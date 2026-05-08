@@ -1,0 +1,315 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block meta_title %}Discover{% endblock %}
+
+{% block extra_css %}
+<style>
+  .discovery-page-header {
+    border-bottom: 1px solid #e5e5e5;
+    margin: 25px 0 22px;
+    padding-bottom: 14px;
+  }
+  .discovery-page-header h1 {
+    display: inline-block;
+    font-size: 28px;
+    line-height: 1.2;
+    margin: 0 10px 0 0;
+    vertical-align: middle;
+    font-weight: 700;
+  }
+  .discovery-page-header .lead {
+    color: #777;
+    display: inline-block;
+    font-size: 18px;
+    margin: 0;
+    vertical-align: middle;
+    font-style: italic;
+  }
+  .discovery-page-header .discovery-help-link {
+    margin-top: 12px;
+    display: inline-block;
+  }
+  .discovery-sidebar .panel,
+  .discovery-toolbar.panel,
+  .discovery-results-panel.panel {
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    box-shadow: 0 1px 2px rgba(0,0,0,.06);
+  }
+  .discovery-sidebar .panel-heading,
+  .discovery-results-panel .panel-heading {
+    background: #f8f8f8;
+    border-bottom: 1px solid #e5e5e5;
+    font-weight: 700;
+  }
+  .discovery-sidebar .panel-default > .panel-heading a {
+    color: #222;
+    display: block;
+    text-decoration: none;
+  }
+  .discovery-sidebar .panel-heading {
+    font-size: 15px;
+  }
+  .discovery-sidebar .panel-body {
+    padding: 14px;
+  }
+  .discovery-sidebar-body {
+    padding-bottom: 8px;
+  }
+  .discovery-sidebar .checkbox { margin-top: 0; margin-bottom: 10px; }
+  .discovery-sidebar hr {
+    border-color: #eee;
+    margin: 18px 0;
+  }
+  .discovery-filter-input-group {
+    margin-bottom: 16px;
+  }
+  .discovery-filter-input-group .input-group-addon {
+    background: #fff;
+    color: #777;
+  }
+  .discovery-caret-addon {
+    min-width: 42px;
+  }
+  .discovery-filter-input-group .form-control,
+  .discovery-filter-input-group .input-group-addon {
+    height: 50px;
+    font-size: 14px;
+  }
+  .discovery-filter-accordion {
+    margin-top: 16px;
+  }
+  .discovery-filter-accordion .panel {
+    border-radius: 0;
+    box-shadow: none;
+    margin-bottom: 0;
+  }
+  .discovery-filter-accordion .panel + .panel {
+    margin-top: 0;
+  }
+  .discovery-filter-accordion .panel-heading {
+    background: #f6f6f6;
+    padding: 0;
+  }
+  .discovery-filter-accordion .panel-heading a {
+    padding: 14px;
+  }
+  .discovery-filter-accordion .panel-body {
+    background: #fff;
+    border-top: 1px solid #eee;
+    padding: 12px 14px;
+  }
+  .discovery-filter-accordion input.form-control {
+    height: 40px;
+  }
+  .discovery-toggle-pill {
+    background: #d7d7d7;
+    border-radius: 10px;
+    display: inline-block;
+    height: 20px;
+    margin-right: 12px;
+    position: relative;
+    top: 4px;
+    width: 30px;
+  }
+  .discovery-toggle-pill:before {
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 0 2px rgba(0,0,0,.2);
+    content: '';
+    height: 24px;
+    left: -1px;
+    position: absolute;
+    top: -2px;
+    width: 24px;
+  }
+  .discovery-toolbar { margin-bottom: 15px; }
+  .discovery-toolbar .panel-body {
+    background: #fff;
+    padding: 14px;
+  }
+  .discovery-main-search .input-group-addon,
+  .discovery-main-search .form-control {
+    height: 50px;
+    font-size: 15px;
+  }
+  .discovery-main-search .input-group-addon {
+    background: #fff;
+    color: #666;
+  }
+  .discovery-search-btn {
+    font-size: 16px;
+    font-weight: 700;
+    height: 50px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+  .discovery-toolbar select.form-control {
+    height: 50px;
+    font-size: 15px;
+  }
+  .discovery-loading { display: none; }
+  .htmx-request .discovery-loading,
+  .htmx-request.discovery-loading { display: block; }
+  .discovery-table-header {
+    background: #fafafa;
+    border: 1px solid #e9e9e9;
+    border-left: 0;
+    border-right: 0;
+    color: #666;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .02em;
+    margin: -15px -15px 0;
+    padding: 10px 15px;
+  }
+  .discovery-sort-link {
+    color: #666;
+    text-decoration: none;
+  }
+  .discovery-sort-link.active,
+  .discovery-sort-link:hover {
+    color: #333;
+    text-decoration: none;
+  }
+  .discovery-sort-link .glyphicon {
+    font-size: 10px;
+    margin-left: 4px;
+  }
+  .discovery-table-row {
+    border-bottom: 1px solid #eee;
+    padding: 20px 0;
+  }
+  .discovery-table-row:last-child { border-bottom: none; }
+  .discovery-result-title {
+    font-size: 21px;
+    font-weight: 500;
+    line-height: 1.45;
+    margin: 0 0 8px;
+  }
+  .discovery-result-title a {
+    color: #00f;
+    text-decoration: none;
+  }
+  .discovery-result-title a:hover {
+    text-decoration: underline;
+  }
+  .discovery-result-meta {
+    color: #555;
+    font-size: 13px;
+    margin-bottom: 8px;
+    line-height: 1.55;
+  }
+  .discovery-result-badges .label {
+    border-radius: 3px;
+    display: inline-block;
+    font-size: 11px;
+    margin-right: 6px;
+    padding: 4px 8px;
+  }
+  .discovery-result-badges .label-primary {
+    background: #2e75b6;
+  }
+  .discovery-result-badges .label-success {
+    background: #5cb85c;
+  }
+  .discovery-keywords .label {
+    background: #f8f8f8;
+    border: 1px solid #ddd;
+    border-radius: 16px;
+    color: #333;
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 400;
+    margin-right: 6px;
+    margin-bottom: 6px;
+    padding: 7px 12px;
+  }
+  .discovery-detail-box {
+    background: #fafafa;
+    border: 1px solid #eee;
+    margin-top: 12px;
+    padding: 14px;
+    border-radius: 3px;
+  }
+  .discovery-filter-help {
+    color: #777;
+    font-size: 12px;
+    margin-top: -6px;
+  }
+  .discovery-active-filters.well {
+    background: #f9f9f9;
+    border-color: #e6e6e6;
+    margin-bottom: 15px;
+  }
+  .discovery-active-filters .label {
+    display: inline-block;
+    margin-right: 6px;
+    margin-bottom: 4px;
+  }
+  .discovery-empty.alert {
+    margin-bottom: 0;
+  }
+  .discovery-icon-cell {
+    padding-top: 6px;
+    white-space: nowrap;
+  }
+  .discovery-icon-img {
+    display: inline-block;
+    height: 28px;
+    margin-right: 8px;
+    vertical-align: middle;
+    width: 28px;
+  }
+  .discovery-abstract-preview {
+    color: #4b4b4b;
+    font-size: 14px;
+    max-width: 95%;
+  }
+  .discovery-result-actions {
+    margin: 10px 0 0;
+  }
+  mark { background: #fff2a8; padding: 0; }
+  @media (max-width: 991px) {
+    .discovery-page-header h1,
+    .discovery-page-header .lead {
+      display: block;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block extra_head %}
+<script src="https://unpkg.com/htmx.org@1.9.12"></script>
+{% endblock %}
+
+{% block main %}
+<div class="container">
+  <div class="row discovery-page-header">
+    <div class="col-md-8 col-sm-12">
+      <h1>Discover</h1>
+      <p class="lead">Public resources shared with the community</p>
+    </div>
+    <div class="col-md-4 col-sm-12 text-right">
+      <a class="discovery-help-link" href="https://help.hydroshare.org/discovering-resources/discovering-data-and-models-from-hydroshare-users/" target="_blank" rel="noopener noreferrer">
+        Learn more about discovering data
+      </a>
+    </div>
+  </div>
+
+  <form id="discovery-form" method="get" action="{{ search_url }}">
+    <div class="row">
+      <div class="col-md-3 discovery-sidebar">
+        {% include "hs_discovery/partials/search_form.html" %}
+      </div>
+      <div class="col-md-9">
+        {% include "hs_discovery/partials/results_toolbar.html" %}
+        <div id="results-region">
+          {% include "hs_discovery/partials/results_region.html" %}
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}

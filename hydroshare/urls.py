@@ -121,6 +121,7 @@ urlpatterns += i18n_patterns(
     path("discoverapi/", SearchAPI.as_view(), name="DiscoverAPI"),
     path("solr/", SearchView.as_view(), name="Discover"),
     path("search/", AtlasSearchView.as_view(), name="Discover"),
+    path("", include(("hs_discovery.urls", "discovery"), namespace="discovery")),
     path(
         "topics/",
         hs_communities.views.communities.TopicsView.as_view(),

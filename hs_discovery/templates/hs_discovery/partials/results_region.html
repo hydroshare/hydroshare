@@ -1,0 +1,53 @@
+{% include "hs_discovery/partials/active_filters.html" %}
+{% if error_message %}
+  <div class="alert alert-warning" role="alert">
+    {{ error_message }}
+  </div>
+{% endif %}
+<div class="discovery-results-panel panel panel-default">
+  <div class="panel-heading clearfix">
+    <div class="pull-left">
+      <strong>{{ results.items|length }}</strong> result{{ results.items|length|pluralize }} in this view
+    </div>
+    <span id="results-loading" class="text-muted pull-right discovery-loading">Loading results…</span>
+  </div>
+  <div class="panel-body">
+    <div class="discovery-table-header row hidden-xs">
+      <div class="col-sm-1">&nbsp;</div>
+      <div class="col-sm-5">
+        <a class="discovery-sort-link{% if selected_sort == 'title' %} active{% endif %}"
+           href="{{ search_url }}?{{ sort_title_querystring }}"
+           hx-get="{{ results_url }}?{{ sort_title_querystring }}"
+           hx-target="#results-region"
+           hx-push-url="true">Title{% if selected_sort == 'title' %} <span class="glyphicon glyphicon-chevron-{% if selected_order == 'asc' %}up{% else %}down{% endif %}"></span>{% endif %}</a>
+      </div>
+      <div class="col-sm-2">
+        <a class="discovery-sort-link{% if selected_sort == 'first-author' %} active{% endif %}"
+           href="{{ search_url }}?{{ sort_first_author_querystring }}"
+           hx-get="{{ results_url }}?{{ sort_first_author_querystring }}"
+           hx-target="#results-region"
+           hx-push-url="true">First Author{% if selected_sort == 'first-author' %} <span class="glyphicon glyphicon-chevron-{% if selected_order == 'asc' %}up{% else %}down{% endif %}"></span>{% endif %}</a>
+      </div>
+      <div class="col-sm-2">
+        <a class="discovery-sort-link{% if selected_sort == 'date-created' %} active{% endif %}"
+           href="{{ search_url }}?{{ sort_date_created_querystring }}"
+           hx-get="{{ results_url }}?{{ sort_date_created_querystring }}"
+           hx-target="#results-region"
+           hx-push-url="true">Date Created{% if selected_sort == 'date-created' %} <span class="glyphicon glyphicon-chevron-{% if selected_order == 'asc' %}up{% else %}down{% endif %}"></span>{% endif %}</a>
+      </div>
+      <div class="col-sm-2">
+        <a class="discovery-sort-link{% if selected_sort == 'last-modified' %} active{% endif %}"
+           href="{{ search_url }}?{{ sort_last_modified_querystring }}"
+           hx-get="{{ results_url }}?{{ sort_last_modified_querystring }}"
+           hx-target="#results-region"
+           hx-push-url="true">Last Modified{% if selected_sort == 'last-modified' %} <span class="glyphicon glyphicon-chevron-{% if selected_order == 'asc' %}up{% else %}down{% endif %}"></span>{% endif %}</a>
+      </div>
+    </div>
+    <div id="results-list">
+      {% include "hs_discovery/partials/results_list.html" %}
+    </div>
+  </div>
+  <div class="panel-footer" id="load-more-container">
+    {% include "hs_discovery/partials/load_more.html" %}
+  </div>
+</div>

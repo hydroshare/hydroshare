@@ -452,6 +452,7 @@ INSTALLED_APPS = (
     "markdown",
     "hs_communities",
     "hs_discover",
+    "hs_discovery",
     "health_check",
     "health_check.db",
     "health_check.cache",
@@ -965,7 +966,7 @@ DEFAULT_QUOTA_VALUE = 20
 DEFAULT_QUOTA_UNIT = "GB"
 
 BROKER_URL = 'rabbitmq://guest:guest@rabbitmq:5672//'
-ATLAS_CONNECTION_URL = "mongodb://user:pass@mongodb:27017/"
+ATLAS_CONNECTION_URL = "mongodb://user:pass@mongodb:27017/?directConnection=true"
 ATLAS_DB_NAME = "hydroshare"
 SEARCH_RELEVANCE_SCORE_THRESHOLD = 0.3
 SEARCH_BOOST_NAME = 5

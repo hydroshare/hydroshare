@@ -1,0 +1,87 @@
+{% load static %}
+{% if results.items %}
+  {% for result in results.items %}
+    <div class="discovery-table-row row">
+      <div class="col-sm-1 col-xs-12 discovery-icon-cell">
+        <img class="discovery-icon-img" src="{% static 'img/resource-icons/composite48x48.png' %}" alt="Resource type">
+        {% if result.sharing_status == 'Public' %}
+          <img class="discovery-icon-img" src="{% static 'img/public.png' %}" alt="Public">
+        {% elif result.sharing_status == 'Published' %}
+          <img class="discovery-icon-img" src="{% static 'img/published.png' %}" alt="Published">
+        {% elif result.sharing_status == 'Discoverable' %}
+          <img class="discovery-icon-img" src="{% static 'img/discoverable.png' %}" alt="Discoverable">
+        {% elif result.sharing_status %}
+          <img class="discovery-icon-img" src="{% static 'img/private.png' %}" alt="Private">
+        {% endif %}
+      </div>
+      <div class="col-sm-5 col-xs-12">
+        <h4 class="discovery-result-title">
+          <a href="{{ result.identifier|default:'#' }}">{{ result.title_html|safe }}</a>
+        </h4>
+        <p class="discovery-result-badges">
+          {% if result.resource_type %}<span class="label label-primary">{{ result.resource_type }}</span>{% endif %}
+          {% if result.sharing_status %}<span class="label label-success">{{ result.sharing_status }}</span>{% endif %}
+        </p>
+        {% if result.abstract %}
+          <p class="discovery-result-meta discovery-abstract-preview">{{ result.abstract_html|safe }}</p>
+        {% endif %}
+        {% if result.keywords %}
+          <p class="discovery-keywords">
+            {% for keyword in result.keywords|slice:":6" %}
+              <span class="label label-default">{{ keyword }}</span>
+            {% endfor %}
+          </p>
+        {% endif %}
+        <p class="discovery-result-actions">
+          <a data-toggle="collapse" href="#result-{{ result.id }}" aria-expanded="false" aria-controls="result-{{ result.id }}">
+            More details
+          </a>
+        </p>
+      </div>
+      <div class="col-sm-2 col-xs-12">
+        <div class="visible-xs text-muted"><strong>First author</strong></div>
+        <div class="discovery-result-meta">{{ result.authors_html|default:result.authors.0|default:"—"|safe }}</div>
+      </div>
+      <div class="col-sm-2 col-xs-6">
+        <div class="visible-xs text-muted"><strong>Date created</strong></div>
+        <div class="discovery-result-meta">{{ result.created|slice:":10"|default:"—" }}</div>
+      </div>
+      <div class="col-sm-2 col-xs-6">
+        <div class="visible-xs text-muted"><strong>Last modified</strong></div>
+        <div class="discovery-result-meta">{{ result.modified|slice:":10"|default:"—" }}</div>
+      </div>
+      <div class="col-xs-12 collapse" id="result-{{ result.id }}">
+        <div class="discovery-detail-box">
+          {% if result.authors %}
+            <p><strong>Authors:</strong> {{ result.authors|join:", " }}</p>
+          {% endif %}
+          {% if result.contributors %}
+            <p><strong>Contributors:</strong> {{ result.contributors|join:", " }}</p>
+          {% endif %}
+          {% if result.keywords %}
+            <p><strong>Keywords:</strong>
+              {% for keyword in result.keywords %}
+                <span class="label label-default">{{ keyword }}</span>
+              {% endfor %}
+            </p>
+          {% endif %}
+          {% if result.published %}
+            <p><strong>Published:</strong> {{ result.published|slice:":10" }}</p>
+          {% endif %}
+          {% if result.temporal_coverage %}
+            <p>
+              <strong>Temporal coverage:</strong>
+              {{ result.temporal_coverage.startDate|default:""|slice:":10" }}
+              {% if result.temporal_coverage.endDate %}- {{ result.temporal_coverage.endDate|slice:":10" }}{% endif %}
+            </p>
+          {% endif %}
+          {% if result.views %}
+            <p><strong>Views:</strong> {{ result.views }}</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+{% else %}
+  {% include "hs_discovery/partials/empty_state.html" %}
+{% endif %}

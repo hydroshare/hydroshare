@@ -1,0 +1,46 @@
+<div class="discovery-toolbar panel panel-default">
+  <div class="panel-body">
+    <input type="hidden" name="order" value="{{ selected_order|default:'' }}">
+    <div class="row">
+      <div class="col-sm-7">
+        <label class="sr-only" for="id_term">Search</label>
+        <div class="input-group input-group-lg discovery-main-search">
+          <span class="input-group-addon"><span class="glyphicon glyphicon-search"></span></span>
+          <input
+            type="search"
+            name="term"
+            id="id_term"
+            class="form-control"
+            value="{{ form.term.value|default:'' }}"
+            placeholder="Search all Public and Discoverable Resources"
+            hx-get="{{ results_url }}"
+            hx-trigger="keyup changed delay:400ms"
+            hx-target="#results-region"
+            hx-include="#discovery-form"
+            hx-push-url="true"
+          >
+        </div>
+      </div>
+      <div class="col-sm-2">
+        <button type="submit" class="btn btn-primary btn-lg btn-block discovery-search-btn">Search</button>
+      </div>
+      <div class="col-sm-3">
+        <label class="sr-only" for="id_sort">Sort results by</label>
+        <select
+          name="sort"
+          id="id_sort"
+          class="form-control input-lg"
+          hx-get="{{ results_url }}"
+          hx-trigger="change"
+          hx-target="#results-region"
+          hx-include="#discovery-form"
+          hx-push-url="true"
+        >
+          {% for value, label in form.fields.sort.choices %}
+            <option value="{{ value }}"{% if selected_sort == value %} selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+  </div>
+</div>

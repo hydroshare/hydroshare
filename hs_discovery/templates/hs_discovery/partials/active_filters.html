@@ -1,0 +1,10 @@
+{% if has_active_filters %}
+  <div class="discovery-active-filters well well-sm">
+    <strong>Active filters:</strong>
+    {% for item in active_filters %}
+      <span class="label label-info">{{ item.label }}: {{ item.value }}</span>
+    {% endfor %}
+    <a href="{{ search_url }}" class="btn btn-xs btn-default pull-right">Clear all</a>
+    <div class="clearfix"></div>
+  </div>
+{% endif %}
