@@ -7,7 +7,11 @@
 <div class="discovery-results-panel panel panel-default">
   <div class="panel-heading clearfix">
     <div class="pull-left discovery-results-count">
-      <strong>{{ results.items|length }}</strong> result{{ results.items|length|pluralize }}
+      {% if results.total_count or results.total_count == 0 %}
+        <strong>{{ results.total_count }}</strong> result{{ results.total_count|pluralize }}
+      {% else %}
+        <strong>{{ results.items|length }}</strong> result{{ results.items|length|pluralize }}
+      {% endif %}
     </div>
     <span id="results-loading" class="text-muted pull-right discovery-loading">Loading results…</span>
   </div>

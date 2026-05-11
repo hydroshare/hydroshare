@@ -128,7 +128,12 @@ def map_atlas_result(raw_result: dict) -> DiscoveryResult:
     )
 
 
-def map_atlas_results(raw_results: list[dict], has_more: bool) -> DiscoverySearchResults:
+def map_atlas_results(raw_results: list[dict], has_more: bool, total_count: Optional[int] = None) -> DiscoverySearchResults:
     items = [map_atlas_result(result) for result in raw_results]
     next_token = items[-1].pagination_token if items and has_more else None
-    return DiscoverySearchResults(items=items, next_pagination_token=next_token, has_more=has_more)
+    return DiscoverySearchResults(
+        items=items,
+        next_pagination_token=next_token,
+        has_more=has_more,
+        total_count=total_count,
+    )

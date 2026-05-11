@@ -331,7 +331,16 @@ class AtlasSearchService:
     def __init__(self, collection=None):
         self.collection = collection or hydroshare_atlas_db['discovery']
 
-    def search_raw(self, search_query: SearchQuery) -> tuple[list[dict], bool]:
+    def _count_raw(self, search_query: SearchQuery) -> int:
+        count_stages = list(search_query.stages)
+        count_stages.append({'$count': 'total'})
+        count_result = self.collection.aggregate(count_stages).to_list(None)
+        if not count_result:
+            return 0
+        return int(count_result[0].get('total', 0) or 0)
+
+    def search_raw(self, search_query: SearchQuery) -> tuple[list[dict], bool, int]:
+        total_count = self._count_raw(search_query)
         stages = list(search_query.stages)
         if not search_query.paginationToken:
             stages.append({'$skip': (search_query.pageNumber - 1) * search_query.pageSize})
@@ -342,11 +351,11 @@ class AtlasSearchService:
         has_more = len(result) > search_query.pageSize
         if has_more:
             result = result[:search_query.pageSize]
-        return result, has_more
+        return result, has_more, total_count
 
     def search(self, search_query: SearchQuery):
-        raw_results, has_more = self.search_raw(search_query)
-        return map_atlas_results(raw_results, has_more)
+        raw_results, has_more, total_count = self.search_raw(search_query)
+        return map_atlas_results(raw_results, has_more, total_count=total_count)
 
     def typeahead(self, term: str, field: str):
         term = (term or '').strip()
