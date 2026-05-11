@@ -4,11 +4,11 @@
     <div class="row">
       <div class="col-sm-8">
         <label class="sr-only" for="id_term">Search</label>
-        <div class="input-group input-group-lg discovery-main-search discovery-typeahead-wrap">
+        <div class="input-group input-group-lg discovery-main-search discovery-typeahead-wrap" x-data="discoveryTypeahead()" @click.outside="closeMenu()">
+          <input type="hidden" name="term" x-bind:value="query">
           <span class="input-group-addon"><span class="glyphicon glyphicon-search"></span></span>
           <input
             type="search"
-            name="term"
             id="id_term"
             class="form-control discovery-typeahead-input"
             value="{{ form.term.value|default:'' }}"
@@ -16,12 +16,39 @@
             autocomplete="off"
             data-typeahead-field="term"
             data-typeahead-url="{{ typeahead_url }}"
+            data-apply-on-select="true"
+            x-ref="input"
+            x-model="query"
+            x-bind:aria-expanded="isOpen ? 'true' : 'false'"
+            @input.debounce.250ms="fetchSuggestions()"
+            @keydown.arrow-down.prevent="moveDown()"
+            @keydown.arrow-up.prevent="moveUp()"
+            @keydown.escape.prevent="closeMenu()"
+            @keydown.enter="handleEnter($event)"
+            @focus="maybeFetchSuggestions()"
+            @blur="handleBlur()"
             hx-get="{{ results_url }}"
-            hx-trigger="keyup changed delay:400ms"
+            hx-trigger="typeahead-select, keyup[key=='Enter'], term-cleared"
             hx-target="#results-region"
             hx-include="#discovery-form"
             hx-push-url="true"
           >
+          <button
+            type="button"
+            class="discovery-main-search-clear"
+            x-cloak
+            x-bind:style="query.trim().length ? '' : 'display: none;'"
+            @click.prevent="clearTerm()"
+            aria-label="Clear search term"
+            title="Clear search term"
+          >
+            <span aria-hidden="true">&times;</span>
+          </button>
+          <ul class="discovery-typeahead-menu" x-cloak x-show="isOpen && suggestions.length" :class="{ 'is-open': isOpen && suggestions.length }">
+            <template x-for="(suggestion, index) in suggestions" :key="suggestion">
+              <li class="discovery-typeahead-item" :class="{ 'is-active': index === activeIndex }" @mousedown.prevent="selectSuggestion(suggestion)" x-text="suggestion"></li>
+            </template>
+          </ul>
         </div>
       </div>
       <div class="col-sm-2">

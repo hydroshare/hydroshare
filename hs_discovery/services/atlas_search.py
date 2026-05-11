@@ -188,7 +188,7 @@ class SearchQuery(BaseModel):
         compound = {'filter': self._filters, 'must': self._must, 'should': []}
 
         if self.term:
-            compound['should'] = [
+            term_clauses = [
                 {'autocomplete': {'query': self.term, 'path': 'name', 'fuzzy': {'maxEdits': 1},
                                   'score': {'boost': {'value': settings.SEARCH_BOOST_NAME}}}},
                 {'autocomplete': {'query': self.term, 'path': 'description', 'fuzzy': {'maxEdits': 1},
@@ -202,6 +202,7 @@ class SearchQuery(BaseModel):
                 {'autocomplete': {'query': self.term, 'path': 'contributor.name', 'fuzzy': {'maxEdits': 1},
                                   'score': {'boost': {'value': settings.SEARCH_BOOST_CONTRIBUTOR_NAME}}}},
             ]
+            compound['must'].append({'compound': {'should': term_clauses, 'minimumShouldMatch': 1}})
 
         if self.creatorName:
             compound['should'].append({'autocomplete': {'query': self.creatorName, 'path': 'creator.name',

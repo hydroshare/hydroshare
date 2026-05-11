@@ -4,7 +4,7 @@
 {% block meta_title %}Discover{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" type="text/css" href="{% static 'hs_discovery/discovery.css' %}?v=20260508-1">
+<link rel="stylesheet" type="text/css" href="{% static 'hs_discovery/discovery.css' %}?v=20260511-7">
 {% endblock %}
 
 {% block extra_head %}
@@ -12,7 +12,12 @@
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
 <script src="https://unpkg.com/htmx.org@1.9.12"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-<script src="{% static 'hs_discovery/discovery.js' %}?v=20260508-1"></script>
+<script src="{% static 'hs_discovery/discovery-sort.js' %}?v=20260511-7"></script>
+<script src="{% static 'hs_discovery/discovery-maps.js' %}?v=20260511-7"></script>
+<script src="{% static 'hs_discovery/discovery-filters.js' %}?v=20260511-7"></script>
+<script src="{% static 'hs_discovery/discovery-typeahead.js' %}?v=20260511-7"></script>
+<script src="{% static 'hs_discovery/discovery-sliders.js' %}?v=20260511-7"></script>
+<script src="{% static 'hs_discovery/discovery-core.js' %}?v=20260511-7"></script>
 {% endblock %}
 
 {% block main %}

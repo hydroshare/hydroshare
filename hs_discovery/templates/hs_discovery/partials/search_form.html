@@ -3,7 +3,7 @@
   <div class="panel-body discovery-sidebar-body">
     <div class="form-group discovery-filter-input-group">
       <label class="sr-only" for="id_keyword">Subject keyword</label>
-      <div class="input-group input-group-lg discovery-typeahead-wrap">
+      <div class="input-group input-group-lg discovery-typeahead-wrap" x-data="discoveryTypeahead()" @click.outside="closeMenu()">
         <span class="input-group-addon"><span class="glyphicon glyphicon-pencil"></span></span>
         <input
           type="text"
@@ -16,18 +16,33 @@
           data-typeahead-field="subject"
           data-typeahead-url="{{ typeahead_url }}"
           data-apply-on-select="true"
+          x-ref="input"
+          x-model="query"
+          x-bind:aria-expanded="isOpen ? 'true' : 'false'"
+          @input.debounce.250ms="fetchSuggestions()"
+          @keydown.arrow-down.prevent="moveDown()"
+          @keydown.arrow-up.prevent="moveUp()"
+          @keydown.escape.prevent="closeMenu()"
+          @keydown.enter="handleEnter($event)"
+          @focus="maybeFetchSuggestions()"
+          @blur="handleBlur()"
           hx-get="{{ results_url }}"
           hx-trigger="typeahead-select, keyup[key=='Enter']"
           hx-target="#results-region"
           hx-include="#discovery-form"
           hx-push-url="true"
         >
+        <ul class="discovery-typeahead-menu" x-cloak x-show="isOpen && suggestions.length" :class="{ 'is-open': isOpen && suggestions.length }">
+          <template x-for="(suggestion, index) in suggestions" :key="suggestion">
+            <li class="discovery-typeahead-item" :class="{ 'is-active': index === activeIndex }" @mousedown.prevent="selectSuggestion(suggestion)" x-text="suggestion"></li>
+          </template>
+        </ul>
       </div>
     </div>
 
     <div class="form-group discovery-filter-input-group">
       <label class="sr-only" for="id_creatorName">Author / contributor</label>
-      <div class="input-group input-group-lg discovery-typeahead-wrap">
+      <div class="input-group input-group-lg discovery-typeahead-wrap" x-data="discoveryTypeahead()" @click.outside="closeMenu()">
         <span class="input-group-addon"><span class="glyphicon glyphicon-user"></span></span>
         <input
           type="text"
@@ -40,18 +55,33 @@
           data-typeahead-field="creator"
           data-typeahead-url="{{ typeahead_url }}"
           data-apply-on-select="true"
+          x-ref="input"
+          x-model="query"
+          x-bind:aria-expanded="isOpen ? 'true' : 'false'"
+          @input.debounce.250ms="fetchSuggestions()"
+          @keydown.arrow-down.prevent="moveDown()"
+          @keydown.arrow-up.prevent="moveUp()"
+          @keydown.escape.prevent="closeMenu()"
+          @keydown.enter="handleEnter($event)"
+          @focus="maybeFetchSuggestions()"
+          @blur="handleBlur()"
           hx-get="{{ results_url }}"
           hx-trigger="typeahead-select, keyup[key=='Enter']"
           hx-target="#results-region"
           hx-include="#discovery-form"
           hx-push-url="true"
         >
+        <ul class="discovery-typeahead-menu" x-cloak x-show="isOpen && suggestions.length" :class="{ 'is-open': isOpen && suggestions.length }">
+          <template x-for="(suggestion, index) in suggestions" :key="suggestion">
+            <li class="discovery-typeahead-item" :class="{ 'is-active': index === activeIndex }" @mousedown.prevent="selectSuggestion(suggestion)" x-text="suggestion"></li>
+          </template>
+        </ul>
       </div>
     </div>
 
     <div class="form-group discovery-filter-input-group">
       <label class="sr-only" for="id_fundingFunderName">Funder</label>
-      <div class="input-group input-group-lg discovery-typeahead-wrap">
+      <div class="input-group input-group-lg discovery-typeahead-wrap" x-data="discoveryTypeahead()" @click.outside="closeMenu()">
         <span class="input-group-addon"><span class="glyphicon glyphicon-th-large"></span></span>
         <input
           type="text"
@@ -64,12 +94,27 @@
           data-typeahead-field="funder"
           data-typeahead-url="{{ typeahead_url }}"
           data-apply-on-select="true"
+          x-ref="input"
+          x-model="query"
+          x-bind:aria-expanded="isOpen ? 'true' : 'false'"
+          @input.debounce.250ms="fetchSuggestions()"
+          @keydown.arrow-down.prevent="moveDown()"
+          @keydown.arrow-up.prevent="moveUp()"
+          @keydown.escape.prevent="closeMenu()"
+          @keydown.enter="handleEnter($event)"
+          @focus="maybeFetchSuggestions()"
+          @blur="handleBlur()"
           hx-get="{{ results_url }}"
           hx-trigger="typeahead-select, keyup[key=='Enter']"
           hx-target="#results-region"
           hx-include="#discovery-form"
           hx-push-url="true"
         >
+        <ul class="discovery-typeahead-menu" x-cloak x-show="isOpen && suggestions.length" :class="{ 'is-open': isOpen && suggestions.length }">
+          <template x-for="(suggestion, index) in suggestions" :key="suggestion">
+            <li class="discovery-typeahead-item" :class="{ 'is-active': index === activeIndex }" @mousedown.prevent="selectSuggestion(suggestion)" x-text="suggestion"></li>
+          </template>
+        </ul>
       </div>
     </div>
 

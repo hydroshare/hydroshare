@@ -85,8 +85,6 @@ def _build_active_filters(form, request, search_url):
             "remove_keys_csv": ",".join(remove_keys_list),
         }
 
-    if cleaned.get("term"):
-        active.append(_build_filter_chip("Search", cleaned["term"], remove_key="term"))
     if cleaned.get("creatorName"):
         active.append(_build_filter_chip("Author", cleaned["creatorName"], remove_key="creatorName"))
     if cleaned.get("keyword"):
