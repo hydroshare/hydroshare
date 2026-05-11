@@ -6,8 +6,8 @@
 {% endif %}
 <div class="discovery-results-panel panel panel-default">
   <div class="panel-heading clearfix">
-    <div class="pull-left">
-      <strong>{{ results.items|length }}</strong> result{{ results.items|length|pluralize }} in this view
+    <div class="pull-left discovery-results-count">
+      <strong>{{ results.items|length }}</strong> result{{ results.items|length|pluralize }}
     </div>
     <span id="results-loading" class="text-muted pull-right discovery-loading">Loading results…</span>
   </div>

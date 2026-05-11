@@ -2,7 +2,7 @@
   <div class="panel-body">
     <input type="hidden" name="order" value="{{ selected_order|default:'' }}">
     <div class="row">
-      <div class="col-sm-7">
+      <div class="col-sm-8">
         <label class="sr-only" for="id_term">Search</label>
         <div class="input-group input-group-lg discovery-main-search">
           <span class="input-group-addon"><span class="glyphicon glyphicon-search"></span></span>
@@ -24,22 +24,27 @@
       <div class="col-sm-2">
         <button type="submit" class="btn btn-primary btn-lg btn-block discovery-search-btn">Search</button>
       </div>
-      <div class="col-sm-3">
-        <label class="sr-only" for="id_sort">Sort results by</label>
-        <select
-          name="sort"
-          id="id_sort"
-          class="form-control input-lg"
-          hx-get="{{ results_url }}"
-          hx-trigger="change"
-          hx-target="#results-region"
-          hx-include="#discovery-form"
-          hx-push-url="true"
-        >
-          {% for value, label in form.fields.sort.choices %}
-            <option value="{{ value }}"{% if selected_sort == value %} selected{% endif %}>{{ label }}</option>
-          {% endfor %}
-        </select>
+      <div class="col-sm-2 discovery-sort-wrap">
+        <label class="discovery-sort-label">Sort results by</label>
+        <input type="hidden" name="sort" id="id_sort" value="{{ selected_sort }}">
+        <div class="dropdown discovery-sort-dropdown">
+          <button class="btn btn-default btn-lg btn-block dropdown-toggle discovery-sort-button" type="button" id="discovery-sort-dropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <span class="discovery-sort-button-label" id="discovery-sort-button-label">{{ selected_sort_label }}</span>
+            <span class="caret"></span>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-right discovery-sort-menu" aria-labelledby="discovery-sort-dropdown">
+            {% for option in sort_options %}
+              <li{% if option.active %} class="active"{% endif %} data-sort-value="{{ option.value }}" data-sort-label="{{ option.label }}">
+                <a
+                  href="{{ search_url }}?{{ option.querystring }}"
+                  hx-get="{{ results_url }}?{{ option.querystring }}"
+                  hx-target="#results-region"
+                  hx-push-url="true"
+                >{{ option.label }}</a>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
       </div>
     </div>
   </div>

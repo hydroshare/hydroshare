@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from .atlas_search import SearchQuery
+from ..forms import CONTENT_TYPE_VALUE_MAP
 
 
 SORT_MAP = {
@@ -35,21 +36,33 @@ class DiscoveryQueryParams:
 
 
 def build_query_params(cleaned_data: dict[str, Any]) -> DiscoveryQueryParams:
+    enable_content_type = cleaned_data.get("enableContentType")
+    enable_availability = cleaned_data.get("enableAvailability")
+    enable_data_coverage = cleaned_data.get("enableDataCoverage")
+    enable_date_created = cleaned_data.get("enableDateCreated")
+    enable_published = cleaned_data.get("enablePublished")
+
+    selected_content_types = (cleaned_data.get("contentType") or []) if enable_content_type else []
+    expanded_content_types = []
+    for content_type in selected_content_types:
+        expanded_content_types.extend(CONTENT_TYPE_VALUE_MAP.get(content_type, [content_type]))
+    expanded_content_types = list(dict.fromkeys(expanded_content_types))
+
     return DiscoveryQueryParams(
         term=cleaned_data.get("term") or None,
         sort=cleaned_data.get("sort") or "relevance",
         order=cleaned_data.get("order") or None,
-        contentType=cleaned_data.get("contentType") or [],
-        creativeWorkStatus=cleaned_data.get("creativeWorkStatus") or [],
+        contentType=expanded_content_types,
+        creativeWorkStatus=(cleaned_data.get("creativeWorkStatus") or []) if enable_availability else [],
         creatorName=cleaned_data.get("creatorName") or None,
         keyword=cleaned_data.get("keyword") or None,
         fundingFunderName=cleaned_data.get("fundingFunderName") or None,
-        dataCoverageStart=cleaned_data.get("dataCoverageStart") or None,
-        dataCoverageEnd=cleaned_data.get("dataCoverageEnd") or None,
-        dateCreatedStart=cleaned_data.get("dateCreatedStart") or None,
-        dateCreatedEnd=cleaned_data.get("dateCreatedEnd") or None,
-        publishedStart=cleaned_data.get("publishedStart") or None,
-        publishedEnd=cleaned_data.get("publishedEnd") or None,
+        dataCoverageStart=(cleaned_data.get("dataCoverageStart") or None) if enable_data_coverage else None,
+        dataCoverageEnd=(cleaned_data.get("dataCoverageEnd") or None) if enable_data_coverage else None,
+        dateCreatedStart=(cleaned_data.get("dateCreatedStart") or None) if enable_date_created else None,
+        dateCreatedEnd=(cleaned_data.get("dateCreatedEnd") or None) if enable_date_created else None,
+        publishedStart=(cleaned_data.get("publishedStart") or None) if enable_published else None,
+        publishedEnd=(cleaned_data.get("publishedEnd") or None) if enable_published else None,
         pageSize=cleaned_data.get("pageSize") or 20,
         paginationToken=cleaned_data.get("paginationToken") or None,
     )

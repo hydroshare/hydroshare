@@ -6,22 +6,23 @@
 {% block extra_css %}
 <style>
   .discovery-page-header {
-    border-bottom: 1px solid #e5e5e5;
-    margin: 25px 0 22px;
-    padding-bottom: 14px;
+    border-bottom: 1px solid #e7eaee;
+    margin: 20px 0 20px;
+    padding-bottom: 16px;
   }
   .discovery-page-header h1 {
     display: inline-block;
-    font-size: 28px;
+    font-size: 32px;
     line-height: 1.2;
     margin: 0 10px 0 0;
     vertical-align: middle;
     font-weight: 700;
+    color: #1f2937;
   }
   .discovery-page-header .lead {
-    color: #777;
+    color: #64748b;
     display: inline-block;
-    font-size: 18px;
+    font-size: 16px;
     margin: 0;
     vertical-align: middle;
     font-style: italic;
@@ -29,19 +30,29 @@
   .discovery-page-header .discovery-help-link {
     margin-top: 12px;
     display: inline-block;
+    color: #2563eb;
+    font-weight: 600;
   }
   .discovery-sidebar .panel,
   .discovery-toolbar.panel,
   .discovery-results-panel.panel {
-    border: 1px solid #ddd;
-    border-radius: 3px;
-    box-shadow: 0 1px 2px rgba(0,0,0,.06);
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(15,23,42,.05);
+    overflow: hidden;
+  }
+  .discovery-toolbar.panel,
+  .discovery-toolbar .panel-body,
+  .discovery-toolbar .discovery-sort-wrap,
+  .discovery-toolbar .discovery-sort-dropdown {
+    overflow: visible;
   }
   .discovery-sidebar .panel-heading,
   .discovery-results-panel .panel-heading {
-    background: #f8f8f8;
-    border-bottom: 1px solid #e5e5e5;
+    background: #f8fafc;
+    border-bottom: 1px solid #e5e7eb;
     font-weight: 700;
+    color: #1f2937;
   }
   .discovery-sidebar .panel-default > .panel-heading a {
     color: #222;
@@ -52,125 +63,301 @@
     font-size: 15px;
   }
   .discovery-sidebar .panel-body {
-    padding: 14px;
+    padding: 16px;
   }
   .discovery-sidebar-body {
     padding-bottom: 8px;
   }
   .discovery-sidebar .checkbox { margin-top: 0; margin-bottom: 10px; }
+  .discovery-sidebar .checkbox label {
+    color: #334155;
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .discovery-sidebar .checkbox input[type="checkbox"] {
+    margin-top: 2px;
+  }
   .discovery-sidebar hr {
     border-color: #eee;
     margin: 18px 0;
   }
   .discovery-filter-input-group {
-    margin-bottom: 16px;
+    margin-bottom: 14px;
   }
   .discovery-filter-input-group .input-group-addon {
     background: #fff;
-    color: #777;
+    color: #6b7280;
+    border-color: #d1d5db;
   }
   .discovery-caret-addon {
     min-width: 42px;
   }
   .discovery-filter-input-group .form-control,
   .discovery-filter-input-group .input-group-addon {
-    height: 50px;
+    height: 46px;
     font-size: 14px;
   }
+  .discovery-filter-input-group .form-control {
+    border-color: #d1d5db;
+    box-shadow: none;
+  }
+  .discovery-filter-input-group .form-control:focus {
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 2px rgba(37,99,235,.12);
+  }
   .discovery-filter-accordion {
-    margin-top: 16px;
+    margin-top: 14px;
   }
   .discovery-filter-accordion .panel {
     border-radius: 0;
     box-shadow: none;
     margin-bottom: 0;
+    border-left: 0;
+    border-right: 0;
   }
   .discovery-filter-accordion .panel + .panel {
-    margin-top: 0;
+    margin-top: 4px;
   }
   .discovery-filter-accordion .panel-heading {
-    background: #f6f6f6;
+    background: #f8fafc;
     padding: 0;
   }
-  .discovery-filter-accordion .panel-heading a {
-    padding: 14px;
+  .discovery-filter-summary {
+    align-items: center;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 10px;
+    padding: 18px 21px;
+    font-weight: 600;
+    color: #334155;
+    height: 40px;
+  }
+  .discovery-filter-summary-title {
+    min-width: 0;
+  }
+  .discovery-filter-accordion .panel-heading .glyphicon {
+    color: #64748b;
+    justify-self: end;
+    margin-right: 10px;
+  }
+  .discovery-filter-summary .glyphicon {
+    margin-left: 0;
+  }
+  .discovery-filter-section > summary {
+    list-style: none;
+  }
+  .discovery-filter-section > summary::-webkit-details-marker {
+    display: none;
+  }
+  .discovery-filter-section > summary:hover {
+    background: #eef2f7;
+  }
+  .discovery-filter-section[open] > summary .glyphicon {
+    transform: rotate(180deg);
+  }
+  .discovery-filter-toggle {
+    align-items: center;
+    cursor: pointer;
+    display: inline-flex;
+    flex: 0 0 auto;
+    font-weight: 600;
+    gap: 8px;
+    margin: 0;
+    user-select: none;
+  }
+  .discovery-filter-toggle input[type="checkbox"] {
+    display: none;
   }
   .discovery-filter-accordion .panel-body {
     background: #fff;
-    border-top: 1px solid #eee;
-    padding: 12px 14px;
+    border-top: 1px solid #e5e7eb;
+    padding: 12px 14px 10px;
+  }
+  .discovery-filter-accordion .row {
+    margin-left: -6px;
+    margin-right: -6px;
+  }
+  .discovery-filter-accordion .row > [class*="col-"] {
+    padding-left: 6px;
+    padding-right: 6px;
   }
   .discovery-filter-accordion input.form-control {
     height: 40px;
+    border-color: #d1d5db;
+    box-shadow: none;
+  }
+  .discovery-filter-accordion input.form-control:focus {
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 2px rgba(37,99,235,.12);
   }
   .discovery-toggle-pill {
-    background: #d7d7d7;
+    background: #cbd5e1;
     border-radius: 10px;
     display: inline-block;
-    height: 20px;
-    margin-right: 12px;
+    height: 18px;
+    margin-right: 6px;
     position: relative;
-    top: 4px;
+    top: 0;
     width: 30px;
   }
   .discovery-toggle-pill:before {
     background: #fff;
     border-radius: 50%;
-    box-shadow: 0 0 2px rgba(0,0,0,.2);
+    box-shadow: 0 1px 4px rgba(15,23,42,.18);
     content: '';
-    height: 24px;
-    left: -1px;
+    height: 16px;
+    left: 1px;
     position: absolute;
-    top: -2px;
-    width: 24px;
+    top: 1px;
+    width: 16px;
+    transition: transform .2s ease;
   }
-  .discovery-toolbar { margin-bottom: 15px; }
+  .discovery-filter-toggle input[type="checkbox"]:checked + .discovery-toggle-pill {
+    background: #93c5fd;
+  }
+  .discovery-filter-toggle input[type="checkbox"]:checked + .discovery-toggle-pill:before {
+    transform: translateX(12px);
+  }
+  .discovery-toolbar { margin-bottom: 14px; }
   .discovery-toolbar .panel-body {
     background: #fff;
-    padding: 14px;
+    padding: 12px 14px;
+  }
+  .discovery-toolbar .row {
+    align-items: flex-end;
+    display: flex;
+    flex-wrap: wrap;
+  }
+  .discovery-toolbar .row > [class*="col-"] {
+    float: none;
+  }
+  .discovery-toolbar .discovery-sort-label {
+    color: #64748b;
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .02em;
+    line-height: 1.2;
+    margin: 0 0 6px;
   }
   .discovery-main-search .input-group-addon,
   .discovery-main-search .form-control {
-    height: 50px;
+    height: 46px;
     font-size: 15px;
   }
   .discovery-main-search .input-group-addon {
     background: #fff;
-    color: #666;
+    color: #64748b;
+    border-color: #d1d5db;
+  }
+  .discovery-main-search .form-control {
+    border-color: #d1d5db;
+    box-shadow: none;
+  }
+  .discovery-main-search .form-control:focus {
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 2px rgba(37,99,235,.12);
   }
   .discovery-search-btn {
-    font-size: 16px;
-    font-weight: 700;
-    height: 50px;
-    text-transform: uppercase;
-    letter-spacing: .04em;
+    font-size: 14px;
+    font-weight: 600;
+    height: 46px;
+    text-transform: none;
+    letter-spacing: .01em;
+    border-radius: 8px;
+    margin-top: 0;
+    padding-left: 10px;
+    padding-right: 10px;
   }
-  .discovery-toolbar select.form-control {
-    height: 50px;
-    font-size: 15px;
+  .discovery-toolbar .discovery-sort-wrap {
+    position: relative;
+    padding-top: 0;
+  }
+  .discovery-sort-dropdown {
+    position: relative;
+  }
+  .discovery-sort-button {
+    align-items: center;
+    background: #fff;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    box-shadow: none;
+    color: #111827;
+    display: flex;
+    font-size: 14px;
+    font-weight: 400;
+    height: 46px;
+    justify-content: space-between;
+    margin: 0;
+    padding: 10px 14px;
+    text-align: left;
+    width: 100%;
+  }
+  .discovery-sort-button:hover,
+  .discovery-sort-button:focus,
+  .open > .discovery-sort-button.dropdown-toggle {
+    background: #fff;
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 2px rgba(37,99,235,.12);
+    color: #111827;
+    outline: none;
+  }
+  .discovery-sort-button-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .discovery-sort-menu {
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    box-shadow: 0 8px 20px rgba(15,23,42,.12);
+    margin-top: 8px;
+    min-width: 100%;
+    overflow: hidden;
+    z-index: 3000;
+  }
+  .discovery-sort-wrap.open .discovery-sort-menu,
+  .discovery-sort-dropdown.open .discovery-sort-menu {
+    display: block;
+  }
+  .discovery-sort-menu > li > a {
+    font-size: 14px;
+    padding: 10px 14px;
+  }
+  .discovery-sort-menu > .active > a,
+  .discovery-sort-menu > .active > a:hover,
+  .discovery-sort-menu > .active > a:focus {
+    background: #2563eb;
+    color: #fff;
   }
   .discovery-loading { display: none; }
   .htmx-request .discovery-loading,
   .htmx-request.discovery-loading { display: block; }
   .discovery-table-header {
-    background: #fafafa;
-    border: 1px solid #e9e9e9;
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
     border-left: 0;
     border-right: 0;
-    color: #666;
+    color: #64748b;
     font-size: 12px;
     font-weight: 700;
-    letter-spacing: .02em;
+    letter-spacing: .04em;
     margin: -15px -15px 0;
-    padding: 10px 15px;
+    padding: 11px 15px;
+  }
+  .discovery-table-header .col-sm-5,
+  .discovery-table-header .col-sm-2,
+  .discovery-table-header .col-sm-1 {
+    padding-left: 10px;
+    padding-right: 10px;
   }
   .discovery-sort-link {
-    color: #666;
+    color: #64748b;
     text-decoration: none;
   }
   .discovery-sort-link.active,
   .discovery-sort-link:hover {
-    color: #333;
+    color: #1e293b;
     text-decoration: none;
   }
   .discovery-sort-link .glyphicon {
@@ -178,35 +365,42 @@
     margin-left: 4px;
   }
   .discovery-table-row {
-    border-bottom: 1px solid #eee;
-    padding: 20px 0;
+    border-bottom: 1px solid #eef2f7;
+    padding: 18px 0;
+    position: relative;
+    padding-right: 52px;
+  }
+  .discovery-table-row > [class*="col-"] {
+    padding-left: 10px;
+    padding-right: 10px;
   }
   .discovery-table-row:last-child { border-bottom: none; }
   .discovery-result-title {
-    font-size: 21px;
-    font-weight: 500;
-    line-height: 1.45;
-    margin: 0 0 8px;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.35;
+    margin: 0 0 10px;
   }
   .discovery-result-title a {
-    color: #00f;
+    color: #1d4ed8;
     text-decoration: none;
   }
   .discovery-result-title a:hover {
     text-decoration: underline;
   }
   .discovery-result-meta {
-    color: #555;
-    font-size: 13px;
+    color: #475569;
+    font-size: 14px;
     margin-bottom: 8px;
-    line-height: 1.55;
+    line-height: 1.5;
   }
   .discovery-result-badges .label {
-    border-radius: 3px;
+    border-radius: 999px;
     display: inline-block;
-    font-size: 11px;
+    font-size: 10px;
+    letter-spacing: .02em;
     margin-right: 6px;
-    padding: 4px 8px;
+    padding: 5px 10px;
   }
   .discovery-result-badges .label-primary {
     background: #2e75b6;
@@ -215,23 +409,23 @@
     background: #5cb85c;
   }
   .discovery-keywords .label {
-    background: #f8f8f8;
-    border: 1px solid #ddd;
+    background: #f8fafc;
+    border: 1px solid #dbe2ea;
     border-radius: 16px;
-    color: #333;
+    color: #334155;
     display: inline-block;
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 400;
     margin-right: 6px;
     margin-bottom: 6px;
-    padding: 7px 12px;
+    padding: 5px 10px;
   }
   .discovery-detail-box {
-    background: #fafafa;
-    border: 1px solid #eee;
-    margin-top: 12px;
-    padding: 14px;
-    border-radius: 3px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    margin-top: 10px;
+    padding: 14px 16px;
+    border-radius: 8px;
   }
   .discovery-filter-help {
     color: #777;
@@ -239,9 +433,35 @@
     margin-top: -6px;
   }
   .discovery-active-filters.well {
-    background: #f9f9f9;
-    border-color: #e6e6e6;
+    background: #f8fafc;
+    border-color: #dbe2ea;
     margin-bottom: 15px;
+    border-radius: 10px;
+    padding: 10px 12px;
+  }
+  .discovery-active-filters .discovery-filter-chip {
+    align-items: center;
+    background: #dbeafe;
+    border-radius: 999px;
+    color: #1e3a8a;
+    display: inline-flex;
+    font-size: 12px;
+    font-weight: 600;
+    margin-right: 6px;
+    margin-bottom: 6px;
+    padding: 4px 10px;
+  }
+  .discovery-active-filters .discovery-filter-chip-remove {
+    color: #1e3a8a;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1;
+    margin-left: 6px;
+    text-decoration: none;
+  }
+  .discovery-active-filters .discovery-filter-chip-remove:hover {
+    color: #1d4ed8;
+    text-decoration: none;
   }
   .discovery-active-filters .label {
     display: inline-block;
@@ -252,23 +472,145 @@
     margin-bottom: 0;
   }
   .discovery-icon-cell {
-    padding-top: 6px;
+    padding-top: 4px;
     white-space: nowrap;
   }
   .discovery-icon-img {
     display: inline-block;
-    height: 28px;
+    height: 24px;
     margin-right: 8px;
     vertical-align: middle;
-    width: 28px;
+    width: 24px;
   }
   .discovery-abstract-preview {
-    color: #4b4b4b;
+    color: #334155;
     font-size: 14px;
     max-width: 95%;
   }
-  .discovery-result-actions {
-    margin: 10px 0 0;
+  .discovery-row-accordion {
+    margin-top: 0;
+    padding-left: 0;
+    padding-right: 0;
+    position: static;
+  }
+  .discovery-row-accordion-summary {
+    align-items: center;
+    cursor: pointer;
+    display: flex;
+    height: 48px;
+    justify-content: flex-end;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    position: absolute;
+    right: 34px;
+    top: 10px;
+    width: 48px;
+  }
+  .discovery-row-accordion-summary::-webkit-details-marker {
+    display: none;
+  }
+  .discovery-row-accordion-summary .glyphicon {
+    border: 1px solid #d1d5db;
+    border-radius: 999px;
+    color: #475569;
+    font-size: 12px;
+    line-height: 1;
+    padding: 9px;
+    transition: transform .18s ease;
+  }
+  .discovery-row-accordion[open] .discovery-row-accordion-summary .glyphicon {
+    transform: rotate(180deg);
+  }
+  .discovery-abstract-toggle {
+    margin: 0;
+  }
+  .discovery-abstract-toggle .discovery-show-less-label {
+    display: none;
+  }
+  .discovery-abstract-toggle[open] .discovery-abstract-preview,
+  .discovery-abstract-toggle[open] .discovery-show-more-label {
+    display: none;
+  }
+  .discovery-abstract-toggle[open] .discovery-show-less-label {
+    display: inline;
+  }
+  .discovery-abstract-toggle > summary {
+    color: #2563eb;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .02em;
+    list-style: none;
+    margin-top: 2px;
+    text-transform: uppercase;
+  }
+  .discovery-abstract-toggle > summary .discovery-abstract-preview {
+    color: #475569;
+    display: block;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.5;
+    margin-bottom: 4px;
+    text-transform: none;
+  }
+  .discovery-abstract-toggle .discovery-abstract-full {
+    margin-top: 4px;
+  }
+  .discovery-abstract-toggle > summary::-webkit-details-marker {
+    display: none;
+  }
+  .discovery-results-panel .panel-footer {
+    background: #f8fafc;
+    border-top: 1px solid #e5e7eb;
+  }
+  .discovery-spatial-map {
+    border: 1px solid #dbe2ea;
+    border-radius: 8px;
+    height: 240px;
+    margin: 8px 0 12px;
+    width: 100%;
+  }
+  .discovery-results-count {
+    color: #334155;
+    font-size: 14px;
+    font-weight: 500;
+  }
+  .discovery-results-count strong {
+    color: #0f172a;
+    font-size: 16px;
+  }
+  .discovery-load-more-btn {
+    border-radius: 8px;
+    font-weight: 600;
+    height: 40px;
+  }
+  .discovery-results-end {
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 500;
+    margin: 0;
+    text-align: center;
+  }
+  .discovery-empty {
+    background: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    border-radius: 10px;
+    color: #475569;
+    font-size: 14px;
+    padding: 14px;
+  }
+  .discovery-empty .glyphicon {
+    color: #64748b;
+    margin-right: 8px;
+  }
+  .discovery-results-panel .panel-footer .btn {
+    border-radius: 8px;
+    font-weight: 600;
+  }
+  .discovery-sidebar .btn {
+    border-radius: 8px;
+    font-weight: 600;
   }
   mark { background: #fff2a8; padding: 0; }
   @media (max-width: 991px) {
@@ -276,12 +618,407 @@
     .discovery-page-header .lead {
       display: block;
     }
+    .discovery-page-header .lead {
+      margin-top: 4px;
+    }
+  }
+  @media (max-width: 767px) {
+    .discovery-table-row {
+      padding-right: 0;
+    }
+    .discovery-row-accordion-summary {
+      position: static;
+      width: 100%;
+      margin-top: 8px;
+    }
+    .discovery-toolbar .discovery-sort-wrap {
+      margin-top: 8px;
+    }
+    .discovery-search-btn {
+      margin-top: 8px;
+    }
+  }
+  @media (min-width: 768px) {
+    .discovery-toolbar .row {
+      flex-wrap: nowrap;
+    }
+  }
+  /* jQuery UI range slider customization */
+  .discovery-range-slider {
+    margin: 14px 4px 16px;
+  }
+  .discovery-range-slider.ui-slider {
+    background: #e5e7eb;
+    border: 0;
+    border-radius: 999px;
+    height: 8px;
+    position: relative;
+  }
+  .discovery-range-slider .ui-slider-range {
+    background: #3b82f6;
+    border: 0;
+    border-radius: 999px;
+  }
+  .discovery-range-slider .ui-slider-handle {
+    background: #fff;
+    border: 2px solid #3b82f6;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    cursor: pointer;
+    height: 18px;
+    outline: none;
+    top: -5px;
+    width: 18px;
+  }
+  .discovery-range-slider .ui-slider-handle:focus {
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.18);
   }
 </style>
 {% endblock %}
 
 {% block extra_head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
 <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script>
+  (function () {
+    var BOX_MAX_ZOOM = 18;
+    var POINT_MAX_ZOOM = 7;
+    var DEFAULT_SORT_ORDER = {
+      relevance: "",
+      "most-viewed": "desc",
+      title: "asc",
+      "first-author": "asc",
+      "date-created": "desc",
+      "last-modified": "desc"
+    };
+    var mapRegistry = new WeakMap();
+
+    function resolveSortState(search) {
+      var params = new URLSearchParams(search || "");
+      var sort = params.get("sort") || "relevance";
+      var defaultOrder = Object.prototype.hasOwnProperty.call(DEFAULT_SORT_ORDER, sort)
+        ? DEFAULT_SORT_ORDER[sort]
+        : "";
+      var order = params.get("order");
+      if (order !== "asc" && order !== "desc") {
+        order = defaultOrder;
+      }
+      return {
+        sort: sort,
+        order: order || ""
+      };
+    }
+
+    function syncSortControlsFromUrl() {
+      var sortControl = document.getElementById("id_sort");
+      if (!sortControl) {
+        return;
+      }
+      var state = resolveSortState(window.location.search);
+      sortControl.value = state.sort;
+
+      var orderControl = document.querySelector('input[name="order"]');
+      if (orderControl) {
+        orderControl.value = state.order;
+      }
+
+      var sortButtonLabel = document.getElementById("discovery-sort-button-label");
+      var sortMenuItems = document.querySelectorAll(".discovery-sort-menu li[data-sort-value]");
+      sortMenuItems.forEach(function(item) {
+        if (!(item instanceof HTMLElement)) {
+          return;
+        }
+        var isActive = item.dataset.sortValue === state.sort;
+        item.classList.toggle("active", isActive);
+        if (isActive && sortButtonLabel) {
+          sortButtonLabel.textContent = item.dataset.sortLabel || item.textContent.trim();
+        }
+      });
+    }
+
+    function parseGeoShapeBounds(rawBox) {
+      if (!rawBox) {
+        return null;
+      }
+      var extents = rawBox.trim().split(/\s+/).map(function (value) {
+        return parseFloat(value);
+      });
+      if (extents.length !== 4 || extents.some(function (value) { return Number.isNaN(value); })) {
+        return null;
+      }
+      return {
+        north: extents[0],
+        east: extents[1],
+        south: extents[2],
+        west: extents[3]
+      };
+    }
+
+    function fitToSpatialExtent(mapState) {
+      if (!mapState || !mapState.markers || !mapState.map || !mapState.markers.getLayers().length) {
+        return;
+      }
+      mapState.map.fitBounds(mapState.markers.getBounds(), {
+        maxZoom: mapState.extentType === "GeoCoordinates" ? POINT_MAX_ZOOM : BOX_MAX_ZOOM
+      });
+    }
+
+    function buildMap(container) {
+      if (!window.L) {
+        return null;
+      }
+
+      var markers = L.featureGroup();
+      var worldBounds = L.latLngBounds(L.latLng(-90, -180), L.latLng(90, 180));
+      var map = L.map(container, {
+        scrollWheelZoom: true,
+        zoomControl: false,
+        maxBounds: worldBounds,
+        maxBoundsViscosity: 1
+      });
+
+      var streets = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors',
+        maxZoom: BOX_MAX_ZOOM
+      });
+
+      var satellite = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
+        attribution: 'Tiles &copy; Esri',
+        maxZoom: BOX_MAX_ZOOM
+      });
+
+      map.attributionControl.setPrefix('<a href="https://leafletjs.com/" target="_blank">Leaflet</a>');
+      L.control.zoom({ position: "bottomright" }).addTo(map);
+      L.control.layers({ Streets: streets, Satellite: satellite }, { "Spatial Extent": markers }, { position: "topright" }).addTo(map);
+
+      var RecenterControl = L.Control.extend({
+        options: { position: "bottomright" },
+        onAdd: function () {
+          var wrapper = L.DomUtil.create("div", "leaflet-bar leaflet-control");
+          var button = L.DomUtil.create("a", "", wrapper);
+          button.href = "#";
+          button.title = "Recenter";
+          button.setAttribute("role", "button");
+          button.innerHTML = "&#9678;";
+          L.DomEvent.disableClickPropagation(wrapper);
+          L.DomEvent.on(button, "click", function (event) {
+            L.DomEvent.preventDefault(event);
+            fitToSpatialExtent(mapState);
+          });
+          return wrapper;
+        }
+      });
+
+      var mapState = {
+        container: container,
+        map: map,
+        markers: markers,
+        extentType: null
+      };
+
+      map.addLayer(streets);
+      map.addLayer(markers);
+      map.addControl(new RecenterControl());
+
+      return mapState;
+    }
+
+    function drawSpatialExtent(mapState) {
+      if (!mapState) {
+        return;
+      }
+      var container = mapState.container;
+      var markers = mapState.markers;
+      markers.clearLayers();
+
+      var type = container.dataset.spatialType;
+      mapState.extentType = type;
+      if (type === "GeoCoordinates") {
+        var latitude = parseFloat(container.dataset.latitude || "");
+        var longitude = parseFloat(container.dataset.longitude || "");
+        if (!Number.isNaN(latitude) && !Number.isNaN(longitude)) {
+          markers.addLayer(L.marker([latitude, longitude]));
+        }
+      } else if (type === "GeoShape") {
+        var bounds = parseGeoShapeBounds(container.dataset.box || "");
+        if (bounds) {
+          markers.addLayer(L.rectangle([
+            [bounds.north, bounds.east],
+            [bounds.south, bounds.west]
+          ]));
+        }
+      }
+    }
+
+    function ensureSpatialMap(container) {
+      if (!container || mapRegistry.has(container)) {
+        return mapRegistry.get(container) || null;
+      }
+      var mapState = buildMap(container);
+      if (!mapState) {
+        return null;
+      }
+      drawSpatialExtent(mapState);
+      mapRegistry.set(container, mapState);
+      return mapState;
+    }
+
+    function isVisible(element) {
+      return !!(element && element.offsetParent !== null && element.clientWidth > 0 && element.clientHeight > 0);
+    }
+
+    function refreshMapLayout(mapState) {
+      if (!mapState) {
+        return;
+      }
+      mapState.map.invalidateSize({ pan: false });
+      if (mapState.markers && mapState.markers.getLayers().length) {
+        fitToSpatialExtent(mapState);
+        return;
+      }
+      mapState.map.setView([0, 0], 2, { animate: false });
+    }
+
+    function activateSpatialMaps(root) {
+      if (!root || !root.querySelectorAll) {
+        return;
+      }
+      var containers = root.querySelectorAll(".discovery-spatial-map");
+      containers.forEach(function (container) {
+        if (!isVisible(container)) {
+          return;
+        }
+        var mapState = ensureSpatialMap(container);
+        if (!mapState) {
+          return;
+        }
+
+        requestAnimationFrame(function () {
+          refreshMapLayout(mapState);
+          setTimeout(function () {
+            refreshMapLayout(mapState);
+          }, 80);
+        });
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+      var eventRoot = document.body || document;
+      activateSpatialMaps(document.querySelector("#results-region") || document);
+      syncSortControlsFromUrl();
+      initializeRangeSliders();
+
+      eventRoot.addEventListener("toggle", function (event) {
+        if (!(event.target instanceof HTMLDetailsElement)) {
+          return;
+        }
+        if (!event.target.classList.contains("discovery-row-accordion") || !event.target.open) {
+          return;
+        }
+        requestAnimationFrame(function () {
+          activateSpatialMaps(event.target);
+        });
+      });
+
+      eventRoot.addEventListener("htmx:afterSwap", function (event) {
+        var target = event.detail && event.detail.target;
+        if (target && target.id === "results-region") {
+          syncSortControlsFromUrl();
+          activateSpatialMaps(target);
+          initializeRangeSliders();
+        }
+      });
+    });
+
+    function initializeRangeSlider(sliderId, startName, endName, enableName) {
+      var slider = document.getElementById(sliderId);
+      var startInput = document.querySelector('input[name="' + startName + '"]');
+      var endInput = document.querySelector('input[name="' + endName + '"]');
+      var enableInput = document.querySelector('input[name="' + enableName + '"]');
+
+      if (!slider || !startInput || !endInput || !window.jQuery || !window.jQuery.fn.slider) {
+        return;
+      }
+
+      var $slider = window.jQuery(slider);
+      var minYear = parseInt(slider.dataset.min, 10) || 2010;
+      var maxYear = parseInt(slider.dataset.max, 10) || new Date().getFullYear();
+      var startValue = parseInt(startInput.value, 10) || minYear;
+      var endValue = parseInt(endInput.value, 10) || maxYear;
+
+      function normalizeRange(start, end) {
+        start = isNaN(start) ? minYear : start;
+        end = isNaN(end) ? maxYear : end;
+        start = Math.max(minYear, Math.min(start, maxYear));
+        end = Math.max(minYear, Math.min(end, maxYear));
+        if (start > end) {
+          var temp = start;
+          start = end;
+          end = temp;
+        }
+        return [start, end];
+      }
+
+      function setInputs(values) {
+        startInput.value = values[0];
+        endInput.value = values[1];
+      }
+
+      function triggerRefresh() {
+        if (enableInput) {
+          enableInput.checked = true;
+        }
+        if (window.htmx) {
+          window.htmx.trigger(startInput, 'change');
+        }
+      }
+
+      var initialValues = normalizeRange(startValue, endValue);
+      setInputs(initialValues);
+
+      if ($slider.hasClass('ui-slider')) {
+        $slider.slider('destroy');
+      }
+
+      $slider.slider({
+        range: true,
+        min: minYear,
+        max: maxYear,
+        step: 1,
+        values: initialValues,
+        slide: function(_event, ui) {
+          setInputs(ui.values);
+        },
+        stop: function(_event, ui) {
+          setInputs(ui.values);
+          triggerRefresh();
+        }
+      });
+
+      function updateSliderFromInputs() {
+        var values = normalizeRange(parseInt(startInput.value, 10), parseInt(endInput.value, 10));
+        setInputs(values);
+        $slider.slider('values', values);
+      }
+
+      if (!startInput.dataset.sliderBound) {
+        startInput.addEventListener('change', updateSliderFromInputs);
+        startInput.dataset.sliderBound = 'true';
+      }
+      if (!endInput.dataset.sliderBound) {
+        endInput.addEventListener('change', updateSliderFromInputs);
+        endInput.dataset.sliderBound = 'true';
+      }
+    }
+
+    function initializeRangeSliders() {
+      initializeRangeSlider('discovery-temporal-coverage-slider', 'dataCoverageStart', 'dataCoverageEnd', 'enableDataCoverage');
+      initializeRangeSlider('discovery-date-created-slider', 'dateCreatedStart', 'dateCreatedEnd', 'enableDateCreated');
+      initializeRangeSlider('discovery-published-slider', 'publishedStart', 'publishedEnd', 'enablePublished');
+    }
+  })();
+</script>
 {% endblock %}
 
 {% block main %}

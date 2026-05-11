@@ -1,7 +1,7 @@
 {% if results.has_more and load_more_querystring %}
   <button
     type="button"
-    class="btn btn-primary btn-block"
+    class="btn btn-primary btn-block discovery-load-more-btn"
     hx-get="{{ more_url }}?{{ load_more_querystring }}"
     hx-target="#results-list"
     hx-swap="beforeend"
@@ -10,5 +10,5 @@
     Load more
   </button>
 {% else %}
-  <p class="text-muted text-center" style="margin: 0;">End of results.</p>
+  <p class="discovery-results-end">End of results.</p>
 {% endif %}

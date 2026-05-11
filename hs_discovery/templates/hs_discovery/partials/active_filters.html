@@ -2,7 +2,20 @@
   <div class="discovery-active-filters well well-sm">
     <strong>Active filters:</strong>
     {% for item in active_filters %}
-      <span class="label label-info">{{ item.label }}: {{ item.value }}</span>
+      <span class="discovery-filter-chip">
+        {{ item.label }}: {{ item.value }}
+        <a
+          href="{{ item.remove_url }}"
+          class="discovery-filter-chip-remove"
+          aria-label="Remove filter {{ item.label }} {{ item.value }}"
+          title="Remove filter"
+          data-filter-key="{{ item.remove_key }}"
+          data-filter-value="{{ item.remove_value }}"
+          hx-get="{{ results_url }}?{{ item.remove_querystring }}"
+          hx-target="#results-region"
+          hx-push-url="true"
+        >&times;</a>
+      </span>
     {% endfor %}
     <a href="{{ search_url }}" class="btn btn-xs btn-default pull-right">Clear all</a>
     <div class="clearfix"></div>

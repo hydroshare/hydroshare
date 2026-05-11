@@ -31,14 +31,13 @@
           id="id_creatorName"
           class="form-control"
           value="{{ form.creatorName.value|default:'' }}"
-          placeholder="Author/contributor's name"
+          placeholder="Author or contributor"
           hx-get="{{ results_url }}"
           hx-trigger="keyup changed delay:400ms"
           hx-target="#results-region"
           hx-include="#discovery-form"
           hx-push-url="true"
         >
-        <span class="input-group-addon discovery-caret-addon"><span class="caret"></span></span>
       </div>
     </div>
 
@@ -62,209 +61,275 @@
       </div>
     </div>
 
-    <div class="panel-group discovery-filter-accordion" id="discovery-filter-accordion">
-      <div class="panel panel-default">
-        <div class="panel-heading">
-          <a data-toggle="collapse" data-parent="#discovery-filter-accordion" href="#temporal-coverage-panel">
+    <div class="discovery-filter-accordion" id="discovery-filter-accordion">
+      <details class="panel panel-default discovery-filter-section">
+        <summary class="panel-heading discovery-filter-summary">
+          <label class="discovery-filter-toggle" for="toggle-data-coverage">
+            <input
+              type="checkbox"
+              id="toggle-data-coverage"
+              name="enableDataCoverage"
+              value="1"
+              {% if enabled_data_coverage %}checked{% endif %}
+              hx-get="{{ results_url }}"
+              hx-trigger="change"
+              hx-target="#results-region"
+              hx-include="#discovery-form"
+              hx-push-url="true"
+            >
             <span class="discovery-toggle-pill"></span>
-            Temporal coverage
-            <span class="glyphicon glyphicon-menu-down pull-right"></span>
-          </a>
-        </div>
-        <div id="temporal-coverage-panel" class="panel-collapse collapse in">
-          <div class="panel-body">
-            <div class="row">
-              <div class="col-xs-6">
-                <input
-                  type="number"
-                  name="dataCoverageStart"
-                  class="form-control"
-                  placeholder="Start year"
-                  value="{{ form.dataCoverageStart.value|default:'' }}"
-                  hx-get="{{ results_url }}"
-                  hx-trigger="keyup changed delay:500ms"
-                  hx-target="#results-region"
-                  hx-include="#discovery-form"
-                  hx-push-url="true"
-                >
-              </div>
-              <div class="col-xs-6">
-                <input
-                  type="number"
-                  name="dataCoverageEnd"
-                  class="form-control"
-                  placeholder="End year"
-                  value="{{ form.dataCoverageEnd.value|default:'' }}"
-                  hx-get="{{ results_url }}"
-                  hx-trigger="keyup changed delay:500ms"
-                  hx-target="#results-region"
-                  hx-include="#discovery-form"
-                  hx-push-url="true"
-                >
-              </div>
+          </label>
+          <span class="discovery-filter-summary-title">Temporal coverage</span>
+          <span class="glyphicon glyphicon-menu-down" aria-hidden="true"></span>
+        </summary>
+        <div class="panel-body">
+          <div id="discovery-temporal-coverage-slider" class="discovery-range-slider" data-min="{{ temporal_min_year }}" data-max="{{ temporal_max_year }}"></div>
+          <div class="row">
+            <div class="col-xs-6">
+              <input
+                type="number"
+                name="dataCoverageStart"
+                class="form-control"
+                placeholder="Start"
+                min="{{ temporal_min_year }}"
+                max="{{ temporal_max_year }}"
+                value="{{ form.dataCoverageStart.value|default:temporal_default_start }}"
+                hx-get="{{ results_url }}"
+                hx-trigger="keyup changed delay:500ms, change delay:100ms"
+                hx-target="#results-region"
+                hx-include="#discovery-form"
+                hx-push-url="true"
+              >
+            </div>
+            <div class="col-xs-6">
+              <input
+                type="number"
+                name="dataCoverageEnd"
+                class="form-control"
+                placeholder="End"
+                min="{{ temporal_min_year }}"
+                max="{{ temporal_max_year }}"
+                value="{{ form.dataCoverageEnd.value|default:temporal_default_end }}"
+                hx-get="{{ results_url }}"
+                hx-trigger="keyup changed delay:500ms, change delay:100ms"
+                hx-target="#results-region"
+                hx-include="#discovery-form"
+                hx-push-url="true"
+              >
             </div>
           </div>
         </div>
-      </div>
+      </details>
 
-      <div class="panel panel-default">
-        <div class="panel-heading">
-          <a data-toggle="collapse" data-parent="#discovery-filter-accordion" href="#content-type-panel">
+      <details class="panel panel-default discovery-filter-section">
+        <summary class="panel-heading discovery-filter-summary">
+          <label class="discovery-filter-toggle" for="toggle-content-type">
+            <input
+              type="checkbox"
+              id="toggle-content-type"
+              name="enableContentType"
+              value="1"
+              {% if enabled_content_type %}checked{% endif %}
+              hx-get="{{ results_url }}"
+              hx-trigger="change"
+              hx-target="#results-region"
+              hx-include="#discovery-form"
+              hx-push-url="true"
+            >
             <span class="discovery-toggle-pill"></span>
-            Content type
-            <span class="glyphicon glyphicon-menu-down pull-right"></span>
-          </a>
-        </div>
-        <div id="content-type-panel" class="panel-collapse collapse in">
-          <div class="panel-body">
-            {% for value, label in form.fields.contentType.choices %}
-              <div class="checkbox">
-                <label>
-                  <input
-                    type="checkbox"
-                    name="contentType"
-                    value="{{ value }}"
-                    {% if value in selected_content_types %}checked{% endif %}
-                    hx-get="{{ results_url }}"
-                    hx-trigger="change"
-                    hx-target="#results-region"
-                    hx-include="#discovery-form"
-                    hx-push-url="true"
-                  >
-                  {{ label }}
-                </label>
-              </div>
-            {% endfor %}
-          </div>
-        </div>
-      </div>
-
-      <div class="panel panel-default">
-        <div class="panel-heading">
-          <a data-toggle="collapse" data-parent="#discovery-filter-accordion" href="#availability-panel">
-            <span class="discovery-toggle-pill"></span>
-            Availability
-            <span class="glyphicon glyphicon-menu-down pull-right"></span>
-          </a>
-        </div>
-        <div id="availability-panel" class="panel-collapse collapse in">
-          <div class="panel-body">
-            {% for value, label in form.fields.creativeWorkStatus.choices %}
-              <div class="checkbox">
-                <label>
-                  <input
-                    type="checkbox"
-                    name="creativeWorkStatus"
-                    value="{{ value }}"
-                    {% if value in selected_statuses %}checked{% endif %}
-                    hx-get="{{ results_url }}"
-                    hx-trigger="change"
-                    hx-target="#results-region"
-                    hx-include="#discovery-form"
-                    hx-push-url="true"
-                  >
-                  {{ label }}
-                </label>
-              </div>
-            {% endfor %}
-          </div>
-        </div>
-      </div>
-
-      <div class="panel panel-default">
-        <div class="panel-heading">
-          <a data-toggle="collapse" data-parent="#discovery-filter-accordion" href="#date-created-panel">
-            <span class="discovery-toggle-pill"></span>
-            Date created
-            <span class="glyphicon glyphicon-menu-down pull-right"></span>
-          </a>
-        </div>
-        <div id="date-created-panel" class="panel-collapse collapse in">
-          <div class="panel-body">
-            <div class="row">
-              <div class="col-xs-6">
+          </label>
+          <span class="discovery-filter-summary-title">Content type</span>
+          <span class="glyphicon glyphicon-menu-down" aria-hidden="true"></span>
+        </summary>
+        <div class="panel-body">
+          {% for value, label in form.fields.contentType.choices %}
+            <div class="checkbox">
+              <label>
                 <input
-                  type="number"
-                  name="dateCreatedStart"
-                  class="form-control"
-                  placeholder="Start year"
-                  value="{{ form.dateCreatedStart.value|default:'' }}"
+                  type="checkbox"
+                  name="contentType"
+                  value="{{ value }}"
+                  {% if value in selected_content_types %}checked{% endif %}
+                  onchange="document.getElementById('toggle-content-type').checked = true"
                   hx-get="{{ results_url }}"
-                  hx-trigger="keyup changed delay:500ms"
+                  hx-trigger="change"
                   hx-target="#results-region"
                   hx-include="#discovery-form"
                   hx-push-url="true"
                 >
-              </div>
-              <div class="col-xs-6">
+                {{ label }}
+              </label>
+            </div>
+          {% endfor %}
+        </div>
+      </details>
+
+      <details class="panel panel-default discovery-filter-section">
+        <summary class="panel-heading discovery-filter-summary">
+          <label class="discovery-filter-toggle" for="toggle-availability">
+            <input
+              type="checkbox"
+              id="toggle-availability"
+              name="enableAvailability"
+              value="1"
+              {% if enabled_availability %}checked{% endif %}
+              hx-get="{{ results_url }}"
+              hx-trigger="change"
+              hx-target="#results-region"
+              hx-include="#discovery-form"
+              hx-push-url="true"
+            >
+            <span class="discovery-toggle-pill"></span>
+          </label>
+          <span class="discovery-filter-summary-title">Availability</span>
+          <span class="glyphicon glyphicon-menu-down" aria-hidden="true"></span>
+        </summary>
+        <div class="panel-body">
+          {% for value, label in form.fields.creativeWorkStatus.choices %}
+            <div class="checkbox">
+              <label>
                 <input
-                  type="number"
-                  name="dateCreatedEnd"
-                  class="form-control"
-                  placeholder="End year"
-                  value="{{ form.dateCreatedEnd.value|default:'' }}"
+                  type="checkbox"
+                  name="creativeWorkStatus"
+                  value="{{ value }}"
+                  {% if value in selected_statuses %}checked{% endif %}
+                  onchange="document.getElementById('toggle-availability').checked = true"
                   hx-get="{{ results_url }}"
-                  hx-trigger="keyup changed delay:500ms"
+                  hx-trigger="change"
                   hx-target="#results-region"
                   hx-include="#discovery-form"
                   hx-push-url="true"
                 >
-              </div>
+                {{ label }}
+              </label>
+            </div>
+          {% endfor %}
+        </div>
+      </details>
+
+      <details class="panel panel-default discovery-filter-section">
+        <summary class="panel-heading discovery-filter-summary">
+          <label class="discovery-filter-toggle" for="toggle-date-created">
+            <input
+              type="checkbox"
+              id="toggle-date-created"
+              name="enableDateCreated"
+              value="1"
+              {% if enabled_date_created %}checked{% endif %}
+              hx-get="{{ results_url }}"
+              hx-trigger="change"
+              hx-target="#results-region"
+              hx-include="#discovery-form"
+              hx-push-url="true"
+            >
+            <span class="discovery-toggle-pill"></span>
+          </label>
+          <span class="discovery-filter-summary-title">Date created</span>
+          <span class="glyphicon glyphicon-menu-down" aria-hidden="true"></span>
+        </summary>
+        <div class="panel-body">
+          <div id="discovery-date-created-slider" class="discovery-range-slider" data-min="{{ date_created_min_year }}" data-max="{{ date_created_max_year }}"></div>
+          <div class="row">
+            <div class="col-xs-6">
+              <input
+                type="number"
+                name="dateCreatedStart"
+                class="form-control"
+                placeholder="Start"
+                min="{{ date_created_min_year }}"
+                max="{{ date_created_max_year }}"
+                value="{{ form.dateCreatedStart.value|default:date_created_default_start }}"
+                hx-get="{{ results_url }}"
+                hx-trigger="keyup changed delay:500ms, change delay:100ms"
+                hx-target="#results-region"
+                hx-include="#discovery-form"
+                hx-push-url="true"
+              >
+            </div>
+            <div class="col-xs-6">
+              <input
+                type="number"
+                name="dateCreatedEnd"
+                class="form-control"
+                placeholder="End"
+                min="{{ date_created_min_year }}"
+                max="{{ date_created_max_year }}"
+                value="{{ form.dateCreatedEnd.value|default:date_created_default_end }}"
+                hx-get="{{ results_url }}"
+                hx-trigger="keyup changed delay:500ms, change delay:100ms"
+                hx-target="#results-region"
+                hx-include="#discovery-form"
+                hx-push-url="true"
+              >
             </div>
           </div>
         </div>
-      </div>
+      </details>
 
-      <div class="panel panel-default">
-        <div class="panel-heading">
-          <a data-toggle="collapse" data-parent="#discovery-filter-accordion" href="#publication-year-panel">
+      <details class="panel panel-default discovery-filter-section">
+        <summary class="panel-heading discovery-filter-summary">
+          <label class="discovery-filter-toggle" for="toggle-published">
+            <input
+              type="checkbox"
+              id="toggle-published"
+              name="enablePublished"
+              value="1"
+              {% if enabled_published %}checked{% endif %}
+              hx-get="{{ results_url }}"
+              hx-trigger="change"
+              hx-target="#results-region"
+              hx-include="#discovery-form"
+              hx-push-url="true"
+            >
             <span class="discovery-toggle-pill"></span>
-            Publication year
-            <span class="glyphicon glyphicon-menu-down pull-right"></span>
-          </a>
-        </div>
-        <div id="publication-year-panel" class="panel-collapse collapse in">
-          <div class="panel-body">
-            <div class="row">
-              <div class="col-xs-6">
-                <input
-                  type="number"
-                  name="publishedStart"
-                  class="form-control"
-                  placeholder="Start year"
-                  value="{{ form.publishedStart.value|default:'' }}"
-                  hx-get="{{ results_url }}"
-                  hx-trigger="keyup changed delay:500ms"
-                  hx-target="#results-region"
-                  hx-include="#discovery-form"
-                  hx-push-url="true"
-                >
-              </div>
-              <div class="col-xs-6">
-                <input
-                  type="number"
-                  name="publishedEnd"
-                  class="form-control"
-                  placeholder="End year"
-                  value="{{ form.publishedEnd.value|default:'' }}"
-                  hx-get="{{ results_url }}"
-                  hx-trigger="keyup changed delay:500ms"
-                  hx-target="#results-region"
-                  hx-include="#discovery-form"
-                  hx-push-url="true"
-                >
-              </div>
+          </label>
+          <span class="discovery-filter-summary-title">Publication year</span>
+          <span class="glyphicon glyphicon-menu-down" aria-hidden="true"></span>
+        </summary>
+        <div class="panel-body">
+          <div id="discovery-published-slider" class="discovery-range-slider" data-min="{{ published_min_year }}" data-max="{{ published_max_year }}"></div>
+          <div class="row">
+            <div class="col-xs-6">
+              <input
+                type="number"
+                name="publishedStart"
+                class="form-control"
+                placeholder="Start"
+                min="{{ published_min_year }}"
+                max="{{ published_max_year }}"
+                value="{{ form.publishedStart.value|default:published_default_start }}"
+                hx-get="{{ results_url }}"
+                hx-trigger="keyup changed delay:500ms, change delay:100ms"
+                hx-target="#results-region"
+                hx-include="#discovery-form"
+                hx-push-url="true"
+              >
+            </div>
+            <div class="col-xs-6">
+              <input
+                type="number"
+                name="publishedEnd"
+                class="form-control"
+                placeholder="End"
+                min="{{ published_min_year }}"
+                max="{{ published_max_year }}"
+                value="{{ form.publishedEnd.value|default:published_default_end }}"
+                hx-get="{{ results_url }}"
+                hx-trigger="keyup changed delay:500ms, change delay:100ms"
+                hx-target="#results-region"
+                hx-include="#discovery-form"
+                hx-push-url="true"
+              >
             </div>
           </div>
         </div>
-      </div>
+      </details>
     </div>
 
     <input type="hidden" name="pageSize" value="{{ page_size }}">
 
     <div class="form-group" style="margin-top: 15px;">
-      <button type="submit" class="btn btn-primary btn-block">Apply filters</button>
-      <a href="{{ search_url }}" class="btn btn-default btn-block">Clear all</a>
+      <a href="{{ search_url }}" class="btn btn-default btn-block">CLEAR FILTERS</a>
     </div>
   </div>
 </div>
