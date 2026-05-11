@@ -4,15 +4,18 @@
     <div class="row">
       <div class="col-sm-8">
         <label class="sr-only" for="id_term">Search</label>
-        <div class="input-group input-group-lg discovery-main-search">
+        <div class="input-group input-group-lg discovery-main-search discovery-typeahead-wrap">
           <span class="input-group-addon"><span class="glyphicon glyphicon-search"></span></span>
           <input
             type="search"
             name="term"
             id="id_term"
-            class="form-control"
+            class="form-control discovery-typeahead-input"
             value="{{ form.term.value|default:'' }}"
             placeholder="Search all Public and Discoverable Resources"
+            autocomplete="off"
+            data-typeahead-field="term"
+            data-typeahead-url="{{ typeahead_url }}"
             hx-get="{{ results_url }}"
             hx-trigger="keyup changed delay:400ms"
             hx-target="#results-region"

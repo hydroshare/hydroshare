@@ -3,17 +3,21 @@
   <div class="panel-body discovery-sidebar-body">
     <div class="form-group discovery-filter-input-group">
       <label class="sr-only" for="id_keyword">Subject keyword</label>
-      <div class="input-group input-group-lg">
+      <div class="input-group input-group-lg discovery-typeahead-wrap">
         <span class="input-group-addon"><span class="glyphicon glyphicon-pencil"></span></span>
         <input
           type="text"
           name="keyword"
           id="id_keyword"
-          class="form-control"
+          class="form-control discovery-typeahead-input"
           value="{{ form.keyword.value|default:'' }}"
           placeholder="Subject keywords"
+          autocomplete="off"
+          data-typeahead-field="subject"
+          data-typeahead-url="{{ typeahead_url }}"
+          data-apply-on-select="true"
           hx-get="{{ results_url }}"
-          hx-trigger="keyup changed delay:400ms"
+          hx-trigger="typeahead-select, keyup[key=='Enter']"
           hx-target="#results-region"
           hx-include="#discovery-form"
           hx-push-url="true"
@@ -23,17 +27,21 @@
 
     <div class="form-group discovery-filter-input-group">
       <label class="sr-only" for="id_creatorName">Author / contributor</label>
-      <div class="input-group input-group-lg">
+      <div class="input-group input-group-lg discovery-typeahead-wrap">
         <span class="input-group-addon"><span class="glyphicon glyphicon-user"></span></span>
         <input
           type="text"
           name="creatorName"
           id="id_creatorName"
-          class="form-control"
+          class="form-control discovery-typeahead-input"
           value="{{ form.creatorName.value|default:'' }}"
           placeholder="Author or contributor"
+          autocomplete="off"
+          data-typeahead-field="creator"
+          data-typeahead-url="{{ typeahead_url }}"
+          data-apply-on-select="true"
           hx-get="{{ results_url }}"
-          hx-trigger="keyup changed delay:400ms"
+          hx-trigger="typeahead-select, keyup[key=='Enter']"
           hx-target="#results-region"
           hx-include="#discovery-form"
           hx-push-url="true"
@@ -43,17 +51,21 @@
 
     <div class="form-group discovery-filter-input-group">
       <label class="sr-only" for="id_fundingFunderName">Funder</label>
-      <div class="input-group input-group-lg">
+      <div class="input-group input-group-lg discovery-typeahead-wrap">
         <span class="input-group-addon"><span class="glyphicon glyphicon-th-large"></span></span>
         <input
           type="text"
           name="fundingFunderName"
           id="id_fundingFunderName"
-          class="form-control"
+          class="form-control discovery-typeahead-input"
           value="{{ form.fundingFunderName.value|default:'' }}"
           placeholder="Funder"
+          autocomplete="off"
+          data-typeahead-field="funder"
+          data-typeahead-url="{{ typeahead_url }}"
+          data-apply-on-select="true"
           hx-get="{{ results_url }}"
-          hx-trigger="keyup changed delay:400ms"
+          hx-trigger="typeahead-select, keyup[key=='Enter']"
           hx-target="#results-region"
           hx-include="#discovery-form"
           hx-push-url="true"

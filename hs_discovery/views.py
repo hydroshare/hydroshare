@@ -73,6 +73,7 @@ def _build_active_filters(form, request, search_url):
             remove_keys=remove_keys,
         )
         remove_url = f"{search_url}?{remove_querystring}" if remove_querystring else search_url
+        remove_keys_list = remove_keys or ([remove_key] if remove_key else [])
         return {
             "label": label,
             "value": value,
@@ -80,6 +81,8 @@ def _build_active_filters(form, request, search_url):
             "remove_querystring": remove_querystring,
             "remove_key": remove_key or "",
             "remove_value": str(remove_value) if remove_value is not None else "",
+            "remove_keys": remove_keys_list,
+            "remove_keys_csv": ",".join(remove_keys_list),
         }
 
     if cleaned.get("term"):
@@ -209,6 +212,7 @@ def build_discovery_context(request, form, results, error_message=None):
         "search_url": search_url,
         "results_url": reverse("discovery:results"),
         "more_url": reverse("discovery:more"),
+        "typeahead_url": reverse("discover-hsapi-typeahead"),
         "page_size": cleaned.get("pageSize") or 20,
         "current_querystring": request.GET.urlencode(),
     }

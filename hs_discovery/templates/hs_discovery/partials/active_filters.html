@@ -11,6 +11,7 @@
           title="Remove filter"
           data-filter-key="{{ item.remove_key }}"
           data-filter-value="{{ item.remove_value }}"
+          data-filter-keys="{{ item.remove_keys_csv }}"
           hx-get="{{ results_url }}?{{ item.remove_querystring }}"
           hx-target="#results-region"
           hx-push-url="true"
