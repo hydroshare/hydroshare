@@ -942,6 +942,15 @@ SECURE_HSTS_SECONDS = 31536000
 SESSION_COOKIE_SECURE = USE_SECURITY
 CSRF_COOKIE_SECURE = USE_SECURITY
 
+# When set, cookies are scoped to this domain and all subdomains, allowing
+# services at e.g. s3.beta.hydroshare.org to receive the same session/CSRF
+# cookies that Django issues at beta.hydroshare.org.
+# Leave unset (None) for local development so cookies remain host-only.
+_cookie_domain = os.environ.get("COOKIE_DOMAIN")  # e.g. "beta.hydroshare.org"
+if _cookie_domain:
+    SESSION_COOKIE_DOMAIN = _cookie_domain
+    CSRF_COOKIE_DOMAIN = _cookie_domain
+
 
 # Categorization in discovery of content types
 # according to file extension of otherwise unaggregated files.

@@ -9,8 +9,11 @@ from botocore.auth import S3SigV4Auth
 from botocore.awsrequest import AWSRequest
 from botocore.credentials import Credentials
 from fastapi import Response
+from fastapi.responses import StreamingResponse
+from starlette.background import BackgroundTask
 
 logger = logging.getLogger("hs_s3_proxy")
+DEBUG_HEADERS = os.environ.get("S3_PROXY_DEBUG_HEADERS", "true").lower() == "true"
 
 
 def _s3_error_xml(code: str, message: str) -> bytes:
@@ -67,14 +70,33 @@ class S3ProxyClient:
         logger.info(f"Proxying {method} request to {url}")
 
         try:
-            async with httpx.AsyncClient(timeout=self.timeout) as client:
-                response = await client.request(
-                    method=method, url=url, headers=outbound_headers,
-                    content=outbound_body if outbound_body else None, follow_redirects=False,
+            client = httpx.AsyncClient(timeout=self.timeout)
+            request = client.build_request(
+                method=method,
+                url=url,
+                headers=outbound_headers,
+                content=outbound_body if outbound_body else None,
+            )
+            response = await client.send(request, stream=True, follow_redirects=False)
+            response_headers = self._filter_response_headers(dict(response.headers))
+            if DEBUG_HEADERS:
+                logger.info(
+                    "Proxy response debug: status=%s backend_header_names=%s outgoing_header_names=%s",
+                    response.status_code,
+                    sorted(response.headers.keys()),
+                    sorted(response_headers.keys()),
                 )
-                response_headers = self._filter_response_headers(dict(response.headers))
-                return Response(content=response.content, status_code=response.status_code,
-                                headers=response_headers)
+
+            async def _close_stream() -> None:
+                await response.aclose()
+                await client.aclose()
+
+            return StreamingResponse(
+                response.aiter_raw(),
+                status_code=response.status_code,
+                headers=response_headers,
+                background=BackgroundTask(_close_stream),
+            )
 
         except httpx.TimeoutException:
             logger.error("Timeout proxying request")
@@ -119,10 +141,31 @@ class S3ProxyClient:
         }
 
     def _filter_response_headers(self, headers: dict) -> dict:
-        """Filter out hop-by-hop headers from the backend response."""
-        exclude = {
-            'connection', 'keep-alive', 'proxy-authenticate', 'proxy-authorization',
-            'te', 'trailer', 'transfer-encoding', 'upgrade',
-            'content-encoding', 'content-length'
+        """Return only browser-safe response headers from the backend.
+
+        For successful object fetches we do not want to leak arbitrary upstream
+        headers back to the browser. Keep the S3/object metadata that matters to
+        clients and drop everything else, especially anything cookie-related.
+        """
+        allow = {
+            'accept-ranges',
+            'cache-control',
+            'content-disposition',
+            'content-language',
+            'content-range',
+            'content-type',
+            'etag',
+            'expires',
+            'last-modified',
+            'x-amz-delete-marker',
+            'x-amz-expiration',
+            'x-amz-mp-parts-count',
+            'x-amz-restore',
+            'x-amz-server-side-encryption',
+            'x-amz-version-id',
+            'x-goog-generation',
+            'x-goog-hash',
+            'x-goog-metageneration',
+            'x-goog-storage-class',
         }
-        return {k: v for k, v in headers.items() if k.lower() not in exclude}
+        return {k: v for k, v in headers.items() if k.lower() in allow}

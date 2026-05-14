@@ -24,6 +24,7 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger("hs_s3_proxy")
+DEBUG_HEADERS = os.environ.get("S3_PROXY_DEBUG_HEADERS", "false").lower() == "true"
 
 # When set, the proxy serves exactly this one backend bucket. Client-facing S3
 # URLs address it directly (S3-native). Keys may follow either
@@ -120,14 +121,36 @@ async def proxy_s3_request(request: Request, full_path: str):
     query_params = dict(request.query_params)
     body = await request.body()
 
+    if DEBUG_HEADERS:
+        cookie_names = sorted(request.cookies.keys())
+        cookie_lengths = {name: len(value or "") for name, value in request.cookies.items()}
+        logger.info(
+            "Proxy request debug: method=%s path=/%s cookie_names=%s cookie_lengths=%s",
+            method,
+            full_path,
+            cookie_names,
+            cookie_lengths,
+        )
+
     path = f"/{full_path}"
     bucket, object_path = parse_s3_path(path)
     object_path = query_params.get("prefix", object_path)
     logger.info(f"Received {method} request for bucket={bucket}, object={object_path}")
 
     if BACKEND_BUCKET and bucket and bucket != BACKEND_BUCKET:
-        logger.warning(f"Request addressed bucket={bucket}, but this proxy serves {BACKEND_BUCKET}")
-        return Response(content=XML_NO_SUCH_BUCKET, status_code=404, media_type="application/xml")
+        # Probe/misdirected request (e.g. mc endpoint-style detection).
+        # Forward to the backend so it returns a proper S3 NoSuchBucket error
+        # that S3 clients recognise. No auth layer needed — the backend will
+        # reject the unknown bucket itself.
+        logger.debug(f"Request addressed bucket={bucket}, forwarding probe to backend (serves {BACKEND_BUCKET})")
+        try:
+            return await s3_proxy.proxy_request(
+                method=method, path=path, headers=headers,
+                query_params=query_params, body=body if body else None,
+            )
+        except Exception as e:
+            logger.error(f"Error proxying probe request: {e}", exc_info=True)
+            return Response(content=XML_INTERNAL_ERROR, status_code=500, media_type="application/xml")
 
     auth_header = headers.get('authorization', '')
     auth_info = parse_authorization_header(auth_header)

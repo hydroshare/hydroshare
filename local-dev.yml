@@ -98,7 +98,6 @@ services:
       PYTHONPATH: /hydroshare
       DJANGO_SETTINGS_MODULE: hydroshare.settings
       VUE_APP_BUCKET_URL_PUBLIC_PATH: "/static/static"
-      MC_HOST_hydroshare: "http://cuahsi:devpassword@hs-s3-proxy:9001"
       DATACITE_USERNAME: ${DATACITE_USERNAME}
       DATACITE_PASSWORD: ${DATACITE_PASSWORD}
       ATLAS_CONNECTION_URL: "mongodb://user:pass@mongodb:27017/"
@@ -153,7 +152,6 @@ services:
       PYTHONPATH: /hydroshare
       DJANGO_SETTINGS_MODULE: hydroshare.settings
       COLUMNS: 80
-      MC_HOST_hydroshare: "http://cuahsi:devpassword@hs-s3-proxy:9001"
     ports:
       - "5555:5555"
     volumes:
@@ -192,7 +190,6 @@ services:
       PYTHONPATH: /hydroshare
       DJANGO_SETTINGS_MODULE: hydroshare.settings
       COLUMNS: 80
-      MC_HOST_hydroshare: "http://cuahsi:devpassword@hs-s3-proxy:9001"
       REDIS_HOST: redis
       REDIS_PORT: "6379"
       CELERY_BROKER_URL: "redis://redis:6379/0"
@@ -231,7 +228,6 @@ services:
       PYTHONPATH: /hydroshare
       DJANGO_SETTINGS_MODULE: hydroshare.settings
       COLUMNS: 80
-      MC_HOST_hydroshare: "http://cuahsi:devpassword@hs-s3-proxy:9001"
       ATLAS_CONNECTION_URL: "mongodb://user:pass@mongodb:27017/"
       REDIS_HOST: redis
       REDIS_PORT: "6379"
@@ -260,7 +256,8 @@ services:
     platform: linux/amd64
     command: ["celery", "-A", "hs_extract.celery_app", "worker", "-Q", "extract", "--loglevel=info"]
     environment:
-      MC_HOST_hydroshare: "http://cuahsi:devpassword@hs-s3-proxy:9001"
+      HS_SETTINGS_FILE: "/app/hydroshare/settings.py"
+      HS_S3_ZONE_NAME: "hydroshare"
       AWS_S3_ENDPOINT_URL: "http://hs-s3-proxy:9001"
       AWS_ACCESS_KEY_ID: "cuahsi"
       AWS_SECRET_ACCESS_KEY: "devpassword"
@@ -272,6 +269,7 @@ services:
     volumes:
       - "./hs_extract:/app/hs_extract"
       - "./hs_cloudnative_schemas:/app/hs_extract/hs_cloudnative_schemas"
+      - "./hydroshare/settings.py:/app/hydroshare/settings.py:ro"
     links:
       - minio:minio
       - redis:redis
