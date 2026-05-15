@@ -63,6 +63,9 @@
     "vitest": "^4.1.0",
     "vue-tsc": "^3.2.5"
   },
+  "engines": {
+    "node": "^24.3.0"
+  },
   "lint-staged": {
     "*": "eslint --fix"
   }
