@@ -54,10 +54,10 @@ class Toc extends Vue {
     if (!el) return;
     this.activeItem = hash;
 
-    // When mounted inside the resource landing iframe (scrolling="no", height
-    // auto-fits content), the iframe itself never scrolls — the parent does.
-    // Reach out to the parent window directly (same-origin) and scroll it to
-    // the element's absolute position.
+    // The iframe has scrolling="no" and is sized to fit content, so
+    // `window.scrollTo` inside the iframe is a no-op — the parent owns the
+    // scroll. Reach across to the parent window (same-origin) and scroll
+    // there.
     if (window.parent && window.parent !== window) {
       const frame = window.frameElement as HTMLIFrameElement | null;
       if (frame) {
@@ -70,7 +70,7 @@ class Toc extends Vue {
           parentWin.scrollTo({ top: iframeTop + elTop - 16, behavior: "smooth" });
           return;
         } catch {
-          // Cross-origin or other failure — fall back to in-iframe scroll.
+          // Cross-origin — fall through to in-iframe scroll.
         }
       }
     }
@@ -85,14 +85,10 @@ export default toNative(Toc);
 
 <style lang="scss" scoped>
 #app-toc {
-  position: sticky;
-  top: 1rem;
   align-self: flex-start;
   width: 220px;
   flex-shrink: 0;
   padding-top: 0.5rem;
-  max-height: calc(100vh - 2rem);
-  overflow-y: auto;
 }
 
 #app-toc ul {
