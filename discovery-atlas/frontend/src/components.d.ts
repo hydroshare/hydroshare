@@ -14,7 +14,7 @@ declare module 'vue' {
     AuthRedirect: typeof import('./components/account/auth-redirect.vue')['default']
     'Cd.authorProfile': typeof import('./components/landing-page/cd.author-profile.vue')['default']
     'Cd.footer': typeof import('./components/base/cd.footer.vue')['default']
-    'Cd.landingPage': typeof import('./components/landing-page/cd.landing-page.vue')['default']
+    'Cd.manageAccess': typeof import('./components/landing-page/cd.manage-access.vue')['default']
     'Cd.ownerProfile': typeof import('./components/landing-page/cd.owner-profile.vue')['default']
     'Cd.rangeInput': typeof import('./components/search-results/cd.range-input.vue')['default']
     'Cd.search': typeof import('./components/search/cd.search.vue')['default']

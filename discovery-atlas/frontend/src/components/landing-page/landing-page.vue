@@ -90,6 +90,15 @@
             </v-menu>
 
             <v-btn
+              v-if="isLoggedIn"
+              size="small"
+              prepend-icon="mdi-account-multiple"
+              variant="outlined"
+              @click="showManageAccess = true"
+              >Manage access</v-btn
+            >
+
+            <v-btn
               size="small"
               color="primary"
               prepend-icon="mdi-pen"
@@ -100,6 +109,12 @@
           </div>
         </div>
       </div>
+
+      <cd-manage-access
+        v-if="resourceId"
+        v-model="showManageAccess"
+        :resource-id="resourceId"
+      />
 
       <v-divider></v-divider>
 
@@ -756,6 +771,7 @@ import hljs from "highlight.js"; // https://highlightjs.org
 import CdSpatialCoverageMap from "@/components/search-results/cd.spatial-coverage-map.vue";
 import CdAuthorProfile from "./cd.author-profile.vue";
 import CdOwnerProfile from "./cd.owner-profile.vue";
+import CdManageAccess from "./cd.manage-access.vue";
 
 const md = markdownit({
   linkify: true,
@@ -774,7 +790,7 @@ const md = markdownit({
 });
 
 @Component({
-  components: { CzForm, CzFileExplorer, S3Form, CdSpatialCoverageMap, CdAuthorProfile, CdOwnerProfile },
+  components: { CzForm, CzFileExplorer, S3Form, CdSpatialCoverageMap, CdAuthorProfile, CdOwnerProfile, CdManageAccess },
   name: "App",
 })
 class LandingPage extends Vue {
@@ -793,6 +809,7 @@ class LandingPage extends Vue {
 
   showDescription = false;
   isDescriptionClamped = false;
+  showManageAccess = false;
   readmeMd = "";
   readMeFileName = "";
   hasTxtReadme = false;
