@@ -1,0 +1,55 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Group",
+      "label": "Basic Information",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/name",
+          "options": {
+            "multi": false
+          }
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/description",
+          "options": {
+            "multi": false
+          }
+        }
+      ]
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/url"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/hasPart",
+      "options": {
+        "elementLabelProp": [
+          "name"
+        ],
+        "detail": {
+          "type": "VerticalLayout",
+          "elements": [
+            {
+              "type": "Control",
+              "scope": "#/properties/name"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/description"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/url"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -18,6 +18,17 @@ export interface IUserState {
   next: string;
   hasUnsavedChanges: boolean;
   showZenodoWarning: boolean;
+  toc: { to: string; text: string; level?: number }[];
+  isTocReady: boolean;
+  credentials: { accessKey: string; secretKey: string };
+  CSRFToken: string;
+}
+
+export enum PrivilegeCodes {
+  OWNER = 1,
+  CHANGE = 2,
+  VIEW = 3,
+  NONE = 4,
 }
 
 export default class User extends Model {
@@ -48,7 +59,141 @@ export default class User extends Model {
       next: "",
       hasUnsavedChanges: false,
       showZenodoWarning: true,
+      toc: [],
+      isTocReady: false,
+      credentials: { accessKey: "", secretKey: "" },
+      CSRFToken: "",
     };
+  }
+
+  static async checkLoginStatus() {
+    try {
+      const response = await fetch(`/hsapi/userInfo/`, {
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        await User.commit((state) => {
+          state.isLoggedIn = true;
+          state.orcid = data.orcid || data.username || "";
+        });
+        return true;
+      }
+    } catch (e) {
+      // network error
+    }
+
+    User.commit((state) => {
+      state.isLoggedIn = false;
+    });
+    return false;
+  }
+
+  static async getResourceS3prefix(
+    res_id: string,
+  ): Promise<{ bucket: string; prefix: string } | null> {
+    try {
+      const response = await fetch(`/hsapi/resource/s3/${res_id}/`, {
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return { bucket: data.bucket, prefix: data.prefix };
+      }
+    } catch (e: any) {
+      const message = `Failed to get S3 prefix for resource ${res_id}: ${e.message}`;
+      Notifications.toast({ message, type: "error" });
+      throw new Error(message);
+    }
+    return null;
+  }
+
+  static async getCSRFToken(forceRefresh = false): Promise<string | null> {
+    if (!forceRefresh && this.$state.CSRFToken) {
+      return this.$state.CSRFToken;
+    }
+
+    try {
+      await fetch(`/csrf-cookie/`, { credentials: "include" });
+      const token = this._readCSRFCookie();
+      if (token) {
+        await User.commit((state) => {
+          state.CSRFToken = token;
+        });
+        return token;
+      }
+    } catch (e) {
+      // ignore
+    }
+
+    const token = this._readCSRFCookie();
+    if (token) {
+      await User.commit((state) => {
+        state.CSRFToken = token;
+      });
+      return token;
+    }
+
+    await User.commit((state) => {
+      state.CSRFToken = "";
+    });
+    return User.$state.CSRFToken;
+  }
+
+  private static _readCSRFCookie(): string | null {
+    for (const cookie of document.cookie.split(";")) {
+      const [name, value] = cookie.trim().split("=");
+      if (name === "csrftoken") return decodeURIComponent(value);
+    }
+    return null;
+  }
+
+  private static _buildHeaders(csrfToken: string | null): HeadersInit {
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+    if (csrfToken) headers["X-CSRFToken"] = csrfToken;
+    return headers;
+  }
+
+  static async getOrCreateS3Credentials() {
+    if (this.$state.credentials.accessKey && this.$state.credentials.secretKey) {
+      return this.$state.credentials;
+    }
+
+    const doRequest = async (csrfToken: string | null) =>
+      fetch(`/hsapi/user/service/accounts/s3/`, {
+        method: "POST",
+        credentials: "include",
+        headers: this._buildHeaders(csrfToken),
+        body: JSON.stringify({}),
+      });
+
+    try {
+      let response = await doRequest(await this.getCSRFToken());
+
+      if (response.status === 403) {
+        const body = await response.json().catch(() => ({}));
+        if (body?.detail?.includes("CSRF")) {
+          response = await doRequest(await this.getCSRFToken(true));
+        }
+      }
+
+      if (response.ok) {
+        const data = await response.json();
+        await User.commit((state) => {
+          state.credentials = {
+            accessKey: data.access_key,
+            secretKey: data.secret_key,
+          };
+        });
+      }
+    } catch (e: any) {
+      throw new Error(`Failed to create S3 credentials: ${e.message}`);
+    }
+    return this.$state.credentials;
   }
 
   static openLogInDialog(redirectTo?: RouteLocationRaw) {

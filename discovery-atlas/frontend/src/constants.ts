@@ -4,6 +4,10 @@ export const APP_URL = import.meta.env.VITE_APP_URL;
 export const API_BASE = import.meta.env.VITE_APP_API_URL;
 export const APP_ORIGIN = import.meta.env.VITE_APP_ORIGIN
 export const DEFAULT_TOAST_DURATION = 3500;
+export const COMPANION_URL = import.meta.env.VITE_APP_COMPANION_URL || "http://localhost/companion";
+export const GOOGLE_PICKER_CLIENT_ID = import.meta.env.VITE_APP_GOOGLE_PICKER_CLIENT_ID || "";
+export const GOOGLE_PICKER_API_KEY = import.meta.env.VITE_APP_GOOGLE_PICKER_API_KEY || "";
+export const GOOGLE_PICKER_APP_ID = import.meta.env.VITE_APP_GOOGLE_PICKER_APP_ID || "";
 
 
 export const sameRouteNavigationErrorHandler = (e) => {

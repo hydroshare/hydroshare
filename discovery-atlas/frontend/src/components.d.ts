@@ -13,6 +13,7 @@ declare module 'vue' {
   export interface GlobalComponents {
     AuthRedirect: typeof import('./components/account/auth-redirect.vue')['default']
     'Cd.footer': typeof import('./components/base/cd.footer.vue')['default']
+    'Cd.landingPage': typeof import('./components/landing-page/cd.landing-page.vue')['default']
     'Cd.rangeInput': typeof import('./components/search-results/cd.range-input.vue')['default']
     'Cd.search': typeof import('./components/search/cd.search.vue')['default']
     'Cd.searchMap': typeof import('./components/search-results/cd.search-map.vue')['default']
@@ -20,7 +21,12 @@ declare module 'vue' {
     'Cd.searchSidebar': typeof import('./components/search-results/cd.search-sidebar.vue')['default']
     'Cd.spatialCoverageMap': typeof import('./components/search-results/cd.spatial-coverage-map.vue')['default']
     'Cz.login': typeof import('./components/account/cz.login.vue')['default']
+    EditDataset: typeof import('./components/landing-page/edit-dataset.vue')['default']
+    HsUppy: typeof import('./components/landing-page/hs-uppy.vue')['default']
+    LandingPage: typeof import('./components/landing-page/landing-page.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    S3Form: typeof import('./components/landing-page/s3-form.vue')['default']
+    Toc: typeof import('./components/base/toc.vue')['default']
   }
 }

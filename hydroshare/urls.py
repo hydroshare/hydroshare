@@ -11,7 +11,7 @@ import hs_communities.views.communities
 from hs_core import autocomplete_light_registry as alr
 from hs_core import views as hs_core_views
 from hs_core.views.oauth2_view import GroupAuthorizationView
-from hs_discover.views import SearchAPI, SearchView, AtlasSearchView
+from hs_discover.views import SearchAPI, SearchView, AtlasSearchView, AtlasLandingView
 from hs_rest_api2.urls import hsapi2_urlpatterns
 from hs_rest_api.urls import hsapi_urlpatterns
 from hs_sitemap.views import sitemap
@@ -187,6 +187,11 @@ urlpatterns += hsapi_urlpatterns + hsapi2_urlpatterns
 
 # Put API URLs before Mezzanine so that Mezzanine doesn't consume them
 urlpatterns += [
+    re_path(
+        r"^resource-v2/(?P<shortkey>[A-z0-9\-_]+)/?$",
+        AtlasLandingView.as_view(),
+        name="resource_landing_v2",
+    ),
     path("", include("hs_core.resourcemap_urls")),
     path("", include("hs_core.metadata_terms_urls")),
     path("", include("hs_core.debug_urls")),

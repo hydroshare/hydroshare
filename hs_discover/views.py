@@ -34,6 +34,30 @@ class AtlasSearchView(TemplateView):
         return render(request, 'hs_discover/atlas.html', context)
 
 
+class AtlasLandingView(TemplateView):
+
+    def get(self, request, *args, **kwargs):
+        from hs_core.hydroshare.utils import get_resource_by_shortkey
+
+        target_origin = request.scheme + "://" + request.get_host()
+        shortkey = kwargs.get('shortkey', '')
+
+        # Mirror the legacy Mezzanine page processor: bump the view count when
+        # the resource landing page is requested. The Vue app inside the iframe
+        # only renders metadata via API calls, so this is the only place where
+        # the visit is recorded.
+        resource = get_resource_by_shortkey(shortkey)
+        resource.update_view_count()
+
+        context = {
+            "targetOrigin": target_origin,
+            "iframeSrc": "{}/discover/resource-v2/{}?viewCount={}".format(
+                target_origin, shortkey, resource.view_count
+            ),
+        }
+        return render(request, 'hs_discover/atlas.html', context)
+
+
 class SearchAPI(APIView):
 
     def __init__(self, **kwargs):
