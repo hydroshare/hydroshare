@@ -1000,26 +1000,16 @@ class LandingPage extends Vue {
   }
 
   get contentSize() {
-    let total = 0;
+    const sumTree = (nodes: any[]): number =>
+      nodes.reduce((acc, n) => {
+        if (Array.isArray(n?.children)) {
+          return acc + sumTree(n.children);
+        }
+        return acc + (typeof n?.uploadedSize === "number" ? n.uploadedSize : 0);
+      }, 0);
 
-    if (this.data.document?.[0].associatedMedia?.length) {
-      total = this.data.document[0].associatedMedia.reduce(
-        (acc: number, m: any, _index: number) => {
-          let size = 0;
-
-          if (typeof m.contentSize === "string") {
-            size = sizeToBytes(m.contentSize);
-          } else if (typeof m.size === "number") {
-            size = m.size;
-          }
-
-          acc += size;
-          return acc;
-        },
-        0,
-      );
-    }
-    return prettyBytes(total);
+    const fromFiles = sumTree(this.rootDirectory.children || []);
+    if (fromFiles > 0) return prettyBytes(fromFiles);
   }
 
   get boxCoordinates() {
