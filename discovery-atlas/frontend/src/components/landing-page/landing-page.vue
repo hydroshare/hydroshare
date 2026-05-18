@@ -116,231 +116,26 @@
                   <div v-bind="infoLabelAttr">Authors:</div>
 
                   <div class="infoValueAttr">
-                    <v-menu
+                    <cd-author-profile
                       v-for="(creator, index) of data.creator"
-                      offset-y
-                      :close-on-content-click="false"
-                      class="d-inline"
                       :key="index"
-                    >
-                      <template v-slot:activator="{ props }">
-                        <span
-                          class="mr-2 cursor-pointer"
-                          v-bind="{ ...props, ...infoValueAttr }"
-                        >
-                          <div class="d-inline-block">
-                            {{ creator.name }}
-                            <v-icon small>mdi-menu-down</v-icon>
-                          </div>
-                        </span>
-                      </template>
-                      <v-card v-if="creator['type'] == 'Person'" width="auto">
-                        <v-card-title class="text-body-1">
-                          <v-icon class="mr-2">mdi-account-outline</v-icon>
-                          {{ creator.name }}
-                        </v-card-title>
-                        <v-divider></v-divider>
-
-                        <v-card-text
-                          v-if="creator.email || creator.identifier"
-                          class="d-flex flex-column gap-1"
-                        >
-                          <div v-if="creator.email">
-                            <div class="d-flex align-center mb-1">
-                              <v-icon
-                                class="mr-1"
-                                small
-                                color="secondary"
-                                title="Email address"
-                                icon="mdi-email-outline"
-                              />
-                              <div class="d-flex align-center gap-1">
-                                <span class="text-medium-emphasis">Email:</span>
-                                {{ creator.email }}
-                              </div>
-                            </div>
-                          </div>
-                          <div
-                            v-if="creator.identifier"
-                            class="d-flex align-center"
-                          >
-                            <i
-                              class="fab fa-orcid mr-2 text-secondary text-h6"
-                              aria-hidden="true"
-                              title="ORCID"
-                            ></i>
-                            {{ creator.identifier }}
-                          </div>
-
-                          <div v-if="creator.affiliation">
-                            <div class="d-flex align-center mb-1">
-                              <v-icon
-                                small
-                                color="secondary"
-                                class="mr-1"
-                                title="Affiliation"
-                              >
-                                mdi-domain
-                              </v-icon>
-                              <div class="d-flex align-center gap-1">
-                                <span class="text-medium-emphasis"
-                                  >Affiliation:</span
-                                >
-                                <div v-if="creator.affiliation.name">
-                                  <span
-                                    v-if="creator.affiliation.url"
-                                    class="d-inline-flex align-baseline"
-                                  >
-                                    <a :href="creator.affiliation.url">{{
-                                      creator.affiliation.name
-                                    }}</a>
-                                  </span>
-                                  <span v-else>{{
-                                    creator.affiliation.name
-                                  }}</span>
-                                </div>
-                              </div>
-                            </div>
-
-                            <div v-if="creator.affiliation.address">
-                              {{ creator.affiliation.address }}
-                            </div>
-                          </div>
-                        </v-card-text>
-                      </v-card>
-                    </v-menu>
+                      :creator="creator"
+                      :profile-link="creatorProfileLink(creator)"
+                      :identifiers="creatorIdentifiers(creator)"
+                    />
                   </div>
 
                   <template v-if="owners.length">
                     <div v-bind="infoLabelAttr">Owners:</div>
-                    <div class="d-flex flex-wrap align-baseline" style="row-gap: 0.15rem; column-gap: 0.75rem">
-                      <v-menu
+                    <div
+                      class="d-flex flex-wrap align-baseline"
+                      style="row-gap: 0.15rem; column-gap: 0.75rem"
+                    >
+                      <cd-owner-profile
                         v-for="(owner, ownerIdx) of owners"
                         :key="owner.id || ownerIdx"
-                        offset-y
-                        :close-on-content-click="false"
-                      >
-                        <template v-slot:activator="{ props }">
-                          <span v-bind="props" class="owner-link">
-                            {{ owner.best_name }}
-                            <v-icon small>mdi-menu-down</v-icon>
-                          </span>
-                        </template>
-                        <v-card class="profile-card" min-width="300" max-width="360">
-                          <div class="profile-banner"></div>
-                          <div class="profile-header">
-                            <v-avatar
-                              v-if="owner.pictureUrl"
-                              size="72"
-                              class="profile-avatar"
-                            >
-                              <img :src="owner.pictureUrl" :alt="owner.best_name" />
-                            </v-avatar>
-                            <v-avatar
-                              v-else
-                              size="72"
-                              color="grey-lighten-3"
-                              class="profile-avatar"
-                            >
-                              <v-icon size="48" color="grey-darken-1">mdi-account</v-icon>
-                            </v-avatar>
-                            <div class="profile-identity">
-                              <div class="profile-name">{{ owner.best_name }}</div>
-                              <div v-if="owner.title" class="profile-title text-medium-emphasis">
-                                {{ owner.title }}
-                              </div>
-                            </div>
-                          </div>
-
-                          <v-card-text class="profile-meta pt-0 pb-3">
-                            <div
-                              v-if="ownerOrganizations(owner).length"
-                              class="profile-row"
-                            >
-                              <v-icon size="16" class="profile-row-icon">mdi-domain</v-icon>
-                              <div class="d-flex flex-column" style="gap: 0.1rem">
-                                <span
-                                  v-for="(org, orgIdx) of ownerOrganizations(owner)"
-                                  :key="orgIdx"
-                                >
-                                  {{ org }}
-                                </span>
-                              </div>
-                            </div>
-                            <div v-if="ownerLocation(owner)" class="profile-row">
-                              <v-icon size="16" class="profile-row-icon">mdi-map-marker-outline</v-icon>
-                              {{ ownerLocation(owner) }}
-                            </div>
-                            <div v-if="owner.joined" class="profile-row">
-                              <v-icon size="16" class="profile-row-icon">mdi-calendar-outline</v-icon>
-                              Joined {{ owner.joined }}
-                            </div>
-                          </v-card-text>
-
-                          <v-divider v-if="owner.subject_areas && owner.subject_areas.length" />
-
-                          <v-card-text
-                            v-if="owner.subject_areas && owner.subject_areas.length"
-                            class="py-3"
-                          >
-                            <div class="profile-section-label">Subject Areas</div>
-                            <div class="d-flex flex-wrap" style="gap: 0.25rem">
-                              <v-chip
-                                v-for="(area, areaIdx) of owner.subject_areas"
-                                :key="areaIdx"
-                                size="x-small"
-                                variant="tonal"
-                                color="primary"
-                                label
-                              >
-                                {{ area }}
-                              </v-chip>
-                            </div>
-                          </v-card-text>
-
-                          <v-divider />
-
-                          <v-card-actions class="profile-actions px-4 py-3">
-                            <v-btn
-                              v-if="owner.email"
-                              :href="`mailto:${owner.email}`"
-                              variant="text"
-                              size="small"
-                              prepend-icon="mdi-email-outline"
-                              class="text-lowercase"
-                            >
-                              Email
-                            </v-btn>
-                            <v-btn
-                              v-if="ownerOrcid(owner)"
-                              :href="ownerOrcid(owner)"
-                              target="_blank"
-                              rel="noopener"
-                              variant="text"
-                              size="small"
-                              class="orcid-btn"
-                            >
-                              <i class="fab fa-orcid mr-1"></i>
-                              ORCID
-                            </v-btn>
-                            <v-spacer />
-                            <v-btn
-                              v-if="owner.user_name"
-                              :href="`/user/${owner.id}/`"
-                              target="_blank"
-                              rel="noopener"
-                              size="small"
-                              variant="flat"
-                              color="primary"
-                            >
-                              <span v-if="owner.viewable_contributions != null && owner.viewable_contributions > 0">
-                                Profile · {{ owner.viewable_contributions.toLocaleString() }}
-                              </span>
-                              <span v-else>Profile</span>
-                            </v-btn>
-                          </v-card-actions>
-                        </v-card>
-                      </v-menu>
+                        :owner="owner"
+                      />
                     </div>
                   </template>
 
@@ -949,7 +744,6 @@ import { stringify } from "@/utils";
 import { fetchResource, onFileDownload } from "./shared";
 import S3Form from "./s3-form.vue";
 import User from "@/models/user.model";
-import { sizeToBytes } from "@/util";
 import prettyBytes from "pretty-bytes";
 import { useGoTo } from "vuetify";
 import { EnumCreativeWorkStatus } from "@/types";
@@ -958,6 +752,8 @@ import markdownit from "markdown-it";
 import hljs from "highlight.js"; // https://highlightjs.org
 
 import CdSpatialCoverageMap from "@/components/search-results/cd.spatial-coverage-map.vue";
+import CdAuthorProfile from "./cd.author-profile.vue";
+import CdOwnerProfile from "./cd.owner-profile.vue";
 
 const md = markdownit({
   linkify: true,
@@ -976,7 +772,7 @@ const md = markdownit({
 });
 
 @Component({
-  components: { CzForm, CzFileExplorer, S3Form, CdSpatialCoverageMap },
+  components: { CzForm, CzFileExplorer, S3Form, CdSpatialCoverageMap, CdAuthorProfile, CdOwnerProfile },
   name: "App",
 })
 class LandingPage extends Vue {
@@ -1005,6 +801,13 @@ class LandingPage extends Vue {
 
   data: Record<string, any> = {};
   owners: any[] = [];
+  creatorProfiles: Array<{
+    name: string;
+    hs_user_id?: number | null;
+    is_active_user?: boolean;
+    relative_uri?: string | null;
+    identifiers?: Record<string, string> | null;
+  }> = [];
   private onParentMessage = (event: MessageEvent) => {
     // atlas.html in the parent posts `{ parentSearch, owners }` after the
     // iframe loads. Owners are injected from the Django view because they
@@ -1250,8 +1053,13 @@ class LandingPage extends Vue {
     // global isn't there (e.g. component loaded directly outside the iframe).
     try {
       const parentWin = window.parent as any;
-      if (parentWin && parentWin !== window && Array.isArray(parentWin.HS_RESOURCE_OWNERS)) {
-        this.owners = parentWin.HS_RESOURCE_OWNERS;
+      if (parentWin && parentWin !== window) {
+        if (Array.isArray(parentWin.HS_RESOURCE_OWNERS)) {
+          this.owners = parentWin.HS_RESOURCE_OWNERS;
+        }
+        if (Array.isArray(parentWin.HS_RESOURCE_CREATOR_PROFILES)) {
+          this.creatorProfiles = parentWin.HS_RESOURCE_CREATOR_PROFILES;
+        }
       }
     } catch {
       // cross-origin access blocked — postMessage listener will handle it
@@ -1365,27 +1173,28 @@ class LandingPage extends Vue {
     window.removeEventListener("message", this.onParentMessage);
   }
 
-  ownerLocation(owner: any): string {
-    const parts = [owner?.state, owner?.country].filter(Boolean);
-    return parts.join(", ");
+  private findCreatorProfile(creator: any) {
+    if (!creator?.name) return undefined;
+    return this.creatorProfiles.find(
+      (p) => p && p.name && p.name === creator.name,
+    );
   }
 
-  ownerOrganizations(owner: any): string[] {
-    // HydroShare stores `organization` as a single string with multiple values
-    // separated by ";" (see theme/static/js/profile.js splitAndWrapWithClass).
-    const raw = owner?.organization;
-    if (typeof raw !== "string") return [];
-    return raw
-      .split(";")
-      .map((s) => s.trim())
-      .filter(Boolean);
+  creatorProfileLink(creator: any): string | null {
+    // The schema.org dataset_metadata.json carries no HydroShare-user linkage,
+    // so we match by name against the side-channel `creatorProfiles` payload
+    // (populated by AtlasLandingView from resource.cached_metadata.creators).
+    const profile = this.findCreatorProfile(creator);
+    if (!profile || !profile.is_active_user || !profile.relative_uri) return null;
+    return profile.relative_uri;
   }
 
-  ownerOrcid(owner: any): string | undefined {
-    const ids = owner?.identifiers;
-    if (!ids || typeof ids !== "object") return undefined;
-    // identifiers is a dict keyed by name; ORCID is usually under "ORCID".
-    return ids["ORCID"] || ids["orcid"] || undefined;
+  creatorIdentifiers(creator: any): Record<string, string> {
+    // Same side-channel rationale as creatorProfileLink — the schema.org
+    // adapter only emits ORCID, so we sourcemap the full dict from
+    // cached_metadata.creators.
+    const profile = this.findCreatorProfile(creator);
+    return profile?.identifiers || {};
   }
 
   async loadResource() {
@@ -1483,99 +1292,6 @@ export default toNative(LandingPage);
   height: 32px;
   width: auto;
   display: block;
-}
-
-.owner-link {
-  display: inline-flex;
-  align-items: center;
-  cursor: pointer;
-  color: rgba(0, 0, 0, 0.7);
-  line-height: 1.4;
-  transition: color 0.12s ease;
-}
-
-.owner-link:hover {
-  color: rgb(var(--v-theme-primary));
-}
-
-
-.profile-card {
-  overflow: hidden;
-  border-radius: 12px !important;
-}
-
-.profile-banner {
-  height: 56px;
-  background: linear-gradient(135deg, #4BB5C1 0%, #2a7c87 100%);
-}
-
-.profile-header {
-  position: relative;
-  padding: 0 20px 16px;
-  margin-top: -36px;
-}
-
-.profile-avatar {
-  border: 3px solid #fff;
-  background-color: #fff;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
-}
-
-.profile-identity {
-  margin-top: 8px;
-}
-
-.profile-name {
-  font-size: 1.05rem;
-  font-weight: 600;
-  line-height: 1.25;
-  color: rgba(0, 0, 0, 0.87);
-}
-
-.profile-title {
-  font-size: 0.8125rem;
-  margin-top: 2px;
-}
-
-.profile-meta {
-  padding-top: 4px !important;
-  font-size: 0.8125rem;
-}
-
-.profile-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.5rem;
-  padding: 3px 0;
-  color: rgba(0, 0, 0, 0.7);
-}
-
-.profile-row-icon {
-  margin-top: 2px;
-  color: rgba(0, 0, 0, 0.45);
-  flex-shrink: 0;
-}
-
-.profile-section-label {
-  font-size: 0.6875rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: rgba(0, 0, 0, 0.55);
-  margin-bottom: 6px;
-}
-
-.profile-actions {
-  background-color: #fafafa;
-}
-
-.orcid-btn :deep(.v-btn__content) {
-  display: inline-flex;
-  align-items: center;
-}
-
-.orcid-btn .fa-orcid {
-  color: #A6CE39;
 }
 
 .section-heading {

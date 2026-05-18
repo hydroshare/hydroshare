@@ -60,6 +60,22 @@ class AtlasLandingView(TemplateView):
             owner.viewable_contributions = 0
             owners.append(get_access_object(owner, "user", "owner"))
 
+        # The schema.org dataset_metadata.json that the Vue app reads doesn't
+        # carry hs_user_id / is_active_user / relative_uri — those are needed
+        # to surface the "View HydroShare profile" link in the author dropdown,
+        # so we side-channel them by `name` for the Vue side to merge.
+        creator_profiles = [
+            {
+                "name": c.get("name"),
+                "hs_user_id": c.get("hs_user_id"),
+                "is_active_user": c.get("is_active_user"),
+                "relative_uri": c.get("relative_uri"),
+                "identifiers": c.get("identifiers") or {},
+            }
+            for c in resource.cached_metadata.get("creators", [])
+            if c.get("name")
+        ]
+
         context = {
             "targetOrigin": target_origin,
             "iframeSrc": "{}/discover/resource-v2/{}?viewCount={}&downloadCount={}".format(
@@ -67,6 +83,7 @@ class AtlasLandingView(TemplateView):
             ),
             "page_title": resource.metadata.title.value if resource.metadata.title else shortkey,
             "owners_json": json.dumps(owners),
+            "creator_profiles_json": json.dumps(creator_profiles),
         }
         return render(request, 'hs_discover/atlas.html', context)
 
