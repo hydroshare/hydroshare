@@ -216,9 +216,11 @@
               stacked
               class="pa-0 pb-4"
               :border="0"
+              :ref="setDescriptionBannerRef"
             >
               <template v-slot:actions>
                 <v-btn
+                  v-if="isDescriptionClamped || showDescription"
                   @click="showDescription = !showDescription"
                   size="x-small"
                   >{{ showDescription ? "Show less" : "Show more" }}</v-btn
@@ -790,6 +792,7 @@ class LandingPage extends Vue {
   }
 
   showDescription = false;
+  isDescriptionClamped = false;
   readmeMd = "";
   readMeFileName = "";
   hasTxtReadme = false;
@@ -909,6 +912,19 @@ class LandingPage extends Vue {
   onCopy(text: string) {
     navigator.clipboard.writeText(text);
     Notifications.toast({ message: "Copied to clipboard", type: "info" });
+  }
+
+  setDescriptionBannerRef(el: any) {
+    // Mirrors cd.search-results' setBannerRef: only show the "Show more"
+    // button when the three-line clamp actually truncates the text.
+    if (!el || this.showDescription) return;
+    this.$nextTick(() => {
+      const bannerEl = el.$el || el;
+      const textEl = bannerEl.querySelector?.(".v-banner-text");
+      if (textEl) {
+        this.isDescriptionClamped = textEl.scrollHeight > textEl.clientHeight;
+      }
+    });
   }
 
   async loadReadmeFile() {
