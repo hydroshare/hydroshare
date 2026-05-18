@@ -145,8 +145,9 @@ const RESOURCE_ID = (() => {
   const idx = parts.indexOf('hydrofabric-subsetter');
   return (idx >= 0 && parts[idx + 1]) ? parts[idx + 1] : '';
 })();
-const S3_PARQUET = `${S3_ORIGIN}/hydroshare-resources/${RESOURCE_ID}/data/contents/parquet`;
-const S3_MAP = `${S3_ORIGIN}/hydroshare-resources/${RESOURCE_ID}/data/contents/map`;
+const S3_BUCKET_NAME = 'resource';
+const S3_PARQUET = `${S3_ORIGIN}/${S3_BUCKET_NAME}/${RESOURCE_ID}/data/contents/parquet`;
+const S3_MAP = `${S3_ORIGIN}/${S3_BUCKET_NAME}/${RESOURCE_ID}/data/contents/map`;
 const NETWORK_GRAPH_URL = `${S3_PARQUET}/network_graph.json`;
 const REF_FLOWPATHS_PMTILES_URL = `${S3_MAP}/only_geometry/reference/flowpaths.pmtiles`;
 const REF_DIVIDES_PMTILES_URL = `${S3_MAP}/only_geometry/reference/divides.pmtiles`;
