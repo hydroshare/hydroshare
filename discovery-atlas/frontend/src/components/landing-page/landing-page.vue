@@ -12,16 +12,26 @@
         </h1>
 
         <div class="d-flex align-center gap-3 mb-1">
-          <v-chip
-            v-if="data.creativeWorkStatus"
-            size="small"
-            :color="getStatusColor(data.creativeWorkStatus.name)"
-            :title="data.creativeWorkStatus.description"
-            variant="flat"
-            label
-          >
-            {{ data.creativeWorkStatus.name }}
-          </v-chip>
+          <div class="d-flex align-center" style="gap: 0.4rem">
+            <img
+              v-if="resourceTypeIcon"
+              :src="resourceTypeIcon"
+              :alt="resourceTypeLabel"
+              :title="resourceTypeLabel"
+              class="resource-type-icon flex-shrink-0"
+            />
+
+            <v-chip
+              v-if="data.creativeWorkStatus"
+              size="small"
+              :color="getStatusColor(data.creativeWorkStatus.name)"
+              :title="data.creativeWorkStatus.description"
+              variant="flat"
+              label
+            >
+              {{ data.creativeWorkStatus.name }}
+            </v-chip>
+          </div>
 
           <span
             v-if="data.dateModified"
@@ -231,9 +241,6 @@
                     </div>
                   </template>
 
-                  <div v-bind="infoLabelAttr">Resource Type:</div>
-                  <div v-bind="infoValueAttr">{{ data["@type"] }}</div>
-
                   <template v-if="contentSize">
                     <div v-bind="infoLabelAttr">Resource Size:</div>
                     <div v-bind="infoValueAttr">~{{ contentSize }}</div>
@@ -262,11 +269,6 @@
                       {{ parseDate(data.datePublished) }}
                     </div>
                   </template>
-
-                  <div v-bind="infoLabelAttr">Views:</div>
-                  <div v-bind="infoValueAttr">
-                    {{ data.viewCount?.toLocaleString() }}
-                  </div>
 
                   <div v-bind="infoLabelAttr">Downloads:</div>
                   <div v-bind="infoValueAttr">46</div>
@@ -799,6 +801,7 @@ import { sizeToBytes } from "@/util";
 import prettyBytes from "pretty-bytes";
 import { useGoTo } from "vuetify";
 import { EnumCreativeWorkStatus } from "@/types";
+import { contentTypeLabels, contentTypeLogos } from "@/constants";
 import markdownit from "markdown-it";
 import hljs from "highlight.js"; // https://highlightjs.org
 
@@ -997,6 +1000,21 @@ class LandingPage extends Vue {
   get hasSpatialFeatures(): boolean {
     const feat = this.data.spatialCoverage?.["type"];
     return feat === "GeoShape" || feat === "GeoCoordinates" || feat === "Place";
+  }
+
+  get resourceTypeKey(): string {
+    // dataset_metadata.json's additionalType holds the HydroShare resource type
+    // (e.g. "CompositeResource"). data["@type"] is the schema.org class ("Dataset").
+    return this.data?.additionalType || this.data?.["@type"] || "";
+  }
+
+  get resourceTypeLabel(): string {
+    const key = this.resourceTypeKey;
+    return contentTypeLabels[key] || key;
+  }
+
+  get resourceTypeIcon(): string | undefined {
+    return contentTypeLogos[this.resourceTypeKey];
   }
 
   get contentSize() {
@@ -1212,6 +1230,11 @@ export default toNative(LandingPage);
 <style lang="scss" scoped>
 .details-card {
   border-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+.resource-type-icon {
+  height: 32px;
+  width: 32px;
 }
 
 .section-heading {
