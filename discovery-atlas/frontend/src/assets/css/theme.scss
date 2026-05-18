@@ -39,6 +39,20 @@ body {
   }
 }
 
+@media (min-width: 1600px) {
+  #main-container {
+    width: 1600px;
+    max-width: 1600px;
+  }
+}
+
+@media (min-width: 1920px) {
+  #main-container {
+    width: 1800px;
+    max-width: 1800px;
+  }
+}
+
 p {
   max-width: 70rem;
 }
