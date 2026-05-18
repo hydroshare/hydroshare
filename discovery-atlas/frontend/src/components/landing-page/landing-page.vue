@@ -612,9 +612,15 @@
                 License
               </v-card-title>
               <div class="text-body-2 text-medium-emphasis">
-                <a v-if="data.license.url" :href="data.license.url">{{ data.license.name }}</a>
+                <a v-if="data.license.url" :href="data.license.url" target="_blank" rel="noopener">{{ data.license.name }}</a>
                 <template v-else>{{ data.license.name }}</template>
               </div>
+              <img
+                v-if="licenseBadgeUrl"
+                :src="licenseBadgeUrl"
+                :alt="data.license.name"
+                class="cc-badge mt-2"
+              />
             </v-card>
 
             <div v-if="hasSpatialFeatures" class="mb-6">
@@ -1004,6 +1010,22 @@ class LandingPage extends Vue {
     return geoType === "GeoShape" || geoType === "GeoCoordinates";
   }
 
+  get licenseBadgeUrl(): string | undefined {
+    // The license `name` is the rights statement; map the canonical CC variants
+    // to the badge images served by Django from theme/static/img/cc-badges/.
+    const statement: string = this.data?.license?.name || "";
+    const badges: { [key: string]: string } = {
+      "This resource is shared under the Creative Commons Attribution CC BY.": "CC-BY.png",
+      "This resource is shared under the Creative Commons Attribution-ShareAlike CC BY-SA.": "CC-BY-SA.png",
+      "This resource is shared under the Creative Commons Attribution-NoDerivs CC BY-ND.": "CC-BY-ND.png",
+      "This resource is shared under the Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA.": "CC-BY-NC-SA.png",
+      "This resource is shared under the Creative Commons Attribution-NoCommercial CC BY-NC.": "CC-BY-NC.png",
+      "This resource is shared under the Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND.": "CC-BY-NC-ND.png",
+    };
+    const file = badges[statement];
+    return file ? `/static/static/img/cc-badges/${file}` : undefined;
+  }
+
   get resourceTypeKey(): string {
     // dataset_metadata.json's additionalType holds the HydroShare resource type
     // (e.g. "CompositeResource"). data["@type"] is the schema.org class ("Dataset").
@@ -1237,6 +1259,12 @@ export default toNative(LandingPage);
 .resource-type-icon {
   height: 32px;
   width: 32px;
+}
+
+.cc-badge {
+  height: 32px;
+  width: auto;
+  display: block;
 }
 
 .section-heading {
