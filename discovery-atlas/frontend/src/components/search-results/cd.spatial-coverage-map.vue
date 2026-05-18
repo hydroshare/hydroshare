@@ -7,7 +7,8 @@
 <script lang="ts">
 import { Component, Vue, Prop, Ref, toNative } from "vue-facing-decorator";
 import L from "leaflet";
-import "leaflet.fullscreen";
+import { FullScreen } from "leaflet.fullscreen";
+import "leaflet.fullscreen/dist/Control.FullScreen.css";
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
@@ -53,13 +54,15 @@ class CdSpatialCoverageMap extends Vue {
       zoomControl: false,
       maxBounds: bounds,
       maxBoundsViscosity: 1.0,
-      // @ts-ignore added by 'leaflet.fullscreen'
-      fullscreenControl: true,
-      fullscreenControlOptions: {
-        position: "bottomright",
-        content: `<i class="fa-solid fa-expand" aria-hidden="true"></i>`,
-      },
     });
+
+    // leaflet.fullscreen@5 dropped the auto-register `fullscreenControl: true`
+    // map option, so add the control manually.
+    new FullScreen({
+      position: "bottomright",
+      content: `<i class="fa-solid fa-expand" aria-hidden="true"></i>`,
+      forceSeparateButton: true,
+    }).addTo(this.coverageMap);
 
     const streets = L.tileLayer(
       "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
@@ -200,7 +203,7 @@ export default toNative(CdSpatialCoverageMap);
 
 <style lang="scss" scoped>
 .map-container {
-  min-width: 25rem;
+  width: 100%;
   min-height: 15rem;
 }
 
