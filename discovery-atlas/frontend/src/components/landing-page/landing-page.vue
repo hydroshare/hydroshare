@@ -710,17 +710,16 @@
             </div>
 
             <v-card
-              v-if="
-                data.document?.[0]?.citation &&
-                data.document?.[0]?.citation.length
-              "
+              v-if="citations.length"
               class="mb-6"
               variant="flat"
               id="citation"
             >
-              <v-card-title class="pa-0 pb-2">How to cite</v-card-title>
+              <v-card-title class="pa-0 pb-2 text-subtitle-2 font-weight-bold text-uppercase" style="letter-spacing: 0.05em; color: #4BB5C1;">
+                How to cite
+              </v-card-title>
               <v-card-text
-                v-for="(citation, index) of data.document[0].citation"
+                v-for="(citation, index) of citations"
                 :key="index"
                 class="pa-0 text-body-2 text-medium-emphasis"
               >
@@ -731,13 +730,25 @@
 
                   <v-tooltip bottom>
                     <template v-slot:activator="{ props }">
-                      <v-btn icon v-bind="props" @click="onCopy(citation)">
-                        <v-icon dark> mdi-content-copy </v-icon>
+                      <v-btn icon v-bind="props" @click="onCopy(citation)" size="small" variant="text">
+                        <v-icon> mdi-content-copy </v-icon>
                       </v-btn>
                     </template>
                     <span>Copy</span>
                   </v-tooltip>
                 </div>
+              </v-card-text>
+              <v-card-text
+                v-if="!isPublished"
+                class="pa-0 pt-2 text-caption text-medium-emphasis font-italic"
+              >
+                When permanently published, this resource will have a formal Digital
+                Object Identifier (DOI) and will be accessible at the following URL:
+                <a :href="potentialDoiUrl" target="_blank" rel="noopener">{{ potentialDoiUrl }}</a>.
+                When you are ready to permanently publish, click the Publish button at
+                the top of the page to request your DOI. Reminder: Once you have published
+                your resource, modifications to Title, Authors, or Content files will
+                require a new version of the resource.
               </v-card-text>
             </v-card>
           </div>
@@ -1008,6 +1019,25 @@ class LandingPage extends Vue {
     // `.geo` and carries the GeoShape / GeoCoordinates type.
     const geoType = this.data.spatialCoverage?.geo?.["type"];
     return geoType === "GeoShape" || geoType === "GeoCoordinates";
+  }
+
+  get isPublished(): boolean {
+    return this.data?.creativeWorkStatus?.name === "Published";
+  }
+
+  get potentialDoiUrl(): string {
+    return `https://doi.org/10.4211/hs.${this.resourceId}`;
+  }
+
+  get citations(): string[] {
+    // hydroshare_schemaorg_adapter sets dataset.citation = [self.citation] —
+    // so the live JSON has data.citation as an array of strings. The legacy
+    // landing-page template referenced data.document[0].citation, which never
+    // exists in this payload.
+    const raw = this.data?.citation;
+    if (Array.isArray(raw)) return raw.filter((c: any) => typeof c === "string" && c.trim());
+    if (typeof raw === "string" && raw.trim()) return [raw];
+    return [];
   }
 
   get licenseBadgeUrl(): string | undefined {
