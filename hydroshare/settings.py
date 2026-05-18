@@ -488,21 +488,21 @@ RESOURCE_S3_DEFAULT_ZONE = "hydroshare"
 RESOURCE_S3_ZONES_CONFIG = {
     "hydroshare": {
         "bucket_name": "resource",
-        "aws_s3_endpoint_url": "http://hs-s3-proxy:9001",
+        "aws_s3_endpoint_url": "http://minio:9000",
         "aws_access_key_id": "cuahsi",
         "aws_secret_access_key": "devpassword",
         "aws_s3_endpoint_url_public": "http://hs_s3_proxy:9000"
     },
     "published": {  # the publisher hydroshare user must be updated to use this zone, see PUBLISHER_USER_NAME
         "bucket_name": "published",
-        "aws_s3_endpoint_url": "http://hs-s3-proxy:9001",
+        "aws_s3_endpoint_url": "http://minio:9000",
         "aws_access_key_id": "cuahsi",
         "aws_secret_access_key": "devpassword",
         "aws_s3_endpoint_url_public": "http://hs_s3_proxy:9000"
     },
     "ciroh": {
         "bucket_name": "ciroh",
-        "aws_s3_endpoint_url": "http://hs-s3-proxy:9001",
+        "aws_s3_endpoint_url": "http://minio:9000",
         "aws_access_key_id": "cuahsi",
         "aws_secret_access_key": "devpassword",
         "aws_s3_endpoint_url_public": "http://hs_s3_proxy:9000"
