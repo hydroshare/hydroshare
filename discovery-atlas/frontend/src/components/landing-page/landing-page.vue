@@ -113,7 +113,7 @@
             <v-card-text class="pa-5">
               <v-row :no-gutters="$vuetify.display.smAndDown">
                 <v-col cols="12" sm="6" class="dataset-info">
-                  <div v-bind="infoLabelAttr">Created By:</div>
+                  <div v-bind="infoLabelAttr">Authors:</div>
 
                   <div class="infoValueAttr">
                     <v-menu
@@ -210,6 +210,139 @@
                       </v-card>
                     </v-menu>
                   </div>
+
+                  <template v-if="owners.length">
+                    <div v-bind="infoLabelAttr">Owners:</div>
+                    <div class="d-flex flex-wrap align-baseline" style="row-gap: 0.15rem; column-gap: 0.75rem">
+                      <v-menu
+                        v-for="(owner, ownerIdx) of owners"
+                        :key="owner.id || ownerIdx"
+                        offset-y
+                        :close-on-content-click="false"
+                      >
+                        <template v-slot:activator="{ props }">
+                          <span v-bind="props" class="owner-link">
+                            {{ owner.best_name }}
+                            <v-icon small>mdi-menu-down</v-icon>
+                          </span>
+                        </template>
+                        <v-card class="profile-card" min-width="300" max-width="360">
+                          <div class="profile-banner"></div>
+                          <div class="profile-header">
+                            <v-avatar
+                              v-if="owner.pictureUrl"
+                              size="72"
+                              class="profile-avatar"
+                            >
+                              <img :src="owner.pictureUrl" :alt="owner.best_name" />
+                            </v-avatar>
+                            <v-avatar
+                              v-else
+                              size="72"
+                              color="grey-lighten-3"
+                              class="profile-avatar"
+                            >
+                              <v-icon size="48" color="grey-darken-1">mdi-account</v-icon>
+                            </v-avatar>
+                            <div class="profile-identity">
+                              <div class="profile-name">{{ owner.best_name }}</div>
+                              <div v-if="owner.title" class="profile-title text-medium-emphasis">
+                                {{ owner.title }}
+                              </div>
+                            </div>
+                          </div>
+
+                          <v-card-text class="profile-meta pt-0 pb-3">
+                            <div
+                              v-if="ownerOrganizations(owner).length"
+                              class="profile-row"
+                            >
+                              <v-icon size="16" class="profile-row-icon">mdi-domain</v-icon>
+                              <div class="d-flex flex-column" style="gap: 0.1rem">
+                                <span
+                                  v-for="(org, orgIdx) of ownerOrganizations(owner)"
+                                  :key="orgIdx"
+                                >
+                                  {{ org }}
+                                </span>
+                              </div>
+                            </div>
+                            <div v-if="ownerLocation(owner)" class="profile-row">
+                              <v-icon size="16" class="profile-row-icon">mdi-map-marker-outline</v-icon>
+                              {{ ownerLocation(owner) }}
+                            </div>
+                            <div v-if="owner.joined" class="profile-row">
+                              <v-icon size="16" class="profile-row-icon">mdi-calendar-outline</v-icon>
+                              Joined {{ owner.joined }}
+                            </div>
+                          </v-card-text>
+
+                          <v-divider v-if="owner.subject_areas && owner.subject_areas.length" />
+
+                          <v-card-text
+                            v-if="owner.subject_areas && owner.subject_areas.length"
+                            class="py-3"
+                          >
+                            <div class="profile-section-label">Subject Areas</div>
+                            <div class="d-flex flex-wrap" style="gap: 0.25rem">
+                              <v-chip
+                                v-for="(area, areaIdx) of owner.subject_areas"
+                                :key="areaIdx"
+                                size="x-small"
+                                variant="tonal"
+                                color="primary"
+                                label
+                              >
+                                {{ area }}
+                              </v-chip>
+                            </div>
+                          </v-card-text>
+
+                          <v-divider />
+
+                          <v-card-actions class="profile-actions px-4 py-3">
+                            <v-btn
+                              v-if="owner.email"
+                              :href="`mailto:${owner.email}`"
+                              variant="text"
+                              size="small"
+                              prepend-icon="mdi-email-outline"
+                              class="text-lowercase"
+                            >
+                              Email
+                            </v-btn>
+                            <v-btn
+                              v-if="ownerOrcid(owner)"
+                              :href="ownerOrcid(owner)"
+                              target="_blank"
+                              rel="noopener"
+                              variant="text"
+                              size="small"
+                              class="orcid-btn"
+                            >
+                              <i class="fab fa-orcid mr-1"></i>
+                              ORCID
+                            </v-btn>
+                            <v-spacer />
+                            <v-btn
+                              v-if="owner.user_name"
+                              :href="`/user/${owner.id}/`"
+                              target="_blank"
+                              rel="noopener"
+                              size="small"
+                              variant="flat"
+                              color="primary"
+                            >
+                              <span v-if="owner.viewable_contributions != null && owner.viewable_contributions > 0">
+                                Profile · {{ owner.viewable_contributions.toLocaleString() }}
+                              </span>
+                              <span v-else>Profile</span>
+                            </v-btn>
+                          </v-card-actions>
+                        </v-card>
+                      </v-menu>
+                    </div>
+                  </template>
 
                   <template v-if="data.provider">
                     <div v-bind="infoLabelAttr">Provider:</div>
@@ -871,6 +1004,17 @@ class LandingPage extends Vue {
   onFileDownload = onFileDownload;
 
   data: Record<string, any> = {};
+  owners: any[] = [];
+  private onParentMessage = (event: MessageEvent) => {
+    // atlas.html in the parent posts `{ parentSearch, owners }` after the
+    // iframe loads. Owners are injected from the Django view because they
+    // aren't part of the S3 dataset_metadata.json payload.
+    if (event.origin !== window.location.origin) return;
+    const payload = event.data;
+    if (payload && Array.isArray(payload.owners)) {
+      this.owners = payload.owners;
+    }
+  };
   stringify = stringify;
 
   isLoadingFiles: boolean = true;
@@ -1100,6 +1244,20 @@ class LandingPage extends Vue {
   }
 
   async created() {
+    // Owners are injected by AtlasLandingView via the parent window
+    // (same-origin) — read them synchronously to avoid a race with the
+    // iframe-load postMessage. Fall back to the postMessage path if the
+    // global isn't there (e.g. component loaded directly outside the iframe).
+    try {
+      const parentWin = window.parent as any;
+      if (parentWin && parentWin !== window && Array.isArray(parentWin.HS_RESOURCE_OWNERS)) {
+        this.owners = parentWin.HS_RESOURCE_OWNERS;
+      }
+    } catch {
+      // cross-origin access blocked — postMessage listener will handle it
+    }
+    window.addEventListener("message", this.onParentMessage);
+
     if (!this.resourceId && this.$route?.params?.resourceId) {
       this.resourceId = this.$route.params.resourceId as string;
     }
@@ -1204,6 +1362,30 @@ class LandingPage extends Vue {
   beforeUnmount() {
     User.$state.toc = [];
     User.$state.isTocReady = false;
+    window.removeEventListener("message", this.onParentMessage);
+  }
+
+  ownerLocation(owner: any): string {
+    const parts = [owner?.state, owner?.country].filter(Boolean);
+    return parts.join(", ");
+  }
+
+  ownerOrganizations(owner: any): string[] {
+    // HydroShare stores `organization` as a single string with multiple values
+    // separated by ";" (see theme/static/js/profile.js splitAndWrapWithClass).
+    const raw = owner?.organization;
+    if (typeof raw !== "string") return [];
+    return raw
+      .split(";")
+      .map((s) => s.trim())
+      .filter(Boolean);
+  }
+
+  ownerOrcid(owner: any): string | undefined {
+    const ids = owner?.identifiers;
+    if (!ids || typeof ids !== "object") return undefined;
+    // identifiers is a dict keyed by name; ORCID is usually under "ORCID".
+    return ids["ORCID"] || ids["orcid"] || undefined;
   }
 
   async loadResource() {
@@ -1301,6 +1483,99 @@ export default toNative(LandingPage);
   height: 32px;
   width: auto;
   display: block;
+}
+
+.owner-link {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  color: rgba(0, 0, 0, 0.7);
+  line-height: 1.4;
+  transition: color 0.12s ease;
+}
+
+.owner-link:hover {
+  color: rgb(var(--v-theme-primary));
+}
+
+
+.profile-card {
+  overflow: hidden;
+  border-radius: 12px !important;
+}
+
+.profile-banner {
+  height: 56px;
+  background: linear-gradient(135deg, #4BB5C1 0%, #2a7c87 100%);
+}
+
+.profile-header {
+  position: relative;
+  padding: 0 20px 16px;
+  margin-top: -36px;
+}
+
+.profile-avatar {
+  border: 3px solid #fff;
+  background-color: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+
+.profile-identity {
+  margin-top: 8px;
+}
+
+.profile-name {
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.25;
+  color: rgba(0, 0, 0, 0.87);
+}
+
+.profile-title {
+  font-size: 0.8125rem;
+  margin-top: 2px;
+}
+
+.profile-meta {
+  padding-top: 4px !important;
+  font-size: 0.8125rem;
+}
+
+.profile-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 3px 0;
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.profile-row-icon {
+  margin-top: 2px;
+  color: rgba(0, 0, 0, 0.45);
+  flex-shrink: 0;
+}
+
+.profile-section-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.55);
+  margin-bottom: 6px;
+}
+
+.profile-actions {
+  background-color: #fafafa;
+}
+
+.orcid-btn :deep(.v-btn__content) {
+  display: inline-flex;
+  align-items: center;
+}
+
+.orcid-btn .fa-orcid {
+  color: #A6CE39;
 }
 
 .section-heading {

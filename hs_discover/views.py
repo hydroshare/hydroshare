@@ -37,7 +37,9 @@ class AtlasSearchView(TemplateView):
 class AtlasLandingView(TemplateView):
 
     def get(self, request, *args, **kwargs):
+        import json
         from hs_core.hydroshare.utils import get_resource_by_shortkey
+        from hs_core.models import get_access_object
 
         target_origin = request.scheme + "://" + request.get_host()
         shortkey = kwargs.get('shortkey', '')
@@ -49,12 +51,22 @@ class AtlasLandingView(TemplateView):
         resource = get_resource_by_shortkey(shortkey)
         resource.update_view_count()
 
+        # Build the owners payload the same shape the legacy left-header
+        # template feeds to its Vue widget (USERS_JSON). The iframe-hosted
+        # landing page picks this up via postMessage in atlas.html.
+        owners = []
+        for owner in resource.raccess.owners.all():
+            owner.can_undo = False
+            owner.viewable_contributions = 0
+            owners.append(get_access_object(owner, "user", "owner"))
+
         context = {
             "targetOrigin": target_origin,
             "iframeSrc": "{}/discover/resource-v2/{}?viewCount={}&downloadCount={}".format(
                 target_origin, shortkey, resource.view_count, resource.download_count
             ),
             "page_title": resource.metadata.title.value if resource.metadata.title else shortkey,
+            "owners_json": json.dumps(owners),
         }
         return render(request, 'hs_discover/atlas.html', context)
 
