@@ -51,8 +51,8 @@ class AtlasLandingView(TemplateView):
 
         context = {
             "targetOrigin": target_origin,
-            "iframeSrc": "{}/discover/resource-v2/{}?viewCount={}".format(
-                target_origin, shortkey, resource.view_count
+            "iframeSrc": "{}/discover/resource-v2/{}?viewCount={}&downloadCount={}".format(
+                target_origin, shortkey, resource.view_count, resource.download_count
             ),
             "page_title": resource.metadata.title.value if resource.metadata.title else shortkey,
         }

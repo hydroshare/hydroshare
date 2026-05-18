@@ -271,7 +271,9 @@
                   </template>
 
                   <div v-bind="infoLabelAttr">Downloads:</div>
-                  <div v-bind="infoValueAttr">46</div>
+                  <div v-bind="infoValueAttr">
+                    {{ data.downloadCount != null ? data.downloadCount.toLocaleString() : "—" }}
+                  </div>
                 </v-col>
               </v-row>
             </v-card-text>
@@ -1220,11 +1222,15 @@ class LandingPage extends Vue {
 
     if (resource) {
       this.data = resource.data;
-      // Live view_count is passed by the Django AtlasLandingView via ?viewCount=
-      // because dataset_metadata.json in S3 is a snapshot and lags the DB counter.
+      // Live counters are passed by the Django AtlasLandingView via query params
+      // because dataset_metadata.json in S3 is a snapshot and lags the DB counters.
       const liveViewCount = Number(this.$route.query.viewCount);
       if (Number.isFinite(liveViewCount)) {
         this.data.viewCount = liveViewCount;
+      }
+      const liveDownloadCount = Number(this.$route.query.downloadCount);
+      if (Number.isFinite(liveDownloadCount)) {
+        this.data.downloadCount = liveDownloadCount;
       }
       // @ts-expect-error The key property is generated when the component is initialized
       this.rootDirectory.children = resource.initialStructure || [];
