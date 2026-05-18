@@ -54,6 +54,7 @@ class AtlasLandingView(TemplateView):
             "iframeSrc": "{}/discover/resource-v2/{}?viewCount={}".format(
                 target_origin, shortkey, resource.view_count
             ),
+            "page_title": resource.metadata.title.value if resource.metadata.title else shortkey,
         }
         return render(request, 'hs_discover/atlas.html', context)
 

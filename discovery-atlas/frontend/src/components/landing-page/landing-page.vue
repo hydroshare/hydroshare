@@ -491,7 +491,7 @@
             <v-row>
               <v-col cols="12" sm="8">
                 <v-card variant="outlined" border="grey thin">
-                  <cd-spatial-coverage-map :feature="data.spatialCoverage" />
+                  <cd-spatial-coverage-map :feature="data.spatialCoverage.geo" />
                   <v-divider></v-divider>
                   <v-card-text
                     v-if="data.spatialCoverage.geo['type'] == 'GeoShape'"
@@ -623,7 +623,7 @@
               </div>
               <v-card variant="outlined" border="grey thin">
                 <v-card-text flat class="pa-0">
-                  <cd-spatial-coverage-map :feature="data.spatialCoverage" />
+                  <cd-spatial-coverage-map :feature="data.spatialCoverage.geo" />
                 </v-card-text>
                 <v-divider></v-divider>
                 <v-expansion-panels accordion flat>
@@ -998,8 +998,10 @@ class LandingPage extends Vue {
   }
 
   get hasSpatialFeatures(): boolean {
-    const feat = this.data.spatialCoverage?.["type"];
-    return feat === "GeoShape" || feat === "GeoCoordinates" || feat === "Place";
+    // `spatialCoverage` is schema.org Place; the actual geometry lives on
+    // `.geo` and carries the GeoShape / GeoCoordinates type.
+    const geoType = this.data.spatialCoverage?.geo?.["type"];
+    return geoType === "GeoShape" || geoType === "GeoCoordinates";
   }
 
   get resourceTypeKey(): string {
