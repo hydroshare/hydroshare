@@ -39,8 +39,6 @@ git clone git@github.com:hydroshare/hydroshare.git
 cd hydroshare
 ```
 
-It’s very important that please DO NOT change the directory name after cloned. Let it be “hydroshare”.
-
 ### One-time local development setup
 
 1. Log into Docker:
@@ -65,8 +63,8 @@ This runs a script that will:
 The [local-dev-first-start-only.sh](./local-dev-first-start-only.sh) will spin up all docker containers in the [local-dev.yml](./local-dev.yml). It does NOT spin up a container for Discover -- instead, the script uses [PM2](https://pm2.io/) to run the Vite dev server to take advantage of [HMR](https://vite.dev/guide/features#hot-module-replacement).
 
 Alternatively, to run Discover as a static build inside a local Docker container you can:
-- [uncomment here](local-dev.yml#L431-L445) to have the compose file include the discovery-atlas container
-- [uncomment here](local-dev.yml#L386) to have the nginx wait for discovery-atlas to be up
+- Uncomment the discovery-atlas service in [local-dev.yml](./local-dev.yml)
+- Uncomment the line in the nginx service in [local-dev.yml](./local-dev.yml) to have nginx wait for discovery-atlas to be up
 - Change the `location /discover/ proxy_pass` entry in [nginx/nginx-local-dev.conf](nginx/nginx-local-dev.conf) to `http://discovery-atlas:80/discover/`
 
 3. Sanity Checks and where to view the app and documentation:
@@ -103,7 +101,13 @@ Or
 docker logs <container name>
 ```
 
-5. Creating an account
+5. Logging in / creating an account
+
+The locally-running app will be populated with a couple accounts:
+- admin (pw: default)
+- asdf (pw: asdf)
+
+Or use the following process to create a new account:
 
 Open Hydroshare in your browser and visit the [sign-up page](http://localhost/sign-up/). Use the UI to sign up for a new account, then view the hydroshare container logs with
 ```
