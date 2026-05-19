@@ -23,6 +23,7 @@ RUN rm requirements.txt
 
 COPY hs_extract hs_extract
 COPY hs_cloudnative_schemas hs_extract/hs_cloudnative_schemas
+COPY hydroshare/settings.py hydroshare/settings.py
 
 ENV PYTHONPATH "${PYTHONPATH}:/app/hs_extract/hsextract/:/app/hs_extract/hs_cloudnative_schemas/"
 

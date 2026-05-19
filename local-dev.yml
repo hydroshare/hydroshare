@@ -123,6 +123,7 @@ services:
       - solr:solr
       - rabbitmq:rabbitmq
       - minio:minio
+      - hs-s3-proxy-external:hs-s3-proxy
     depends_on:
       - postgis
       - pgbouncer
@@ -130,6 +131,7 @@ services:
       - rabbitmq
       - minio
       - redis
+      - hs-s3-proxy-external
     stdin_open: true
     tty: true
     command: python manage.py runserver 0.0.0.0:8000
@@ -165,11 +167,13 @@ services:
     links:
       - pgbouncer:pgbouncer
       - rabbitmq:rabbitmq
+      - hs-s3-proxy-external:hs-s3-proxy
     depends_on:
       - hydroshare
       - pgbouncer
       - solr
       - rabbitmq
+      - hs-s3-proxy-external
     stdin_open: true
     tty: true
     command: /bin/bash init-defaultworker
@@ -310,21 +314,27 @@ services:
       dockerfile: hs_extract/Dockerfile
     platform: linux/amd64
     environment:
-      AWS_S3_ENDPOINT_URL: "http://minio:9000"
-      AWS_ACCESS_KEY_ID: cuahsi
-      AWS_SECRET_ACCESS_KEY: devpassword
-      MC_HOST_hydroshare: "http://cuahsi:devpassword@minio:9000"
+      HS_SETTINGS_FILE: "/app/hydroshare/settings.py"
+      HS_S3_ZONE_NAME: "hydroshare"
+      AWS_S3_ENDPOINT_URL: "http://hs-s3-proxy-internal:9000"
+      AWS_ACCESS_KEY_ID: "cuahsi"
+      AWS_SECRET_ACCESS_KEY: "devpassword"
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      CELERY_BROKER_URL: "redis://redis:6379/0"
+      CELERY_RESULT_BACKEND: "redis://redis:6379/0"
+      PYTHONPATH: "/app/hs_extract/hsextract/:/app/hs_extract/hs_cloudnative_schemas/:/app:/app/hs_extract"
     volumes:
       - "./hs_extract:/app/hs_extract"
       - "./hs_cloudnative_schemas:/app/hs_extract/hs_cloudnative_schemas"
     links:
-      - pgbouncer:pgbouncer
-      - redpanda:redpanda
+      - minio:minio
+      - redis:redis
+      - hs-s3-proxy-internal:hs-s3-proxy-internal
     depends_on:
-      - hydroshare
-      - pgbouncer
-      - solr
-      - redpanda
+      - redis
+      - minio
+      - hs-s3-proxy-internal
     stdin_open: true
     tty: true
   companion:
@@ -401,19 +411,20 @@ services:
     restart: on-failure
     depends_on:
       - postgis
-  hs-s3-proxy:
+  hs-s3-proxy-external:
     image: hydroshare/hs-s3-proxy:latest
     platform: linux/amd64
-    container_name: hs-s3-proxy
+    container_name: hs-s3-proxy-external
+    hostname: hs_s3_proxy
     build:
       context: ./hs_s3_proxy
       dockerfile: Dockerfile
     environment:
+      S3_PROXY_ROUTER_MODE: "external"
       AUTH_SERVICE_URL: "http://hs-s3-auth"
       AUTH_SERVICE_TIMEOUT: "5"
-      S3_BACKEND_URL: "http://minio:9000"
-      S3_BACKEND_ACCESS_KEY: "cuahsi"
-      S3_BACKEND_SECRET_KEY: "devpassword"
+      RESOURCE_S3_DEFAULT_ZONE: "hydroshare"
+      RESOURCE_S3_ZONES_CONFIG: '{"hydroshare":{"bucket_name":"resource","aws_s3_endpoint_url":"http://minio:9000","aws_access_key_id":"cuahsi","aws_secret_access_key":"devpassword","aws_s3_endpoint_url_public":"http://hs_s3_proxy:9000"},"published":{"bucket_name":"published","aws_s3_endpoint_url":"http://minio:9000","aws_access_key_id":"cuahsi","aws_secret_access_key":"devpassword","aws_s3_endpoint_url_public":"http://hs_s3_proxy:9000"},"ciroh":{"bucket_name":"ciroh","aws_s3_endpoint_url":"http://minio:9000","aws_access_key_id":"cuahsi","aws_secret_access_key":"devpassword","aws_s3_endpoint_url_public":"http://hs_s3_proxy:9000"}}'
       S3_BACKEND_REGION: "auto"
       S3_PROXY_TIMEOUT: "300"
     ports:
@@ -424,6 +435,28 @@ services:
     restart: on-failure
     depends_on:
       - hs-s3-auth
+      - minio
+  hs-s3-proxy-internal:
+    image: hydroshare/hs-s3-proxy:latest
+    platform: linux/amd64
+    container_name: hs-s3-proxy-internal
+    build:
+      context: ./hs_s3_proxy
+      dockerfile: Dockerfile
+    environment:
+      S3_PROXY_ROUTER_MODE: "internal"
+      AUTH_SERVICE_URL: "http://hs-s3-auth"
+      AUTH_SERVICE_TIMEOUT: "5"
+      RESOURCE_S3_DEFAULT_ZONE: "hydroshare"
+      RESOURCE_S3_ZONES_CONFIG: '{"hydroshare":{"bucket_name":"resource","aws_s3_endpoint_url":"http://minio:9000","aws_access_key_id":"cuahsi","aws_secret_access_key":"devpassword","aws_s3_endpoint_url_public":"http://hs_s3_proxy:9000"},"published":{"bucket_name":"published","aws_s3_endpoint_url":"http://minio:9000","aws_access_key_id":"cuahsi","aws_secret_access_key":"devpassword","aws_s3_endpoint_url_public":"http://hs_s3_proxy:9000"},"ciroh":{"bucket_name":"ciroh","aws_s3_endpoint_url":"http://minio:9000","aws_access_key_id":"cuahsi","aws_secret_access_key":"devpassword","aws_s3_endpoint_url_public":"http://hs_s3_proxy:9000"}}'
+      S3_BACKEND_REGION: "auto"
+      S3_PROXY_TIMEOUT: "300"
+    ports:
+      - 9003:9000
+    links:
+      - minio:minio
+    restart: on-failure
+    depends_on:
       - minio
   mongodb:
     image: mongodb/mongodb-atlas-local
