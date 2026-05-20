@@ -382,6 +382,8 @@ services:
     depends_on:
       - hydroshare
       - companion
+      # If running discovery-atlas via docker, wait for discovery-atlas to be up before starting nginx
+      # - discovery-atlas
   micro-auth:
     image: hydroshare/micro-auth:latest
     platform: linux/amd64
@@ -405,6 +407,7 @@ services:
   mongodb:
     image: mongodb/mongodb-atlas-local
     container_name: mongodb
+    hostname: mongodb
     environment:
       - MONGODB_INITDB_ROOT_USERNAME=user
       - MONGODB_INITDB_ROOT_PASSWORD=pass
@@ -414,7 +417,14 @@ services:
     volumes:
       - mongodb_data_vol:/data/db
       - mongodb_config_vol:/data/configdb
+      - mongodb_mongot_vol:/data/mongot
       - ./hs_discover/search_indexes:/hs_discover/search_indexes:ro
+    healthcheck:
+      test: ["CMD", "mongosh", "mongodb://localhost:27017/?directConnection=true", "--quiet", "--eval", "rs.isMaster().ismaster || quit(1)"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
   # for local dev, we run discover using pm2 and a vite dev server
   # this allows for better developer experience with features like HMR
   # the discovery-atlas service is run using "make up-discover"
@@ -427,16 +437,18 @@ services:
   #   platform: linux/amd64
   #   environment:
   #     VITE_APP_NAME: "Discover"
-  #     VITE_APP_API_URL: "http://localhost/api"
+  #     VITE_APP_API_URL: "http://localhost/hsapi/discovery-atlas"
   #     VITE_APP_BASE: "/discover/"
   #     VITE_APP_ORIGIN: "http://localhost"
-  #   ports:
-  #     - "5004:80"
+  #   depends_on:
+  #     mongodb:
+  #       condition: service_healthy
 volumes:
   postgis_data_vol:
   solr_data_vol:
   mongodb_data_vol:
   mongodb_config_vol:
+  mongodb_mongot_vol:
   temp_vol:
   share_vol:
   redpanda_data_vol:
