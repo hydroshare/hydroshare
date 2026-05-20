@@ -1,1060 +1,175 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Hydrofabric Subsetter</title>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Source+Sans+3:wght@300;400;600;700&display=swap" rel="stylesheet">
-<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
-<link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet"/>
-<script src="https://unpkg.com/pmtiles@4.0.1/dist/pmtiles.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.11.0/sql-wasm.js"></script>
-<style>
-:root {
-  --bg:#0a0e17; --surface:#111827; --surface2:#1e293b; --border:#334155;
-  --text:#e2e8f0; --text-dim:#94a3b8; --accent:#38bdf8; --accent-dim:#0ea5e9;
-  --selected:#ee3377; --upstream:#ee7733; --success:#10b981; --danger:#ef4444;
-  --radius:6px;
-}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Source Sans 3',sans-serif;background:var(--bg);color:var(--text);overflow:hidden;height:100vh;width:100vw}
-#map-container{position:absolute;inset:0;z-index:0;display:flex}
-#map{flex:1}
-#map-right{display:none}
-body.split-view #map{flex:0 0 50%}
-body.split-view #map-right{display:block;flex:0 0 50%;border-left:2px solid var(--border)}
-.map-label{display:none;position:absolute;top:8px;z-index:5;
-  padding:4px 12px;background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--radius);font-size:11px;font-weight:600;color:var(--text-dim);
-  font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.5px;
-  pointer-events:none}
-body.split-view .map-label{display:block}
-#label-left{left:25%;transform:translateX(-50%)}
-#label-right{left:75%;transform:translateX(-50%)}
-#sidebar{
-  position:absolute;top:16px;left:16px;z-index:10;width:340px;
-  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
-  display:flex;flex-direction:column;max-height:calc(100vh - 32px);
-  box-shadow:0 8px 32px rgba(0,0,0,.5);overflow:hidden;
-}
-#sidebar header{padding:16px 20px;border-bottom:1px solid var(--border);background:var(--surface2)}
-#sidebar header h1{font-size:15px;font-weight:700;letter-spacing:.5px;color:var(--accent);font-family:'JetBrains Mono',monospace}
-#sidebar header p{font-size:12px;color:var(--text-dim);margin-top:4px;line-height:1.5}
-#controls{padding:16px 20px;flex-shrink:0}
-.field{margin-bottom:12px}
-.field label{display:block;font-size:11px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;font-family:'JetBrains Mono',monospace}
-.field input{width:100%;padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px}
-.field input:focus{outline:none;border-color:var(--accent)}
-.field input::placeholder{color:#475569}
-.btn-row{display:flex;gap:8px;margin-top:16px}
-button{flex:1;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius);font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;text-transform:uppercase;letter-spacing:.5px}
-#btn-subset{background:var(--accent-dim);color:#000;border-color:var(--accent)}
-#btn-subset:hover{background:var(--accent)}
-#btn-subset:disabled{opacity:.4;cursor:not-allowed;background:var(--surface2);color:var(--text-dim);border-color:var(--border)}
-#btn-clear{background:var(--surface2);color:var(--text-dim);flex:0 0 auto;width:80px}
-#btn-clear:hover{color:var(--text);border-color:var(--text-dim)}
-#selection-info{padding:12px 20px;border-top:1px solid var(--border);font-size:12px;color:var(--text-dim);font-family:'JetBrains Mono',monospace;line-height:1.6;display:none}
-#selection-info .count{color:var(--upstream);font-weight:600;font-size:14px}
-#selection-info .outlet{color:var(--selected);font-weight:600}
-#log-container{flex:1;overflow-y:auto;border-top:1px solid var(--border);padding:12px 20px;min-height:80px}
-#log{font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.7;color:var(--text-dim);white-space:pre-wrap;word-break:break-all}
-#log .info{color:var(--accent)} #log .success{color:var(--success)}
-#log .error{color:var(--danger)} #log .step{color:var(--upstream)}
-#progress-bar{height:3px;background:var(--surface2);overflow:hidden;flex-shrink:0}
-#progress-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--accent),#22d3ee);transition:width .3s}
-.checkbox-field{display:flex;align-items:center;gap:8px;margin-bottom:12px;cursor:pointer}
-.checkbox-field input[type="checkbox"]{width:14px;height:14px;cursor:pointer;accent-color:var(--accent)}
-.checkbox-field span{font-size:12px;color:var(--text-dim)}
-#legend{
-  position:absolute;top:16px;right:16px;z-index:10;
-  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
-  box-shadow:0 8px 32px rgba(0,0,0,.5);padding:12px 16px;min-width:200px;
-}
-#legend h2{font-size:11px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;font-family:'JetBrains Mono',monospace}
-.legend-item{display:flex;align-items:center;gap:8px;margin-bottom:8px}
-.legend-item:last-child{margin-bottom:0}
-.legend-item input[type="checkbox"]{width:14px;height:14px;cursor:pointer;accent-color:var(--accent)}
-.legend-item label{font-size:12px;color:var(--text-dim);cursor:pointer;flex:1}
-.legend-item input[type="color"]{
-  width:28px;height:22px;padding:0;border:1px solid var(--border);border-radius:3px;
-  background:var(--bg);cursor:pointer;-webkit-appearance:none;appearance:none;
-}
-.legend-item input[type="color"]::-webkit-color-swatch-wrapper{padding:1px}
-.legend-item input[type="color"]::-webkit-color-swatch{border:none;border-radius:2px}
-.legend-item input[type="color"]::-moz-color-swatch{border:none;border-radius:2px}
-</style>
-</head>
-<body>
-<div id="map-container">
-  <div id="map"></div>
-  <div id="map-right"></div>
-  <div id="label-left" class="map-label">Catchments</div>
-  <div id="label-right" class="map-label">Reference</div>
-</div>
-<div id="sidebar">
-  <header>
-    <h1>&#9651; HYDROFABRIC SUBSETTER</h1>
-    <p>Click a catchment on the map or enter an ID. Upstream network is auto-selected, then download a subset GeoPackage.</p>
-  </header>
-  <div id="controls">
-    <div class="field">
-      <label>Catchment ID</label>
-      <input id="input-catid" type="text" placeholder="e.g. cat-486931" spellcheck="false"/>
+  <head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Hydrofabric Subsetter</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Source+Sans+3:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+    <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet"/>
+    <script src="https://unpkg.com/pmtiles@4.0.1/dist/pmtiles.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.11.0/sql-wasm.js"></script>
+  </head>
+  <body>
+    <div id="map-container">
+      <div id="map"></div>
+      <div id="map-right"></div>
+      <div id="label-left" class="map-label">Catchments</div>
+      <div id="label-right" class="map-label">Reference</div>
     </div>
-    <label class="checkbox-field">
-      <input type="checkbox" id="chk-include-outlet" checked/>
-      <span>Include outlet nexus</span>
-    </label>
-    <div class="btn-row">
-      <button id="btn-subset" disabled>Subset &amp; Download</button>
-      <button id="btn-clear">Clear</button>
+    <div id="sidebar">
+      <header>
+        <h1>&#9651; HYDROFABRIC SUBSETTER</h1>
+        <p>Click a catchment on the map or enter an ID. Upstream network is auto-selected, then download a subset GeoPackage.</p>
+      </header>
+      <div id="controls">
+        <div class="field">
+          <label>Catchment ID</label>
+          <input id="input-catid" type="text" placeholder="e.g. cat-486931" spellcheck="false"/>
+        </div>
+        <label class="checkbox-field">
+          <input type="checkbox" id="chk-include-outlet" checked/>
+          <span>Include outlet nexus</span>
+        </label>
+        <div class="btn-row">
+          <button id="btn-subset" disabled>Subset &amp; Download</button>
+          <button id="btn-clear">Clear</button>
+        </div>
+      </div>
+      <div id="selection-info"></div>
+      <div id="progress-bar"><div id="progress-fill"></div></div>
+      <div id="log-container"><div id="log"></div></div>
     </div>
-  </div>
-  <div id="selection-info"></div>
-  <div id="progress-bar"><div id="progress-fill"></div></div>
-  <div id="log-container"><div id="log"></div></div>
-</div>
 
-<div id="legend">
-  <h2>Reference Layers</h2>
-  <div class="legend-item">
-    <input type="checkbox" id="toggle-split"/>
-    <label for="toggle-split">Split View</label>
-  </div>
-  <hr style="border:none;border-top:1px solid var(--border);margin:8px 0"/>
-  <div class="legend-item">
-    <input type="checkbox" id="toggle-flowpaths"/>
-    <label for="toggle-flowpaths">Flowpaths</label>
-    <input type="color" id="color-flowpaths" value="#FF0000"/>
-  </div>
-  <div class="legend-item">
-    <input type="checkbox" id="toggle-divides"/>
-    <label for="toggle-divides">Divides</label>
-    <input type="color" id="color-divides" value="#11FF00"/>
-  </div>
-</div>
+    <div id="legend">
+      <h2>Reference Layers</h2>
+      <div class="legend-item">
+        <input type="checkbox" id="toggle-split"/>
+        <label for="toggle-split">Split View</label>
+      </div>
+      <hr style="border:none;border-top:1px solid var(--border);margin:8px 0"/>
+      <div class="legend-item">
+        <input type="checkbox" id="toggle-flowpaths"/>
+        <label for="toggle-flowpaths">Flowpaths</label>
+        <input type="color" id="color-flowpaths" value="#FF0000"/>
+      </div>
+      <div class="legend-item">
+        <input type="checkbox" id="toggle-divides"/>
+        <label for="toggle-divides">Divides</label>
+        <input type="color" id="color-divides" value="#11FF00"/>
+      </div>
+    </div>
+  </body>
 
-<script>
-// ============================================================
-// CONFIG
-// ============================================================
-// const S3_ORIGIN = `${window.location.protocol}//s3.${window.location.hostname}`;
-const S3_ORIGIN = `http://localhost:9002`;
-const RESOURCE_ID = (() => {
-  const parts = window.location.pathname.split('/').filter(Boolean);
-  const idx = parts.indexOf('hydrofabric-subsetter');
-  return (idx >= 0 && parts[idx + 1]) ? parts[idx + 1] : '';
-})();
-const S3_BUCKET_NAME = 'resource';
-const S3_PARQUET = `${S3_ORIGIN}/${S3_BUCKET_NAME}/${RESOURCE_ID}/data/contents/parquet`;
-const S3_MAP = `${S3_ORIGIN}/${S3_BUCKET_NAME}/${RESOURCE_ID}/data/contents/map`;
-const NETWORK_GRAPH_URL = `${S3_PARQUET}/network_graph.json`;
-const REF_FLOWPATHS_PMTILES_URL = `${S3_MAP}/only_geometry/reference/flowpaths.pmtiles`;
-const REF_DIVIDES_PMTILES_URL = `${S3_MAP}/only_geometry/reference/divides.pmtiles`;
+  <script type="module">
+    import { useMap } from "{% static 'js/src/composables/useMap.js' %}";
+    import { useNetwork } from "{% static 'js/src/composables/useNetwork.js' %}";
+    import { useParquet } from "{% static 'js/src/composables/useParquet.js' %}";
+    import { useSubset } from "{% static 'js/src/updateMapFilters/useSubset.js' %}";
+    import { state, log } from "{% static 'js/src/config.js' %}";
 
-const PARQUET_URLS = {
-  'divides':                `${S3_PARQUET}/divides.parquet`,
-  'divide-attributes':      `${S3_PARQUET}/divide-attributes.parquet`,
-  'flowpaths':              `${S3_PARQUET}/flowpaths.parquet`,
-  'flowpath-attributes':    `${S3_PARQUET}/flowpath-attributes.parquet`,
-  'flowpath-attributes-ml': `${S3_PARQUET}/flowpath-attributes-ml.parquet`,
-  'hydrolocations':         `${S3_PARQUET}/hydrolocations.parquet`,
-  'nexus':                  `${S3_PARQUET}/nexus.parquet`,
-  'pois':                   `${S3_PARQUET}/pois.parquet`,
-  'lakes':                  `${S3_PARQUET}/lakes.parquet`,
-  'network':                `${S3_PARQUET}/network.parquet`,
-};
+    const { initHyparquet } = useParquet();
+    const { loadNetworkGraph, getUpstreamIds } = useNetwork();
+    const { subsetAndDownload } = useSubset();
+    const { initMap, updateMapFilters, toggleSplitView } = useMap();
 
-// ============================================================
-// STATE
-// ============================================================
-let networkGraph = null;
-let adjacency = null;
-let downstream = null;
-let outletCatId = null;
-let upstreamCatIds = [];
-let upstreamNumericIds = new Set();
-let map = null;
-let mapRight = null;
-let splitActive = false;
-let syncing = false;
 
-let hp = null;
-let compressors = null;
-const fileHandleCache = {};
+    // ============================================================
+    // SELECTION
+    // ============================================================
+    async function selectOutlet(catId) {
+      if (!catId.startsWith('cat-')) catId = 'cat-' + catId.replace(/^(cat-?)/, '');
+      state.outletCatId = catId;
+      document.getElementById('input-catid').value = catId;
 
-let pmtilesProtocolRegistered = false;
+      const numeric = parseInt(catId.split('-')[1]);
+      const includeOutlet = document.getElementById('chk-include-outlet').checked;
 
-function createCredentialedPmtilesSource(url) {
-  return {
-    getKey() {
-      return url;
-    },
-    async getBytes(offset, length, signal, etag) {
-      const headers = new Headers();
-      headers.set('range', `bytes=${offset}-${offset + length - 1}`);
-
-      const resp = await fetch(url, {
-        signal,
-        headers,
-        credentials: 'include',
-      });
-
-      const newEtag = resp.headers.get('Etag') || undefined;
-      if (resp.status === 416 || (etag && newEtag && newEtag !== etag)) {
-        throw new pmtiles.EtagMismatch(`Server returned non-matching ETag ${etag}`);
-      }
-      if (resp.status >= 300) {
-        throw new Error(`Bad response code: ${resp.status}`);
-      }
-
-      const contentLength = resp.headers.get('Content-Length');
-      if (resp.status === 200 && (!contentLength || +contentLength > length)) {
-        throw new Error('Server returned no content-length header or content-length exceeding request. Check that your storage backend supports HTTP Byte Serving.');
-      }
-
-      return {
-        data: await resp.arrayBuffer(),
-        etag: newEtag,
-        cacheControl: resp.headers.get('Cache-Control') || undefined,
-        expires: resp.headers.get('Expires') || undefined,
-      };
-    },
-  };
-}
-
-function ensurePmtilesProtocol() {
-  if (pmtilesProtocolRegistered) return;
-
-  const protocol = new pmtiles.Protocol({ metadata: true });
-  protocol.add(new pmtiles.PMTiles(createCredentialedPmtilesSource(REF_FLOWPATHS_PMTILES_URL)));
-  protocol.add(new pmtiles.PMTiles(createCredentialedPmtilesSource(REF_DIVIDES_PMTILES_URL)));
-  maplibregl.addProtocol('pmtiles', protocol.tile);
-  pmtilesProtocolRegistered = true;
-}
-
-// ============================================================
-// LOGGING
-// ============================================================
-const logEl = document.getElementById('log');
-function log(msg, cls = '') {
-  const span = document.createElement('span');
-  span.className = cls;
-  span.textContent = msg + '\n';
-  logEl.appendChild(span);
-  logEl.parentElement.scrollTop = logEl.parentElement.scrollHeight;
-}
-function setProgress(pct) {
-  document.getElementById('progress-fill').style.width = pct + '%';
-}
-
-// ============================================================
-// NETWORK GRAPH
-// ============================================================
-async function loadNetworkGraph() {
-  log('Loading network graph...', 'info');
-  const t0 = performance.now();
-  const resp = await fetch(NETWORK_GRAPH_URL, { credentials: 'include' });
-  if (!resp.ok) throw new Error(`Failed: ${resp.status}`);
-  networkGraph = await resp.json();
-  log(`  ${networkGraph.meta.total_edges} edges in ${((performance.now()-t0)/1000).toFixed(1)}s`, 'success');
-
-  const upstream = new Map();
-  const fwd = new Map();
-  for (const [ft, fn, tt, tn] of networkGraph.edges) {
-    if ((ft === 0 || ft === 2) && (tt === 1 || tt === 3 || tt === 4)) {
-      if (!upstream.has(tn)) upstream.set(tn, new Set());
-      upstream.get(tn).add(fn);
-      if (!fwd.has(fn)) fwd.set(fn, tn);
-    }
-  }
-  adjacency = upstream;
-  downstream = fwd;
-  log(`  Adjacency: ${upstream.size} nodes`, 'success');
-}
-
-function getUpstreamIds(outletNumeric, includeOutlet = true) {
-  const visited = new Set();
-  visited.add(outletNumeric);
-  const queue = [outletNumeric];
-
-  if (includeOutlet) {
-    const ds = downstream.get(outletNumeric);
-    if (ds != null) queue.unshift(ds);
-  }
-
-  while (queue.length > 0) {
-    const cur = queue.shift();
-    const parents = adjacency.get(cur);
-    if (!parents) continue;
-    for (const p of parents) {
-      if (!visited.has(p)) { visited.add(p); queue.push(p); }
-    }
-  }
-  return visited;
-}
-
-// ============================================================
-// HYPARQUET
-// ============================================================
-async function initHyparquet() {
-  if (hp) return;
-  log('Loading hyparquet...', 'info');
-  const t0 = performance.now();
-
-  hp = await import('https://cdn.jsdelivr.net/npm/hyparquet/+esm');
-
-  try {
-    const hpc = await import('https://cdn.jsdelivr.net/npm/hyparquet-compressors/+esm');
-    compressors = hpc.compressors;
-    log(`  hyparquet + compressors ready (${((performance.now()-t0)/1000).toFixed(1)}s)`, 'success');
-  } catch (e) {
-    log(`  hyparquet ready, compressors unavailable (${e.message})`, 'info');
-    compressors = undefined;
-  }
-}
-
-async function getFileHandle(url) {
-  if (!fileHandleCache[url]) {
-    fileHandleCache[url] = await hp.asyncBufferFromUrl({ url, requestInit: { credentials: 'include' } });
-  }
-  return fileHandleCache[url];
-}
-
-/**
- * Read rows from a remote parquet file using hyparquet's $in filter.
- * Row groups whose min/max stats don't overlap the $in values are
- * skipped entirely (no range request made).
- */
-const _td = new TextDecoder();
-
-async function readParquetFiltered(url, filterCol, idArray) {
-  const file = await getFileHandle(url);
-  const opts = {
-    file,
-    geoparquet: false,
-    rowFormat: 'object',
-    utf8: false, // keep BYTE_ARRAY as Uint8Array so binary geom isn't corrupted by UTF-8 decoding
-    filter: { [filterCol]: { $in: idArray } },
-  };
-  if (compressors) opts.compressors = compressors;
-
-  const rows = await hp.parquetReadObjects(opts);
-  return rows.map(row => {
-    const out = {};
-    for (const [k, v] of Object.entries(row)) {
-      if (typeof v === 'bigint') {
-        out[k] = Number(v);
-      } else if (v instanceof Uint8Array && k !== 'geom' && k !== 'geometry') {
-        // Non-geom BYTE_ARRAY columns are text — decode them back to strings
-        out[k] = _td.decode(v);
-      } else {
-        out[k] = v;
-      }
-    }
-    return out;
-  });
-}
-
-// ============================================================
-// MAP
-// ============================================================
-function initMap() {
-  ensurePmtilesProtocol();
-
-  const darkStyle = `${S3_MAP}/styles/dark-style.json`;
-  const lightStyle = `${S3_MAP}/styles/light-style.json`;
-  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-  map = new maplibregl.Map({
-    container: 'map',
-    style: prefersDark ? darkStyle : lightStyle,
-    center: [-96, 40],
-    zoom: 4,
-    transformRequest: (url) => {
-      if (url.startsWith(S3_ORIGIN)) return { url, credentials: 'include' };
-    },
-  });
-  
-  map.on("styledata", () => {
-    if (map.getSource("oconus_ref_flowpaths")) return;
-    map.addSource("oconus_ref_flowpaths", {
-      type: "vector",
-      url: `pmtiles://${REF_FLOWPATHS_PMTILES_URL}`,
-    });
-    map.addLayer(
-      {
-        id: "ref_flowpaths",
-        type: "line",
-        source: "oconus_ref_flowpaths",
-        "source-layer": "conus_flowpaths",
-        layout: { visibility: "none" },
-        paint: {
-          "line-width": 1,
-          "line-color": document.getElementById('color-flowpaths').value,
-          "line-opacity": 1,
-        },
-      },
-      "flowpaths"
-    );
-    map.addSource("oconus_ref_divides", {
-      type: "vector",
-      url: `pmtiles://${REF_DIVIDES_PMTILES_URL}`,
-    });
-    map.addLayer(
-      {
-        id: "ref_divides",
-        type: "line",
-        source: "oconus_ref_divides",
-        "source-layer": "conus_divides",
-        layout: { visibility: "none" },
-        paint: {
-          "line-width": 0.5,
-          "line-color": document.getElementById('color-divides').value,
-          "line-opacity": 0.9,
-        },
-      },
-      "catchments"
-    );
-  });
-
-  map.on('load', () => {
-    map.on('click', 'catchments', (e) => {
-      if (e.features && e.features.length > 0) {
-        const catId = e.features[0].properties.divide_id;
-        if (catId) selectOutlet(catId);
-      }
-    });
-    map.on('mouseenter', 'catchments', () => { map.getCanvas().style.cursor = 'pointer'; });
-    map.on('mouseleave', 'catchments', () => { map.getCanvas().style.cursor = ''; });
-    log('Map loaded. Zoom in to see catchments, then click one.', 'success');
-  });
-}
-
-function updateMapFilters() {
-  const maps = [map];
-  if (splitActive && mapRight && mapRight.isStyleLoaded()) maps.push(mapRight);
-
-  for (const m of maps) {
-    if (!m || !m.isStyleLoaded()) continue;
-    if (!outletCatId) {
-      m.setFilter('selected-catchments', ['any', ['in', 'divide_id', '']]);
-      m.setFilter('upstream-catchments', ['any', ['in', 'divide_id', '']]);
-      continue;
-    }
-    m.setFilter('selected-catchments', ['any', ['in', 'divide_id', outletCatId]]);
-    const upstreamList = upstreamCatIds.filter(id => id !== outletCatId);
-    if (upstreamList.length > 0) {
-      m.setFilter('upstream-catchments', ['any', ['in', 'divide_id', ...upstreamList]]);
-    } else {
-      m.setFilter('upstream-catchments', ['any', ['in', 'divide_id', '']]);
-    }
-  }
-}
-
-// ============================================================
-// SPLIT VIEW
-// ============================================================
-function initMapRight() {
-  ensurePmtilesProtocol();
-
-  const darkStyle = `${S3_MAP}/styles/dark-style.json`;
-  const lightStyle = `${S3_MAP}/styles/light-style.json`;
-  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-  mapRight = new maplibregl.Map({
-    container: 'map-right',
-    style: prefersDark ? darkStyle : lightStyle,
-    center: map.getCenter(),
-    zoom: map.getZoom(),
-    bearing: map.getBearing(),
-    pitch: map.getPitch(),
-    transformRequest: (url) => {
-      if (url.startsWith(S3_ORIGIN)) return { url, credentials: 'include' };
-    },
-  });
-
-  mapRight.on("styledata", () => {
-    // Hide base catchments/flowpaths on the reference map
-    if (mapRight.getLayer("catchments")) mapRight.setLayoutProperty("catchments", "visibility", "none");
-    if (mapRight.getLayer("flowpaths")) mapRight.setLayoutProperty("flowpaths", "visibility", "none");
-
-    if (mapRight.getSource("oconus_ref_flowpaths")) return;
-    mapRight.addSource("oconus_ref_flowpaths", {
-      type: "vector",
-      url: `pmtiles://${REF_FLOWPATHS_PMTILES_URL}`,
-    });
-    mapRight.addLayer({
-      id: "ref_flowpaths",
-      type: "line",
-      source: "oconus_ref_flowpaths",
-      "source-layer": "conus_flowpaths",
-      layout: { visibility: document.getElementById('toggle-flowpaths').checked ? 'visible' : 'none' },
-      paint: {
-        "line-width": 1,
-        "line-color": document.getElementById('color-flowpaths').value,
-        "line-opacity": 1,
-      },
-    });
-    mapRight.addSource("oconus_ref_divides", {
-      type: "vector",
-      url: `pmtiles://${REF_DIVIDES_PMTILES_URL}`,
-    });
-    mapRight.addLayer({
-      id: "ref_divides",
-      type: "line",
-      source: "oconus_ref_divides",
-      "source-layer": "conus_divides",
-      layout: { visibility: document.getElementById('toggle-divides').checked ? 'visible' : 'none' },
-      paint: {
-        "line-width": 0.5,
-        "line-color": document.getElementById('color-divides').value,
-        "line-opacity": 0.9,
-      },
-    });
-
-    // Apply any existing selection to the right map
-    updateMapFilters();
-  });
-
-  // Sync camera between maps
-  function onMove(source, target) {
-    if (syncing) return;
-    syncing = true;
-    target.jumpTo({
-      center: source.getCenter(),
-      zoom: source.getZoom(),
-      bearing: source.getBearing(),
-      pitch: source.getPitch(),
-    });
-    syncing = false;
-  }
-  map.on('move', () => { if (splitActive && mapRight) onMove(map, mapRight); });
-  mapRight.on('move', () => { if (splitActive) onMove(mapRight, map); });
-}
-
-function toggleSplitView(active) {
-  splitActive = active;
-  document.body.classList.toggle('split-view', active);
-
-  if (active) {
-    // Hide ref layers on main map
-    if (map.getLayer('ref_flowpaths')) map.setLayoutProperty('ref_flowpaths', 'visibility', 'none');
-    if (map.getLayer('ref_divides')) map.setLayoutProperty('ref_divides', 'visibility', 'none');
-
-    if (!mapRight) {
-      // Show container first so MapLibre can measure it, then init
-      setTimeout(() => {
-        initMapRight();
-        // Auto-enable both ref layers on the right map
-        document.getElementById('toggle-flowpaths').checked = true;
-        document.getElementById('toggle-flowpaths').dispatchEvent(new Event('change'));
-        document.getElementById('toggle-divides').checked = true;
-        document.getElementById('toggle-divides').dispatchEvent(new Event('change'));
-        map.resize();
-      }, 0);
-    } else {
-      setTimeout(() => {
-        map.resize();
-        mapRight.resize();
-        // Sync position
-        mapRight.jumpTo({ center: map.getCenter(), zoom: map.getZoom(), bearing: map.getBearing(), pitch: map.getPitch() });
-      }, 0);
-    }
-  } else {
-    // Transfer ref layer state back to main map
-    const fpVisible = document.getElementById('toggle-flowpaths').checked;
-    const dvVisible = document.getElementById('toggle-divides').checked;
-    if (map.getLayer('ref_flowpaths')) {
-      map.setLayoutProperty('ref_flowpaths', 'visibility', fpVisible ? 'visible' : 'none');
-      map.setPaintProperty('ref_flowpaths', 'line-color', document.getElementById('color-flowpaths').value);
-    }
-    if (map.getLayer('ref_divides')) {
-      map.setLayoutProperty('ref_divides', 'visibility', dvVisible ? 'visible' : 'none');
-      map.setPaintProperty('ref_divides', 'line-color', document.getElementById('color-divides').value);
-    }
-    setTimeout(() => map.resize(), 0);
-  }
-}
-
-// ============================================================
-// SELECTION
-// ============================================================
-async function selectOutlet(catId) {
-  if (!catId.startsWith('cat-')) catId = 'cat-' + catId.replace(/^(cat-?)/, '');
-  outletCatId = catId;
-  document.getElementById('input-catid').value = catId;
-
-  const numeric = parseInt(catId.split('-')[1]);
-  const includeOutlet = document.getElementById('chk-include-outlet').checked;
-
-  log(`\nSelected: ${catId}`, 'step');
-  const t0 = performance.now();
-  upstreamNumericIds = getUpstreamIds(numeric, includeOutlet);
-  upstreamCatIds = Array.from(upstreamNumericIds).map(n => `cat-${n}`);
-  log(`  ${upstreamNumericIds.size} upstream catchments (${(performance.now()-t0).toFixed(0)}ms)`, 'success');
-
-  const info = document.getElementById('selection-info');
-  info.style.display = 'block';
-  info.innerHTML = `Outlet: <span class="outlet">${catId}</span><br>Upstream: <span class="count">${upstreamNumericIds.size}</span> catchments`;
-
-  document.getElementById('btn-subset').disabled = false;
-  updateMapFilters();
-}
-
-// ============================================================
-// SUBSET & DOWNLOAD
-//
-// Table order and inter-table dependencies match the Python
-// subsetting logic in subset_table() / create_subset_gpkg():
-//
-//   divides            -> filter by divide_id using catIds
-//   divide-attributes  -> filter by divide_id from subset divides
-//   flowpath-attributes    -> filter by id using wbIds
-//   flowpath-attributes-ml -> filter by id using wbIds
-//   flowpaths          -> filter by id using wbIds
-//   hydrolocations     -> filter by id using wbIds
-//   nexus              -> filter by id using nexIds + flowpath toids
-//   pois               -> filter by id using wbIds
-//   lakes              -> filter by poi_id from subset pois
-//   network            -> filter by id using the full upstream id set
-// ============================================================
-async function subsetAndDownload() {
-  if (!outletCatId || upstreamNumericIds.size === 0) return;
-  const btn = document.getElementById('btn-subset');
-  btn.disabled = true;
-  logEl.innerHTML = '';
-  setProgress(0);
-
-  try {
-    const nums = Array.from(upstreamNumericIds);
-    log(`Subsetting ${nums.length} catchments from ${outletCatId}`, 'step');
-
-    await initHyparquet();
-
-    // Build ID arrays matching Python's upstream_ids prefixing
-    const catIds = nums.map(n => `cat-${n}`);
-    const wbIds  = nums.map(n => `wb-${n}`);
-
-    // The Python subset_table passes the same ids list to every table.
-    // The SQL WHERE key_name IN (...) naturally ignores non-matching prefixes.
-    // We replicate this by building the right ID list per table, matching
-    // the column each table actually filters on.
-
-    // allTableData stores { rows, url } per table so buildGeoPackage can
-    // fetch parquet schema even when a table has 0 matching rows.
-    const allTableData = {};
-    const totalSteps = 12; // 10 tables + gpkg build + download
-    let step = 0;
-
-    async function doTable(name, url, filterCol, ids) {
-      step++;
-      setProgress((step / totalSteps) * 100);
-      log(`  ${name}...`, 'info');
+      log(`\nSelected: ${catId}`, 'step');
       const t0 = performance.now();
+      state.upstreamNumericIds = getUpstreamIds(numeric, includeOutlet);
+      state.upstreamCatIds = Array.from(state.upstreamNumericIds).map(n => `cat-${n}`);
+      log(`  ${state.upstreamNumericIds.size} upstream catchments (${(performance.now()-t0).toFixed(0)}ms)`, 'success');
+
+      const info = document.getElementById('selection-info');
+      info.style.display = 'block';
+      info.innerHTML = `Outlet: <span class="outlet">${catId}</span><br>Upstream: <span class="count">${state.upstreamNumericIds.size}</span> catchments`;
+
+      document.getElementById('btn-subset').disabled = false;
+      updateMapFilters();
+    }
+
+    // ============================================================
+    // EVENT HANDLERS
+    // ============================================================
+    document.getElementById('input-catid').addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        const val = e.target.value.trim();
+        if (val) selectOutlet(val);
+      }
+    });
+    document.getElementById('btn-subset').addEventListener('click', subsetAndDownload);
+    document.getElementById('chk-include-outlet').addEventListener('change', () => {
+      if (state.outletCatId) selectOutlet(state.outletCatId);
+    });
+
+    document.getElementById('toggle-split').addEventListener('change', (e) => {
+      toggleSplitView(e.target.checked);
+    });
+
+    document.getElementById('toggle-flowpaths').addEventListener('change', (e) => {
+      const vis = e.target.checked ? 'visible' : 'none';
+      const target = state.splitActive && state.mapRight ? state.mapRight : state.map;
+      if (target && target.getLayer('ref_flowpaths')) {
+        target.setLayoutProperty('ref_flowpaths', 'visibility', vis);
+      }
+    });
+    document.getElementById('toggle-divides').addEventListener('change', (e) => {
+      const vis = e.target.checked ? 'visible' : 'none';
+      const target = state.splitActive && state.mapRight ? state.mapRight : state.map;
+      if (target && target.getLayer('ref_divides')) {
+        target.setLayoutProperty('ref_divides', 'visibility', vis);
+      }
+    });
+    document.getElementById('color-flowpaths').addEventListener('input', (e) => {
+      const target = state.splitActive && state.mapRight ? state.mapRight : state.map;
+      if (target && target.getLayer('ref_flowpaths')) {
+        target.setPaintProperty('ref_flowpaths', 'line-color', e.target.value);
+      }
+    });
+    document.getElementById('color-divides').addEventListener('input', (e) => {
+      const target = state.splitActive && state.mapRight ? state.mapRight : state.map;
+      if (target && target.getLayer('ref_divides')) {
+        target.setPaintProperty('ref_divides', 'line-color', e.target.value);
+      }
+    });
+    document.getElementById('btn-clear').addEventListener('click', () => {
+      state.outletCatId = null;
+      state.upstreamCatIds = [];
+      state.upstreamNumericIds.clear();
+      document.getElementById('input-catid').value = '';
+      document.getElementById('selection-info').style.display = 'none';
+      document.getElementById('btn-subset').disabled = true;
+      updateMapFilters();
+      logEl.innerHTML = '';
+      setProgress(0);
+    });
+
+    // ============================================================
+    // BOOT
+    // ============================================================
+    (async () => {
+      initMap();
       try {
-        const rows = await readParquetFiltered(url, filterCol, ids);
-        allTableData[name] = { rows, url };
-        log(`    ${rows.length} rows (${((performance.now()-t0)/1000).toFixed(1)}s)`, 'success');
+        await loadNetworkGraph();
+        log('Ready. Zoom in and click a catchment, or type an ID.', 'success');
       } catch (err) {
-        log(`    Error: ${err.message}`, 'error');
-        allTableData[name] = { rows: [], url };
+        log(`Init error: ${err.message}`, 'error');
+        console.error(err);
       }
-    }
-
-    // Compute nexus IDs from network topology (no need to fetch flowpaths first)
-    // Include nex-N for every N in the selection that has an upstream parent also in the selection
-    const computedNexIds = [];
-    for (const n of upstreamNumericIds) {
-      const parents = adjacency.get(n);
-      if (parents) {
-        for (const p of parents) {
-          if (upstreamNumericIds.has(p)) { computedNexIds.push(`nex-${n}`); break; }
-        }
-      }
-    }
-    // Add the outlet's downstream nexus (not in the upstream selection itself)
-    const outletNumeric = parseInt(outletCatId.split('-')[1]);
-    const outletDownstream = downstream.get(outletNumeric);
-    if (outletDownstream != null) computedNexIds.push(`nex-${outletDownstream}`);
-    const allNexIds = [...new Set(computedNexIds)];
-
-    // --- Wave 1: all tables whose IDs are derived from the network graph ---
-    await Promise.all([
-      doTable('divides',              PARQUET_URLS['divides'],              'divide_id', catIds),
-      doTable('divide-attributes',    PARQUET_URLS['divide-attributes'],    'divide_id', catIds),
-      doTable('flowpaths',            PARQUET_URLS['flowpaths'],            'id', wbIds),
-      doTable('flowpath-attributes',  PARQUET_URLS['flowpath-attributes'],  'id', wbIds),
-      doTable('flowpath-attributes-ml', PARQUET_URLS['flowpath-attributes-ml'], 'id', wbIds),
-      doTable('hydrolocations',       PARQUET_URLS['hydrolocations'],       'id', wbIds),
-      doTable('nexus',                PARQUET_URLS['nexus'],                'id', allNexIds),
-      doTable('pois',                 PARQUET_URLS['pois'],                 'id', wbIds),
-      doTable('network',              PARQUET_URLS['network'],              'id', [...wbIds, ...allNexIds]),
-    ]);
-
-    // --- Wave 2: lakes depends on pois results ---
-    const poiIds = (allTableData['pois']?.rows || []).map(r => r.poi_id).filter(x => x != null);
-    if (poiIds.length > 0) {
-      await doTable('lakes', PARQUET_URLS['lakes'], 'poi_id', poiIds);
-    } else {
-      step++;
-      setProgress((step / totalSteps) * 100);
-      allTableData['lakes'] = { rows: [], url: PARQUET_URLS['lakes'] };
-      log('  lakes... 0 rows (no poi_ids)', '');
-    }
-
-    // Build GeoPackage
-    step++;
-    setProgress((step / totalSteps) * 100);
-    log('Building GeoPackage...', 'step');
-    const gpkgBlob = await buildGeoPackage(allTableData);
-
-    setProgress(100);
-    const filename = `${outletCatId}_subset.gpkg`;
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(gpkgBlob);
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(a.href);
-    log(`Downloaded ${filename} (${(gpkgBlob.size/1024/1024).toFixed(1)} MB)`, 'success');
-  } catch (err) {
-    log(`FATAL: ${err.message}`, 'error');
-    console.error(err);
-  } finally {
-    btn.disabled = false;
-  }
-}
-
-// ============================================================
-// GEOMETRY HELPERS
-// Convert any value (Uint8Array, ArrayBuffer, binary string) to Uint8Array
-// ============================================================
-function _ensureBytes(v) {
-  if (v instanceof Uint8Array) return v;
-  if (v instanceof ArrayBuffer) return new Uint8Array(v);
-  if (v && v.buffer instanceof ArrayBuffer) return new Uint8Array(v.buffer, v.byteOffset, v.byteLength);
-  if (typeof v === 'string') {
-    // hyparquet returns BYTE_ARRAY columns as JS strings — convert char-by-char
-    const b = new Uint8Array(v.length);
-    for (let i = 0; i < v.length; i++) b[i] = v.charCodeAt(i) & 0xff;
-    return b;
-  }
-  return null;
-}
-
-// Extract [minx, miny, maxx, maxy] from a ring (array of sequential x,y doubles)
-function _ringBbox(dv, off, n, le) {
-  let x0=Infinity, y0=Infinity, x1=-Infinity, y1=-Infinity;
-  for (let i = 0; i < n; i++, off += 16) {
-    const x = dv.getFloat64(off, le), y = dv.getFloat64(off+8, le);
-    if (x < x0) x0=x; if (x > x1) x1=x;
-    if (y < y0) y0=y; if (y > y1) y1=y;
-  }
-  return [x0, y0, x1, y1];
-}
-
-// Extract [minx, miny, maxx, maxy] from WKB bytes
-function wkbBbox(bytes) {
-  if (!bytes || bytes.length < 5) return null;
-  try {
-    const le = bytes[0] === 1;
-    const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-    const gt = dv.getUint32(1, le) & 0xffff;
-    if (gt === 1) { // POINT
-      const x = dv.getFloat64(5, le), y = dv.getFloat64(13, le);
-      return isFinite(x) && isFinite(y) ? [x, y, x, y] : null;
-    }
-    if (gt === 2) { // LINESTRING
-      const n = dv.getUint32(5, le);
-      return _ringBbox(dv, 9, n, le);
-    }
-    if (gt === 3) { // POLYGON
-      const nr = dv.getUint32(5, le);
-      if (!nr) return null;
-      const n = dv.getUint32(9, le);
-      return _ringBbox(dv, 13, n, le);
-    }
-    if (gt >= 4 && gt <= 7) { // MULTI* / GEOMETRYCOLLECTION
-      const ng = dv.getUint32(5, le);
-      let bb = null, off = 9;
-      for (let g = 0; g < ng; g++) {
-        const sle = bytes[off] === 1; off++;
-        const st = dv.getUint32(off, sle) & 0xffff; off += 4;
-        let sb = null;
-        if (st === 1) {
-          const x=dv.getFloat64(off,sle), y=dv.getFloat64(off+8,sle);
-          sb = [x, y, x, y]; off += 16;
-        } else if (st === 2) {
-          const n = dv.getUint32(off, sle); off += 4;
-          sb = _ringBbox(dv, off, n, sle); off += n*16;
-        } else if (st === 3) {
-          const nr2 = dv.getUint32(off, sle); off += 4;
-          if (nr2 > 0) {
-            const n = dv.getUint32(off, sle); off += 4;
-            sb = _ringBbox(dv, off, n, sle); off += n*16;
-            for (let r = 1; r < nr2; r++) { const rn = dv.getUint32(off, sle); off += 4+rn*16; }
-          }
-        }
-        if (sb) bb = bb ? [Math.min(bb[0],sb[0]),Math.min(bb[1],sb[1]),Math.max(bb[2],sb[2]),Math.max(bb[3],sb[3])] : sb;
-      }
-      return bb;
-    }
-    return null;
-  } catch(e) { return null; }
-}
-
-// Merge two [minx,miny,maxx,maxy] extents
-function mergeBbox(a, b) {
-  if (!a) return b; if (!b) return a;
-  return [Math.min(a[0],b[0]), Math.min(a[1],b[1]), Math.max(a[2],b[2]), Math.max(a[3],b[3])];
-}
-
-// Wrap raw WKB bytes in a GeoPackage geometry blob (GP header + optional bbox envelope + WKB)
-// GP blob format: http://www.geopackage.org/spec/#gpb_format
-function toGpkgBlob(v, srsId) {
-  const wkb = _ensureBytes(v);
-  if (!wkb || !wkb.length) return null;
-  // Already a GP blob (magic bytes 'G','P')?
-  if (wkb[0] === 0x47 && wkb[1] === 0x50) return wkb;
-
-  const bbox = wkbBbox(wkb);
-  // flags: bit0=little-endian=1, bits1-3=envelope type (1=bbox, 0=none)
-  // envelope type 1 = minx,maxx,miny,maxy (4x float64 = 32 bytes)
-  const hLen = bbox ? 40 : 8;
-  const hdr = new Uint8Array(hLen);
-  hdr[0] = 0x47; hdr[1] = 0x50; hdr[2] = 0x00;
-  hdr[3] = bbox ? 0x03 : 0x01; // 0x03 = le + envelope type 1; 0x01 = le + no envelope
-  const hdv = new DataView(hdr.buffer);
-  hdv.setInt32(4, srsId, true); // SRS ID little-endian
-  if (bbox) {
-    hdv.setFloat64(8,  bbox[0], true); // minx
-    hdv.setFloat64(16, bbox[2], true); // maxx
-    hdv.setFloat64(24, bbox[1], true); // miny
-    hdv.setFloat64(32, bbox[3], true); // maxy
-  }
-  const out = new Uint8Array(hLen + wkb.length);
-  out.set(hdr); out.set(wkb, hLen);
-  return out;
-}
-
-// ============================================================
-// GEOPACKAGE BUILDER
-// ============================================================
-async function buildGeoPackage(tableData) {
-  const SQL = await initSqlJs({
-    locateFile: f => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.11.0/${f}`
-  });
-  const db = new SQL.Database();
-
-  db.run(`
-    CREATE TABLE gpkg_spatial_ref_sys (
-      srs_name TEXT NOT NULL, srs_id INTEGER NOT NULL PRIMARY KEY,
-      organization TEXT NOT NULL, organization_coordsys_id INTEGER NOT NULL,
-      definition TEXT NOT NULL, description TEXT
-    );
-    INSERT INTO gpkg_spatial_ref_sys VALUES
-      ('NAD83 / Conus Albers',5070,'EPSG',5070,'PROJCS["NAD83 / Conus Albers",GEOGCS["NAD83",DATUM["North_American_Datum_1983",SPHEROID["GRS 1980",6378137,298.257222101]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433]],PROJECTION["Albers_Conic_Equal_Area"],PARAMETER["latitude_of_center",23],PARAMETER["longitude_of_center",-96],PARAMETER["standard_parallel_1",29.5],PARAMETER["standard_parallel_2",45.5],PARAMETER["false_easting",0],PARAMETER["false_northing",0],UNIT["metre",1]]',NULL),
-      ('WGS 84',4326,'EPSG',4326,'GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433]]',NULL),
-      ('Undefined cartesian',-1,'NONE',-1,'undefined',NULL),
-      ('Undefined geographic',0,'NONE',0,'undefined',NULL);
-    CREATE TABLE gpkg_contents (
-      table_name TEXT NOT NULL PRIMARY KEY, data_type TEXT NOT NULL,
-      identifier TEXT, description TEXT DEFAULT '',
-      last_change DATETIME DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
-      min_x DOUBLE, min_y DOUBLE, max_x DOUBLE, max_y DOUBLE,
-      srs_id INTEGER REFERENCES gpkg_spatial_ref_sys(srs_id)
-    );
-    CREATE TABLE gpkg_geometry_columns (
-      table_name TEXT NOT NULL, column_name TEXT NOT NULL,
-      geometry_type_name TEXT NOT NULL, srs_id INTEGER NOT NULL,
-      z TINYINT NOT NULL, m TINYINT NOT NULL,
-      CONSTRAINT pk_gc PRIMARY KEY (table_name, column_name)
-    );
-    CREATE TABLE gpkg_ogr_contents (table_name TEXT NOT NULL PRIMARY KEY, feature_count INTEGER);
-    CREATE TABLE gpkg_extensions (
-      table_name TEXT, column_name TEXT, extension_name TEXT NOT NULL,
-      definition TEXT NOT NULL, scope TEXT NOT NULL,
-      CONSTRAINT ge_tce UNIQUE (table_name, column_name, extension_name)
-    );
-    CREATE TABLE gpkg_tile_matrix_set (
-      table_name TEXT NOT NULL PRIMARY KEY, srs_id INTEGER NOT NULL,
-      min_x DOUBLE NOT NULL, min_y DOUBLE NOT NULL,
-      max_x DOUBLE NOT NULL, max_y DOUBLE NOT NULL
-    );
-    CREATE TABLE gpkg_tile_matrix (
-      table_name TEXT NOT NULL, zoom_level INTEGER NOT NULL,
-      matrix_width INTEGER NOT NULL, matrix_height INTEGER NOT NULL,
-      tile_width INTEGER NOT NULL, tile_height INTEGER NOT NULL,
-      pixel_x_size DOUBLE NOT NULL, pixel_y_size DOUBLE NOT NULL,
-      CONSTRAINT pk_ttm PRIMARY KEY (table_name, zoom_level)
-    );
-    PRAGMA application_id = 1196444487;
-    PRAGMA user_version = 10200;
-  `);
-
-  // Geometry type per feature table (matches working.gpkg gpkg_geometry_columns)
-  const GEOM_TYPE = {
-    divides: 'POLYGON',
-    flowpaths: 'GEOMETRY',
-    nexus: 'POINT',
-    hydrolocations: 'POINT',
-    lakes: 'POINT',
-  };
-  const geomTables = new Set(Object.keys(GEOM_TYPE));
-
-  // Hardcoded column definitions for tables that may have 0 matching rows,
-  // taken directly from template.sql to ensure schema consistency.
-  // fid is excluded here — it is prepended as PRIMARY KEY AUTOINCREMENT below.
-  const EMPTY_TABLE_COLS = {
-    'hydrolocations': '"poi_id" INTEGER,"id" TEXT,"nex_id" TEXT,"hf_id" REAL,"hl_link" TEXT,"hl_reference" TEXT,"hl_uri" TEXT,"hl_source" TEXT,"hl_x" REAL,"hl_y" REAL,"vpuid" TEXT,"geom" BLOB',
-    'pois':           '"poi_id" INTEGER,"id" TEXT,"nex_id" TEXT,"vpuid" TEXT',
-    'lakes':          '"geom" BLOB,"lake_id" REAL,"LkArea" REAL,"LkMxE" REAL,"WeirC" REAL,"WeirL" REAL,"OrificeC" REAL,"OrificeA" REAL,"OrificeE" REAL,"WeirE" REAL,"ifd" REAL,"Dam_Length" REAL,"domain" TEXT,"poi_id" INTEGER,"hf_id" REAL,"reservoir_index_AnA" REAL,"reservoir_index_Extended_AnA" REAL,"reservoir_index_GDL_AK" REAL,"reservoir_index_Medium_Range" REAL,"reservoir_index_Short_Range" REAL,"res_id" TEXT,"vpuid" TEXT,"lake_x" REAL,"lake_y" REAL',
-  };
-
-  for (const [tableName, entry] of Object.entries(tableData)) {
-    // entry is { rows, url } from doTable
-    const rows = Array.isArray(entry) ? entry : (entry?.rows ?? []);
-
-    const hasGeom = geomTables.has(tableName);
-
-    let columns, colDefs, geomCol;
-    if (rows.length > 0) {
-      columns = Object.keys(rows[0]);
-      geomCol = (hasGeom && columns.find(c => c === 'geom' || c === 'geometry')) || null;
-      colDefs = columns.map(c => {
-        if (c === geomCol) return `"${c}" BLOB`;
-        const sample = rows[0][c];
-        if (typeof sample === 'number') return Number.isInteger(sample) ? `"${c}" INTEGER` : `"${c}" REAL`;
-        return `"${c}" TEXT`;
-      }).join(', ');
-    } else if (EMPTY_TABLE_COLS[tableName]) {
-      colDefs = EMPTY_TABLE_COLS[tableName];
-      columns = colDefs.split(',').map(d => d.match(/"([^"]+)"/)[1]);
-      geomCol = hasGeom ? (columns.find(c => c === 'geom' || c === 'geometry') || null) : null;
-    } else {
-      continue;
-    }
-
-    const hasFid = columns.includes('fid');
-    db.run(`CREATE TABLE "${tableName}" (${hasFid ? colDefs : `fid INTEGER PRIMARY KEY AUTOINCREMENT, ${colDefs}`})`);
-
-    let extent = null;
-    if (rows.length > 0) {
-      const placeholders = columns.map(() => '?').join(',');
-      const colStr = columns.map(c => `"${c}"`).join(',');
-      const stmt = db.prepare(`INSERT INTO "${tableName}" (${colStr}) VALUES (${placeholders})`);
-      for (const row of rows) {
-        const vals = columns.map(c => {
-          const v = row[c];
-          if (v == null) return null;
-          if (c === geomCol) {
-            const gpb = toGpkgBlob(v, 5070);
-            if (gpb) {
-              const envType = (gpb[3] & 0x0E) >> 1;
-              const wkbOff = 8 + [0,32,48,48,64][envType];
-              extent = mergeBbox(extent, wkbBbox(gpb.subarray(wkbOff)));
-            }
-            return gpb;
-          }
-          return v;
-        });
-        try { stmt.run(vals); } catch(e) {}
-      }
-      stmt.free();
-    }
-
-    const dataType = hasGeom ? 'features' : 'attributes';
-    if (hasGeom && extent) {
-      db.run(
-        `INSERT INTO gpkg_contents (table_name,data_type,identifier,description,min_x,min_y,max_x,max_y,srs_id) VALUES (?,?,?,'',?,?,?,?,?)`,
-        [tableName, dataType, tableName, extent[0], extent[1], extent[2], extent[3], 5070]
-      );
-    } else {
-      db.run(`INSERT INTO gpkg_contents (table_name,data_type,identifier,srs_id) VALUES (?,?,?,?)`,
-        [tableName, dataType, tableName, hasGeom ? 5070 : 0]);
-    }
-    if (hasGeom) {
-      db.run(`INSERT INTO gpkg_geometry_columns VALUES (?,?,?,5070,0,0)`,
-        [tableName, geomCol, GEOM_TYPE[tableName] || 'GEOMETRY']);
-    }
-    db.run(`INSERT INTO gpkg_ogr_contents VALUES (?,?)`, [tableName, rows.length]);
-    log(`  gpkg: ${tableName} (${rows.length} rows)`, '');
-  }
-
-  const data = db.export();
-  db.close();
-  return new Blob([data], { type: 'application/geopackage+sqlite3' });
-}
-
-// ============================================================
-// EVENT HANDLERS
-// ============================================================
-document.getElementById('input-catid').addEventListener('keydown', e => {
-  if (e.key === 'Enter') {
-    const val = e.target.value.trim();
-    if (val) selectOutlet(val);
-  }
-});
-document.getElementById('btn-subset').addEventListener('click', subsetAndDownload);
-document.getElementById('chk-include-outlet').addEventListener('change', () => {
-  if (outletCatId) selectOutlet(outletCatId);
-});
-
-document.getElementById('toggle-split').addEventListener('change', (e) => {
-  toggleSplitView(e.target.checked);
-});
-
-document.getElementById('toggle-flowpaths').addEventListener('change', (e) => {
-  const vis = e.target.checked ? 'visible' : 'none';
-  const target = splitActive && mapRight ? mapRight : map;
-  if (target && target.getLayer('ref_flowpaths')) {
-    target.setLayoutProperty('ref_flowpaths', 'visibility', vis);
-  }
-});
-document.getElementById('toggle-divides').addEventListener('change', (e) => {
-  const vis = e.target.checked ? 'visible' : 'none';
-  const target = splitActive && mapRight ? mapRight : map;
-  if (target && target.getLayer('ref_divides')) {
-    target.setLayoutProperty('ref_divides', 'visibility', vis);
-  }
-});
-document.getElementById('color-flowpaths').addEventListener('input', (e) => {
-  const target = splitActive && mapRight ? mapRight : map;
-  if (target && target.getLayer('ref_flowpaths')) {
-    target.setPaintProperty('ref_flowpaths', 'line-color', e.target.value);
-  }
-});
-document.getElementById('color-divides').addEventListener('input', (e) => {
-  const target = splitActive && mapRight ? mapRight : map;
-  if (target && target.getLayer('ref_divides')) {
-    target.setPaintProperty('ref_divides', 'line-color', e.target.value);
-  }
-});
-document.getElementById('btn-clear').addEventListener('click', () => {
-  outletCatId = null;
-  upstreamCatIds = [];
-  upstreamNumericIds.clear();
-  document.getElementById('input-catid').value = '';
-  document.getElementById('selection-info').style.display = 'none';
-  document.getElementById('btn-subset').disabled = true;
-  updateMapFilters();
-  logEl.innerHTML = '';
-  setProgress(0);
-});
-
-// ============================================================
-// BOOT
-// ============================================================
-(async () => {
-  initMap();
-  try {
-    await loadNetworkGraph();
-    log('Ready. Zoom in and click a catchment, or type an ID.', 'success');
-  } catch (err) {
-    log(`Init error: ${err.message}`, 'error');
-    console.error(err);
-  }
-})();
-</script>
-</body>
+    })();
+  </script>
+<style>
+  @import "{% static 'css/style.css' %}";
+</style>
 </html>
