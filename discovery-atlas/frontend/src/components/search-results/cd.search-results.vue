@@ -416,6 +416,7 @@ const sortOptions: SortOption[] = [
   { key: "creatorName", title: "First Author", order: "asc" },
   { key: "dateCreated", title: "Date Created", order: "asc" },
   { key: "lastModified", title: "Last Modified", order: "asc" },
+  { key: "datePublished", title: "Date Published", order: "desc" },
 ];
 
 @Component({
