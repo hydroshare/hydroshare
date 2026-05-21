@@ -741,21 +741,7 @@ class CdSearchResults extends Vue {
     return params as EnumDictionary<EnumShortParams, any>;
   }
 
-  // Handles received route parameters from HydroShare page
-  handleMessage(event: MessageEvent) {
-    const parentOrigin = APP_ORIGIN;
-    if (event.origin !== parentOrigin) {
-      return;
-    }
-
-    if (event.data.parentSearch) {
-      this.$router.push(window.location.href + event.data.parentSearch)
-      .catch(sameRouteNavigationErrorHandler);
-    }
-  }
-
   created() {
-    window.addEventListener("message", this.handleMessage, false);
     this._loadRouteParams();
     this.sendRouteParams();
     this._onSearch();
