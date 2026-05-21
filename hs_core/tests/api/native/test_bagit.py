@@ -1,4 +1,6 @@
 import os
+import shutil
+import tempfile
 from django.contrib.auth.models import Group
 from django.test import TestCase
 
@@ -32,7 +34,8 @@ class TestBagIt(TestCase):
             self.user,
             'My Test Resource'
         )
-        self.readme_md = "readme.md"
+        self._tmpdir = tempfile.mkdtemp()
+        self.readme_md = os.path.join(self._tmpdir, "readme.md")
         self.readme_md_file = open(self.readme_md, 'w')
         self.readme_md_file.write("##This is a readme markdown file")
         self.readme_md_file.close()
@@ -43,7 +46,7 @@ class TestBagIt(TestCase):
             self.test_res.delete()
         BaseResource.objects.all().delete()
         self.readme_md_file.close()
-        os.remove(self.readme_md_file.name)
+        shutil.rmtree(self._tmpdir, ignore_errors=True)
 
     def test_create_bag_files(self):
         # this is the api call we are testing
