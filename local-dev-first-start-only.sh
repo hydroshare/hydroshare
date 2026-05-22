@@ -59,55 +59,6 @@ function getImageID() {
     docker images | grep $1 | tr -s ' ' | cut -f3 -d' '
 }
 
-##nodejs build for discovery
-
-node_build() {
-
-HS_PATH=`pwd`
-#### Set version pin variable ####
-#n_ver="15.0.0"
-n_ver="14.14.0"
-
-echo '####################################################################################################'
-echo "Starting Node Build .... "
-echo '####################################################################################################'
-
-### Create Directory structure outside to maintain correct permissions
-cd hs_discover
-rm -rf static templates
-mkdir static templates
-mkdir templates/hs_discover
-mkdir static/js
-mkdir static/css
-
-# Start Docker container and Run build
-docker run -i -v $HS_PATH:/hydroshare --name=nodejs node:$n_ver /bin/bash << eof
-
-cd hydroshare
-cd hs_discover
-npm install
-npm run build
-mkdir -p static/js
-mkdir -p static/css
-cp -rp templates/hs_discover/js static/
-cp -rp templates/hs_discover/css static/
-cp -p templates/hs_discover/map.js static/js/
-echo "----------------js--------------------"
-ls -l static/js
-echo "--------------------------------------"
-echo "----------------css-------------------"
-ls -l static/css
-echo "--------------------------------------"
-eof
-
-echo "Node Build completed ..."
-echo
-echo "Removing node container"
-docker container rm nodejs
-cd $HS_PATH
-
-}
-
 
 ### Clean-up | Setup hydroshare environment
 
@@ -189,16 +140,6 @@ make up-discover
 
 echo "  - docker compose -f ${DOCKER_COMPOSER_YAML_FILE} up -d ${REBUILD_IMAGE}"
 docker compose -f $DOCKER_COMPOSER_YAML_FILE up -d $REBUILD_IMAGE
-
-echo
-echo '########################################################################################################################'
-echo " Starting backround tasks..."
-echo '########################################################################################################################'
-echo
-
-echo
-echo " - building Node for Discovery in background"
-node_build > /dev/null 2>&1 &
 
 echo
 echo '########################################################################################################################'
@@ -334,15 +275,6 @@ echo '##########################################################################
 echo
 echo "  - docker exec mongodb bash -c 'mongosh \"$ATLAS_CONNECTION_URL\" hs_discover/search_indexes/createIndex.js'"
 docker exec mongodb bash -c 'mongosh "$ATLAS_CONNECTION_URL" hs_discover/search_indexes/createIndex.js'
-
-echo
-echo '########################################################################################################################'
-echo " Replacing env vars in static files for Discovery"
-echo '########################################################################################################################'
-echo
-
-echo "  -docker exec hydroshare ./discover-entrypoint.sh"
-docker exec hydroshare ./discover-entrypoint.sh
 
 echo
 echo '########################################################################################################################'
