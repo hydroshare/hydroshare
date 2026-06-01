@@ -65,6 +65,37 @@ def _build_media_object(bucket: str, key: str, size_bytes: int, checksum: str) -
     return media_object.model_dump(exclude_none=True)
 
 
+def _get_object_size_and_checksum(bucket: str, key: str) -> tuple[int, str]:
+    """Return object size and checksum with fallbacks for incomplete HEAD responses."""
+    response = s3_client.head_object(Bucket=bucket, Key=key)
+
+    size_bytes = response.get('ContentLength')
+    if size_bytes is None:
+        list_response = s3_client.list_objects_v2(Bucket=bucket, Prefix=key, MaxKeys=1)
+        for obj in list_response.get('Contents', []):
+            if obj.get('Key') == key:
+                size_bytes = obj.get('Size')
+                break
+
+    checksum = response.get('ETag')
+    if checksum is None:
+        list_response = locals().get('list_response')
+        if list_response is None:
+            list_response = s3_client.list_objects_v2(Bucket=bucket, Prefix=key, MaxKeys=1)
+        for obj in list_response.get('Contents', []):
+            if obj.get('Key') == key:
+                checksum = obj.get('ETag')
+                break
+
+    if size_bytes is None:
+        body_response = s3_client.get_object(Bucket=bucket, Key=key)
+        with body_response['Body'] as stream:
+            size_bytes = len(stream.read())
+
+    normalized_checksum = str(checksum or 'N/A').strip('"')
+    return int(size_bytes), normalized_checksum
+
+
 def _build_manifest_reference(manifest_path: str, size_bytes: int, from_manifest_file: bool = False) -> dict:
     """Build a MediaObject payload that points to the manifest file itself."""
     bucket, key = _split_s3_path(manifest_path)
@@ -78,9 +109,7 @@ def _build_manifest_reference(manifest_path: str, size_bytes: int, from_manifest
         return manifest_object.model_dump(exclude_none=True)
     else:
         # Use the existing manifest file to build the reference media object
-        response = s3_client.head_object(Bucket=bucket, Key=key)
-        size_bytes = response['ContentLength']
-        checksum = response.get('ETag', 'N/A').strip('"')
+        size_bytes, checksum = _get_object_size_and_checksum(bucket, key)
         manifest_object = _build_media_object(bucket, key, size_bytes, checksum)
         return manifest_object
 

@@ -1,7 +1,7 @@
 import logging
 import os
 from typing import Optional
-from urllib.parse import urlencode, quote
+from urllib.parse import quote
 from xml.sax.saxutils import escape as xml_escape
 
 import httpx
@@ -14,6 +14,17 @@ from starlette.background import BackgroundTask
 
 logger = logging.getLogger("hs_s3_proxy")
 DEBUG_HEADERS = os.environ.get("S3_PROXY_DEBUG_HEADERS", "true").lower() == "true"
+
+
+def _encode_query_params(query_params: dict) -> str:
+    # Use RFC3986 encoding (space -> %20, not '+') for SigV4 compatibility.
+    encoded_pairs = []
+    for key, value in query_params.items():
+        encoded_key = quote(str(key), safe='-_.~')
+        encoded_value = quote(str(value), safe='-_.~')
+        encoded_pairs.append((encoded_key, encoded_value))
+    encoded_pairs.sort(key=lambda pair: (pair[0], pair[1]))
+    return '&'.join(f"{k}={v}" for k, v in encoded_pairs)
 
 
 def _s3_error_xml(code: str, message: str) -> bytes:
@@ -53,11 +64,13 @@ class S3ProxyClient:
         body: Optional[bytes] = None
     ) -> Response:
         """Proxy an S3 request to the backend storage, re-signing with backend credentials."""
+        query_params = self._strip_presign_auth_query_params(query_params)
+
         encoded_parts = [quote(part, safe='') for part in path.split('/')]
         encoded_path = '/'.join(encoded_parts)
         url = f"{self.backend_url}{encoded_path}"
         if query_params:
-            url = f"{url}?{urlencode(query_params)}"
+            url = f"{url}?{_encode_query_params(query_params)}"
 
         outbound_headers = self._filter_headers(headers)
         outbound_body = body or b""
@@ -92,7 +105,7 @@ class S3ProxyClient:
                 await client.aclose()
 
             return StreamingResponse(
-                response.aiter_raw(),
+                response.aiter_bytes(),
                 status_code=response.status_code,
                 headers=response_headers,
                 background=BackgroundTask(_close_stream),
@@ -151,6 +164,7 @@ class S3ProxyClient:
             'accept-ranges',
             'cache-control',
             'content-disposition',
+            'content-length',
             'content-language',
             'content-range',
             'content-type',
@@ -169,3 +183,28 @@ class S3ProxyClient:
             'x-goog-storage-class',
         }
         return {k: v for k, v in headers.items() if k.lower() in allow}
+
+    def _strip_presign_auth_query_params(self, query_params: dict) -> dict:
+        """Drop SigV4 presigned auth params before backend re-signing.
+
+        The proxy authenticates/authorizes client requests itself, then signs
+        upstream calls with backend credentials. Forwarding client presign
+        signature fields would create mixed auth types at the backend.
+        """
+        if not query_params:
+            return query_params
+
+        sigv4_query_fields = {
+            'x-amz-algorithm',
+            'x-amz-credential',
+            'x-amz-date',
+            'x-amz-expires',
+            'x-amz-signedheaders',
+            'x-amz-signature',
+            'x-amz-security-token',
+            'x-amz-content-sha256',
+        }
+        return {
+            k: v for k, v in query_params.items()
+            if str(k).lower() not in sigv4_query_fields
+        }

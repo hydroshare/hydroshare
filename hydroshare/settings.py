@@ -485,27 +485,30 @@ SWAGGER_SETTINGS = {
 }
 
 RESOURCE_S3_DEFAULT_ZONE = "hydroshare"
+# Force boto/botocore presigned URLs to SigV4 so proxy-side signature
+# verification and authorization work consistently.
+AWS_S3_SIGNATURE_VERSION = "s3v4"
 RESOURCE_S3_ZONES_CONFIG = {
     "hydroshare": {
         "bucket_name": "resource",
-        "aws_s3_endpoint_url": "http://minio:9000",
+        "aws_s3_endpoint_url": "http://hs-s3-proxy-internal:9001",
         "aws_access_key_id": "cuahsi",
         "aws_secret_access_key": "devpassword",
-        "aws_s3_endpoint_url_public": "http://hs_s3_proxy:9000"
+        "aws_s3_endpoint_url_public": "http://localhost:9002"
     },
     "published": {  # the publisher hydroshare user must be updated to use this zone, see PUBLISHER_USER_NAME
         "bucket_name": "published",
-        "aws_s3_endpoint_url": "http://minio:9000",
+        "aws_s3_endpoint_url": "http://hs-s3-proxy-internal:9001",
         "aws_access_key_id": "cuahsi",
         "aws_secret_access_key": "devpassword",
-        "aws_s3_endpoint_url_public": "http://hs_s3_proxy:9000"
+        "aws_s3_endpoint_url_public": "http://localhost:9002"
     },
     "ciroh": {
         "bucket_name": "ciroh",
-        "aws_s3_endpoint_url": "http://minio:9000",
+        "aws_s3_endpoint_url": "http://hs-s3-proxy-internal:9001",
         "aws_access_key_id": "cuahsi",
         "aws_secret_access_key": "devpassword",
-        "aws_s3_endpoint_url_public": "http://hs_s3_proxy:9000"
+        "aws_s3_endpoint_url_public": "http://localhost:9002"
     }
 }
 
@@ -992,7 +995,7 @@ PUBLISHER_USER_NAME = "published"
 DEFAULT_QUOTA_VALUE = 20
 DEFAULT_QUOTA_UNIT = "GB"
 
-BROKER_URL = 'rabbitmq://guest:guest@rabbitmq:5672//'
+BROKER_URL = 'redis://redis:6379/0'
 ATLAS_CONNECTION_URL = "mongodb://user:pass@mongodb:27017/"
 ATLAS_DB_NAME = "hydroshare"
 SEARCH_RELEVANCE_SCORE_THRESHOLD = 0.3

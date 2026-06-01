@@ -14,7 +14,6 @@ from hs_core.hydroshare_atlas_discovery_collection import (  # noqa: E402
     delete_file_from_catalog,
 )
 from hs_core.views.utils import link_s3_file_to_django  # noqa: E402
-from hs_file_types.utils import get_logical_file_type, set_logical_file_type  # noqa: E402
 from django.contrib.auth.models import User  # noqa: E402
 from theme.models import UserQuota  # noqa: E402
 
@@ -24,11 +23,7 @@ logger = logging.getLogger("hs_event_s3")
 
 
 def _link_s3_file_to_resource(resource, short_path: str):
-    res_file = link_s3_file_to_django(resource, short_path)
-    if resource.resource_type == "CompositeResource":
-        file_type = get_logical_file_type(res=resource, file_id=res_file.pk, fail_feedback=False)
-        if not res_file.has_logical_file and file_type is not None:
-            set_logical_file_type(res=resource, user=None, file_id=res_file.pk, fail_feedback=False)
+    link_s3_file_to_django(resource, short_path)
 
 
 @celery_app.task(

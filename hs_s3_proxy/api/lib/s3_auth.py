@@ -39,6 +39,42 @@ def parse_authorization_header(auth_header: str) -> Optional[dict]:
     }
 
 
+def parse_presigned_auth_query(query_params: dict) -> Optional[dict]:
+    """Parse SigV4 presigned URL query params into auth_info shape.
+
+    Expected query keys include X-Amz-Credential, X-Amz-SignedHeaders,
+    and X-Amz-Signature.
+    """
+    if not query_params:
+        return None
+
+    lowered = {str(k).lower(): v for k, v in query_params.items()}
+    algorithm = lowered.get("x-amz-algorithm")
+    credential = lowered.get("x-amz-credential")
+    signed_headers = lowered.get("x-amz-signedheaders")
+    signature = lowered.get("x-amz-signature")
+
+    if algorithm != "AWS4-HMAC-SHA256":
+        return None
+    if not credential or not signed_headers or not signature:
+        return None
+
+    cred_parts = credential.split('/')
+    if len(cred_parts) != 5:
+        return None
+
+    return {
+        'algorithm': algorithm,
+        'access_key': cred_parts[0],
+        'date': cred_parts[1],
+        'region': cred_parts[2],
+        'service': cred_parts[3],
+        'request_type': cred_parts[4],
+        'signed_headers': signed_headers,
+        'signature': signature,
+    }
+
+
 def get_s3_action_from_request(method: str, path: str, query_params: dict) -> str:
     """Map HTTP method, path, and query parameters to an S3 action string."""
     if 'uploads' in query_params:

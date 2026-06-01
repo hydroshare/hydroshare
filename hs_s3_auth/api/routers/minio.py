@@ -243,10 +243,18 @@ async def verify_signature(request: SignatureVerifyRequest):
 
     row = get_user_token_and_id(username)
     if row is None:
-        logger.warning(f"No token found for username: {username}")
-        return {"allow": False, "reason": "user_not_found"}
-
-    token_key, user_id = row
+        # SigV4 requests when no DB token exists for that access key.
+        if username == os.environ.get("S3_BACKEND_ACCESS_KEY", ""):
+            token_key = os.environ.get("S3_BACKEND_SECRET_KEY", "")
+            if not token_key:
+                logger.warning("Missing S3_BACKEND_SECRET_KEY for cuahsi signature verification")
+                return {"allow": False, "reason": "user_not_found"}
+            user_id = 0
+        else:
+            logger.warning(f"No token found for username: {username}")
+            return {"allow": False, "reason": "user_not_found"}
+    else:
+        token_key, user_id = row
 
     valid = verify_signature_v4(
         method=request.method,

@@ -306,10 +306,23 @@ class S3Storage(s3.S3Storage):
         params["Bucket"] = bucket
         params["Key"] = name
 
-        connection = (
-            self.connection(zone) if self.querystring_auth else self.unsigned_connection
-        )
-        url = connection.meta.client.generate_presigned_url(
-            "get_object", Params=params, ExpiresIn=expire, HttpMethod=http_method
-        )
+        if self.querystring_auth:
+            session = self._create_session(zone)
+            zone_config = get_zone_config(zone)
+            presign_endpoint = zone_config.aws_s3_endpoint_url_public or zone_config.aws_s3_endpoint_url
+            presign_client = session.client(
+                "s3",
+                region_name=self.region_name,
+                use_ssl=self.use_ssl,
+                endpoint_url=presign_endpoint,
+                config=self.client_config,
+                verify=self.verify,
+            )
+            url = presign_client.generate_presigned_url(
+                "get_object", Params=params, ExpiresIn=expire, HttpMethod=http_method
+            )
+        else:
+            url = self.unsigned_connection.meta.client.generate_presigned_url(
+                "get_object", Params=params, ExpiresIn=expire, HttpMethod=http_method
+            )
         return url
