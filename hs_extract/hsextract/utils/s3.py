@@ -1,11 +1,13 @@
 from __future__ import annotations
 import json
+import logging
 import mimetypes
 import os
 from tempfile import SpooledTemporaryFile
 from typing import Iterator, Protocol, TYPE_CHECKING
 
 import boto3
+import requests
 from hs_cloudnative_schemas.schema.base import HasPart, MediaObject
 if TYPE_CHECKING:
     from hsextract.content_types.models import ContentType
@@ -25,6 +27,10 @@ class SupportsFileManifest(Protocol):
 
 JSON_SPOOL_MAX_SIZE_ENV_VAR = "HS_EXTRACT_JSON_SPOOL_MAX_SIZE"
 DEFAULT_JSON_SPOOL_MAX_SIZE = 5 * 1024 * 1024
+DEFAULT_S3_EVENT_ENDPOINT = "http://hs-s3-auth/s3/event/"
+DEFAULT_S3_EVENT_TIMEOUT = 5.0
+
+logger = logging.getLogger(__name__)
 
 s3_config = {
     "endpoint_url": os.environ.get("AWS_S3_ENDPOINT_URL", "https://s3.beta.hydroshare.org"),
@@ -32,6 +38,94 @@ s3_config = {
     "aws_secret_access_key": os.environ.get("AWS_SECRET_ACCESS_KEY", "YOUR_SECRET_KEY")
 }
 s3_client = boto3.client('s3', **s3_config)
+
+
+def _resolve_s3_event_endpoint() -> str:
+    explicit_endpoint = os.environ.get("HS_S3_AUTH_EVENT_ENDPOINT")
+    if explicit_endpoint:
+        return explicit_endpoint
+
+    auth_service_url = os.environ.get("AUTH_SERVICE_URL")
+    if auth_service_url:
+        return f"{auth_service_url.rstrip('/')}/s3/event/"
+
+    return DEFAULT_S3_EVENT_ENDPOINT
+
+
+def _post_s3_event(action: str, bucket: str, object_path: str, file_size: int = 0) -> None:
+    endpoint = _resolve_s3_event_endpoint()
+    timeout = float(os.environ.get("HS_S3_AUTH_EVENT_TIMEOUT", str(DEFAULT_S3_EVENT_TIMEOUT)))
+    username = os.environ.get("HS_S3_AUTH_EVENT_USERNAME", os.environ.get("AWS_ACCESS_KEY_ID", "cuahsi"))
+    payload = {
+        "action": action,
+        "bucket": bucket,
+        "object_path": object_path,
+        "username": username,
+        "user_id": None,
+        "file_size": file_size,
+    }
+
+    try:
+        response = requests.post(endpoint, json=payload, timeout=timeout)
+        if response.status_code not in (200, 204):
+            logger.error(
+                "S3 event endpoint returned %s for action=%s bucket=%s object=%s: %s",
+                response.status_code,
+                action,
+                bucket,
+                object_path,
+                response.text,
+            )
+    except requests.RequestException:
+        logger.exception(
+            "S3 event endpoint request failed for action=%s bucket=%s object=%s",
+            action,
+            bucket,
+            object_path,
+        )
+
+
+def _register_mutation_hooks(client) -> None:
+    events = client.meta.events
+    if getattr(events, "_hs_mutation_hooks_registered", False):
+        return
+    events._hs_mutation_hooks_registered = True
+
+    def before_parameter_build(params, model, context, **kwargs):
+        operation = getattr(model, 'name', '')
+        if operation not in ("PutObject", "DeleteObject", "CompleteMultipartUpload"):
+            return
+
+        context["_hs_bucket"] = params.get("Bucket")
+        context["_hs_key"] = params.get("Key")
+        context["_hs_action"] = {
+            "PutObject": "s3:PutObject",
+            "DeleteObject": "s3:DeleteObjects",
+            "CompleteMultipartUpload": "s3:CompleteMultipartUpload",
+        }.get(operation)
+
+    def after_call(http_response, parsed, model, context, **kwargs):
+        action = context.get("_hs_action")
+        bucket = context.get("_hs_bucket")
+        object_path = context.get("_hs_key")
+        status_code = getattr(http_response, "status_code", None)
+
+        if not action or not bucket or not object_path:
+            return
+        if status_code not in (200, 204):
+            return
+
+        _post_s3_event(action=action, bucket=bucket, object_path=object_path, file_size=0)
+
+    events.register("before-parameter-build.s3.PutObject", before_parameter_build)
+    events.register("before-parameter-build.s3.DeleteObject", before_parameter_build)
+    events.register("before-parameter-build.s3.CompleteMultipartUpload", before_parameter_build)
+    events.register("after-call.s3.PutObject", after_call)
+    events.register("after-call.s3.DeleteObject", after_call)
+    events.register("after-call.s3.CompleteMultipartUpload", after_call)
+
+
+_register_mutation_hooks(s3_client)
 
 
 def _split_s3_path(path: str) -> tuple[str, str]:

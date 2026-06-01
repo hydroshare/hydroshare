@@ -60,25 +60,9 @@ def get_proxy_mode():
 
 
 async def main():
-    mode = get_proxy_mode()
-    servers = []
-    if mode in ("external", ):
-        servers.append(Server(
-            config=uvicorn.Config(
-                external_app, workers=1, loop="asyncio",
-                host="0.0.0.0", port=9000, forwarded_allow_ips="*"
-            )
-        ))
-    if mode in ("internal", ):
-        servers.append(Server(
-            config=uvicorn.Config(
-                internal_app, workers=1, loop="asyncio",
-                host="0.0.0.0", port=9001, forwarded_allow_ips="*"
-            )
-        ))
-    await asyncio.wait([
-        asyncio.create_task(server.serve()) for server in servers
-    ])
+    server = Server(config=uvicorn.Config(external_app, workers=1, loop="asyncio",
+                                          host="0.0.0.0", port=9000, forwarded_allow_ips="*"))
+    await server.serve()
 
 if __name__ == "__main__":
     asyncio.run(main())

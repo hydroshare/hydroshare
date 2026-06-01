@@ -56,7 +56,8 @@ gcloud run deploy ${SERVICE_NAME} \
   --set-env-vars "S3_BACKEND_ACCESS_KEY=${S3_BACKEND_ACCESS_KEY}" \
   --set-env-vars "S3_BACKEND_SECRET_KEY=${S3_BACKEND_SECRET_KEY}" \
   --set-env-vars "S3_PROXY_TIMEOUT=300" \
-  --set-env-vars "CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS}" \
+  --set-env-vars "^|^CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS}" \
+  --set-env-vars "PROXY_MODE=external" \
   --allow-unauthenticated
 
 echo ""

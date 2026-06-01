@@ -74,7 +74,6 @@ class S3ProxyClient:
 
         outbound_headers = self._filter_headers(headers)
         # Avoid compressed upstream payloads so stream length semantics remain stable.
-        outbound_headers['accept-encoding'] = 'identity'
         outbound_body = body or b""
 
         if self._signer:

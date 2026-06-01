@@ -114,14 +114,12 @@ services:
       - solr:solr
       - redis:redis
       - minio:minio
-      - hs-s3-proxy-internal:hs-s3-proxy-internal
     depends_on:
       - postgis
       - pgbouncer
       - solr
       - redis
       - minio
-      - hs-s3-proxy-internal
     stdin_open: true
     tty: true
     command: python manage.py runserver 0.0.0.0:8000
@@ -159,13 +157,11 @@ services:
     links:
       - pgbouncer:pgbouncer
       - redis:redis
-      - hs-s3-proxy-internal:hs-s3-proxy-internal
     depends_on:
       - hydroshare
       - pgbouncer
       - solr
       - redis
-      - hs-s3-proxy-internal
     stdin_open: true
     tty: true
     command: /bin/bash init-defaultworker
@@ -258,7 +254,7 @@ services:
     environment:
       HS_SETTINGS_FILE: "/app/hydroshare/settings.py"
       HS_S3_ZONE_NAME: "hydroshare"
-      AWS_S3_ENDPOINT_URL: "http://hs-s3-proxy-internal:9001"
+      AWS_S3_ENDPOINT_URL: "http://minio:9000"
       AWS_ACCESS_KEY_ID: "cuahsi"
       AWS_SECRET_ACCESS_KEY: "devpassword"
       REDIS_HOST: redis
@@ -273,11 +269,9 @@ services:
     links:
       - minio:minio
       - redis:redis
-      - hs-s3-proxy-internal:hs-s3-proxy-internal
     depends_on:
       - redis
       - minio
-      - hs-s3-proxy-internal
     stdin_open: true
     tty: true
   companion:
@@ -356,11 +350,11 @@ services:
     restart: on-failure
     depends_on:
       - postgis
-  hs-s3-proxy-external:
+  hs-s3-proxy:
     image: hydroshare/hs-s3-proxy:latest
     platform: linux/amd64
-    container_name: hs-s3-proxy-external
-    hostname: hs-s3-proxy-external
+    container_name: hs-s3-proxy
+    hostname: hs-s3-proxy
     build:
       context: ./hs_s3_proxy
       dockerfile: Dockerfile
@@ -373,36 +367,8 @@ services:
       S3_BACKEND_SECRET_KEY: "devpassword"
       S3_BACKEND_REGION: "auto"
       S3_PROXY_TIMEOUT: "300"
-      PROXY_MODE: "external"
     ports:
       - 9002:9000
-    links:
-      - hs-s3-auth:hs-s3-auth
-      - minio:minio
-    restart: on-failure
-    depends_on:
-      - hs-s3-auth
-      - minio
-  hs-s3-proxy-internal:
-    image: hydroshare/hs-s3-proxy:latest
-    platform: linux/amd64
-    container_name: hs-s3-proxy-internal
-    hostname: hs-s3-proxy-internal
-    build:
-      context: ./hs_s3_proxy
-      dockerfile: Dockerfile
-    environment:
-      AUTH_SERVICE_URL: "http://hs-s3-auth"
-      AUTH_SERVICE_TIMEOUT: "5"
-      S3_BACKEND_URL: "http://minio:9000"
-      S3_BACKEND_BUCKET: "resource"
-      S3_BACKEND_ACCESS_KEY: "cuahsi"
-      S3_BACKEND_SECRET_KEY: "devpassword"
-      S3_BACKEND_REGION: "auto"
-      S3_PROXY_TIMEOUT: "300"
-      PROXY_MODE: "internal"
-    ports:
-      - 9003:9001
     links:
       - hs-s3-auth:hs-s3-auth
       - minio:minio

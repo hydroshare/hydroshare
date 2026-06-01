@@ -85,3 +85,17 @@ def collect_file_to_catalog(filepath: str):
 def delete_file_from_catalog(filepath: str):
     _, object_key = filepath.split('/', 1)
     hydroshare_atlas_db["discovery"].delete_one({"_s3_filepath": object_key})
+
+
+def handle_s3_mutation(action: str, bucket: str, object_path: str, status_code: int):
+    """Sync Atlas discovery docs when dataset metadata jsonld is written/deleted."""
+    if status_code not in (200, 204):
+        return
+    if not object_path.endswith('/.hsjsonld/dataset_metadata.json'):
+        return
+
+    key = f"{bucket}/{object_path}"
+    if action in ("s3:PutObject", "s3:CompleteMultipartUpload"):
+        collect_file_to_catalog(key)
+    elif action in ("s3:DeleteObject", "s3:DeleteObjects"):
+        delete_file_from_catalog(key)
