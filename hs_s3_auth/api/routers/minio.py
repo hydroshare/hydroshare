@@ -163,7 +163,8 @@ async def hs_s3_authorization_check(auth_request: AuthRequest):
     # only
     resource_ids_and_is_contents_path = [
         (prefix.split(
-            "/")[0], True) if prefix.split("/", 1)[1].startswith("data/contents/") else (prefix.split("/")[0], False)
+            "/")[0], True) if (prefix.split("/", 1)[1].startswith("data/contents/")
+                               or prefix.split("/", 1)[1].startswith(".hsmetadata/")) else (prefix.split("/")[0], False)
         for prefix in prefixes
     ]
     # check the user and each resource against the action

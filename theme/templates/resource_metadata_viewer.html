@@ -313,8 +313,8 @@ a { color: var(--accent); }
 <main class="page">
   <section class="hero card">
     <div class="eyebrow">HydroShare Metadata Viewer</div>
-    <h1 id="title">Loading resource metadata...</h1>
-    <p class="subtitle" id="abstract">Fetching JSON-LD from the resource metadata file.</p>
+    <h1 id="name">Loading resource metadata...</h1>
+    <p class="subtitle" id="description">Fetching JSON-LD from the resource metadata file.</p>
     <div class="hero-actions" id="hero-actions"></div>
     <div class="hero-grid">
       <div class="card section">
@@ -369,13 +369,14 @@ a { color: var(--accent); }
 </main>
 
 <script>
-const S3_ORIGIN = `${window.location.protocol}//s3.${window.location.hostname}`;
+//const S3_ORIGIN = `${window.location.protocol}//s3.${window.location.hostname}`;
+const S3_ORIGIN = `http://localhost:9003`;
 const RESOURCE_ID = (() => {
   const parts = window.location.pathname.split('/').filter(Boolean);
   const idx = parts.indexOf('resource-metadata-view');
   return (idx >= 0 && parts[idx + 1]) ? parts[idx + 1] : '';
 })();
-const JSONLD_URL = `${S3_ORIGIN}/hydroshare-resources/${RESOURCE_ID}/.hsjsonld/dataset_metadata.json`;
+const JSONLD_URL = `${S3_ORIGIN}/resource/${RESOURCE_ID}/.hsjsonld/dataset_metadata.json`;
 
 function escapeHtml(value) {
   return String(value ?? '')
@@ -431,8 +432,8 @@ function renderMetaGrid(targetId, items) {
 function renderStats(metadata) {
   const stats = [
     { label: 'Type', value: metadata.type || 'Dataset' },
-    { label: 'Creators', value: asArray(metadata.creators).length },
-    { label: 'Keywords', value: asArray(metadata.subjects).length },
+    { label: 'Creators', value: asArray(metadata.creator).length },
+    { label: 'Keywords', value: asArray(metadata.keywords).length },
     { label: 'Has Part', value: asArray(metadata.hasPart).length },
   ];
   document.getElementById('stats').innerHTML = stats.map(stat => `
@@ -445,10 +446,10 @@ function renderStats(metadata) {
 
 function renderPeople(metadata) {
   const people = [];
-  for (const creator of asArray(metadata.creators)) {
+  for (const creator of asArray(metadata.creator)) {
     people.push({ role: 'Creator', item: creator });
   }
-  for (const contributor of asArray(metadata.contributors)) {
+  for (const contributor of asArray(metadata.contributor)) {
     people.push({ role: 'Contributor', item: contributor });
   }
 
@@ -480,12 +481,12 @@ function renderPeople(metadata) {
 
 function renderKeywords(metadata) {
   const target = document.getElementById('keywords');
-  const subjects = asArray(metadata.subjects);
-  if (!subjects.length) {
-    target.innerHTML = '<div class="empty">No subjects listed.</div>';
+  const keywords = asArray(metadata.keywords);
+  if (!keywords.length) {
+    target.innerHTML = '<div class="empty">No keywords listed.</div>';
     return;
   }
-  target.innerHTML = subjects.map(subject => `<span class="chip">${escapeHtml(subject)}</span>`).join('');
+  target.innerHTML = keywords.map(keyword => `<span class="chip">${escapeHtml(keyword)}</span>`).join('');
 }
 
 function renderRelations(metadata) {
@@ -540,9 +541,9 @@ function renderActions(metadata) {
 }
 
 function renderPage(metadata) {
-  document.title = metadata.title ? `${metadata.title} | HydroShare Metadata` : 'HydroShare Resource Metadata';
-  document.getElementById('title').textContent = metadata.title || 'Untitled resource';
-  document.getElementById('abstract').textContent = metadata.abstract || 'No abstract provided in the JSON-LD metadata.';
+  document.name = metadata.name ? `${metadata.name} | HydroShare Metadata` : 'HydroShare Resource Metadata';
+  document.getElementById('name').textContent = metadata.name || 'Untitled resource';
+  document.getElementById('description').textContent = metadata.description || 'No description provided in the JSON-LD metadata.';
   document.getElementById('raw-json').textContent = JSON.stringify(metadata, null, 2);
 
   const pills = [];
@@ -584,8 +585,8 @@ function renderPage(metadata) {
 
 async function boot() {
   if (!RESOURCE_ID) {
-    document.getElementById('title').textContent = 'Missing resource id';
-    document.getElementById('abstract').innerHTML = '<div class="error">The URL must include a resource id.</div>';
+    document.getElementById('name').textContent = 'Missing resource id';
+    document.getElementById('description').innerHTML = '<div class="error">The URL must include a resource id.</div>';
     document.getElementById('raw-json').textContent = '';
     return;
   }
@@ -596,8 +597,8 @@ async function boot() {
     const metadata = await resp.json();
     renderPage(metadata);
   } catch (error) {
-    document.getElementById('title').textContent = 'Unable to load resource metadata';
-    document.getElementById('abstract').innerHTML = `<div class="error">${escapeHtml(error.message)}</div><div class="notice" style="margin-top:12px;">Expected JSON-LD URL: ${escapeHtml(JSONLD_URL)}</div>`;
+    document.getElementById('name').textContent = 'Unable to load resource metadata';
+    document.getElementById('description').innerHTML = `<div class="error">${escapeHtml(error.message)}</div><div class="notice" style="margin-top:12px;">Expected JSON-LD URL: ${escapeHtml(JSONLD_URL)}</div>`;
     document.getElementById('raw-json').textContent = String(error.stack || error);
   }
 }

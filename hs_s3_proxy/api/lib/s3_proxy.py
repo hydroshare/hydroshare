@@ -73,6 +73,8 @@ class S3ProxyClient:
             url = f"{url}?{_encode_query_params(query_params)}"
 
         outbound_headers = self._filter_headers(headers)
+        # Avoid compressed upstream payloads so stream length semantics remain stable.
+        outbound_headers['accept-encoding'] = 'identity'
         outbound_body = body or b""
 
         if self._signer:
@@ -92,6 +94,11 @@ class S3ProxyClient:
             )
             response = await client.send(request, stream=True, follow_redirects=False)
             response_headers = self._filter_response_headers(dict(response.headers))
+            # For streamed responses, avoid strict length assertions on downstream
+            # when upstream content encoding/decoding behavior differs by transport.
+            if method.upper() != "HEAD":
+                response_headers.pop("content-length", None)
+                response_headers.pop("Content-Length", None)
             if DEBUG_HEADERS:
                 logger.info(
                     "Proxy response debug: status=%s backend_header_names=%s outgoing_header_names=%s",
@@ -105,7 +112,8 @@ class S3ProxyClient:
                 await client.aclose()
 
             return StreamingResponse(
-                response.aiter_bytes(),
+                # Preserve exact upstream bytes to keep Content-Length accurate.
+                response.aiter_raw(),
                 status_code=response.status_code,
                 headers=response_headers,
                 background=BackgroundTask(_close_stream),
