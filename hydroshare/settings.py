@@ -485,7 +485,6 @@ SWAGGER_SETTINGS = {
 }
 
 RESOURCE_S3_DEFAULT_ZONE = "hydroshare"
-INTERNAL_S3_ENDPOINT_URL = os.environ.get("HS_INTERNAL_S3_ENDPOINT_URL", "http://minio:9000")
 S3_AUTH_EVENT_ENDPOINT = os.environ.get("HS_S3_AUTH_EVENT_ENDPOINT", "http://hs-s3-auth/s3/event/")
 S3_AUTH_EVENT_TIMEOUT = float(os.environ.get("HS_S3_AUTH_EVENT_TIMEOUT", "5"))
 S3_AUTH_EVENT_USERNAME = os.environ.get("HS_S3_AUTH_EVENT_USERNAME", "cuahsi")
@@ -495,21 +494,21 @@ AWS_S3_SIGNATURE_VERSION = "s3v4"
 RESOURCE_S3_ZONES_CONFIG = {
     "hydroshare": {
         "bucket_name": "resource",
-        "aws_s3_endpoint_url": INTERNAL_S3_ENDPOINT_URL,
+        "aws_s3_endpoint_url": "http://minio:9000",
         "aws_access_key_id": "cuahsi",
         "aws_secret_access_key": "devpassword",
         "aws_s3_endpoint_url_public": "http://localhost:9000"
     },
     "published": {  # the publisher hydroshare user must be updated to use this zone, see PUBLISHER_USER_NAME
         "bucket_name": "published",
-        "aws_s3_endpoint_url": INTERNAL_S3_ENDPOINT_URL,
+        "aws_s3_endpoint_url": "http://minio:9000",
         "aws_access_key_id": "cuahsi",
         "aws_secret_access_key": "devpassword",
         "aws_s3_endpoint_url_public": "http://localhost:9000"
     },
     "ciroh": {
         "bucket_name": "ciroh",
-        "aws_s3_endpoint_url": INTERNAL_S3_ENDPOINT_URL,
+        "aws_s3_endpoint_url": "http://minio:9000",
         "aws_access_key_id": "cuahsi",
         "aws_secret_access_key": "devpassword",
         "aws_s3_endpoint_url_public": "http://localhost:9000"
