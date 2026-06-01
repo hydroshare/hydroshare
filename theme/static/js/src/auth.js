@@ -1,4 +1,4 @@
-import { isPmtilesProtocolRegistered, setPmtilesProtocolRegistered, REF_DIVIDES_PMTILES_URL, REF_FLOWPATHS_PMTILES_URL } from "./config.js";
+import { isPmtilesProtocolRegistered, setPmtilesProtocolRegistered, REF_DIVIDES_PMTILES_URL, REF_FLOWPATHS_PMTILES_URL, COMMUNITY_HF_DIVIDES, COMMUNITY_HF_FLOWPATHS } from "./config.js";
 function createCredentialedPmtilesSource(url) {
     return {
     getKey() {
@@ -43,6 +43,9 @@ export function ensurePmtilesProtocol() {
     const protocol = new pmtiles.Protocol({ metadata: true });
     protocol.add(new pmtiles.PMTiles(createCredentialedPmtilesSource(REF_FLOWPATHS_PMTILES_URL)));
     protocol.add(new pmtiles.PMTiles(createCredentialedPmtilesSource(REF_DIVIDES_PMTILES_URL)));
+    protocol.add(new pmtiles.PMTiles(createCredentialedPmtilesSource(COMMUNITY_HF_FLOWPATHS)));
+    protocol.add(new pmtiles.PMTiles(createCredentialedPmtilesSource(COMMUNITY_HF_DIVIDES)));
+
     maplibregl.addProtocol('pmtiles', protocol.tile);
     setPmtilesProtocolRegistered(true);
 }

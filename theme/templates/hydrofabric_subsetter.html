@@ -1,175 +1,169 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <title>Hydrofabric Subsetter</title>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Source+Sans+3:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
-    <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet"/>
-    <script src="https://unpkg.com/pmtiles@4.0.1/dist/pmtiles.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.11.0/sql-wasm.js"></script>
-  </head>
-  <body>
-    <div id="map-container">
-      <div id="map"></div>
-      <div id="map-right"></div>
-      <div id="label-left" class="map-label">Catchments</div>
-      <div id="label-right" class="map-label">Reference</div>
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Hydrofabric Viewer</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Source+Sans+3:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+  <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet"/>
+  <script src="https://unpkg.com/pmtiles@4.0.1/dist/pmtiles.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.11.0/sql-wasm.js"></script>
+  <style>@import "{% static 'css/style.css' %}";</style>
+</head>
+<body>
+
+<div id="map-container">
+  <div id="map"></div>
+  <div id="map-right"></div>
+  <div id="label-left"  class="map-label">Researcher Data</div>
+  <div id="label-right" class="map-label">Reference</div>
+</div>
+
+<div id="sidebar">
+  <header>
+    <h1>&#9651; HYDROFABRIC VIEWER</h1>
+    <p>Displaying researcher subset. Enable split view to compare against the reference hydrofabric.</p>
+  </header>
+
+  <div id="status-bar">
+    <div id="status-dot" class="loading"></div>
+    <span id="status-text">Initializing...</span>
+  </div>
+
+  <div id="meta-panel">
+    <div class="meta-row">
+      <span class="meta-label">VPU ID</span>
+      <span class="meta-value accent" id="meta-vpuid">—</span>
     </div>
-    <div id="sidebar">
-      <header>
-        <h1>&#9651; HYDROFABRIC SUBSETTER</h1>
-        <p>Click a catchment on the map or enter an ID. Upstream network is auto-selected, then download a subset GeoPackage.</p>
-      </header>
-      <div id="controls">
-        <div class="field">
-          <label>Catchment ID</label>
-          <input id="input-catid" type="text" placeholder="e.g. cat-486931" spellcheck="false"/>
-        </div>
-        <label class="checkbox-field">
-          <input type="checkbox" id="chk-include-outlet" checked/>
-          <span>Include outlet nexus</span>
-        </label>
-        <div class="btn-row">
-          <button id="btn-subset" disabled>Subset &amp; Download</button>
-          <button id="btn-clear">Clear</button>
-        </div>
-      </div>
-      <div id="selection-info"></div>
-      <div id="progress-bar"><div id="progress-fill"></div></div>
-      <div id="log-container"><div id="log"></div></div>
+    <div class="meta-row">
+      <span class="meta-label">Catchments</span>
+      <span class="meta-value researcher" id="meta-catchments">—</span>
     </div>
-
-    <div id="legend">
-      <h2>Reference Layers</h2>
-      <div class="legend-item">
-        <input type="checkbox" id="toggle-split"/>
-        <label for="toggle-split">Split View</label>
-      </div>
-      <hr style="border:none;border-top:1px solid var(--border);margin:8px 0"/>
-      <div class="legend-item">
-        <input type="checkbox" id="toggle-flowpaths"/>
-        <label for="toggle-flowpaths">Flowpaths</label>
-        <input type="color" id="color-flowpaths" value="#FF0000"/>
-      </div>
-      <div class="legend-item">
-        <input type="checkbox" id="toggle-divides"/>
-        <label for="toggle-divides">Divides</label>
-        <input type="color" id="color-divides" value="#11FF00"/>
-      </div>
+    <div class="meta-row">
+      <span class="meta-label">Flowpaths</span>
+      <span class="meta-value researcher" id="meta-flowpaths">—</span>
     </div>
-  </body>
+    <div class="meta-row">
+      <span class="meta-label">Render</span>
+      <span class="meta-value" id="meta-render">—</span>
+    </div>
+  </div>
 
-  <script type="module">
-    import { useMap } from "{% static 'js/src/composables/useMap.js' %}";
-    import { useNetwork } from "{% static 'js/src/composables/useNetwork.js' %}";
-    import { useParquet } from "{% static 'js/src/composables/useParquet.js' %}";
-    import { useSubset } from "{% static 'js/src/updateMapFilters/useSubset.js' %}";
-    import { state, log } from "{% static 'js/src/config.js' %}";
+  <div id="layer-panel">
+    <h2>Layers</h2>
+    <div class="layer-row">
+      <label class="toggle-switch">
+        <input type="checkbox" id="toggle-divides" checked
+               onchange="handlers.toggleDivides(this.checked)"/>
+        <span class="slider"></span>
+      </label>
+      <span class="layer-label">Divides</span>
+      <span class="layer-swatch poly" style="border-color:#a78bfa"></span>
+    </div>
+    <div class="layer-row">
+      <label class="toggle-switch">
+        <input type="checkbox" id="toggle-flowpaths" checked
+               onchange="handlers.toggleFlowpaths(this.checked)"/>
+        <span class="slider"></span>
+      </label>
+      <span class="layer-label">Flowpaths</span>
+      <span class="layer-swatch" style="background:#38bdf8;height:2px;margin-top:6px"></span>
+    </div>
+    <div class="layer-row">
+      <label class="toggle-switch">
+        <input type="checkbox" id="toggle-nexus"
+               onchange="handlers.toggleNexus(this.checked)"/>
+        <span class="slider"></span>
+      </label>
+      <span class="layer-label">Nexus Points</span>
+      <span class="layer-swatch poly" style="border-color:#f59e0b;border-radius:50%;width:12px;height:12px"></span>
+    </div>
+    <div class="layer-row">
+      <label class="toggle-switch">
+        <input type="checkbox" id="toggle-split"
+               onchange="handlers.toggleSplit(this.checked)"/>
+        <span class="slider"></span>
+      </label>
+      <span class="layer-label">Split View</span>
+    </div>
+  </div>
 
-    const { initHyparquet } = useParquet();
-    const { loadNetworkGraph, getUpstreamIds } = useNetwork();
-    const { subsetAndDownload } = useSubset();
-    const { initMap, updateMapFilters, toggleSplitView } = useMap();
+  <div id="progress-bar"><div id="progress-fill"></div></div>
+  <div id="log-container"><div id="log"></div></div>
+</div>
 
+<script type="module">
+  import { useMap } from "{% static 'js/src/composables/useMap.js' %}";
+  import { useViewer, ensureNexusLayer } from "{% static 'js/src/useViewer.js' %}";
+  import { state, log, setProgress } from "{% static 'js/src/config.js' %}";
 
-    // ============================================================
-    // SELECTION
-    // ============================================================
-    async function selectOutlet(catId) {
-      if (!catId.startsWith('cat-')) catId = 'cat-' + catId.replace(/^(cat-?)/, '');
-      state.outletCatId = catId;
-      document.getElementById('input-catid').value = catId;
+  const { initMap, toggleSplitView, fitToBbox } = useMap();
+  const { bootViewer, setLayerVisibility } = useViewer();
 
-      const numeric = parseInt(catId.split('-')[1]);
-      const includeOutlet = document.getElementById('chk-include-outlet').checked;
-
-      log(`\nSelected: ${catId}`, 'step');
-      const t0 = performance.now();
-      state.upstreamNumericIds = getUpstreamIds(numeric, includeOutlet);
-      state.upstreamCatIds = Array.from(state.upstreamNumericIds).map(n => `cat-${n}`);
-      log(`  ${state.upstreamNumericIds.size} upstream catchments (${(performance.now()-t0).toFixed(0)}ms)`, 'success');
-
-      const info = document.getElementById('selection-info');
-      info.style.display = 'block';
-      info.innerHTML = `Outlet: <span class="outlet">${catId}</span><br>Upstream: <span class="count">${state.upstreamNumericIds.size}</span> catchments`;
-
-      document.getElementById('btn-subset').disabled = false;
-      updateMapFilters();
+  function setStatus(text, dotClass = 'loading') {
+    document.getElementById('status-text').textContent = text;
+    document.getElementById('status-dot').className = dotClass;
+  }
+  function showMeta({ vpuid, catchments, flowpaths, renderMode }) {
+    document.getElementById('meta-vpuid').textContent = vpuid ?? '—';
+    document.getElementById('meta-catchments').textContent = catchments != null ? catchments.toLocaleString() : '—';
+    document.getElementById('meta-flowpaths').textContent = flowpaths  != null ? flowpaths.toLocaleString()  : '—';
+    document.getElementById('meta-render').textContent = renderMode ?? '—';
+    document.getElementById('meta-panel').classList.add('visible');
+  }
+  function setVisibilityBoth(leftIds, rightIds, visible) {
+    const v = visible ? 'visible' : 'none';
+    for (const id of leftIds) {
+      if (state.map?.getLayer(id)) state.map.setLayoutProperty(id, 'visibility', v);
     }
+    if (state.mapRight) {
+      for (const id of rightIds) {
+        if (state.mapRight.getLayer(id)) state.mapRight.setLayoutProperty(id, 'visibility', v);
+      }
+    }
+  }
+  window.handlers = {
+    toggleDivides(checked) {
+      setVisibilityBoth(
+        ['res-divides-fill', 'res-divides-line'],
+        ['ref-divides-fill', 'ref-divides-line'],
+        checked
+      );
+    },
+    toggleFlowpaths(checked) {
+      setVisibilityBoth(
+        ['res-flowpaths-line'],
+        ['ref-flowpaths-line'],
+        checked
+      );
+    },
+    async toggleNexus(checked) {
+      await ensureNexusLayer();
+      setLayerVisibility(['res-nexus-circle'], checked);
+    },
+    toggleSplit(checked) {
+      toggleSplitView(checked);
+    },
+  };
 
-    // ============================================================
-    // EVENT HANDLERS
-    // ============================================================
-    document.getElementById('input-catid').addEventListener('keydown', e => {
-      if (e.key === 'Enter') {
-        const val = e.target.value.trim();
-        if (val) selectOutlet(val);
-      }
-    });
-    document.getElementById('btn-subset').addEventListener('click', subsetAndDownload);
-    document.getElementById('chk-include-outlet').addEventListener('change', () => {
-      if (state.outletCatId) selectOutlet(state.outletCatId);
-    });
-
-    document.getElementById('toggle-split').addEventListener('change', (e) => {
-      toggleSplitView(e.target.checked);
-    });
-
-    document.getElementById('toggle-flowpaths').addEventListener('change', (e) => {
-      const vis = e.target.checked ? 'visible' : 'none';
-      const target = state.splitActive && state.mapRight ? state.mapRight : state.map;
-      if (target && target.getLayer('ref_flowpaths')) {
-        target.setLayoutProperty('ref_flowpaths', 'visibility', vis);
-      }
-    });
-    document.getElementById('toggle-divides').addEventListener('change', (e) => {
-      const vis = e.target.checked ? 'visible' : 'none';
-      const target = state.splitActive && state.mapRight ? state.mapRight : state.map;
-      if (target && target.getLayer('ref_divides')) {
-        target.setLayoutProperty('ref_divides', 'visibility', vis);
-      }
-    });
-    document.getElementById('color-flowpaths').addEventListener('input', (e) => {
-      const target = state.splitActive && state.mapRight ? state.mapRight : state.map;
-      if (target && target.getLayer('ref_flowpaths')) {
-        target.setPaintProperty('ref_flowpaths', 'line-color', e.target.value);
-      }
-    });
-    document.getElementById('color-divides').addEventListener('input', (e) => {
-      const target = state.splitActive && state.mapRight ? state.mapRight : state.map;
-      if (target && target.getLayer('ref_divides')) {
-        target.setPaintProperty('ref_divides', 'line-color', e.target.value);
-      }
-    });
-    document.getElementById('btn-clear').addEventListener('click', () => {
-      state.outletCatId = null;
-      state.upstreamCatIds = [];
-      state.upstreamNumericIds.clear();
-      document.getElementById('input-catid').value = '';
-      document.getElementById('selection-info').style.display = 'none';
-      document.getElementById('btn-subset').disabled = true;
-      updateMapFilters();
-      logEl.innerHTML = '';
-      setProgress(0);
-    });
-
-    // ============================================================
-    // BOOT
-    // ============================================================
-    (async () => {
-      initMap();
-      try {
-        await loadNetworkGraph();
-        log('Ready. Zoom in and click a catchment, or type an ID.', 'success');
-      } catch (err) {
-        log(`Init error: ${err.message}`, 'error');
-        console.error(err);
-      }
-    })();
-  </script>
-<style>
-  @import "{% static 'css/style.css' %}";
-</style>
+  (async () => {
+    initMap();
+    await new Promise(resolve => state.map.on('load', resolve));
+    setStatus('Loading data...', 'loading');
+    try {
+      const meta = await bootViewer();
+      showMeta(meta);
+      setProgress(100);
+      if (meta.bbox) fitToBbox(meta.bbox);
+      setStatus('Ready', 'ready');
+      log('Viewer ready.', 'success');
+    } catch(err) {
+      log(`Fatal: ${err.message}`, 'error');
+      setStatus('Error loading data', 'error');
+      console.error(err);
+    }
+  })();
+</script>
+</body>
 </html>
