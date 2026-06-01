@@ -536,6 +536,7 @@ function renderPartsMedia(metadata) {
 function renderActions(metadata) {
   const actions = [];
   if (metadata.url) actions.push(`<a class="button primary" href="${escapeHtml(metadata.url)}" target="_blank" rel="noreferrer">Open Resource</a>`);
+  actions.push(`<a class="button" href="/resource-metadata-edit/${escapeHtml(RESOURCE_ID)}/">Edit Metadata And Files</a>`);
   actions.push(`<a class="button" href="${escapeHtml(JSONLD_URL)}" target="_blank" rel="noreferrer">Open JSON-LD</a>`);
   document.getElementById('hero-actions').innerHTML = actions.join('');
 }

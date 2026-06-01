@@ -229,6 +229,8 @@ urlpatterns += [
          name="hydrofabric-subsetter"),
     path("resource-metadata-view/<str:resource_id>/", direct_to_template, {"template": "resource_metadata_viewer.html"},
          name="resource-metadata-view"),
+    path("resource-metadata-edit/<str:resource_id>/", direct_to_template, {"template": "resource_metadata_editor.html"},
+         name="resource-metadata-edit"),
     # HOMEPAGE AS AN EDITABLE PAGE IN THE PAGE TREE
     # ---------------------------------------------
     # This pattern gives us a normal ``Page`` object, so that your
