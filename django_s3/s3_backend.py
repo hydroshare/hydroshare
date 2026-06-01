@@ -23,6 +23,7 @@ from storages.utils import is_seekable
 from storages.utils import setting
 
 try:
+    from botocore.config import Config as BotocoreConfig
     from botocore.exceptions import ClientError
 except ImportError as e:
     raise ImproperlyConfigured("Could not load Boto3's S3 bindings. %s" % e)
@@ -392,12 +393,19 @@ class S3Storage(s3.S3Storage):
             session = self._create_session(zone)
             zone_config = get_zone_config(zone)
             presign_endpoint = zone_config.aws_s3_endpoint_url_public or zone_config.aws_s3_endpoint_url
+            # Force path-style addressing and s3v4 for GCS S3-compat presigned URLs.
+            # Virtual-hosted style changes the string-to-sign host component, causing
+            # SignatureDoesNotMatch on GCS even with otherwise correct credentials.
+            presign_config = BotocoreConfig(
+                signature_version="s3v4",
+                s3={"addressing_style": "path"},
+            )
             presign_client = session.client(
                 "s3",
-                region_name=self.region_name,
+                region_name=self.region_name or "auto",
                 use_ssl=self.use_ssl,
                 endpoint_url=presign_endpoint,
-                config=self.client_config,
+                config=presign_config,
                 verify=self.verify,
             )
             url = presign_client.generate_presigned_url(
