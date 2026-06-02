@@ -2,6 +2,7 @@ import logging
 from datetime import timedelta
 
 from django_s3.utils import bucket_and_zone
+from drf_yasg import openapi
 from rest_framework.views import APIView
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.response import Response
@@ -45,9 +46,22 @@ class MinIOServiceAccounts(APIView):
 
         return timedelta(days=expiry_days), None
 
-    @swagger_auto_schema(operation_description="Creates a service account with access key/secret for the user. "
-                                               "Optional request field `expiry` sets token lifetime in days "
-                                               "(default: 180).")
+    @swagger_auto_schema(
+        operation_description="Creates a service account with access key/secret for the user. "
+                              "Optional request field `expiry` sets token lifetime in days "
+                              "(default: 180).",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                "expiry": openapi.Schema(
+                    type=openapi.TYPE_INTEGER,
+                    description="Optional token lifetime in days. Must be a positive integer.",
+                    default=180,
+                    minimum=1,
+                )
+            },
+        ),
+    )
     def post(self, request):
         user, unauthorized = self._require_authenticated_user(request)
         if unauthorized:
