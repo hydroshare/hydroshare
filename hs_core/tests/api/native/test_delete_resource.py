@@ -4,11 +4,10 @@ import tempfile
 from django.contrib.auth.models import Group
 from django.test import TestCase
 from unittest import skip
-from haystack.query import SearchQuerySet
-
 from hs_core.hydroshare import resource
 from hs_core.hydroshare import users
 from hs_core.models import BaseResource
+# from hs_core.hydroshare_atlas_discovery_collection import hydroshare_atlas_db
 from hs_core.testing import MockS3TestCaseMixin
 
 
@@ -43,7 +42,7 @@ class TestDeleteResource(MockS3TestCaseMixin, TestCase):
         # there should be no resource at this point
         self.assertEqual(BaseResource.objects.all().count(), 0, msg="Number of resources not equal to 0")
 
-    @skip("TODO: https://github.com/hydroshare/hydroshare/issues/5736")
+    @skip("TODO: this is testing integration through async events -- test removal from index as proper unit test")
     def test_delete_resource_public(self):
         # create files
         file_one = os.path.join(self.tmp_dir, "test1.txt")
@@ -65,10 +64,11 @@ class TestDeleteResource(MockS3TestCaseMixin, TestCase):
             keywords=("one", "two", "INDEX-FOR-TESTING"),
             metadata=[{"description": {"abstract": "myabstract"}}]
         )
-        current_index_count = len(SearchQuerySet().all())
+        # current_index_count = hydroshare_atlas_db["discovery"].count_documents({})
 
-        new_res.set_public(True)
-        self.assertEqual(len(SearchQuerySet().all()), current_index_count + 1)
+        # new_res.set_public(True)
+        
+        # self.assertEqual(hydroshare_atlas_db["discovery"].count_documents({}), current_index_count + 1)
 
-        resource.delete_resource(new_res.short_id)
-        self.assertEqual(len(SearchQuerySet().all()), current_index_count)
+        # resource.delete_resource(new_res.short_id)
+        # self.assertEqual(hydroshare_atlas_db["discovery"].count_documents({}), current_index_count)

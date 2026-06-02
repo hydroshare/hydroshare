@@ -16,13 +16,13 @@ class TestResourceFileMetadataEndpoint(HSRESTTestCase):
 
         self.temp_dir = tempfile.mkdtemp()
         self.resources_to_delete = []
-        # delete any existing records from haystack
-        call_command('clear_index', "--noinput")
+        # delete any existing records from search index
+        # call_command('clear_index', "--noinput")
 
     def tearDown(self):
         super(TestResourceFileMetadataEndpoint, self).tearDown()
-        # clean up haystack
-        call_command('clear_index', "--noinput")
+        # clean up search index
+        # call_command('clear_index', "--noinput")
 
     @skip("TODO: https://github.com/hydroshare/hydroshare/issues/5736")
     def test_discovery_rest_api(self):

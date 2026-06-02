@@ -206,6 +206,14 @@ echo
 docker exec hydroshare psql -U postgres -h postgis -d postgres -q -f ${HS_DATABASE}
 
 echo
+echo "  - waiting for postgres to be ready to accept connections..."
+until docker exec postgis pg_isready -U postgres -d postgres -q; do
+  sleep 1
+  echo -n "."
+done
+echo " ready."
+
+echo
 echo '########################################################################################################################'
 echo " Migrating data"
 echo '########################################################################################################################'
@@ -237,35 +245,9 @@ echo
 docker exec hydroshare python manage.py fix_permissions
 
 echo
-echo '########################################################################################################################'
-echo " Reindexing SOLR"
-echo '########################################################################################################################'
-
+echo "  - docker exec hydroshare pip install -r requirements-test.txt"
 echo
-echo " - docker exec solr bin/solr create_core -c collection1 -n basic_config"
-docker exec solr bin/solr create -c collection1 -d basic_configs
-
-echo
-echo "  - docker exec hydroshare python manage.py build_solr_schema -f schema.xml"
-echo
-docker exec hydroshare python manage.py build_solr_schema -f schema.xml
-
-echo
-echo "  - docker cp schema.xml solr:/opt/solr/server/solr/collection1/conf/schema.xml"
-echo
-docker cp schema.xml solr:/opt/solr/server/solr/collection1/conf/schema.xml
-
-echo
-echo "  - docker exec solr sed -i '/<schemaFactory class=\"ManagedIndexSchemaFactory\">/,+4d' /opt/solr/server/solr/collection1/conf/solrconfig.xml"
-docker exec solr sed -i '/<schemaFactory class="ManagedIndexSchemaFactory">/,+4d' /opt/solr/server/solr/collection1/conf/solrconfig.xml
-
-echo
-echo "  - docker exec solr rm /opt/solr/server/solr/collection1/conf/managed-schema"
-docker exec solr rm /opt/solr/server/solr/collection1/conf/managed-schema
-
-echo '  - docker exec hydroshare curl "solr:8983/solr/admin/cores?action=RELOAD&core=collection1"'
-echo
-docker exec hydroshare curl "solr:8983/solr/admin/cores?action=RELOAD&core=collection1"
+docker exec hydroshare pip install -r requirements-test.txt
 
 echo
 echo '########################################################################################################################'
