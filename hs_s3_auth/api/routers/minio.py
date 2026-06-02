@@ -66,10 +66,11 @@ VIEW_ACTIONS = _parse_action_list(
         s3:HeadObject",
 )
 WRITE_ACTIONS = _parse_action_list(
-    "S3_WRITE_ACTIONS", "s3:PutObject,s3:UploadPart,s3:PutObjectLegalHold"
+    "S3_WRITE_ACTIONS", "s3:PutObject,s3:CreateMultipartUpload,s3:UploadPart,"
+    "s3:CompleteMultipartUpload,s3:PutObjectLegalHold"
 )
 DELETE_ACTIONS = _parse_action_list(
-    "S3_DELETE_ACTIONS", "s3:DeleteObject,s3:DeleteObjects"
+    "S3_DELETE_ACTIONS", "s3:DeleteObject,s3:DeleteObjects,s3:AbortMultipartUpload"
 )
 EDIT_ACTIONS = WRITE_ACTIONS + DELETE_ACTIONS
 

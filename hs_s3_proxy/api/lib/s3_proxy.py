@@ -27,6 +27,36 @@ def _encode_query_params(query_params: dict) -> str:
     return '&'.join(f"{k}={v}" for k, v in encoded_pairs)
 
 
+def _decode_aws_chunked_body(body: bytes) -> bytes:
+    """Decode an aws-chunked (SigV4 streaming) payload to raw content bytes.
+
+    boto3 wraps each chunk as::
+
+        {hex-size};chunk-signature={sig}\r\n{data}\r\n
+
+    A final zero-sized chunk signals the end.  We strip all framing and return
+    only the concatenated data bytes so the backend receives a plain body.
+    """
+    result = bytearray()
+    pos = 0
+    while pos < len(body):
+        line_end = body.find(b'\r\n', pos)
+        if line_end == -1:
+            break
+        header = body[pos:line_end].decode('ascii', errors='replace')
+        hex_size = header.split(';')[0].strip()
+        try:
+            chunk_size = int(hex_size, 16)
+        except ValueError:
+            break
+        if chunk_size == 0:
+            break
+        data_start = line_end + 2
+        result.extend(body[data_start:data_start + chunk_size])
+        pos = data_start + chunk_size + 2  # skip trailing \r\n after chunk data
+    return bytes(result)
+
+
 def _s3_error_xml(code: str, message: str) -> bytes:
     return (
         f"<?xml version='1.0' encoding='UTF-8'?>"
@@ -76,8 +106,20 @@ class S3ProxyClient:
         # Force uncompressed backend responses so the proxy can stream raw bytes
         # without needing to decompress or re-advertise encoding to the client.
         outbound_headers['accept-encoding'] = 'identity'
-        # Avoid compressed upstream payloads so stream length semantics remain stable.
         outbound_body = body or b""
+
+        # boto3 streaming uploads use aws-chunked encoding which embeds per-chunk
+        # SigV4 signatures in the body framing.  We re-sign with backend credentials
+        # so the embedded signatures are meaningless to the backend; decode to raw
+        # bytes and strip the related headers so the backend stores the correct content.
+        content_encoding = outbound_headers.get('content-encoding', '').lower()
+        sha256_hdr = outbound_headers.get('x-amz-content-sha256', '')
+        if content_encoding == 'aws-chunked' or sha256_hdr.upper().startswith('STREAMING-'):
+            outbound_body = _decode_aws_chunked_body(outbound_body)
+            outbound_headers.pop('content-encoding', None)
+            outbound_headers.pop('Content-Encoding', None)
+            outbound_headers.pop('x-amz-decoded-content-length', None)
+            outbound_headers.pop('X-Amz-Decoded-Content-Length', None)
 
         if self._signer:
             aws_req = AWSRequest(method=method, url=url, data=outbound_body, headers=outbound_headers)
@@ -182,6 +224,12 @@ class S3ProxyClient:
             'etag',
             'expires',
             'last-modified',
+            'x-amz-checksum-crc32',
+            'x-amz-checksum-crc32c',
+            'x-amz-checksum-crc64nvme',
+            'x-amz-checksum-sha1',
+            'x-amz-checksum-sha256',
+            'x-amz-checksum-type',
             'x-amz-delete-marker',
             'x-amz-expiration',
             'x-amz-mp-parts-count',

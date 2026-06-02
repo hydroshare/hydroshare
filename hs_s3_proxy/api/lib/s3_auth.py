@@ -78,7 +78,11 @@ def parse_presigned_auth_query(query_params: dict) -> Optional[dict]:
 def get_s3_action_from_request(method: str, path: str, query_params: dict) -> str:
     """Map HTTP method, path, and query parameters to an S3 action string."""
     if 'uploads' in query_params:
-        return 's3:ListMultipartUploadParts'
+        if method == 'POST':
+            return 's3:CreateMultipartUpload'
+        if method == 'GET':
+            return 's3:ListBucketMultipartUploads'
+        return 's3:Unknown'
     if 'uploadId' in query_params:
         if method == 'POST':
             return 's3:CompleteMultipartUpload'
