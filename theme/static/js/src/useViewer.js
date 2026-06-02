@@ -80,14 +80,8 @@ export function useViewer() {
 
     log('Checking for pre-generated pmtiles...', 'info');
     setProgress(10);
-    const [dividesOk, flowpathsOk] = await Promise.all([
-      fileExists(RES_DIVIDES_PMTILES_URL),
-      fileExists(RES_FLOWPATHS_PMTILES_URL),
-    ]);
-    state.usingPmtiles = dividesOk && flowpathsOk;
 
-    if (state.usingPmtiles) {
-      // ── Fast path: pmtiles exist ─────────────────────────
+
       log('  pmtiles found — using vector tiles', 'success');
       setProgress(30);
       addPmtilesLayers();
@@ -127,48 +121,6 @@ export function useViewer() {
         setProgress(80);
         return { vpuid: '?', catchments: null, flowpaths: null, renderMode: 'PMTiles', bbox: null };
       }
-
-    } else {
-      // ── Fallback: render directly from parquet ────────────
-      log('  no pmtiles — loading from parquet', 'warn');
-      setProgress(20);
-
-      let dividesGj = null, flowpathsGj = null;
-      let catchments = 0, flowpaths = 0;
-
-      try {
-        log('Loading divides...', 'info');
-        const rows = await readParquetAll(PARQUET_URLS['divides']);
-        state.inferredVpuid = inferVpuid(rows);
-        const col = geomCol(rows);
-        if (col) {
-          dividesGj = rowsToGeojson(rows, col);
-          // bbox comes from the full WKB -> GeoJSON conversion, accurate for fitToBbox
-          state.researcherBbox = dividesGj.bbox;
-          catchments = rows.length;
-        }
-        log(`  divides: ${rows.length} rows, vpuid: ${state.inferredVpuid}`, 'success');
-      } catch(e) { log(`  divides error: ${e.message}`, 'error'); }
-      setProgress(50);
-
-      try {
-        log('Loading flowpaths...', 'info');
-        const rows = await readParquetAll(PARQUET_URLS['flowpaths']);
-        const col  = geomCol(rows);
-        if (col) { flowpathsGj = rowsToGeojson(rows, col); flowpaths = rows.length; }
-        log(`  flowpaths: ${rows.length} rows`, 'success');
-      } catch(e) { log(`  flowpaths error: ${e.message}`, 'error'); }
-      setProgress(75);
-
-      setProgress(90);
-      return {
-        vpuid: state.inferredVpuid,
-        catchments,
-        flowpaths,
-        renderMode: 'GeoJSON (parquet)',
-        bbox: state.researcherBbox,
-      };
-    }
   }
 
   function inferVpuid(rows) {
