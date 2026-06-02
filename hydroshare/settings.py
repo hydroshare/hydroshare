@@ -432,6 +432,7 @@ INSTALLED_APPS = (
     "haystack",
     "rest_framework",
     'rest_framework.authtoken',
+    'knox',
     "robots",
     "sorl.thumbnail",
     "hs_core",

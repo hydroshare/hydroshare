@@ -22,6 +22,8 @@ RUN pip install confluent-kafka
 
 RUN pip install pymongo
 
+RUN pip install django-rest-knox
+
 # installs specific commit until hsmodels gets a full release
 RUN pip install --upgrade git+https://github.com/hydroshare/hsmodels.git@22b7d610814a28065511ff03ba044ad66cc1bc98
 
