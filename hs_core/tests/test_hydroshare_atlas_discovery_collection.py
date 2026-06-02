@@ -5,7 +5,9 @@ from unittest.mock import MagicMock, patch
 
 from unittest_parametrize import ParametrizedTestCase, parametrize, param
 
-from hs_core.hydroshare_atlas_discovery_collection import MongoDBClient, collect_file_to_catalog, delete_file_from_catalog
+from hs_core.hydroshare_atlas_discovery_collection import (
+    MongoDBClient, collect_file_to_catalog, delete_file_from_catalog
+)
 
 
 SAMPLE_METADATA = {
@@ -34,7 +36,11 @@ class TestCollectFileToCatalog(ParametrizedTestCase):
         self.mock_collection = MagicMock()
 
         self.s3_patcher = patch("hs_core.hydroshare_atlas_discovery_collection.s3", self.mock_s3)
-        self.collection_patcher = patch.object(MongoDBClient, "get_discovery_collection", return_value=self.mock_collection)
+        self.collection_patcher = patch.object(
+            MongoDBClient,
+            "get_discovery_collection",
+            return_value=self.mock_collection
+        )
         self.s3_patcher.start()
         self.collection_patcher.start()
 
@@ -107,7 +113,11 @@ class TestDeleteFileFromCatalog(TestCase):
     def setUp(self):
         self.mock_collection = MagicMock()
 
-        self.collection_patcher = patch.object(MongoDBClient, "get_discovery_collection", return_value=self.mock_collection)
+        self.collection_patcher = patch.object(
+            MongoDBClient,
+            "get_discovery_collection",
+            return_value=self.mock_collection
+        )
         self.collection_patcher.start()
 
     def tearDown(self):

@@ -1,9 +1,7 @@
-import os
 import tempfile
 
 from django.contrib.auth.models import Group
 from django.test import TestCase
-from unittest import skip
 from hs_core.hydroshare import resource
 from hs_core.hydroshare import users
 from hs_core.models import BaseResource

@@ -11,6 +11,7 @@ from rest_framework.decorators import api_view
 
 from hs_core.hydroshare_atlas_discovery_collection import MongoDBClient
 
+
 class SearchQuery(BaseModel):
     term: Optional[str] = None
     sortBy: Optional[str] = None

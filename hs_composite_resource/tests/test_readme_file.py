@@ -36,7 +36,7 @@ class TestReadmeResourceFile(MockS3TestCaseMixin, ParametrizedTestCase, Transact
         if self.composite_resource:
             self.composite_resource.delete()
         shutil.rmtree(self.temp_dir)
-    
+
     def _write_test_file(self, filename):
         file_path = os.path.join(self.temp_dir, filename)
         with open(file_path, 'w') as test_file:

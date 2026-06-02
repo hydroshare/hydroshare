@@ -74,8 +74,13 @@ def collect_file_to_catalog(filepath: str):
     #         content_types.append(json_dict.get('additionalType'))
     #     metadata_json['content_types'] = list(set(content_types))
 
-    MongoDBClient.get_discovery_collection().find_one_and_replace({"_s3_filepath": metadata_json["_s3_filepath"]},
-                                                                   metadata_json, upsert=True)
+    MongoDBClient.get_discovery_collection().find_one_and_replace(
+        {
+            "_s3_filepath": metadata_json["_s3_filepath"]
+        },
+        metadata_json,
+        upsert=True
+    )
 
 
 def delete_file_from_catalog(filepath: str):
