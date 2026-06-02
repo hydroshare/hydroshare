@@ -179,7 +179,7 @@ class CoreMetadata(SchemaBaseModel):
         title="Relation",
         description="All other types of relations",
         default=None,
-    ),
+    )
     additionalProperty: Optional[List[PropertyValue]] = Field(
         title="Additional properties",
         default=None,
