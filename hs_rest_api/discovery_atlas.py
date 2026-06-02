@@ -1,17 +1,15 @@
 
-from django.conf import settings
-from rest_framework.decorators import api_view
 from datetime import datetime
 from typing import Optional
-from pymongo import MongoClient
-from pydantic import BaseModel, ValidationInfo, field_validator, model_validator
-from drf_yasg.utils import swagger_auto_schema
+
+from django.conf import settings
 from django.http import JsonResponse
+from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from pydantic import BaseModel, ValidationInfo, field_validator, model_validator
+from rest_framework.decorators import api_view
 
-mongo_connection_url = settings.ATLAS_CONNECTION_URL
-hydroshare_atlas_db = MongoClient(mongo_connection_url)[settings.ATLAS_DB_NAME]
-
+from hs_core.hydroshare_atlas_discovery_collection import MongoDBClient
 
 class SearchQuery(BaseModel):
     term: Optional[str] = None
@@ -437,7 +435,7 @@ def search(request):
             "from": "discovery", "localField": "_id", "foreignField": "_id", "as": "document"
         }
     })
-    result = hydroshare_atlas_db["discovery"].aggregate(stages).to_list(None)
+    result = MongoDBClient.get_discovery_collection().aggregate(stages).to_list(None)
 
     result = convert_objectid(result)
     return JsonResponse(result, safe=False)
@@ -496,6 +494,6 @@ def typeahead(request):
             "from": "discovery", "localField": "_id", "foreignField": "_id", "as": "document"
         }
     })
-    result = hydroshare_atlas_db["discovery"].aggregate(stages).to_list(None)
+    result = MongoDBClient.get_discovery_collection().aggregate(stages).to_list(None)
     result = convert_objectid(result)
     return JsonResponse(result, safe=False)
