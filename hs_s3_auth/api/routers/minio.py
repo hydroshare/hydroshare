@@ -17,7 +17,7 @@ from api.cache import (
 )
 from api.database import (
     get_user_by_session_id,
-    get_user_token_and_id,
+    get_user_service_account_secrets_and_id,
     is_superuser_and_id,
     resource_discoverability,
     user_has_edit_access,
@@ -238,37 +238,38 @@ class SignatureVerifyRequest(BaseModel):
 
 @router.post("/verify-signature/")
 async def verify_signature(request: SignatureVerifyRequest):
-    username = request.auth_info.get("access_key")
-    if not username:
+    access_key = request.auth_info.get("access_key")
+    if not access_key:
         return {"allow": False, "reason": "missing_access_key"}
 
-    row = get_user_token_and_id(username)
-    if row is None:
+    rows = get_user_service_account_secrets_and_id(access_key)
+    candidate_secrets = []
+    if rows:
+        candidate_secrets = [(secret_key, int(user_id)) for secret_key, user_id in rows]
+    else:
         # SigV4 requests when no DB token exists for that access key.
-        if username == os.environ.get("S3_BACKEND_ACCESS_KEY", ""):
+        if access_key == os.environ.get("S3_BACKEND_ACCESS_KEY", ""):
             token_key = os.environ.get("S3_BACKEND_SECRET_KEY", "")
             if not token_key:
                 logger.warning("Missing S3_BACKEND_SECRET_KEY for cuahsi signature verification")
                 return {"allow": False, "reason": "user_not_found"}
-            user_id = 0
+            candidate_secrets = [(token_key, 0)]
         else:
-            logger.warning(f"No token found for username: {username}")
+            logger.warning(f"No token found for access_key: {access_key}")
             return {"allow": False, "reason": "user_not_found"}
-    else:
-        token_key, user_id = row
 
-    valid = verify_signature_v4(
-        method=request.method,
-        path=request.path,
-        headers=request.headers,
-        query_params=request.query_params,
-        payload_hash=request.payload_hash,
-        secret_key=token_key,
-        auth_info=request.auth_info,
-    )
+    for token_key, user_id in candidate_secrets:
+        valid = verify_signature_v4(
+            method=request.method,
+            path=request.path,
+            headers=request.headers,
+            query_params=request.query_params,
+            payload_hash=request.payload_hash,
+            secret_key=token_key,
+            auth_info=request.auth_info,
+        )
+        if valid:
+            return {"allow": True, "user_id": int(user_id)}
 
-    if not valid:
-        logger.warning(f"Invalid signature for username: {username}")
-        return {"allow": False, "reason": "invalid_signature"}
-
-    return {"allow": True, "user_id": int(user_id)}
+    logger.warning(f"Invalid signature for access_key: {access_key}")
+    return {"allow": False, "reason": "invalid_signature"}

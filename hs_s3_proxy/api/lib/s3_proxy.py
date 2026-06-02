@@ -73,6 +73,9 @@ class S3ProxyClient:
             url = f"{url}?{_encode_query_params(query_params)}"
 
         outbound_headers = self._filter_headers(headers)
+        # Force uncompressed backend responses so the proxy can stream raw bytes
+        # without needing to decompress or re-advertise encoding to the client.
+        outbound_headers['accept-encoding'] = 'identity'
         # Avoid compressed upstream payloads so stream length semantics remain stable.
         outbound_body = body or b""
 
@@ -171,6 +174,7 @@ class S3ProxyClient:
             'accept-ranges',
             'cache-control',
             'content-disposition',
+            'content-encoding',
             'content-length',
             'content-language',
             'content-range',

@@ -27,20 +27,33 @@ def quota_is_exceeded(resource_id: int):
     return True
 
 
-def get_user_token_and_id(username: str):
-    # return (token_key, user_id) or None
-    query = """SELECT authtoken_token.key, authtoken_token.user_id
+def get_user_service_account_secrets_and_id(access_key: str):
+    # return [(secret_key, user_id), ...]
+    # Required access key format: <username>:<service_account_key>
+    if ":" not in access_key:
+        return []
+
+    username, service_account_key = access_key.split(":", 1)
+    query = """SELECT knox_authtoken.digest AS secret_key, knox_authtoken.user_id
+    FROM knox_authtoken
+    INNER JOIN auth_user ON knox_authtoken.user_id = auth_user.id
+    WHERE auth_user.username = :username
+    AND knox_authtoken.token_key = :service_account_key
+    UNION ALL
+    SELECT authtoken_token.key AS secret_key, authtoken_token.user_id
     FROM authtoken_token
     INNER JOIN auth_user ON authtoken_token.user_id = auth_user.id
-    WHERE auth_user.username = :username"""
+    WHERE auth_user.username = :username
+    AND authtoken_token.key = :service_account_key"""
+    parameters = dict(username=username, service_account_key=service_account_key)
 
     with engine.connect() as con:
         rs = con.execute(statement=text(query),
-                         parameters=dict(username=username))
-        row = rs.fetchone()
-        if row:
-            return row
-    return None
+                         parameters=parameters)
+        rows = rs.fetchall()
+        if rows:
+            return rows
+    return []
 
 
 def is_superuser_and_id(username: str):

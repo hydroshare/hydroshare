@@ -91,7 +91,7 @@ async def proxy_s3_request(request: Request, full_path: str):
 
     # --- SigV4 path ---
     if auth_info:
-        username = auth_info['access_key']
+        username = auth_info['access_key'].split(":")[0]
         payload_hash = headers.get('x-amz-content-sha256') or headers.get('X-Amz-Content-Sha256')
         if not payload_hash and is_presigned:
             payload_hash = _get_query_value_case_insensitive(query_params, 'X-Amz-Content-Sha256')
