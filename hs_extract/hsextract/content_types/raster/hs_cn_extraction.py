@@ -4,6 +4,7 @@ import rasterio
 import mimetypes
 import xml.etree.ElementTree as ET
 from pyproj import CRS
+from pydantic import ValidationError
 
 from hs_cloudnative_schemas.schema.base import GeoShape, SpatialReference, Place
 from hs_cloudnative_schemas.schema.dataset import ScientificDataset, AdditionalType
@@ -119,11 +120,17 @@ def encode_raster_metadata(filepath, multiband=False, validate_bbox=True):
     # name = src.name.split('/')[1:][0]
     src.close()
 
+    crs = CRS.from_wkt(src.crs.wkt)
     # Encode metadata
     box_str = f'{extent_south} {extent_west} {extent_north} {extent_east}'
-    geo = GeoShape(box=box_str, validate_bbox=validate_bbox)
+    # Bbox validation expects geographic lat/lon degrees. For projected CRS values
+    # (e.g., meters), strict validation will fail even when metadata is valid.
+    should_validate_bbox = validate_bbox and (crs is None or crs.is_geographic)
+    try:
+        geo = GeoShape(box=box_str, validate_bbox=should_validate_bbox)
+    except ValidationError:
+        geo = GeoShape(box=box_str, validate_bbox=False)
 
-    crs = CRS.from_wkt(src.crs.wkt)
     srs = SpatialReference(
         name=crs.name,
         srsType=crs.type_name.split(' ')[0],
