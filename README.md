@@ -4,7 +4,9 @@ HydroShare is a website and hydrologic information system for sharing hydrologic
 
 ## Install
 
-Prerequisites
+Prerequisites:
+- Docker
+- Node.js
 
 Supported OS (developer laptops): macOS 10.12+, Win10+ Pro, Ent, Edu, Acad Pro, Acad Ent, CentOS 7 and Ubuntu/Lubuntu 18+ LTS
 
@@ -12,102 +14,111 @@ We got some troubles with Lubuntu 16.04 LTS so probably Ubuntu 16.04 LTS also do
 
 Familiarity with docker and git are required to work with HydroShare
 
+disovery-atlas (search) frontend requires Node version specified in [that module's package.json](discovery-atlas/package.json).
+It's recommended to use [Node Version Manager](https://github.com/nvm-sh/nvm) to switch between different versions of node in your local environment.
+
 Some VM skills such as network settings (Bridge/NAT/Host only) and file sharing are needed if you work with a virtual machine.
 
 For Windows, this link is required to proceed - https://docs.google.com/document/d/1wIQEYq3OkWmzPTHeyGyjXLZWrinEXojJPBTJq7fczL8/edit#heading=h.mfmd8m9mxvsl
 
-     
-
-One-Time Install
-
-Tables are provided (in Courier font) throughout this wiki for copy-paste of entire blocks.
+### Getting the source code
 
 1. Open a terminal (macOS, Linux) or command prompt (Windows)
 Navigate to where you will store the source code, for example /Users/yourname/repo/
 
-Typically you will find it under this directory:
-    
-    cd ~/repo
+2. Clone repository
 
-2. Get code
+Note: the default branch for hydroshare is `develop`
+```
+git clone https://github.com/hydroshare/hydroshare.git
+```
 
-Note it should have a default branch set to the develop branch
-
-    git clone https://github.com/hydroshare/hydroshare.git
-
-    git checkout <branch>
-
-To get current solr revision fixes:
-
-      a. git pull
-
+Or if you are using ssh:
+```
+git clone git@github.com:hydroshare/hydroshare.git
 cd hydroshare
+```
 
-    b. docker exec -ti hydroshare python manage.py solr_update
+### One-time local development setup
 
- 
-It’s very important that please DO NOT change the directory name after cloned. Let it be “hydroshare”
-If you are running inside a virtual machine such as HydroDev Ubuntu 18.04 from here, you need to:
+1. Log into Docker:
+```
+docker login
+```
+(You will be asked to authenticate with Docker.)
 
-1. Log into Docker via application and command line.
-Command line: 
-    
-    docker login 
-    
-    You will be asked to enter your username and password 
+2. Launch the stack
+```
+./local-dev-first-start-only.sh
+```
 
-1. Launch the stack
+This runs a script that will:
+- Delete all containers, images, and volumes for a clean start
+- Update config files with your user/group IDs
+- Install dependencies (npm, pm2) and build frontend assets
+- Recreate Docker containers and database
+- Run migrations and set up search indexes
+- Starts the stack defined in the Docker Compose file local-dev.yml
 
-        ./local-dev-first-start-only.sh
+The [local-dev-first-start-only.sh](./local-dev-first-start-only.sh) will spin up all docker containers in the [local-dev.yml](./local-dev.yml). It does NOT spin up a container for Discover -- instead, the script uses [PM2](https://pm2.io/) to run the Vite dev server to take advantage of [HMR](https://vite.dev/guide/features#hot-module-replacement).
 
-Following the screen instruction to continue.
+Alternatively, to run Discover as a static build inside a local Docker container you can:
+- Uncomment the discovery-atlas service in [local-dev.yml](./local-dev.yml)
+- Uncomment the line in the nginx service in [local-dev.yml](./local-dev.yml) to have nginx wait for discovery-atlas to be up
+- Change the `location /discover/ proxy_pass` entry in [nginx/nginx-local-dev.conf](nginx/nginx-local-dev.conf) to `http://discovery-atlas:80/discover/`
 
-The [local-dev-first-start-only.sh](./local-dev-first-start-only.sh) will spin up all docker containers in the [local-dev.yml](./local-dev.yml). It does NOT spin up a container for Discover (you can [uncomment here](https://github.com/hydroshare/hydroshare/blob/5726/devincowan/discovery-ui-keep-solr/local-dev.yml#L416-L431) if you desire to run Discover as a static build inside a local Docker container). Instead, the script uses [PM2](https://pm2.io/) to run the Vite dev server to take advantage of [HMR](https://vite.dev/guide/features#hot-module-replacement). More details in the [discover readme](/discovery-atlas/README.md).
+3. Sanity Checks and where to view the app and documentation:
+- Some WARNINGs are normal. 
+- HydroShare is available in your browser at https://localhost
+- The default admin page is https://localhost/admin
+- The default admin account is admin:default
+- Swagger API docs https://localhost/hsapi/
 
-5. Sanity Checks
+4. Start & Stop & Log
 
-    Some WARNINGs are normal. 
+To start HydroShare, only need to open a shell, change to HydroShare code directory then run
+```
+docker-compose -f local-dev.yml (up | down) [-d] [--build]
+```
 
-    HydroShare is available in your browser at https://localhost
-
-    The default admin page is https://localhost/admin
-
-    The default admin account is admin:default
-
-    Swagger API docs https://localhost/hsapi/
-
-6. Start & Stop & Log
-
-To start HydroShare, only need to open a windows shell, change to HydroShare code directory then run
-
-    docker-compose -f local-dev.yml (up | down) [-d] [--build]
-
-Note bracketed -d for daemon is optional and you don’t paste in the brackets
-
-    Use -d option in case you want to type new command on this windows or don’t want to see real-time output log.
-
-    Use --build option in case docker keeps image in cache and does not update correctly while modifying the Dockerfile and working with PyCharm
-
-CREATE NEW ACCOUNT - This is the same as it's always been in HydroShare. Ask a teammate or hack at it. Basically open a hydroshare console window then use the UI to sign up for a new account and watch the hydroshare container console (docker logs hydroshare) for a verification link and paste that into your browser and save the new account in the UI.
-
-
+Note bracketed -d (run in detached mode) is optional and you don’t paste in the brackets.
+Use -d option if you want to run your containers in the background and not see live logs.
+Use --build option in case docker keeps image in cache and does not update correctly while modifying the Dockerfile.
 
 To stop HydroShare, only need to close the running windows or open a new windows then run
-
-    docker-compose -f local-dev.yml down
+```
+docker-compose -f local-dev.yml down
+```
 
 All data is persisted for the next start.
 
-To see the logs in case you start with -d option, open a windows then run
-
-    docker-compose -f local-dev.yml logs
-
+To see the logs in case you start with -d option, run
+```
+docker-compose -f local-dev.yml logs
+```
 Or
+```
+docker logs <container name>
+```
 
-    docker logs <container name>
+5. Logging in / creating an account
 
-Branching
-When you activate a new branch, just bring the stack down and up again. Sometimes you can get away with a warm restart of the stack or even relying on the Django debug mode (doing nothing but waiting). 
+The locally-running app will be populated with a couple accounts:
+- admin (pw: default)
+- asdf (pw: asdf)
+
+Or use the following process to create a new account:
+
+Open Hydroshare in your browser and visit the [sign-up page](http://localhost/sign-up/). Use the UI to sign up for a new account, then view the hydroshare container logs with
+```
+docker logs hydroshare
+```
+to get a verification link.  Look for
+```
+Welcome to HydroShare. This email address was used to request an account on www.hydroshare.org.
+If you originated the request, please use the link below to verify your email address and activate your account.
+```
+and get the link below that text, paste it into your browser and save the new account in the UI.
 
 ## Usage
 
@@ -117,20 +128,6 @@ For all intents and purposes, Hydroshare is a large Python/Django application wi
 - Celery + Redis for asynchronous background work
 - Minio for a S3 file system
 - PostgreSQL for the database backend
-
-#### The `hsctl` Script
-
-The `hsctl` script is your primary tool in interacting with and running tasks against your Hydroshare install. It has the syntax `./hsccl [command]` where `[command]` is one of:
-
-- `loaddb`: Deletes existing database and reloads the database specified in the `hydroshare-config.yaml` file.
-- `managepy [args]`: Executes a `python manage.py [args]` call on the running hydroshare container.
-- `rebuild`: Stops, removes and deletes only the hydroshare docker containers and images while retaining the database contents on the subsequent build as defined in the `hydroshare-config.yaml` file
-- `rebuild --db`: Fully stops, removes and deletes any prior hydroshare docker containers, images and database contents prior to installing a clean copy of the hydroshare codebase as defined in the `hydroshare-config.yaml` file.
-- `rebuild_index`: Rebuilds the solr/haystack index in a non-interactive way.
-- `restart`: Restarts the django server only.
-- `start`: Starts all containers as defined in the `docker-compose.yml` file.
-- `stop`: Stops all containers as defined in the `docker-compose.yml` file.
-- `update_index`: Updates the solr/haystack index in a non-interactive way.
 
 ## Testing and Debugging
 

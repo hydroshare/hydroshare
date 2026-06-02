@@ -9,6 +9,7 @@ from hsextract.utils.s3 import (
     delete_metadata,
     iter_find,
     load_metadata,
+    s3_config,
     write_file_manifest,
     write_has_part_file,
     write_metadata,
@@ -39,7 +40,7 @@ def _iter_resource_has_parts(md: BaseMetadataObject, user_json: dict):
         has_part = HasPart(
             name=content_type_metadata.get("name", None),
             description=content_type_metadata.get("description", None),
-            url=f"{os.environ['AWS_S3_ENDPOINT_URL']}/{file}",
+            url=f"{s3_config['public_endpoint_url']}/{file}",
         )
         yield has_part.model_dump(exclude_none=True)
 

@@ -114,6 +114,7 @@ services:
       - solr:solr
       - redis:redis
       - minio:minio
+      - hs-s3-proxy:hs-s3-proxy
     depends_on:
       - postgis
       - pgbouncer
@@ -156,12 +157,10 @@ services:
       - ".:/hydroshare"
     links:
       - pgbouncer:pgbouncer
-      - redis:redis
     depends_on:
       - hydroshare
       - pgbouncer
       - solr
-      - redis
     stdin_open: true
     tty: true
     command: /bin/bash init-defaultworker
@@ -252,26 +251,20 @@ services:
     platform: linux/amd64
     command: ["celery", "-A", "hs_extract.celery_app", "worker", "-Q", "extract", "--loglevel=info"]
     environment:
-      HS_SETTINGS_FILE: "/app/hydroshare/settings.py"
-      HS_S3_ZONE_NAME: "hydroshare"
       AWS_S3_ENDPOINT_URL: "http://minio:9000"
-      AWS_ACCESS_KEY_ID: "cuahsi"
-      AWS_SECRET_ACCESS_KEY: "devpassword"
-      REDIS_HOST: redis
-      REDIS_PORT: "6379"
-      CELERY_BROKER_URL: "redis://redis:6379/0"
-      CELERY_RESULT_BACKEND: "redis://redis:6379/0"
-      PYTHONPATH: "/app/hs_extract/hsextract/:/app/hs_extract/hs_cloudnative_schemas/:/app:/app/hs_extract"
+      AWS_ACCESS_KEY_ID: cuahsi
+      AWS_SECRET_ACCESS_KEY: devpassword
+      MC_HOST_hydroshare: "http://cuahsi:devpassword@minio:9000"
     volumes:
       - "./hs_extract:/app/hs_extract"
       - "./hs_cloudnative_schemas:/app/hs_extract/hs_cloudnative_schemas"
       - "./hydroshare/settings.py:/app/hydroshare/settings.py:ro"
     links:
-      - minio:minio
-      - redis:redis
+      - pgbouncer:pgbouncer
     depends_on:
-      - redis
-      - minio
+      - hydroshare
+      - pgbouncer
+      - solr
     stdin_open: true
     tty: true
   companion:
@@ -329,6 +322,8 @@ services:
     depends_on:
       - hydroshare
       - companion
+      # If running discovery-atlas via docker, wait for discovery-atlas to be up before starting nginx
+      # - discovery-atlas HEAD
   hs-s3-auth:
     image: hydroshare/hs-s3-auth:latest
     platform: linux/amd64
@@ -354,7 +349,6 @@ services:
     image: hydroshare/hs-s3-proxy:latest
     platform: linux/amd64
     container_name: hs-s3-proxy
-    hostname: hs-s3-proxy
     build:
       context: ./hs_s3_proxy
       dockerfile: Dockerfile
@@ -362,7 +356,6 @@ services:
       AUTH_SERVICE_URL: "http://hs-s3-auth"
       AUTH_SERVICE_TIMEOUT: "5"
       S3_BACKEND_URL: "http://minio:9000"
-      S3_BACKEND_BUCKET: "resource"
       S3_BACKEND_ACCESS_KEY: "cuahsi"
       S3_BACKEND_SECRET_KEY: "devpassword"
       S3_BACKEND_REGION: "auto"
@@ -379,6 +372,7 @@ services:
   mongodb:
     image: mongodb/mongodb-atlas-local
     container_name: mongodb
+    hostname: mongodb
     environment:
       - MONGODB_INITDB_ROOT_USERNAME=user
       - MONGODB_INITDB_ROOT_PASSWORD=pass
@@ -388,7 +382,14 @@ services:
     volumes:
       - mongodb_data_vol:/data/db
       - mongodb_config_vol:/data/configdb
+      - mongodb_mongot_vol:/data/mongot
       - ./hs_discover/search_indexes:/hs_discover/search_indexes:ro
+    healthcheck:
+      test: ["CMD", "mongosh", "mongodb://localhost:27017/?directConnection=true", "--quiet", "--eval", "rs.isMaster().ismaster || quit(1)"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
   # for local dev, we run discover using pm2 and a vite dev server
   # this allows for better developer experience with features like HMR
   # the discovery-atlas service is run using "make up-discover"
@@ -401,16 +402,18 @@ services:
   #   platform: linux/amd64
   #   environment:
   #     VITE_APP_NAME: "Discover"
-  #     VITE_APP_API_URL: "http://localhost/api"
+  #     VITE_APP_API_URL: "http://localhost/hsapi/discovery-atlas"
   #     VITE_APP_BASE: "/discover/"
   #     VITE_APP_ORIGIN: "http://localhost"
-  #   ports:
-  #     - "5004:80"
+  #   depends_on:
+  #     mongodb:
+  #       condition: service_healthy
 volumes:
   postgis_data_vol:
   solr_data_vol:
   mongodb_data_vol:
   mongodb_config_vol:
+  mongodb_mongot_vol:
   temp_vol:
   share_vol:
   minio_data_vol:

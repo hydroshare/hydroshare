@@ -1,4 +1,5 @@
 from __future__ import annotations
+import ast
 import json
 import logging
 import mimetypes
@@ -32,12 +33,75 @@ DEFAULT_S3_EVENT_TIMEOUT = 5.0
 
 logger = logging.getLogger(__name__)
 
-s3_config = {
-    "endpoint_url": os.environ.get("AWS_S3_ENDPOINT_URL", "https://s3.beta.hydroshare.org"),
-    "aws_access_key_id": os.environ.get("AWS_ACCESS_KEY_ID", "YOUR_ACCESS_KEY"),
-    "aws_secret_access_key": os.environ.get("AWS_SECRET_ACCESS_KEY", "YOUR_SECRET_KEY")
-}
-s3_client = boto3.client('s3', **s3_config)
+DEFAULT_SETTINGS_FILE = "/app/hydroshare/settings.py"
+DEFAULT_ZONE_NAME = "hydroshare"
+
+
+def _load_zone_s3_config() -> dict:
+    settings_file = os.environ.get("HS_SETTINGS_FILE", DEFAULT_SETTINGS_FILE)
+    if not os.path.exists(settings_file):
+        return {}
+
+    with open(settings_file, "r", encoding="utf-8") as settings_handle:
+        module = ast.parse(settings_handle.read(), filename=settings_file)
+
+    default_zone = None
+    zone_configs = None
+    for node in module.body:
+        if not isinstance(node, ast.Assign):
+            continue
+        for target in node.targets:
+            if not isinstance(target, ast.Name):
+                continue
+            if target.id == "RESOURCE_S3_DEFAULT_ZONE":
+                default_zone = ast.literal_eval(node.value)
+            elif target.id == "RESOURCE_S3_ZONES_CONFIG":
+                zone_configs = ast.literal_eval(node.value)
+
+    if not zone_configs:
+        return {}
+
+    zone_name = os.environ.get("HS_S3_ZONE_NAME") or default_zone or DEFAULT_ZONE_NAME
+    zone_config = dict(zone_configs.get(zone_name, {}))
+    if zone_config:
+        zone_config["zone_name"] = zone_name
+    return zone_config
+
+
+def _build_s3_config() -> dict:
+    zone_config = _load_zone_s3_config()
+    endpoint_url = zone_config.get(
+        "aws_s3_endpoint_url",
+        os.environ.get("AWS_S3_ENDPOINT_URL", "https://s3.beta.hydroshare.org"),
+    )
+    access_key = zone_config.get(
+        "aws_access_key_id",
+        os.environ.get("AWS_ACCESS_KEY_ID", "YOUR_ACCESS_KEY"),
+    )
+    secret_key = zone_config.get(
+        "aws_secret_access_key",
+        os.environ.get("AWS_SECRET_ACCESS_KEY", "YOUR_SECRET_KEY"),
+    )
+    public_endpoint_url = zone_config.get(
+        "aws_s3_endpoint_url_public",
+        endpoint_url,
+    )
+    return {
+        "zone_name": zone_config.get("zone_name", os.environ.get("HS_S3_ZONE_NAME", DEFAULT_ZONE_NAME)),
+        "endpoint_url": endpoint_url,
+        "aws_access_key_id": access_key,
+        "aws_secret_access_key": secret_key,
+        "public_endpoint_url": public_endpoint_url,
+    }
+
+
+s3_config = _build_s3_config()
+s3_client = boto3.client(
+    's3',
+    endpoint_url=s3_config["endpoint_url"],
+    aws_access_key_id=s3_config["aws_access_key_id"],
+    aws_secret_access_key=s3_config["aws_secret_access_key"],
+)
 
 
 def _resolve_s3_event_endpoint() -> str:
@@ -150,7 +214,7 @@ def _build_media_object(bucket: str, key: str, size_bytes: int, checksum: str) -
     _, extension = os.path.splitext(key)
     _, name = os.path.split(key)
     media_object = MediaObject(
-        contentUrl=f"{os.environ['AWS_S3_ENDPOINT_URL']}/{bucket}/{key}",
+        contentUrl=f"{s3_config['public_endpoint_url']}/{bucket}/{key}",
         name=name,
         sha256=str(checksum),
         contentSize=f"{size_bytes / 1000.00} KB",
@@ -195,7 +259,7 @@ def _build_manifest_reference(manifest_path: str, size_bytes: int, from_manifest
     bucket, key = _split_s3_path(manifest_path)
     if not from_manifest_file:
         manifest_object = MediaObject(
-            contentUrl=f"{os.environ['AWS_S3_ENDPOINT_URL']}/{bucket}/{key}",
+            contentUrl=f"{s3_config['public_endpoint_url']}/{bucket}/{key}",
             name=os.path.basename(key),
             contentSize=f"{size_bytes / 1000.00} KB",
             encodingFormat="application/json"
@@ -212,7 +276,7 @@ def _build_has_part_reference(parts_path: str) -> dict:
     """Build a HasPart payload that points to the has_parts.json file."""
     bucket, key = _split_s3_path(parts_path)
     has_part = HasPart(
-        url=f"{os.environ['AWS_S3_ENDPOINT_URL']}/{bucket}/{key}",
+        url=f"{s3_config['public_endpoint_url']}/{bucket}/{key}",
     )
     return has_part.model_dump(exclude_none=True)
 

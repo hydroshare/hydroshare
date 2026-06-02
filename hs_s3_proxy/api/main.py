@@ -9,7 +9,6 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from api.routes.external import router as external_router
-from api.routes.internal import router as internal_router
 
 # ...existing code...
 
@@ -43,20 +42,11 @@ internal_app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-internal_app.include_router(internal_router)
 
 
 class Server(uvicorn.Server):
     def handle_exit(self, sig: int, frame) -> None:
         return super().handle_exit(sig, frame)
-
-
-def get_proxy_mode():
-    mode = os.environ.get("PROXY_MODE", "external").lower()
-    if mode not in ("external", "internal"):
-        logger.warning(f"Unknown PROXY_MODE '{mode}', defaulting to 'external'.")
-        mode = "external"
-    return mode
 
 
 async def main():
