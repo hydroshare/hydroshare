@@ -5,12 +5,104 @@ import {
   RES_FLOWPATHS_PMTILES_URL,
 } from './config.js';
 import { useParquet } from './composables/useParquet.js';
+import { _ensureBytes } from './updateMapFilters/useGpkg.js'
 
 const { initHyparquet, readParquetAll } = useParquet();
 
 function geomCol(rows) {
   if (!rows?.length) return null;
   return Object.keys(rows[0]).find(k => k === 'geom' || k === 'geometry') ?? null;
+}
+
+function wkbToGeojsonGeom(rawV) {
+  let bytes = _ensureBytes(rawV);
+  if (!bytes || bytes.length < 5) return null;
+  try {
+    bytes = _stripGpHeader(bytes);
+    const le = bytes[0] === 1;
+    const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    const gt = dv.getUint32(1, le) & 0xffff;
+
+    if (gt === 1) {
+      return { type: 'Point', coordinates: _ALB(dv.getFloat64(5, le), dv.getFloat64(13, le)) };
+    }
+    if (gt === 2) {
+      const n = dv.getUint32(5, le);
+      return { type: 'LineString', coordinates: _readRing(dv, 9, n, le).coords };
+    }
+    if (gt === 3) {
+      const nr = dv.getUint32(5, le); const rings = []; let off = 9;
+      for (let r = 0; r < nr; r++) {
+        const n = dv.getUint32(off, le); off += 4;
+        const res = _readRing(dv, off, n, le); off = res.end;
+        rings.push(res.coords);
+      }
+      return { type: 'Polygon', coordinates: rings };
+    }
+    if (gt === 5) { // MULTILINESTRING
+      const ng = dv.getUint32(5, le); let off = 9; const lines = [];
+      for (let g = 0; g < ng; g++) {
+        off += 5;
+        const n = dv.getUint32(off, le); off += 4;
+        const res = _readRing(dv, off, n, le); off = res.end;
+        lines.push(res.coords);
+      }
+      return { type: 'MultiLineString', coordinates: lines };
+    }
+    if (gt === 6) { // MULTIPOLYGON
+      const ng = dv.getUint32(5, le); let off = 9; const polys = [];
+      for (let g = 0; g < ng; g++) {
+        off += 5;
+        const nr = dv.getUint32(off, le); off += 4; const rings = [];
+        for (let r = 0; r < nr; r++) {
+          const n = dv.getUint32(off, le); off += 4;
+          const res = _readRing(dv, off, n, le); off = res.end;
+          rings.push(res.coords);
+        }
+        polys.push(rings);
+      }
+      return { type: 'MultiPolygon', coordinates: polys };
+    }
+    return null;
+  } catch(e) { return null; }
+}
+
+function rowsToGeojson(rows, geomCol) {
+  const features = [];
+  let bbox = null;
+
+  for (const row of rows) {
+    const rawGeom = row[geomCol];
+    if (!rawGeom) continue;
+    const geom = wkbToGeojsonGeom(rawGeom);
+    if (!geom) continue;
+
+    const props = {};
+    for (const [k, v] of Object.entries(row)) {
+      if (k !== geomCol) props[k] = (v instanceof Uint8Array) ? null : v;
+    }
+    features.push({ type: 'Feature', geometry: geom, properties: props });
+
+    // Expand bbox from the first ring/coords of each feature
+    const sample =
+      geom.type === 'Point'            ? [geom.coordinates]
+      : geom.type === 'LineString'     ? geom.coordinates
+      : geom.type === 'MultiLineString'? geom.coordinates[0]
+      : geom.type === 'Polygon'        ? geom.coordinates[0]
+      : geom.type === 'MultiPolygon'   ? geom.coordinates[0][0]
+      : [];
+    for (const [lon, lat] of sample) {
+      if (!isFinite(lon) || !isFinite(lat)) continue;
+      if (!bbox) bbox = [lon, lat, lon, lat];
+      else {
+        if (lon < bbox[0]) bbox[0] = lon;
+        if (lat < bbox[1]) bbox[1] = lat;
+        if (lon > bbox[2]) bbox[2] = lon;
+        if (lat > bbox[3]) bbox[3] = lat;
+      }
+    }
+  }
+  return { type: 'FeatureCollection', features, bbox };
 }
 
 // ── Layer adders ──────────────────────────────────────────

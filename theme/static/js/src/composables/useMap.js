@@ -5,18 +5,18 @@ import {
   log, state,
 } from '../config.js';
 import { ensurePmtilesProtocol } from '../auth.js';
+import { useDarkStyle } from '../updateMapFilters/dark-style.js';
+import { useLightStyle } from '../updateMapFilters/light-style.js';
 
 export function useMap() {
     function initMap() {
       ensurePmtilesProtocol();
 
-        const darkStyle = `${S3_MAP}/styles/dark-style.json`;
-        const lightStyle = `${S3_MAP}/styles/light-style.json`;
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
         state.map = new maplibregl.Map({
         container: 'map',
-        style: prefersDark ? `${S3_MAP}/styles/dark-style.json` : `${S3_MAP}/styles/light-style.json`,
+        style: prefersDark ? useDarkStyle() : useLightStyle(),
         center: [-96, 40],
         zoom: 4,
         transformRequest: (url) => {
@@ -28,13 +28,12 @@ export function useMap() {
 
   function initMapRight() {
     ensurePmtilesProtocol();
-    const darkStyle = `${S3_MAP}/styles/dark-style.json`;
-    const lightStyle = `${S3_MAP}/styles/light-style.json`;
+
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
     state.mapRight = new maplibregl.Map({
       container: 'map-right',
-      style: prefersDark ? darkStyle : lightStyle ,
+      style: prefersDark ? useDarkStyle() : useLightStyle(),
       center: state.map.getCenter(),
       zoom: state.map.getZoom(),
       bearing: state.map.getBearing(),

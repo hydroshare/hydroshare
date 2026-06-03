@@ -22,12 +22,15 @@ export const REF_DIVIDES_PMTILES_URL = `${S3_MAP}/only_geometry/reference/divide
 export const RES_DIVIDES_PMTILES_URL   = `${S3_MAP}/only_geometry/reference/divides.pmtiles`;
 export const RES_FLOWPATHS_PMTILES_URL = `${S3_MAP}/only_geometry/reference/flowpaths.pmtiles`;
 
+//styles
+export const MERGED_PMTILES_URL = `${S3_MAP}/merged.pmtiles`;
+export const VPU_PMTILES_URL = `${S3_MAP}/only_geometry/reference/vpu.pmtiles`;
+
 //community hydrofabric reference
 export const COMMUNITY_HF_ORIGIN     = `${S3_ORIGIN}/${S3_BUCKET_NAME}/${RESOURCE_ID}/data/contents/community`;
 export const COMMUNITY_HF_MAP        = `${COMMUNITY_HF_ORIGIN}/map`;
 export const COMMUNITY_HF_DIVIDES = `${COMMUNITY_HF_MAP}/only_geometry/reference/divides.pmtiles`;
 export const COMMUNITY_HF_FLOWPATHS = `${COMMUNITY_HF_MAP}/only_geometry/reference/flowpaths.pmtiles`;
-export const COMMUNITY_HF_DARK_STYLE = `${COMMUNITY_HF_ORIGIN}/map/styles/dark-style.json`;
 
 export let pmtilesProtocolRegistered = false;
 export function isPmtilesProtocolRegistered() {

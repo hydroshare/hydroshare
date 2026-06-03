@@ -1,5 +1,5 @@
 import { log } from "../config.js";
-function _ensureBytes(v) {
+export function _ensureBytes(v) {
     if (v instanceof Uint8Array) return v;
     if (v instanceof ArrayBuffer) return new Uint8Array(v);
     if (v && v.buffer instanceof ArrayBuffer) return new Uint8Array(v.buffer, v.byteOffset, v.byteLength);
@@ -262,5 +262,5 @@ export function useGpkg() {
       db.close();
       return new Blob([data], { type: 'application/geopackage+sqlite3' });
     }
-    return { buildGeoPackage };
+    return { buildGeoPackage, _ensureBytes };
 }
