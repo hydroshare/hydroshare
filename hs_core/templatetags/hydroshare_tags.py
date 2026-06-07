@@ -410,6 +410,12 @@ def json_dumps(value):
 
 
 @register.filter
+def relation_values_json(relations, relation_type):
+    values = [rel.get('value') for rel in relations if rel.get('type') == relation_type and rel.get('value')]
+    return dumps(values) if values else ""
+
+
+@register.filter
 def is_debug(page):
     return settings.DEBUG
 
