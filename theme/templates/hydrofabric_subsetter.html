@@ -26,71 +26,80 @@
     <p>Displaying researcher subset. Enable split view to compare against the reference hydrofabric.</p>
   </header>
 
-  <div id="status-bar">
-    <div id="status-dot" class="loading"></div>
-    <span id="status-text">Initializing...</span>
-  </div>
+  <div id="controls-collapsible">
+    <button id="controls-toggle" type="button" onclick="handlers.toggleControls()" aria-expanded="false" aria-controls="controls-content">
+      <span class="arrow">&#x21AA;</span>
+      <span>Details</span>
+    </button>
 
-  <div id="meta-panel">
-    <div class="meta-row">
-      <span class="meta-label">VPU ID</span>
-      <span class="meta-value accent" id="meta-vpuid">—</span>
-    </div>
-    <div class="meta-row">
-      <span class="meta-label">Catchments</span>
-      <span class="meta-value researcher" id="meta-catchments">—</span>
-    </div>
-    <div class="meta-row">
-      <span class="meta-label">Flowpaths</span>
-      <span class="meta-value researcher" id="meta-flowpaths">—</span>
-    </div>
-    <div class="meta-row">
-      <span class="meta-label">Render</span>
-      <span class="meta-value" id="meta-render">—</span>
+    <div id="controls-content">
+      <div id="status-bar">
+        <div id="status-dot" class="loading"></div>
+        <span id="status-text">Initializing...</span>
+      </div>
+
+      <div id="meta-panel">
+        <div class="meta-row">
+          <span class="meta-label">VPU ID</span>
+          <span class="meta-value accent" id="meta-vpuid">—</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-label">Catchments</span>
+          <span class="meta-value researcher" id="meta-catchments">—</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-label">Flowpaths</span>
+          <span class="meta-value researcher" id="meta-flowpaths">—</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-label">Render</span>
+          <span class="meta-value" id="meta-render">—</span>
+        </div>
+      </div>
+
+      <div id="layer-panel">
+        <h2>Layers</h2>
+        <div class="layer-row">
+          <label class="toggle-switch">
+            <input type="checkbox" id="toggle-divides" checked
+                   onchange="handlers.toggleDivides(this.checked)"/>
+            <span class="slider"></span>
+          </label>
+          <span class="layer-label">Divides</span>
+          <span class="layer-swatch poly" style="border-color:#a78bfa"></span>
+        </div>
+        <div class="layer-row">
+          <label class="toggle-switch">
+            <input type="checkbox" id="toggle-flowpaths" checked
+                   onchange="handlers.toggleFlowpaths(this.checked)"/>
+            <span class="slider"></span>
+          </label>
+          <span class="layer-label">Flowpaths</span>
+          <span class="layer-swatch" style="background:#38bdf8;height:2px;margin-top:6px"></span>
+        </div>
+        <div class="layer-row">
+          <label class="toggle-switch">
+            <input type="checkbox" id="toggle-nexus"
+                   onchange="handlers.toggleNexus(this.checked)"/>
+            <span class="slider"></span>
+          </label>
+          <span class="layer-label">Nexus Points</span>
+          <span class="layer-swatch poly" style="border-color:#f59e0b;border-radius:50%;width:12px;height:12px"></span>
+        </div>
+        <div class="layer-row">
+          <label class="toggle-switch">
+            <input type="checkbox" id="toggle-split"
+                   onchange="handlers.toggleSplit(this.checked)"/>
+            <span class="slider"></span>
+          </label>
+          <span class="layer-label">Split View</span>
+        </div>
+      </div>
+
+      <div id="progress-bar"><div id="progress-fill"></div></div>
+      <div id="log-container"><div id="log"></div></div>
     </div>
   </div>
-
-  <div id="layer-panel">
-    <h2>Layers</h2>
-    <div class="layer-row">
-      <label class="toggle-switch">
-        <input type="checkbox" id="toggle-divides" checked
-               onchange="handlers.toggleDivides(this.checked)"/>
-        <span class="slider"></span>
-      </label>
-      <span class="layer-label">Divides</span>
-      <span class="layer-swatch poly" style="border-color:#a78bfa"></span>
-    </div>
-    <div class="layer-row">
-      <label class="toggle-switch">
-        <input type="checkbox" id="toggle-flowpaths" checked
-               onchange="handlers.toggleFlowpaths(this.checked)"/>
-        <span class="slider"></span>
-      </label>
-      <span class="layer-label">Flowpaths</span>
-      <span class="layer-swatch" style="background:#38bdf8;height:2px;margin-top:6px"></span>
-    </div>
-    <div class="layer-row">
-      <label class="toggle-switch">
-        <input type="checkbox" id="toggle-nexus"
-               onchange="handlers.toggleNexus(this.checked)"/>
-        <span class="slider"></span>
-      </label>
-      <span class="layer-label">Nexus Points</span>
-      <span class="layer-swatch poly" style="border-color:#f59e0b;border-radius:50%;width:12px;height:12px"></span>
-    </div>
-    <div class="layer-row">
-      <label class="toggle-switch">
-        <input type="checkbox" id="toggle-split"
-               onchange="handlers.toggleSplit(this.checked)"/>
-        <span class="slider"></span>
-      </label>
-      <span class="layer-label">Split View</span>
-    </div>
-  </div>
-
-  <div id="progress-bar"><div id="progress-fill"></div></div>
-  <div id="log-container"><div id="log"></div></div>
 </div>
 
 <script type="module">
@@ -124,6 +133,12 @@
     }
   }
   window.handlers = {
+    toggleControls() {
+      const wrapper = document.getElementById('controls-collapsible');
+      const button = document.getElementById('controls-toggle');
+      const expanded = wrapper.classList.toggle('expanded');
+      button.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+    },
     toggleDivides(checked) {
       setVisibilityBoth(
         ['res-divides-fill', 'res-divides-line'],
