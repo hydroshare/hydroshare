@@ -376,6 +376,34 @@ echo "  - docker exec hydroshare python manage.py add_missing_bucket_names"
 echo
 docker exec hydroshare python manage.py add_missing_bucket_names
 
+
+# Parse arguments
+SEED_DEV_RESOURCES=false
+for arg in "$@"; do
+  case $arg in
+    --seed-dev-resources)
+      SEED_DEV_RESOURCES=true
+      ;;
+  esac
+done
+
+if [ "$SEED_DEV_RESOURCES" = true ]; then
+  echo
+  echo '########################################################################################################################'
+  echo " Seeding dev resources"
+  echo '########################################################################################################################'
+  echo
+  echo "  - docker exec hydroshare python manage.py seed_dev_resources --username asdf"
+  echo
+  docker exec hydroshare python manage.py seed_dev_resources --username asdf
+else
+  echo
+  echo '########################################################################################################################'
+  echo " Skipping dev resource seeding (use --seed-dev-resources to enable)"
+  echo '########################################################################################################################'
+  echo
+fi
+
 echo
 echo " waiting for hydroshare container to be ready..."
 echo " you can check your logs by running: `blue 'docker logs -f hydroshare'`"
