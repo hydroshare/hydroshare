@@ -2,8 +2,6 @@
 Optional argument --force does the update even if the record exists.
 Optional argument --debug causes all exceptions to halt execution.
 """
-import time
-
 from django.core.management.base import BaseCommand
 from django.db.models import Q
 from hs_core.models import BaseResource
@@ -37,23 +35,6 @@ class Command(BaseCommand):
             help='optional list of resource short_id to update; if not provided, all resources will be checked'
         )
 
-    def create_and_poll_for_item_in_mongodb(self, resource: BaseResource, timeout=120, poll_interval=3):
-        """
-        Create resource metadata files and poll until the resource appears in MongoDB
-        or timeout is reached. Returns True if indexed, False on timeout.
-        """
-        resource.write_django_metadata_json_files()
-        expected_filepath = f"{resource.short_id}/.hsjsonld/dataset_metadata.json"
-        deadline = time.monotonic() + timeout
-        while time.monotonic() < deadline:
-            doc = MongoDBClient.get_discovery_collection().find_one(
-                {"_s3_filepath": expected_filepath}, {"_id": 1}
-            )
-            if doc is not None:
-                return True
-            time.sleep(poll_interval)
-        return False
-
     def handle(self, *args, **options):
         if len(options['resource_ids']) > 0:
             for rid in options['resource_ids']:
@@ -62,9 +43,7 @@ class Command(BaseCommand):
                     try:
                         resource = get_resource_by_shortkey(rid, or_404=False)
                         if resource.show_in_discover:
-                            created = self.create_and_poll_for_item_in_mongodb(resource)
-                            if not created:
-                                print(f"WARNING: {resource.short_id} not indexed in MongoDB within timeout")
+                            resource.write_django_metadata_json_files()
                     except BaseResource.DoesNotExist:
                         print(f"resource {rid} does not exist in Django")
                     except Exception as e:
@@ -72,9 +51,7 @@ class Command(BaseCommand):
                 else:
                     resource = get_resource_by_shortkey(rid, or_404=False)
                     if resource.show_in_discover:
-                        created = self.create_and_poll_for_item_in_mongodb(resource)
-                        if not created:
-                            print(f"WARNING: {resource.short_id} not indexed in MongoDB within timeout")
+                        resource.write_django_metadata_json_files()
                 print(f"Create/update triggered for resource {rid} in Discovery Index.")
         else:
             discovery_items_iterator = MongoDBClient.get_discovery_collection().find({}, {"identifier": 1})
@@ -118,11 +95,8 @@ class Command(BaseCommand):
                 if resource.short_id not in found_in_discovery:
                     print(f"Resource {resource.short_id} NOT FOUND in MongoDB: adding to MongoDB Discovery Index")
                     try:
-                        created = self.create_and_poll_for_item_in_mongodb(resource)
-                        if created:
-                            added_to_mongodb += 1
-                        else:
-                            print(f"WARNING: {resource.short_id} not indexed in MongoDB within timeout")
+                        resource.write_django_metadata_json_files()
+                        added_to_mongodb += 1
                     except Exception as e:
                         if options["debug"]:
                             raise
@@ -158,6 +132,6 @@ class Command(BaseCommand):
                     continue
 
             print(f"Django contains {discoverable_in_django} discoverable resources")
-            print(f"{added_to_mongodb} resources in Django added to MongoDB Discovery Index")
+            print(f"{added_to_mongodb} resources in Django triggered for addition to MongoDB Discovery Index")
             print(f"{triggered_refresh_in_mongodb} resources were refreshed in MongoDB Discovery Index")
             print(f"{deleted_from_mongodb} resources not in Django removed from MongoDB Discovery Index")
