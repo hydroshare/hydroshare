@@ -54,17 +54,6 @@ services:
       - "6432:6432"
     depends_on:
       - postgis
-  solr:
-    image: solr:6.6
-    platform: linux/amd64
-    container_name: solr
-    volumes:
-      # hydroshare repository
-      - ".:/hydroshare"
-      - "solr_data_vol:/opt/solr/server/solr"
-    ports:
-      - "8983"
-    command: ["solr-foreground"]
   hydroshare:
     platform: linux/amd64
     build:
@@ -86,8 +75,6 @@ services:
       REDIS_PORT: "6379"
       CELERY_BROKER_URL: "redis://redis:6379/0"
       CELERY_RESULT_BACKEND: "redis://redis:6379/0"
-      SOLR_PORT_8983_TCP_ADDR: solr
-      SOLR_HOST: solr
       TMP: /tmp
       POSTGIS_PORT_5432_TCP_ADDR: pgbouncer
       POSTGIS_DISABLE_SERVER_SIDE_CURSORS: "True"
@@ -111,14 +98,12 @@ services:
       - "8000:8000"
     links:
       - postgis:postgis
-      - solr:solr
       - redis:redis
       - minio:minio
       - hs-s3-proxy:hs-s3-proxy
     depends_on:
       - postgis
       - pgbouncer
-      - solr
       - redis
       - minio
     stdin_open: true
@@ -177,8 +162,6 @@ services:
       POSTGIS_USER: postgres
       PGPASSWORD: postgres
       C_FORCE_ROOT: 1
-      SOLR_PORT_8983_TCP_ADDR: solr
-      SOLR_HOST: solr
       POSTGIS_PORT_5432_TCP_ADDR: pgbouncer
       POSTGIS_DISABLE_SERVER_SIDE_CURSORS: "True"
       HS_PATH: ${PWD}
@@ -215,8 +198,6 @@ services:
       POSTGIS_USER: postgres
       PGPASSWORD: postgres
       C_FORCE_ROOT: 1
-      SOLR_PORT_8983_TCP_ADDR: solr
-      SOLR_HOST: solr
       POSTGIS_PORT_5432_TCP_ADDR: pgbouncer
       POSTGIS_DISABLE_SERVER_SIDE_CURSORS: "True"
       HS_PATH: ${PWD}
@@ -411,7 +392,6 @@ services:
   #       condition: service_healthy
 volumes:
   postgis_data_vol:
-  solr_data_vol:
   mongodb_data_vol:
   mongodb_config_vol:
   mongodb_mongot_vol:

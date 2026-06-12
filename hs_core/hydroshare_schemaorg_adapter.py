@@ -4,7 +4,7 @@ from typing import Any, List, Optional, Union, Literal
 from pydantic import BaseModel, HttpUrl, ConfigDict, model_validator
 
 from hs_cloudnative_schemas.schema import base as schema
-from hs_cloudnative_schemas.schema.dataset import ScientificDataset
+from hs_cloudnative_schemas.schema.dataset import ScientificDataset, AdditionalType
 
 
 class BasePerson(BaseModel):
@@ -160,8 +160,9 @@ class Relation(BaseModel):
             description = ""
         if not url:
             url = ""
+        url_str = url.strip()
         relation.description = description.strip()
-        relation.url = url.strip()
+        relation.url = HttpUrl(url_str) if url_str else None
         return relation
 
 
@@ -288,30 +289,43 @@ class _HydroshareResourceMetadata(BaseModel):
             "private": schema.Private,
         }
         if self.sharing_status:
-            return status_defined_terms[self.sharing_status].construct()
+            return status_defined_terms[self.sharing_status]()
+
+    def _to_dataset_language(self):
+        if self.language is None:
+            return None
+        try:
+            return schema.LanguageEnum(self.language)
+        except ValueError:
+            return schema.InLanguageStr(self.language)
 
     @staticmethod
     def to_dataset_provider():
-        provider = schema.Organization.construct()
-        provider.name = "HydroShare"
-        provider.url = "https://www.hydroshare.org/"
-        return provider
+        return schema.Organization.model_validate({"name": "HydroShare", "url": "https://www.hydroshare.org/"})
+
+    @staticmethod
+    def to_additional_type(type: str):
+        try:
+            additional_type = AdditionalType(type)
+        except ValueError:
+            additional_type = None
+        return additional_type
 
     def to_catalog_dataset(self):
         dataset = ScientificDataset.model_construct(**self.extra_columns)
-        dataset.additionalType = self.type
+        dataset.additionalType = self.to_additional_type(self.type) if self.type else None
         dataset.provider = self.to_dataset_provider()
         dataset.name = self.title
         dataset.description = self.abstract
         dataset.url = self.url
-        dataset.identifier = [self.identifier]
+        dataset.identifier = [str(self.identifier)] if self.identifier else None
         dataset.creator = self.to_dataset_creators()
         dataset.contributor = self.to_dataset_contributors()
         dataset.dateCreated = self.created
         dataset.dateModified = self.modified
         dataset.datePublished = self.published
         dataset.keywords = self.to_dataset_keywords()
-        dataset.inLanguage = self.language
+        dataset.inLanguage = self._to_dataset_language()
         dataset.funding = self.to_dataset_funding()
         dataset.spatialCoverage = self.to_dataset_spatial_coverage()
         dataset.temporalCoverage = self.to_dataset_period_coverage()

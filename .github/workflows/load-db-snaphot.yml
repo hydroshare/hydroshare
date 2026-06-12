@@ -190,6 +190,6 @@ jobs:
         echo "Hydroshare pod: $HYDROSHARE_POD"
         echo "wait for pod to spin up"
         kubectl wait --for=condition=ready pod/$HYDROSHARE_POD -n $NAMESPACE --timeout=180s
-        echo "Running solr_update in Hydroshare pod: $HYDROSHARE_POD"
-        kubectl exec -n $NAMESPACE $HYDROSHARE_POD -- python manage.py solr_update
-        echo "Database snapshot load and solr update completed successfully."
+        echo "Running update_discovery_index in Hydroshare pod: $HYDROSHARE_POD"
+        kubectl exec -n $NAMESPACE $HYDROSHARE_POD -- python manage.py update_discovery_index
+        echo "Database snapshot load and MongoDB Discovery Index update completed successfully."

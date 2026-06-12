@@ -2189,12 +2189,12 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
 
     def update_view_count(self):
         self.view_count += 1
-        # using update query api to update instead of self.save() to avoid triggering solr realtime indexing
+        # using update query api to update instead of self.save() to avoid triggering search index update
         type(self).objects.filter(id=self.id).update(view_count=self.view_count)
 
     def update_download_count(self):
         self.download_count += 1
-        # using update query api to update instead of self.save() to avoid triggering solr realtime indexing
+        # using update query api to update instead of self.save() to avoid triggering search index update
         type(self).objects.filter(id=self.id).update(download_count=self.download_count)
 
     def update_cached_metadata_field(self, field_name):
@@ -4829,7 +4829,7 @@ class BaseResource(Page, AbstractResource):
 
     @property
     def discovery_content_type(self):
-        """Return name used for the content type in discovery/solr search."""
+        """Return name used for the content type in discovery search."""
         return self.get_content_model().display_name
 
     @property

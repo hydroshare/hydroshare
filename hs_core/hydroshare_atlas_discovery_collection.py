@@ -23,13 +23,23 @@ def _make_s3_client():
 
 s3 = _make_s3_client()
 
-mongo_connection_url = settings.ATLAS_CONNECTION_URL
-hydroshare_atlas_db = MongoClient(mongo_connection_url)[settings.ATLAS_DB_NAME]
 
 datetime_format_regex = re.compile(r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{6}\+\d{2}:\d{2}$')
 temporal_coverage_datetime_format_regex = re.compile(r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$')
 datetime_format = "%Y-%m-%d %H:%M:%S.%f%z"
 temporal_coverage_datetime_format = "%Y-%m-%d %H:%M:%S"
+
+
+class MongoDBClient:
+    """Provides connection to MongoDB collections."""
+
+    _collection = None
+
+    @classmethod
+    def get_discovery_collection(cls):
+        if cls._collection is None:
+            cls._collection = MongoClient(settings.ATLAS_CONNECTION_URL)[settings.ATLAS_DB_NAME]["discovery"]
+        return cls._collection
 
 
 def datetime_parser(dct):
@@ -78,13 +88,18 @@ def collect_file_to_catalog(filepath: str):
     #         content_types.append(json_dict.get('additionalType'))
     #     metadata_json['content_types'] = list(set(content_types))
 
-    hydroshare_atlas_db["discovery"].find_one_and_replace({"_s3_filepath": metadata_json["_s3_filepath"]},
-                                                          metadata_json, upsert=True)
+    MongoDBClient.get_discovery_collection().find_one_and_replace(
+        {
+            "_s3_filepath": metadata_json["_s3_filepath"]
+        },
+        metadata_json,
+        upsert=True
+    )
 
 
 def delete_file_from_catalog(filepath: str):
     _, object_key = filepath.split('/', 1)
-    hydroshare_atlas_db["discovery"].delete_one({"_s3_filepath": object_key})
+    MongoDBClient.get_discovery_collection().delete_one({"_s3_filepath": object_key})
 
 
 def handle_s3_mutation(action: str, bucket: str, object_path: str, status_code: int):
