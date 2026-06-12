@@ -16,7 +16,7 @@ cd "${PROJECT_ROOT}"
 build_image() {
     case "$1" in
         hydroshare)
-            docker build --platform linux/amd64 -t "${BASE_REPOSITORY}/hydroshare:${IMAGE_TAG}" -f Dockerfile-multistage-node . && \
+            docker build --platform linux/amd64 -t "${BASE_REPOSITORY}/hydroshare:${IMAGE_TAG}" -f Dockerfile . && \
             docker push "${BASE_REPOSITORY}/hydroshare:${IMAGE_TAG}" &
             ;;
         discover-frontend)

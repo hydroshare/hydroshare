@@ -9,6 +9,7 @@ S3_BACKEND_BUCKET=hydroshare-resources
 S3_BACKEND_ACCESS_KEY=GOOG1EQ2KX3UZJEN3D4ADSJITQABGI5WN7DRIM566AC6A5OKBOFZ47HFYCQT4
 S3_PROXY_TIMEOUT=300
 CORS_ALLOWED_ORIGINS="${CORS_ALLOWED_ORIGINS:-https://beta.hydroshare.org,https://hydroshare.org}"
+IMAGE_TAG=3.16.0-gcr
 
 # Configuration - from environment
 # Required: PROJECT_ID, SERVICE_ACCOUNT, AUTH_SERVICE_URL,
@@ -26,15 +27,15 @@ S3_BACKEND_URL="${S3_BACKEND_URL:-https://storage.googleapis.com}"
 
 # Build and push the container image
 echo "Building container image..."
-docker build --platform linux/amd64 -t ${IMAGE_NAME}:latest .
+docker build --platform linux/amd64 -t ${IMAGE_NAME}:${IMAGE_TAG} .
 
-echo "Pushing to Container Registry..."
-docker push ${IMAGE_NAME}:latest
+#echo "Pushing to Container Registry..."
+docker push ${IMAGE_NAME}:${IMAGE_TAG}
 
 # Deploy to Cloud Run with Direct VPC egress
 echo "Deploying to Cloud Run with Direct VPC egress..."
 gcloud run deploy ${SERVICE_NAME} \
-  --image ${IMAGE_NAME}:latest \
+  --image ${IMAGE_NAME}:${IMAGE_TAG} \
   --platform managed \
   --region ${REGION} \
   --project ${PROJECT_ID} \
