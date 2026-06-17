@@ -1,5 +1,4 @@
 from __future__ import annotations
-import ast
 import json
 import logging
 import mimetypes
@@ -37,57 +36,13 @@ DEFAULT_SETTINGS_FILE = "/app/hydroshare/settings.py"
 DEFAULT_ZONE_NAME = "hydroshare"
 
 
-def _load_zone_s3_config() -> dict:
-    settings_file = os.environ.get("HS_SETTINGS_FILE", DEFAULT_SETTINGS_FILE)
-    if not os.path.exists(settings_file):
-        return {}
-
-    with open(settings_file, "r", encoding="utf-8") as settings_handle:
-        module = ast.parse(settings_handle.read(), filename=settings_file)
-
-    default_zone = None
-    zone_configs = None
-    for node in module.body:
-        if not isinstance(node, ast.Assign):
-            continue
-        for target in node.targets:
-            if not isinstance(target, ast.Name):
-                continue
-            if target.id == "RESOURCE_S3_DEFAULT_ZONE":
-                default_zone = ast.literal_eval(node.value)
-            elif target.id == "RESOURCE_S3_ZONES_CONFIG":
-                zone_configs = ast.literal_eval(node.value)
-
-    if not zone_configs:
-        return {}
-
-    zone_name = os.environ.get("HS_S3_ZONE_NAME") or default_zone or DEFAULT_ZONE_NAME
-    zone_config = dict(zone_configs.get(zone_name, {}))
-    if zone_config:
-        zone_config["zone_name"] = zone_name
-    return zone_config
-
-
 def _build_s3_config() -> dict:
-    zone_config = _load_zone_s3_config()
-    endpoint_url = zone_config.get(
-        "aws_s3_endpoint_url",
-        os.environ.get("AWS_S3_ENDPOINT_URL", "https://s3.beta.hydroshare.org"),
-    )
-    access_key = zone_config.get(
-        "aws_access_key_id",
-        os.environ.get("AWS_ACCESS_KEY_ID", "YOUR_ACCESS_KEY"),
-    )
-    secret_key = zone_config.get(
-        "aws_secret_access_key",
-        os.environ.get("AWS_SECRET_ACCESS_KEY", "YOUR_SECRET_KEY"),
-    )
-    public_endpoint_url = zone_config.get(
-        "aws_s3_endpoint_url_public",
-        endpoint_url,
-    )
+    endpoint_url = os.environ.get("AWS_S3_ENDPOINT_URL", "https://s3.beta.hydroshare.org")
+    access_key = os.environ.get("AWS_ACCESS_KEY_ID", "YOUR_ACCESS_KEY")
+    secret_key = os.environ.get("AWS_SECRET_ACCESS_KEY", "YOUR_SECRET_KEY")
+    public_endpoint_url = os.environ.get("AWS_S3_ENDPOINT_URL_PUBLIC", endpoint_url)
     return {
-        "zone_name": zone_config.get("zone_name", os.environ.get("HS_S3_ZONE_NAME", DEFAULT_ZONE_NAME)),
+        "zone_name": os.environ.get("HS_S3_ZONE_NAME", DEFAULT_ZONE_NAME),
         "endpoint_url": endpoint_url,
         "aws_access_key_id": access_key,
         "aws_secret_access_key": secret_key,
