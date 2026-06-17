@@ -1,0 +1,594 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Group",
+      "label": "Basic Information",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/title"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/abstract",
+          "options": {
+            "multi": true,
+            "trim": true
+          }
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/subjects"
+        }
+      ]
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/creators",
+      "options": {
+        "elementLabelProp": [
+          "name"
+        ],
+        "showSortButtons": true,
+        "detail": {
+          "type": "VerticalLayout",
+          "elements": [
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/name"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/email"
+                }
+              ]
+            },
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/organization"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/address"
+                }
+              ]
+            },
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/phone"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/homepage",
+                  "options": {
+                    "description": "URL for a website associated with the creator"
+                  }
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/profile_url",
+                  "options": {
+                    "placeholder": "e.g. 'https://www.hydroshare.org/user/10/'",
+                    "description": "A URL for the creator's HydroShare profile"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/contributors",
+      "options": {
+        "elementLabelProp": [
+          "name"
+        ],
+        "showSortButtons": true,
+        "detail": {
+          "type": "VerticalLayout",
+          "elements": [
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/name"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/email"
+                }
+              ]
+            },
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/organization"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/address"
+                }
+              ]
+            },
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/phone"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/homepage",
+                  "options": {
+                    "description": "URL for a website associated with the contributor"
+                  }
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/profile_url",
+                  "options": {
+                    "placeholder": "e.g. 'https://www.hydroshare.org/user/10/'",
+                    "description": "A URL for the contributor's HydroShare profile"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Control",
+      "label": "Spatial coverage",
+      "scope": "#/properties/spatial_coverage",
+      "options": {
+        "detail": {
+          "1": {
+            "type": "VerticalLayout",
+            "elements": [
+              {
+                "type": "Control",
+                "scope": "#/properties/name"
+              },
+              {
+                "type": "MapLayout",
+                "options": {
+                  "map": {
+                    "type": "box",
+                    "northlimit": "northlimit",
+                    "eastlimit": "eastlimit",
+                    "southlimit": "southlimit",
+                    "westlimit": "westlimit"
+                  }
+                },
+                "elements": [
+                  {
+                    "type": "Control",
+                    "scope": "#/properties/northlimit"
+                  },
+                  {
+                    "type": "Control",
+                    "scope": "#/properties/eastlimit"
+                  },
+                  {
+                    "type": "Control",
+                    "scope": "#/properties/southlimit"
+                  },
+                  {
+                    "type": "Control",
+                    "scope": "#/properties/westlimit"
+                  }
+                ]
+              },
+              {
+                "type": "HorizontalLayout",
+                "elements": [
+                  {
+                    "type": "Control",
+                    "scope": "#/properties/units"
+                  },
+                  {
+                    "type": "Control",
+                    "scope": "#/properties/projection"
+                  }
+                ]
+              }
+            ]
+          },
+          "0": {
+            "type": "VerticalLayout",
+            "elements": [
+              {
+                "type": "Control",
+                "scope": "#/properties/name"
+              },
+              {
+                "type": "MapLayout",
+                "options": {
+                  "map": {
+                    "type": "point",
+                    "north": "north",
+                    "east": "east"
+                  }
+                },
+                "elements": [
+                  {
+                    "type": "Control",
+                    "scope": "#/properties/north"
+                  },
+                  {
+                    "type": "Control",
+                    "scope": "#/properties/east"
+                  }
+                ]
+              },
+              {
+                "type": "HorizontalLayout",
+                "elements": [
+                  {
+                    "type": "Control",
+                    "scope": "#/properties/units"
+                  },
+                  {
+                    "type": "Control",
+                    "scope": "#/properties/projection"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/period_coverage",
+      "options": {
+        "detail": {
+          "type": "Object",
+          "label": "Period coverage",
+          "elements": [
+            {
+              "type": "Control",
+              "scope": "#/properties/name"
+            },
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/start"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/end"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/additional_metadata",
+      "options": {
+        "showSortButtons": true,
+        "elementLabelProp": [
+          "key"
+        ],
+        "detail": {
+          "type": "VerticalLayout",
+          "elements": [
+            {
+              "type": "Control",
+              "scope": "#/properties/key"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/value",
+              "options": {
+                "multi": true
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/relations",
+      "options": {
+        "showSortButtons": true,
+        "collapsed": true,
+        "elementLabelProp": [
+          "type",
+          "value"
+        ],
+        "detail": {
+          "type": "VerticalLayout",
+          "scope": "#",
+          "rule": {
+            "effect": "DISABLE",
+            "condition": {
+              "scope": "#/properties/type",
+              "schema": {
+                "enum": [
+                  "The content of this resource is part of"
+                ]
+              }
+            }
+          },
+          "elements": [
+            {
+              "type": "Control",
+              "scope": "#/properties/type",
+              "options": {
+                "hidden": [
+                  "The content of this resource is part of"
+                ]
+              }
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/value"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/awards",
+      "options": {
+        "elementLabelProp": [
+          "funding_agency_name"
+        ],
+        "showSortButtons": true,
+        "detail": {
+          "type": "VerticalLayout",
+          "elements": [
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/funding_agency_name"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/title"
+                }
+              ]
+            },
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/number"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/funding_agency_url",
+                  "options": {
+                    "label": "Agency URL",
+                    "description": "URL for a website describing the funding award"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "label": "Rights",
+      "type": "Control",
+      "scope": "#/properties/rights",
+      "options": {
+        "detail": {
+          "0": {
+            "type": "Control",
+            "scope": "#",
+            "options": {
+              "dropdown": true,
+              "flat": true,
+              "title": "License",
+              "detail": {
+                "0": {
+                  "type": "VerticalLayout",
+                  "elements": [
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/license",
+                      "rule": {
+                        "effect": "HIDE",
+                        "condition": {}
+                      }
+                    },
+                    {
+                      "type": "Group",
+                      "label": "Your Selected License:",
+                      "elements": [
+                        {
+                          "type": "Control",
+                          "scope": "#/properties/statement"
+                        },
+                        {
+                          "type": "Control",
+                          "scope": "#/properties/url"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "1": {
+                  "type": "VerticalLayout",
+                  "elements": [
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/license",
+                      "rule": {
+                        "effect": "HIDE",
+                        "condition": {}
+                      }
+                    },
+                    {
+                      "type": "Group",
+                      "label": "Your Selected License:",
+                      "elements": [
+                        {
+                          "type": "Control",
+                          "scope": "#/properties/statement"
+                        },
+                        {
+                          "type": "Control",
+                          "scope": "#/properties/url"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "2": {
+                  "type": "VerticalLayout",
+                  "elements": [
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/license",
+                      "rule": {
+                        "effect": "HIDE",
+                        "condition": {}
+                      }
+                    },
+                    {
+                      "type": "Group",
+                      "label": "Your Selected License:",
+                      "elements": [
+                        {
+                          "type": "Control",
+                          "scope": "#/properties/statement"
+                        },
+                        {
+                          "type": "Control",
+                          "scope": "#/properties/url"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "3": {
+                  "type": "VerticalLayout",
+                  "elements": [
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/license",
+                      "rule": {
+                        "effect": "HIDE",
+                        "condition": {}
+                      }
+                    },
+                    {
+                      "type": "Group",
+                      "label": "Your Selected License:",
+                      "elements": [
+                        {
+                          "type": "Control",
+                          "scope": "#/properties/statement"
+                        },
+                        {
+                          "type": "Control",
+                          "scope": "#/properties/url"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "4": {
+                  "type": "VerticalLayout",
+                  "elements": [
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/license",
+                      "rule": {
+                        "effect": "HIDE",
+                        "condition": {}
+                      }
+                    },
+                    {
+                      "type": "Group",
+                      "label": "Your Selected License:",
+                      "elements": [
+                        {
+                          "type": "Control",
+                          "scope": "#/properties/statement"
+                        },
+                        {
+                          "type": "Control",
+                          "scope": "#/properties/url"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "5": {
+                  "type": "VerticalLayout",
+                  "elements": [
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/license",
+                      "rule": {
+                        "effect": "HIDE",
+                        "condition": {}
+                      }
+                    },
+                    {
+                      "type": "Group",
+                      "label": "Your Selected License:",
+                      "elements": [
+                        {
+                          "type": "Control",
+                          "scope": "#/properties/statement"
+                        },
+                        {
+                          "type": "Control",
+                          "scope": "#/properties/url"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/citation",
+      "rule": {
+        "effect": "DISABLE",
+        "condition": {
+          "scope": "#/properties/citation"
+        }
+      }
+    }
+  ]
+}

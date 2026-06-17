@@ -7,19 +7,332 @@
       "elements": [
         {
           "type": "Control",
-          "scope": "#/properties/name",
-          "options": {
-            "multi": false
-          }
+          "scope": "#/properties/name"
         },
         {
           "type": "Control",
           "scope": "#/properties/description",
           "options": {
-            "multi": false
+            "multi": true,
+            "trim": true
           }
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/keywords"
         }
       ]
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/creator",
+      "options": {
+        "elementLabelProp": ["name"],
+        "showSortButtons": true,
+        "detail": {
+          "type": "VerticalLayout",
+          "elements": [
+            { "type": "Control", "scope": "#/properties/@type" },
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                { "type": "Control", "scope": "#/properties/name" },
+                { "type": "Control", "scope": "#/properties/email" }
+              ]
+            },
+            { "type": "Control", "scope": "#/properties/identifier" },
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                { "type": "Control", "scope": "#/properties/url" },
+                { "type": "Control", "scope": "#/properties/address" }
+              ]
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/affiliation",
+              "options": {
+                "detail": {
+                  "type": "Object",
+                  "elements": [
+                    { "type": "Control", "scope": "#/properties/name" },
+                    {
+                      "type": "HorizontalLayout",
+                      "elements": [
+                        { "type": "Control", "scope": "#/properties/url" },
+                        { "type": "Control", "scope": "#/properties/address" }
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/contributor",
+      "options": {
+        "elementLabelProp": ["name"],
+        "showSortButtons": true,
+        "detail": {
+          "type": "VerticalLayout",
+          "elements": [
+            { "type": "Control", "scope": "#/properties/@type" },
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                { "type": "Control", "scope": "#/properties/name" },
+                { "type": "Control", "scope": "#/properties/email" }
+              ]
+            },
+            { "type": "Control", "scope": "#/properties/identifier" },
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                { "type": "Control", "scope": "#/properties/url" },
+                { "type": "Control", "scope": "#/properties/address" }
+              ]
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/affiliation",
+              "options": {
+                "detail": {
+                  "type": "Object",
+                  "elements": [
+                    { "type": "Control", "scope": "#/properties/name" },
+                    {
+                      "type": "HorizontalLayout",
+                      "elements": [
+                        { "type": "Control", "scope": "#/properties/url" },
+                        { "type": "Control", "scope": "#/properties/address" }
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Control",
+      "label": "Spatial coverage",
+      "scope": "#/properties/spatialCoverage",
+      "options": {
+        "detail": {
+          "type": "Object",
+          "elements": [
+            { "type": "Control", "scope": "#/properties/name" },
+            {
+              "type": "Control",
+              "scope": "#/properties/geo",
+              "options": {
+                "detail": {
+                  "type": "VerticalLayout",
+                  "elements": [
+                    { "type": "Control", "scope": "#/properties/@type" },
+                    {
+                      "type": "MapLayout",
+                      "options": {
+                        "map": {
+                          "type": "point",
+                          "north": "latitude",
+                          "east": "longitude"
+                        }
+                      },
+                      "elements": [
+                        { "type": "Control", "scope": "#/properties/latitude" },
+                        { "type": "Control", "scope": "#/properties/longitude" }
+                      ]
+                    },
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/box",
+                      "options": {
+                        "description": "Bounding box: north east south west (space separated decimal degrees)"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Control",
+      "label": "Temporal coverage",
+      "scope": "#/properties/temporalCoverage",
+      "options": {
+        "detail": {
+          "type": "Object",
+          "elements": [
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                { "type": "Control", "scope": "#/properties/startDate" },
+                { "type": "Control", "scope": "#/properties/endDate" }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/additionalProperty",
+      "options": {
+        "showSortButtons": true,
+        "collapsed": true,
+        "elementLabelProp": ["name"],
+        "detail": {
+          "type": "VerticalLayout",
+          "elements": [
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                { "type": "Control", "scope": "#/properties/name" },
+                { "type": "Control", "scope": "#/properties/propertyID" }
+              ]
+            },
+            { "type": "Control", "scope": "#/properties/value" },
+            {
+              "type": "Control",
+              "scope": "#/properties/description",
+              "options": { "multi": true }
+            },
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                { "type": "Control", "scope": "#/properties/unitCode" },
+                { "type": "Control", "scope": "#/properties/measurementTechnique" }
+              ]
+            },
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                { "type": "Control", "scope": "#/properties/minValue" },
+                { "type": "Control", "scope": "#/properties/maxValue" }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/relation",
+      "options": {
+        "showSortButtons": true,
+        "collapsed": true,
+        "elementLabelProp": ["name"],
+        "detail": {
+          "type": "VerticalLayout",
+          "elements": [
+            { "type": "Control", "scope": "#/properties/name" },
+            { "type": "Control", "scope": "#/properties/url" },
+            {
+              "type": "Control",
+              "scope": "#/properties/description",
+              "options": { "multi": true }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/funding",
+      "options": {
+        "elementLabelProp": ["name"],
+        "showSortButtons": true,
+        "detail": {
+          "type": "VerticalLayout",
+          "elements": [
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                { "type": "Control", "scope": "#/properties/name" },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/identifier",
+                  "options": { "label": "Award number" }
+                }
+              ]
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/description",
+              "options": { "multi": true }
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/funder",
+              "options": {
+                "detail": {
+                  "type": "Object",
+                  "elements": [
+                    { "type": "Control", "scope": "#/properties/name" },
+                    {
+                      "type": "HorizontalLayout",
+                      "elements": [
+                        { "type": "Control", "scope": "#/properties/url" },
+                        { "type": "Control", "scope": "#/properties/address" }
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/subjectOf",
+      "options": {
+        "elementLabelProp": ["name"],
+        "showSortButtons": true,
+        "collapsed": true,
+        "detail": {
+          "type": "VerticalLayout",
+          "elements": [
+            { "type": "Control", "scope": "#/properties/name" },
+            { "type": "Control", "scope": "#/properties/url" },
+            {
+              "type": "Control",
+              "scope": "#/properties/description",
+              "options": { "multi": true }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "label": "License",
+      "type": "Control",
+      "scope": "#/properties/license",
+      "options": {
+        "detail": {
+          "type": "VerticalLayout",
+          "elements": [
+            { "type": "Control", "scope": "#/properties/name" },
+            {
+              "type": "Control",
+              "scope": "#/properties/description",
+              "options": { "multi": true }
+            },
+            { "type": "Control", "scope": "#/properties/url" }
+          ]
+        }
+      }
     }
   ]
 }

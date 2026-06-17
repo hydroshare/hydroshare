@@ -194,6 +194,14 @@ class App extends Vue {
     return User.$state.isLoggedIn;
   }
 
+  protected get accessKey(): string {
+    return User.$state.credentials.accessKey;
+  }
+
+  protected get secretKey(): string {
+    return User.$state.credentials.secretKey;
+  }
+
   schema!: any;
   uischema!: any;
   defaults!: any;
@@ -203,9 +211,6 @@ class App extends Vue {
   errors: FormError[] = [];
   data: Record<string, any> = {};
   stringify = stringify;
-
-  accessKey = localStorage.getItem("s3AccessKey") || "minioadmin";
-  secretKey = localStorage.getItem("s3SecretKey") || "minioadmin";
 
   isLoadingFiles: boolean = true;
   isSubmitting: boolean = false;
@@ -256,14 +261,19 @@ class App extends Vue {
   };
 
   startS3Client() {
+    const accessKeyId =
+      User.$state.credentials.accessKey ||
+      import.meta.env.VITE_MINIO_ACCESS_KEY ||
+      "";
+    const secretAccessKey =
+      User.$state.credentials.secretKey ||
+      import.meta.env.VITE_MINIO_SECRET_KEY ||
+      "";
     this.s3Client = new S3Client({
       region: "us-central-2",
-      endpoint: `${this.s3Host}`,
+      endpoint: this.s3Host,
       forcePathStyle: true,
-      credentials: {
-        accessKeyId: this.accessKey,
-        secretAccessKey: this.secretKey,
-      },
+      credentials: { accessKeyId, secretAccessKey },
     });
   }
 
@@ -272,37 +282,12 @@ class App extends Vue {
       this.resourceId = this.$route.params.resourceId as string;
     }
 
-    const fetchCredentials = async () => {
-      const { access_key, secret_key } = await User.getOrCreateS3Credentials();
-      this.accessKey = access_key;
-      this.secretKey = secret_key;
-    };
-
     if (this.isLoggedIn) {
-      console.log("user is already logged in, fetching S3 credentials");
-      fetchCredentials();
+      await User.getOrCreateS3Credentials();
     } else {
-      console.log(
-        "checking if we just returned from HydroShare login redirect",
-      );
-      User.checkLoginStatus().then((loggedIn) => {
-        if (loggedIn) {
-          fetchCredentials();
-        }
-      });
-    }
-
-    // temporary local storage for S3 keys (will move to Pinia later)
-    if (!this.accessKey || !this.secretKey) {
-      this.accessKey = prompt("Enter your S3 Access Key:") || "minioadmin";
-      this.secretKey = prompt("Enter your S3 Secret Key:") || "minioadmin";
-
-      if (this.accessKey && this.secretKey) {
-        localStorage.setItem("s3AccessKey", this.accessKey);
-        localStorage.setItem("s3SecretKey", this.secretKey);
-      } else {
-        alert("Access key and secret key are required to proceed.");
-        return;
+      const loggedIn = await User.checkLoginStatus();
+      if (loggedIn) {
+        await User.getOrCreateS3Credentials();
       }
     }
 
@@ -320,7 +305,9 @@ class App extends Vue {
         const s3info = await User.getResourceS3prefix(this.resourceId);
         if (s3info) {
           this.s3Info = s3info;
-          this.s3Info.prefix = `${this.resourceId}/data/contents/`; // TODO: overriding wrong api response value
+          // Metadata lives alongside the landing-page payload — see
+          // landing-page.vue, which reads .hsjsonld/dataset_metadata.json.
+          this.s3Info.prefix = `${this.resourceId}/.hsjsonld/`;
         }
       } catch (e) {
         this.isLoadingFiles = false;
@@ -330,10 +317,11 @@ class App extends Vue {
 
     this.startS3Client();
 
-    // Load schema + uischema
+    // Load schema + uischema. The edit schema marks non-editable fields with
+    // `readOnly: true`, so cz-form renders them disabled automatically.
     /* @ts-ignore */
     this.schema = await import(
-      `@/schemas/hydroshare/scientific_dataset_json_schema.json`
+      `@/schemas/hydroshare/resource_edit_schema.json`
     );
 
     /* @ts-ignore */
@@ -354,11 +342,11 @@ class App extends Vue {
       this.resourceId,
       this.s3Client,
       this.s3Info.bucket,
-      `${this.s3Info.prefix}hs_user_meta.json`,
+      `${this.s3Info.prefix}dataset_metadata.json`,
     );
 
     if (resource) {
-      this.data = resource.data;
+      this.data = this.normalizeFormData(resource.data);
       // @ts-expect-error The key property is generated when the component is initialized
       this.rootDirectory.children = resource.initialStructure;
     } else {
@@ -366,6 +354,46 @@ class App extends Vue {
     }
     this.isFetchingMetadata = false;
     this.isLoadingFiles = false;
+  }
+
+  // cz-form's array control calls .map() on the bound value, so any array
+  // field the UI schema renders must exist as an array in the data — the
+  // schema's `default: []` only seeds AJV validation, not the v-model.
+  private normalizeFormData(data: Record<string, any>): Record<string, any> {
+    const arrayFields = [
+      "keywords",
+      "creator",
+      "contributor",
+      "funding",
+      "relation",
+      "subjectOf",
+      "additionalProperty",
+      "citation",
+      "identifier",
+    ];
+    const objectFields = ["spatialCoverage", "temporalCoverage"];
+    const normalized = { ...data };
+    for (const field of arrayFields) {
+      if (!Array.isArray(normalized[field])) {
+        normalized[field] = [];
+      }
+    }
+    for (const field of objectFields) {
+      if (normalized[field] == null || typeof normalized[field] !== "object") {
+        normalized[field] = {};
+      }
+    }
+    // license is now an object schema; coerce legacy URL-string licenses
+    // into the {@type, url} shape so the form renders without breaking.
+    if (typeof normalized.license === "string") {
+      normalized.license = {
+        "@type": "CreativeWork",
+        url: normalized.license,
+      };
+    } else if (normalized.license == null) {
+      normalized.license = {};
+    }
+    return normalized;
   }
 
   onUpdateErrors(errors: FormError[]) {
@@ -380,10 +408,14 @@ class App extends Vue {
     this.hydroshareHost = params.hydroshareHost;
     this.s3Host = params.s3Host;
 
-    this.secretKey = params.secretKey;
-    this.accessKey = params.accessKey;
-    localStorage.setItem("s3AccessKey", this.accessKey);
-    localStorage.setItem("s3SecretKey", this.secretKey);
+    if (params.accessKey || params.secretKey) {
+      User.commit((state) => {
+        state.credentials = {
+          accessKey: params.accessKey || state.credentials.accessKey,
+          secretKey: params.secretKey || state.credentials.secretKey,
+        };
+      });
+    }
 
     this.startS3Client();
     this.loadResource();
@@ -405,14 +437,8 @@ class App extends Vue {
 
   async submit() {
     try {
-      const resourceId = this.resourceId;
-      const key = `${resourceId}/data/contents/hs_user_meta.json`;
-
-      const content = JSON.stringify(
-        { name: this.data.name, description: this.data.description },
-        null,
-        2,
-      );
+      const key = `${this.s3Info.prefix}dataset_metadata.json`;
+      const content = JSON.stringify(this.data, null, 2);
       const command = new PutObjectCommand({
         Bucket: this.s3Info.bucket,
         Key: key,

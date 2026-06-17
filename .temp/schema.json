@@ -1,0 +1,684 @@
+{
+  "title": "Resource Metadata",
+  "description": "A class used to represent the metadata for a resource",
+  "type": "object",
+  "properties": {
+    "title": {
+      "title": "Title",
+      "description": "A string containing the name given to a resource",
+      "maxLength": 300,
+      "type": "string"
+    },
+    "abstract": {
+      "title": "Abstract",
+      "description": "A string containing a summary of a resource",
+      "type": "string"
+    },
+    "subjects": {
+      "title": "Subject keywords",
+      "description": "A list of keyword strings expressing the topic of a resource",
+      "default": [
+        "CZNet"
+      ],
+      "minItems": 2,
+      "contains": {
+        "enum": [
+          "CZNet"
+        ]
+      },
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "creators": {
+      "title": "Creators",
+      "description": "A list of Creator objects indicating the entities responsible for creating a resource",
+      "default": [],
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/Creator"
+      }
+    },
+    "contributors": {
+      "title": "Contributors",
+      "description": "A list of Contributor objects indicating the entities that contributed to a resource",
+      "default": [],
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Contributor"
+      }
+    },
+    "relations": {
+      "title": "Related resources",
+      "description": "A list of Relation objects representing resources related to a described resource",
+      "default": [],
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Relation"
+      }
+    },
+    "additional_metadata": {
+      "title": "Additional metadata",
+      "description": "A dictionary containing key-value pair metadata associated with a resource",
+      "default": [],
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/AdditionalMetadata"
+      }
+    },
+    "rights": {
+      "title": "Rights",
+      "description": "An object containing information about rights held in and over a resource",
+      "required": [
+        "statement",
+        "url"
+      ],
+      "anyOf": [
+        {
+          "title": "Choose a License",
+          "required": [
+            "license"
+          ],
+          "default": {
+            "license": "Creative Commons Attribution CC BY",
+            "statement": "This resource is shared under the Creative Commons Attribution CC BY.",
+            "url": "http://creativecommons.org/licenses/by/4.0/"
+          },
+          "anyOf": [
+            {
+              "type": "object",
+              "title": "Creative Commons Attribution CC BY",
+              "properties": {
+                "license": {
+                  "type": "string",
+                  "default": "Creative Commons Attribution CC BY"
+                },
+                "statement": {
+                  "type": "string",
+                  "default": "This resource is shared under the Creative Commons Attribution CC BY.",
+                  "readOnly": true
+                },
+                "url": {
+                  "type": "string",
+                  "default": "http://creativecommons.org/licenses/by/4.0/",
+                  "readOnly": true
+                }
+              }
+            },
+            {
+              "type": "object",
+              "title": "Creative Commons Attribution-ShareAlike CC BY-SA",
+              "properties": {
+                "license": {
+                  "type": "string",
+                  "default": "Creative Commons Attribution-ShareAlike CC BY-SA"
+                },
+                "statement": {
+                  "type": "string",
+                  "default": "This resource is shared under the Creative Commons Attribution-ShareAlike CC BY-SA.",
+                  "readOnly": true
+                },
+                "url": {
+                  "type": "string",
+                  "default": "http://creativecommons.org/licenses/by-sa/4.0/",
+                  "readOnly": true
+                }
+              }
+            },
+            {
+              "type": "object",
+              "title": "Creative Commons Attribution-NoDerivs CC BY-ND",
+              "properties": {
+                "license": {
+                  "type": "string",
+                  "default": "Creative Commons Attribution-NoDerivs CC BY-ND"
+                },
+                "statement": {
+                  "type": "string",
+                  "default": "This resource is shared under the Creative Commons Attribution-NoDerivs CC BY-ND.",
+                  "readOnly": true
+                },
+                "url": {
+                  "type": "string",
+                  "default": "http://creativecommons.org/licenses/by-nd/4.0/",
+                  "readOnly": true
+                }
+              }
+            },
+            {
+              "type": "object",
+              "title": "Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA",
+              "properties": {
+                "license": {
+                  "type": "string",
+                  "default": "Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA"
+                },
+                "statement": {
+                  "type": "string",
+                  "default": "This resource is shared under the Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA.",
+                  "readOnly": true
+                },
+                "url": {
+                  "type": "string",
+                  "default": "http://creativecommons.org/licenses/by-nc-sa/4.0/",
+                  "readOnly": true
+                }
+              }
+            },
+            {
+              "type": "object",
+              "title": "Creative Commons Attribution-NoCommercial CC BY-NC",
+              "properties": {
+                "license": {
+                  "type": "string",
+                  "default": "Creative Commons Attribution-NoCommercial CC BY-NC"
+                },
+                "statement": {
+                  "type": "string",
+                  "default": "This resource is shared under the Creative Commons Attribution-NoCommercial CC BY-NC.",
+                  "readOnly": true
+                },
+                "url": {
+                  "type": "string",
+                  "default": "http://creativecommons.org/licenses/by-nc/4.0/",
+                  "readOnly": true
+                }
+              }
+            },
+            {
+              "type": "object",
+              "title": "Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND",
+              "properties": {
+                "license": {
+                  "type": "string",
+                  "default": "Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND"
+                },
+                "statement": {
+                  "type": "string",
+                  "default": "This resource is shared under the Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND.",
+                  "readOnly": true
+                },
+                "url": {
+                  "type": "string",
+                  "default": "http://creativecommons.org/licenses/by-nc/4.0/",
+                  "readOnly": true
+                }
+              }
+            }
+          ]
+        },
+        {
+          "title": "Custom License",
+          "description": "An object containing information about rights held in an over a resource",
+          "type": "object",
+          "properties": {
+            "statement": {
+              "title": "Statement",
+              "description": "A string containing the text of the license or rights statement",
+              "type": "string"
+            },
+            "url": {
+              "type": "string",
+              "title": "URL",
+              "description": "URL pointing to a description of the license or rights statement",
+              "minLength": 1,
+              "maxLength": 2047,
+              "pattern": "^(http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|https:\\/\\/)?[a-z0-9]+([\\-\\.]{1}[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/.*)?$",
+              "errorMessage": {
+                "pattern": "must match format \"url\""
+              }
+            }
+          }
+        }
+      ],
+      "errorMessage": {
+        "anyOf": "selected item is incomplete"
+      }
+    },
+    "awards": {
+      "title": "Funding agency information",
+      "description": "A list of objects containing information about the funding agencies and awards associated with a resource",
+      "default": [],
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/AwardInfo"
+      }
+    },
+    "spatial_coverage": {
+      "title": "Spatial coverage",
+      "description": "An object containing information about the spatial topic of a resource, the spatial applicability of a resource, or jurisdiction under with a resource is relevant",
+      "anyOf": [
+        {
+          "title": "Point Coverage Metadata",
+          "description": "A class used to represent geographic coverage metadata for a resource or aggregation expressed as a\npoint location",
+          "type": "object",
+          "properties": {
+            "name": {
+              "title": "Name",
+              "description": "A string containing a name for the place associated with the geographic coverage",
+              "type": "string"
+            },
+            "east": {
+              "title": "East",
+              "description": "The coordinate of the point location measured in the east direction (between -180 and 180)",
+              "exclusiveMinimum": -180,
+              "exclusiveMaximum": 180,
+              "type": "number"
+            },
+            "north": {
+              "title": "North",
+              "description": " The coordinate of the point location measured in the north direction (between -90 and 90)",
+              "exclusiveMinimum": -90,
+              "exclusiveMaximum": 90,
+              "type": "number"
+            },
+            "units": {
+              "title": "Units",
+              "description": "The units applying to the unlabelled numeric values of north and east",
+              "type": "string",
+              "default": "Decimal degrees",
+              "readOnly": true
+            },
+            "projection": {
+              "title": "Projection",
+              "description": "The name of the projection used with any parameters required, such as ellipsoid parameters, datum, standard parallels and meridians, zone, etc.",
+              "type": "string",
+              "default": "WGS 84 EPSG:4326",
+              "readOnly": true
+            }
+          },
+          "required": [
+            "east",
+            "north"
+          ]
+        },
+        {
+          "title": "Box Coverage Metadata",
+          "description": "A class used to represent geographic coverage metadata for a resource or aggregation expressed as a\nlatitude-longitude bounding box",
+          "type": "object",
+          "properties": {
+            "name": {
+              "title": "Name",
+              "description": "A string containing a name for the place associated with the geographic coverage",
+              "type": "string"
+            },
+            "northlimit": {
+              "title": "North limit",
+              "description": "A floating point value containing the constant coordinate for the northernmost face or edge of the bounding box (between -90 and 90)",
+              "exclusiveMinimum": -90,
+              "exclusiveMaximum": 90,
+              "type": "number"
+            },
+            "eastlimit": {
+              "title": "East limit",
+              "description": "A floating point value containing the constant coordinate for the easternmost face or edge of the bounding box (between -180 and 180)",
+              "exclusiveMinimum": -180,
+              "exclusiveMaximum": 180,
+              "type": "number"
+            },
+            "southlimit": {
+              "title": "South limit",
+              "description": "A floating point value containing the constant coordinate for the southernmost face or edge of the bounding box (between -90 and 90)",
+              "exclusiveMinimum": -90,
+              "exclusiveMaximum": 90,
+              "type": "number"
+            },
+            "westlimit": {
+              "title": "West limit",
+              "description": "A floating point value containing the constant coordinate for the westernmost face or edge of the bounding box (between -180 and 180)",
+              "exclusiveMinimum": -180,
+              "exclusiveMaximum": 180,
+              "type": "number"
+            },
+            "units": {
+              "title": "Units",
+              "description": "A string containing the units applying to the unlabelled numeric values of northlimit, eastlimit, southlimit, and westlimit",
+              "type": "string",
+              "default": "Decimal degrees",
+              "readOnly": true
+            },
+            "projection": {
+              "title": "Projection",
+              "description": "A string containing the name of the projection used with any parameters required, such as ellipsoid parameters, datum, standard parallels and meridians, zone, etc.",
+              "type": "string",
+              "default": "WGS 84 EPSG:4326",
+              "readOnly": true
+            }
+          },
+          "required": [
+            "northlimit",
+            "eastlimit",
+            "southlimit",
+            "westlimit"
+          ]
+        }
+      ],
+      "errorMessage": {
+        "anyOf": "selected item is incomplete"
+      }
+    },
+    "period_coverage": {
+      "title": "Temporal coverage",
+      "description": "An object containing information about the temporal topic or applicability of a resource",
+      "$ref": "#/definitions/PeriodCoverage"
+    },
+    "publisher": {
+      "title": "Publisher",
+      "description": "An object containing information about the publisher of a resource",
+      "allOf": [
+        {
+          "$ref": "#/definitions/Publisher"
+        }
+      ]
+    },
+    "citation": {
+      "title": "Citation",
+      "description": "A string containing the biblilographic citation for a resource",
+      "type": "string",
+      "readOnly": true
+    }
+  },
+  "required": [
+    "title",
+    "abstract",
+    "subjects",
+    "awards",
+    "rights"
+  ],
+  "definitions": {
+    "Creator": {
+      "title": "Creator Metadata",
+      "description": "A class used to represent the metadata associated with a creator of a resource",
+      "type": "object",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "description": "A string containing the name of the creator",
+          "maxLength": 100,
+          "type": "string",
+          "options": {
+            "placeholder": "e.g. 'Horsburgh, Jeffery S.'"
+          }
+        },
+        "phone": {
+          "title": "Phone",
+          "description": "A string containing a phone number for the creator",
+          "maxLength": 25,
+          "type": "string",
+          "options": {
+            "placeholder": "Phone: e.g., (435) 797-2946"
+          }
+        },
+        "address": {
+          "title": "Address",
+          "description": "A string containing an address for the creator",
+          "maxLength": 250,
+          "type": "string",
+          "options": {
+            "placeholder": "e.g., 8200 Old Main Hill, Logan, UT 84322-8200"
+          }
+        },
+        "organization": {
+          "title": "Organization",
+          "description": "A string containing the name of the organization with which the creator is affiliated",
+          "maxLength": 200,
+          "type": "string",
+          "options": {
+            "placeholder": "e.g. 'Utah State University'"
+          }
+        },
+        "email": {
+          "title": "Email",
+          "description": "A string containing an email address for the creator",
+          "type": "string",
+          "format": "email",
+          "options": {
+            "placeholder": "e.g. 'jeff.horsburgh@usu.edu'"
+          }
+        },
+        "homepage": {
+          "$ref": "#/definitions/UrlPattern"
+        },
+        "profile_url": {
+          "$ref": "#/definitions/ProfileUrlPattern"
+        }
+      },
+      "required": [
+        "name"
+      ]
+    },
+    "Contributor": {
+      "title": "Contributor Metadata",
+      "description": "A class used to represent the metadata associated with a contributor to a resource",
+      "type": "object",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "description": "A string containing the name of the contributor",
+          "type": "string",
+          "maxLength": 100,
+          "options": {
+            "placeholder": "e.g. 'Horsburgh, Jeffery S.'"
+          }
+        },
+        "phone": {
+          "title": "Phone",
+          "description": "A string containing a phone number for the contributor",
+          "maxLength": 25,
+          "type": "string",
+          "options": {
+            "placeholder": "Phone: e.g., (435) 797-2946"
+          }
+        },
+        "address": {
+          "title": "Address",
+          "description": "A string containing an address for the contributor",
+          "maxLength": 250,
+          "type": "string",
+          "options": {
+            "placeholder": "e.g., 8200 Old Main Hill, Logan, UT 84322-8200"
+          }
+        },
+        "organization": {
+          "title": "Organization",
+          "description": "A string containing the name of the organization with which the contributor is affiliated",
+          "maxLength": 200,
+          "type": "string",
+          "options": {
+            "placeholder": "e.g. 'Utah State University'"
+          }
+        },
+        "email": {
+          "title": "Email",
+          "description": "A string containing an email address for the contributor",
+          "type": "string",
+          "format": "email",
+          "options": {
+            "placeholder": "e.g. 'jeff.horsburgh@usu.edu'"
+          }
+        },
+        "homepage": {
+          "$ref": "#/definitions/UrlPattern"
+        },
+        "profile_url": {
+          "$ref": "#/definitions/ProfileUrlPattern"
+        }
+      },
+      "required": [
+        "name"
+      ]
+    },
+    "Relation": {
+      "title": "Related Resource Metadata",
+      "description": "A class used to represent the metadata associated with a resource related to the resource being described",
+      "type": "object",
+      "properties": {
+        "type": {
+          "title": "RelationType",
+          "description": "",
+          "enum": [
+            "The content of this resource can be executed by",
+            "The content of this resource was created by a related App or software program",
+            "This resource is described by",
+            "This resource conforms to established standard described by",
+            "This resource has a related resource in another format",
+            "This resource is a different format of",
+            "This resource is required by",
+            "This resource requires",
+            "This resource is referenced by",
+            "The content of this resource references",
+            "The content of this resource is derived from",
+            "The content of this resource is similar to",
+            "The content of this resource is part of"
+          ],
+          "type": "string"
+        },
+        "value": {
+          "title": "Value",
+          "description": "String expressing the Full text citation, URL link for, or description of the related resource",
+          "maxLength": 500,
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "value"
+      ]
+    },
+    "AdditionalMetadata": {
+      "title": "Key-Value",
+      "description": "A key-value pair",
+      "type": "object",
+      "properties": {
+        "key": {
+          "title": "Key",
+          "type": "string"
+        },
+        "value": {
+          "title": "Value",
+          "type": "string"
+        }
+      },
+      "required": [
+        "key",
+        "value"
+      ]
+    },
+    "AwardInfo": {
+      "title": "Funding Agency Metadata",
+      "description": "A class used to represent the metadata associated with funding agency credits for a resource",
+      "type": "object",
+      "properties": {
+        "funding_agency_name": {
+          "title": "Agency name",
+          "description": "A string containing the name of the funding agency or organization",
+          "type": "string"
+        },
+        "title": {
+          "title": "Award title",
+          "description": "A string containing the title of the project or award",
+          "type": "string"
+        },
+        "number": {
+          "title": "Award number",
+          "description": "A string containing the award number or other identifier",
+          "type": "string"
+        },
+        "funding_agency_url": {
+          "$ref": "#/definitions/UrlPattern"
+        }
+      },
+      "required": [
+        "funding_agency_name",
+        "number",
+        "title"
+      ]
+    },
+    "PeriodCoverage": {
+      "title": "Period coverage",
+      "description": "A class used to represent temporal coverage metadata for a resource or aggregation",
+      "type": "object",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "description": "A string containing a name for the time interval",
+          "type": "string"
+        },
+        "start": {
+          "title": "Start",
+          "description": "A datetime object containing the instant corresponding to the commencement of the time interval",
+          "type": "string",
+          "format": "date-time",
+          "options": {
+            "placeholder": "YYYY-MM-DDTHH:MM"
+          },
+          "formatMaximum": {
+            "$data": "1/end"
+          },
+          "errorMessage": {
+            "formatMaximum": "must be lesser than or equal to End date"
+          }
+        },
+        "end": {
+          "title": "End",
+          "description": "A datetime object containing the instant corresponding to the termination of the time interval",
+          "type": "string",
+          "format": "date-time",
+          "options": {
+            "placeholder": "YYYY-MM-DDTHH:MM"
+          },
+          "formatMinimum": {
+            "$data": "1/start"
+          },
+          "errorMessage": {
+            "formatMinimum": "must be greater than or equal to Start date"
+          }
+        }
+      },
+      "required": [
+        "start",
+        "end"
+      ]
+    },
+    "Publisher": {
+      "title": "Publisher Metadata",
+      "description": "A class used to represent the metadata associated with the publisher of a resource",
+      "type": "object",
+      "properties": {
+        "name": {
+          "title": "Publisher name",
+          "description": "A string containing the name of the publisher",
+          "maxLength": 200,
+          "type": "string"
+        },
+        "url": {
+          "title": "Publisher URL",
+          "description": "An object containing a URL that points to the publisher website",
+          "minLength": 1,
+          "maxLength": 2047,
+          "$ref": "#/definitions/UrlPattern"
+        }
+      },
+      "required": [
+        "name",
+        "url"
+      ]
+    },
+    "UrlPattern": {
+      "type": "string",
+      "pattern": "^(http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|https:\\/\\/)?[a-z0-9]+([\\-\\.]{1}[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/.*)?$",
+      "errorMessage": {
+        "pattern": "must match format \"url\""
+      }
+    },
+    "ProfileUrlPattern": {
+      "type": "string",
+      "pattern": "^(http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|https:\\/\\/)?hydroshare\\.org\\/user\\/\\d+\\/?$",
+      "errorMessage": {
+        "pattern": "must match profile link format. e.g. \"https://www.hydroshare.org/user/10/\""
+      }
+    }
+  }
+}

@@ -23,7 +23,7 @@ import {
 import "@uppy/core/css/style.min.css";
 import "@uppy/dashboard/css/style.min.css";
 
-let uppyInstance = {} as Uppy | null;
+let uppyInstance: Uppy | null = null;
 
 @Component({
   name: "hs-uppy",
@@ -142,7 +142,16 @@ class HsUppy extends Vue {
   initializeUppy() {
     if (uppyInstance) {
       try {
-        uppyInstance.destroy();
+        // Uppy v5 renamed `destroy()` to `close()`. Guard both for safety.
+        const inst = uppyInstance as unknown as {
+          close?: (opts?: { reason?: string }) => void;
+          destroy?: () => void;
+        };
+        if (typeof inst.close === "function") {
+          inst.close({ reason: "unmount" });
+        } else if (typeof inst.destroy === "function") {
+          inst.destroy();
+        }
         uppyInstance = null;
       } catch (error) {
         console.error("Error destroying current Uppy instance:", error);
