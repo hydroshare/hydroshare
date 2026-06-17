@@ -49,7 +49,7 @@ docker login
 
 2. Launch the stack
 ```
-./local-dev-first-start-only.sh
+./local-dev-first-start-only.sh --seed-dev-resources
 ```
 
 This runs a script that will:
@@ -58,6 +58,7 @@ This runs a script that will:
 - Install dependencies (npm, pm2) and build frontend assets
 - Recreate Docker containers and database
 - Run migrations and set up search indexes
+- Seed some Hydroshare resources for the seeded user with username asdf (exclude `--seed-dev-resources` from the command above to skip this).  You can also seed data after the fact by running `docker exec hydroshare python manage.py seed_dev_resources --username asdf`.
 - Starts the stack defined in the Docker Compose file local-dev.yml
 
 The [local-dev-first-start-only.sh](./local-dev-first-start-only.sh) will spin up all docker containers in the [local-dev.yml](./local-dev.yml). It does NOT spin up a container for Discover -- instead, the script uses [PM2](https://pm2.io/) to run the Vite dev server to take advantage of [HMR](https://vite.dev/guide/features#hot-module-replacement).
@@ -105,7 +106,7 @@ docker logs <container name>
 
 The locally-running app will be populated with a couple accounts:
 - admin (pw: default)
-- asdf (pw: asdf)
+- asdf (pw: asdf) -- if you ran `./local-dev-first-start-only.sh --seed-dev-resources` this user will have some Hydroshare resources created
 
 Or use the following process to create a new account:
 
@@ -123,7 +124,7 @@ and get the link below that text, paste it into your browser and save the new ac
 ## Usage
 
 For all intents and purposes, Hydroshare is a large Python/Django application with some extra features and technologies added on:
-- SOLR for searching, running in parallel with Vue + Mongo Atlas
+- A Vue app for searching, backed by MongoDB Atlas
 - Redis for caching
 - RedPanda for concurrency and serialization
 - Minio for a S3 file system

@@ -12,8 +12,7 @@ from hs_access_control.models.privilege import (PrivilegeCodes,
                                                 UserResourcePrivilege)
 from hs_core.authentication import build_oidc_url
 from hs_core.enums import DataciteSubmissionStatus
-from hs_core.hydroshare.utils import get_resource_by_shortkey
-from hs_core.search_indexes import normalize_name
+from hs_core.hydroshare.utils import get_resource_by_shortkey, normalize_name
 
 register = template.Library()
 
