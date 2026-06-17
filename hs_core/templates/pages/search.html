@@ -13,15 +13,10 @@
   const iframe = document.getElementById("discovery-app-frame");
   const targetOrigin = "{{ targetOrigin }}"; // For security
 
-  // Send the route params to the iframe when the HydroShare page loads
+  // Register immediately so messages sent during iframe boot are not missed
+  window.addEventListener("message", receiveMessage, false);
+
   iframe.addEventListener("load", () => {
-    iframe.contentWindow.postMessage(
-      { parentSearch: window.location.search },
-      targetOrigin,
-    );
-
-    window.addEventListener("message", receiveMessage, false);
-
     const resizeObserver = new ResizeObserver((entries) => {
       iframe.height = entries[0].contentRect.height + "px";
     });

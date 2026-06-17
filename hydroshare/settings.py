@@ -429,7 +429,6 @@ INSTALLED_APPS = (
     "crispy_forms",
     "crispy_bootstrap3",
     "mezzanine.accounts",
-    "haystack",
     "rest_framework",
     'rest_framework.authtoken',
     "robots",
@@ -502,7 +501,7 @@ APPS_TO_NOT_RUN = (
     "corsheaders",
     "security",
     "django_comments",
-    "haystack" "test_without_migrations",
+    "test_without_migrations",
     "robots",
     "heartbeat",
     "filebrowser_safe"
@@ -691,23 +690,6 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": DEFAULT_AUTHENTICATION_CLASSES,
     "DEFAULT_VERSIONING_CLASS": "rest_framework.versioning.NamespaceVersioning",
 }
-
-SOLR_HOST = os.environ.get("SOLR_PORT_8983_TCP_ADDR", "localhost")
-SOLR_PORT = "8983"
-HAYSTACK_CONNECTIONS = {
-    "default": {
-        "ENGINE": "haystack.backends.solr_backend.SolrEngine",
-        "URL": "http://{SOLR_HOST}:{SOLR_PORT}/solr/collection1".format(**globals()),
-        "ADMIN_URL": "http://{SOLR_HOST}:{SOLR_PORT}/solr/admin/cores".format(
-            **globals()
-        ),
-        # ...or for multicore...
-        # 'URL': 'http://127.0.0.1:8983/solr/mysite',
-    },
-}
-HAYSTACK_SIGNAL_PROCESSOR = (
-    "hs_core.hydro_realtime_signal_processor.HydroRealtimeSignalProcessor"
-)
 
 
 # customized value for password reset token, email verification and group invitation link token
