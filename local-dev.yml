@@ -17,9 +17,6 @@ services:
       MINIO_ROOT_PASSWORD: devpassword
       MINIO_BROWSER_REDIRECT: "false"
       MINIO_SCANNER_SPEED: "fastest"
-      MINIO_NOTIFY_KAFKA_ENABLE_RESOURCEFILE: "on"
-      MINIO_NOTIFY_KAFKA_BROKERS_RESOURCEFILE: "redpanda:9092"
-      MINIO_NOTIFY_KAFKA_TOPIC_RESOURCEFILE: "resource_file"
     command: server --console-address ":9001" /data
     depends_on:
       - hs-s3-auth
@@ -57,12 +54,6 @@ services:
       - "6432:6432"
     depends_on:
       - postgis
-  rabbitmq:
-    image: rabbitmq:3.8.2
-    platform: linux/amd64
-    container_name: rabbitmq
-    volumes:
-      - "rabbitmq_data_vol:/var/lib/rabbitmq"
   hydroshare:
     platform: linux/amd64
     build:
@@ -80,7 +71,10 @@ services:
       POSTGIS_DB: postgres
       POSTGIS_USER: postgres
       PGPASSWORD: postgres
-      RABBITMQ_PORT_5672_TCP_ADDR: rabbitmq
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      CELERY_BROKER_URL: "redis://redis:6379/0"
+      CELERY_RESULT_BACKEND: "redis://redis:6379/0"
       TMP: /tmp
       POSTGIS_PORT_5432_TCP_ADDR: pgbouncer
       POSTGIS_DISABLE_SERVER_SIDE_CURSORS: "True"
@@ -88,13 +82,10 @@ services:
       PYTHONPATH: /hydroshare
       DJANGO_SETTINGS_MODULE: hydroshare.settings
       VUE_APP_BUCKET_URL_PUBLIC_PATH: "/static/static"
-      MC_HOST_hydroshare: "http://cuahsi:devpassword@minio:9000"
       DATACITE_USERNAME: ${DATACITE_USERNAME}
       DATACITE_PASSWORD: ${DATACITE_PASSWORD}
       ATLAS_CONNECTION_URL: "mongodb://user:pass@mongodb:27017/"
-      AWS_ENDPOINT_URL: "http://minio:9000"
-      AWS_ACCESS_KEY_ID: cuahsi
-      AWS_SECRET_ACCESS_KEY: devpassword
+      MC_HOST_hydroshare: "http://cuahsi:devpassword@minio:9000"
     volumes:
       # hydroshare repository
       - ".:/hydroshare"
@@ -107,16 +98,14 @@ services:
       - "8000:8000"
     links:
       - postgis:postgis
-      - rabbitmq:rabbitmq
+      - redis:redis
       - minio:minio
-      - hs-s3-proxy-external:hs-s3-proxy
+      - hs-s3-proxy:hs-s3-proxy
     depends_on:
       - postgis
       - pgbouncer
-      - rabbitmq
-      - minio
       - redis
-      - hs-s3-proxy-external
+      - minio
     stdin_open: true
     tty: true
     command: python manage.py runserver 0.0.0.0:8000
@@ -135,27 +124,24 @@ services:
       POSTGIS_USER: postgres
       PGPASSWORD: postgres
       C_FORCE_ROOT: 1
-      RABBITMQ_PORT_5672_TCP_ADDR: rabbitmq
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
       POSTGIS_PORT_5432_TCP_ADDR: pgbouncer
       POSTGIS_DISABLE_SERVER_SIDE_CURSORS: "True"
       HS_PATH: ${PWD}
       PYTHONPATH: /hydroshare
       DJANGO_SETTINGS_MODULE: hydroshare.settings
       COLUMNS: 80
-      MC_HOST_hydroshare: "http://cuahsi:devpassword@minio:9000"
     ports:
       - "5555:5555"
     volumes:
       - ".:/hydroshare"
     links:
       - pgbouncer:pgbouncer
-      - rabbitmq:rabbitmq
-      - hs-s3-proxy-external:hs-s3-proxy
     depends_on:
       - hydroshare
       - pgbouncer
-      - rabbitmq
-      - hs-s3-proxy-external
+      - redis
     stdin_open: true
     tty: true
     command: /bin/bash init-defaultworker
@@ -178,24 +164,22 @@ services:
       PYTHONPATH: /hydroshare
       DJANGO_SETTINGS_MODULE: hydroshare.settings
       COLUMNS: 80
-      MC_HOST_hydroshare: "http://cuahsi:devpassword@minio:9000"
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      CELERY_BROKER_URL: "redis://redis:6379/0"
+      CELERY_RESULT_BACKEND: "redis://redis:6379/0"
     volumes:
       - ".:/hydroshare"
     links:
       - pgbouncer:pgbouncer
-      - redpanda:redpanda
+      - redis:redis
     depends_on:
       - hydroshare
       - pgbouncer
-      - redpanda
+      - redis
     stdin_open: true
     tty: true
-    command:
-      - rpk
-      - connect
-      - run
-      - --rpc-plugins=/hydroshare/hs_event_s3/notify_hs_django_plugin.yaml
-      - /hydroshare/hs_event_s3/notify_hs_django_pipeline.yaml
+    command: celery -A hs_event_s3.celery_app worker -Q s3_events --loglevel=info
   discovery_collection_worker:
     build:
       context: .
@@ -215,102 +199,48 @@ services:
       PYTHONPATH: /hydroshare
       DJANGO_SETTINGS_MODULE: hydroshare.settings
       COLUMNS: 80
-      MC_HOST_hydroshare: "http://cuahsi:devpassword@minio:9000"
-      AWS_ENDPOINT_URL: "http://minio:9000"
-      AWS_ACCESS_KEY_ID: cuahsi
-      AWS_SECRET_ACCESS_KEY: devpassword
       ATLAS_CONNECTION_URL: "mongodb://user:pass@mongodb:27017/"
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      CELERY_BROKER_URL: "redis://redis:6379/0"
+      CELERY_RESULT_BACKEND: "redis://redis:6379/0"
     volumes:
       - ".:/hydroshare"
     links:
       - pgbouncer:pgbouncer
-      - redpanda:redpanda
       - minio:minio
       - mongodb:mongodb
+      - redis:redis
     depends_on:
       - hydroshare
       - pgbouncer
-      - redpanda
+      - redis
+      - mongodb
     stdin_open: true
     tty: true
-    command:
-      - rpk
-      - connect
-      - run
-      - --rpc-plugins=/hydroshare/hs_event_s3/discovery_collection_plugin.yaml
-      - /hydroshare/hs_event_s3/discovery_collection_pipeline.yaml
-  redpanda:
-    command:
-      - redpanda
-      - start
-      - --kafka-addr internal://0.0.0.0:9092,external://0.0.0.0:19092
-      - --advertise-kafka-addr internal://redpanda:9092,external://localhost:19092
-      - --pandaproxy-addr internal://0.0.0.0:8082,external://0.0.0.0:18082
-      - --advertise-pandaproxy-addr internal://redpanda:8082,external://localhost:18082
-      - --schema-registry-addr internal://0.0.0.0:8081,external://0.0.0.0:18081
-      - --rpc-addr redpanda:33145
-      - --advertise-rpc-addr redpanda:33145
-      - --mode dev-container
-      - --smp 1
-      - --default-log-level=info
-    image: docker.redpanda.com/redpandadata/redpanda:v25.2.5
-    container_name: redpanda
-    volumes:
-      - redpanda_data_vol:/var/lib/redpanda/data
-    ports:
-      - 18081:18081
-      - 18082:18082
-      - 19092:19092
-      - 19644:9644
-  # Enable as needed in local development for kafka topics and redpanda console access.
-  # redpanda-console:
-  #   container_name: redpanda-console
-  #   image: docker.redpanda.com/redpandadata/console:v3.2.2
-  #   entrypoint: /bin/sh
-  #   command: -c 'echo "$$CONSOLE_CONFIG_FILE" > /tmp/config.yml; /app/console'
-  #   environment:
-  #     CONFIG_FILEPATH: /tmp/config.yml
-  #     CONSOLE_CONFIG_FILE: |
-  #       kafka:
-  #         brokers: ["redpanda:9092"]
-  #       schemaRegistry:
-  #         enabled: true
-  #         urls: ["http://redpanda:8081"]
-  #       redpanda:
-  #         adminApi:
-  #           enabled: true
-  #           urls: ["http://redpanda:9644"]
-  #   ports:
-  #     - 8080:8080
-  #   depends_on:
-  #     - redpanda
+    command: celery -A hs_event_s3.celery_app worker -Q s3_events --loglevel=info
   hs_extract:
     build:
       context: .
       dockerfile: hs_extract/Dockerfile
     platform: linux/amd64
+    command: ["celery", "-A", "hs_extract.celery_app", "worker", "-Q", "extract", "--loglevel=info"]
     environment:
-      HS_SETTINGS_FILE: "/app/hydroshare/settings.py"
-      HS_S3_ZONE_NAME: "hydroshare"
-      AWS_S3_ENDPOINT_URL: "http://hs-s3-proxy-internal:9000"
-      AWS_ACCESS_KEY_ID: "cuahsi"
-      AWS_SECRET_ACCESS_KEY: "devpassword"
-      REDIS_HOST: redis
-      REDIS_PORT: "6379"
+      AWS_S3_ENDPOINT_URL: "http://minio:9000"
+      AWS_ACCESS_KEY_ID: cuahsi
+      AWS_SECRET_ACCESS_KEY: devpassword
+      MC_HOST_hydroshare: "http://cuahsi:devpassword@minio:9000"
       CELERY_BROKER_URL: "redis://redis:6379/0"
-      CELERY_RESULT_BACKEND: "redis://redis:6379/0"
-      PYTHONPATH: "/app/hs_extract/hsextract/:/app/hs_extract/hs_cloudnative_schemas/:/app:/app/hs_extract"
     volumes:
       - "./hs_extract:/app/hs_extract"
       - "./hs_cloudnative_schemas:/app/hs_extract/hs_cloudnative_schemas"
+      - "./hydroshare/settings.py:/app/hydroshare/settings.py:ro"
     links:
-      - minio:minio
-      - redis:redis
-      - hs-s3-proxy-internal:hs-s3-proxy-internal
+      - pgbouncer:pgbouncer
     depends_on:
-      - redis
-      - minio
-      - hs-s3-proxy-internal
+      - hydroshare
+      - pgbouncer
+      - solr
     stdin_open: true
     tty: true
   companion:
@@ -382,6 +312,8 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: "6379"
       ENABLE_EDIT_ACTIONS: "true"
+      S3_BACKEND_ACCESS_KEY: "cuahsi"
+      S3_BACKEND_SECRET_KEY: "devpassword"
     ports:
       - 8001:80
     links:
@@ -389,20 +321,19 @@ services:
     restart: on-failure
     depends_on:
       - postgis
-  hs-s3-proxy-external:
+  hs-s3-proxy:
     image: hydroshare/hs-s3-proxy:latest
     platform: linux/amd64
-    container_name: hs-s3-proxy-external
-    hostname: hs_s3_proxy
+    container_name: hs-s3-proxy
     build:
       context: ./hs_s3_proxy
       dockerfile: Dockerfile
     environment:
-      S3_PROXY_ROUTER_MODE: "external"
       AUTH_SERVICE_URL: "http://hs-s3-auth"
       AUTH_SERVICE_TIMEOUT: "5"
-      RESOURCE_S3_DEFAULT_ZONE: "hydroshare"
-      RESOURCE_S3_ZONES_CONFIG: '{"hydroshare":{"bucket_name":"resource","aws_s3_endpoint_url":"http://minio:9000","aws_access_key_id":"cuahsi","aws_secret_access_key":"devpassword","aws_s3_endpoint_url_public":"http://hs_s3_proxy:9000"},"published":{"bucket_name":"published","aws_s3_endpoint_url":"http://minio:9000","aws_access_key_id":"cuahsi","aws_secret_access_key":"devpassword","aws_s3_endpoint_url_public":"http://hs_s3_proxy:9000"},"ciroh":{"bucket_name":"ciroh","aws_s3_endpoint_url":"http://minio:9000","aws_access_key_id":"cuahsi","aws_secret_access_key":"devpassword","aws_s3_endpoint_url_public":"http://hs_s3_proxy:9000"}}'
+      S3_BACKEND_URL: "http://minio:9000"
+      S3_BACKEND_ACCESS_KEY: "cuahsi"
+      S3_BACKEND_SECRET_KEY: "devpassword"
       S3_BACKEND_REGION: "auto"
       S3_PROXY_TIMEOUT: "300"
     ports:
@@ -413,28 +344,6 @@ services:
     restart: on-failure
     depends_on:
       - hs-s3-auth
-      - minio
-  hs-s3-proxy-internal:
-    image: hydroshare/hs-s3-proxy:latest
-    platform: linux/amd64
-    container_name: hs-s3-proxy-internal
-    build:
-      context: ./hs_s3_proxy
-      dockerfile: Dockerfile
-    environment:
-      S3_PROXY_ROUTER_MODE: "internal"
-      AUTH_SERVICE_URL: "http://hs-s3-auth"
-      AUTH_SERVICE_TIMEOUT: "5"
-      RESOURCE_S3_DEFAULT_ZONE: "hydroshare"
-      RESOURCE_S3_ZONES_CONFIG: '{"hydroshare":{"bucket_name":"resource","aws_s3_endpoint_url":"http://minio:9000","aws_access_key_id":"cuahsi","aws_secret_access_key":"devpassword","aws_s3_endpoint_url_public":"http://hs_s3_proxy:9000"},"published":{"bucket_name":"published","aws_s3_endpoint_url":"http://minio:9000","aws_access_key_id":"cuahsi","aws_secret_access_key":"devpassword","aws_s3_endpoint_url_public":"http://hs_s3_proxy:9000"},"ciroh":{"bucket_name":"ciroh","aws_s3_endpoint_url":"http://minio:9000","aws_access_key_id":"cuahsi","aws_secret_access_key":"devpassword","aws_s3_endpoint_url_public":"http://hs_s3_proxy:9000"}}'
-      S3_BACKEND_REGION: "auto"
-      S3_PROXY_TIMEOUT: "300"
-    ports:
-      - 9003:9000
-    links:
-      - minio:minio
-    restart: on-failure
-    depends_on:
       - minio
   mongodb:
     image: mongodb/mongodb-atlas-local
@@ -482,8 +391,6 @@ volumes:
   mongodb_mongot_vol:
   temp_vol:
   share_vol:
-  redpanda_data_vol:
-  rabbitmq_data_vol:
   minio_data_vol:
   redis_data_vol:
   companion_vol:

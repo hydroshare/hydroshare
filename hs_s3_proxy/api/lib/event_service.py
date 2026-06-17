@@ -5,8 +5,8 @@ import httpx
 
 logger = logging.getLogger("hs_s3_proxy")
 
-EVENT_SERVICE_URL = os.environ.get("S3_EVENT_SERVICE_URL", "")
-EVENT_SERVICE_TIMEOUT = float(os.environ.get("S3_EVENT_SERVICE_TIMEOUT", "3.0"))
+AUTH_SERVICE_URL = os.environ.get("AUTH_SERVICE_URL", "http://localhost:8001")
+EVENT_SERVICE_TIMEOUT = float(os.environ.get("EVENT_SERVICE_TIMEOUT", "5.0"))
 
 
 def post_s3_event(
@@ -14,33 +14,42 @@ def post_s3_event(
     bucket: str,
     object_path: str,
     username: str,
-    user_id: int | None,
-    file_size: int | None = None,
-) -> None:
-    """Best-effort event post; non-blocking for proxy success path."""
-    if not EVENT_SERVICE_URL:
-        return
+    user_id: int,
+    file_size: int = 0,
+) -> bool:
+    """Notify hs-s3-auth of a completed S3 write or delete event.
 
+    Returns True if the event was accepted, False otherwise.
+    Failures are logged but never propagate — the proxy response to the client
+    is already on its way when this is called.
+    """
+    url = f"{AUTH_SERVICE_URL}/s3/event/"
     payload = {
         "action": action,
         "bucket": bucket,
-        "object_path": object_path,
+        "object_path": object_path or "",
         "username": username,
         "user_id": user_id,
+        "file_size": file_size,
     }
-    if file_size is not None:
-        payload["file_size"] = file_size
 
     try:
         with httpx.Client(timeout=EVENT_SERVICE_TIMEOUT) as client:
-            response = client.post(EVENT_SERVICE_URL, json=payload)
-        if response.status_code >= 400:
-            logger.warning(
-                "Event service returned %s for action=%s bucket=%s object=%s",
-                response.status_code,
-                action,
-                bucket,
-                object_path,
+            response = client.post(url, json=payload)
+        if response.status_code not in (200, 204):
+            logger.error(
+                f"Event service returned {response.status_code} for {action} "
+                f"on {bucket}/{object_path}: {response.text}"
             )
+            return False
+        logger.debug(f"S3 event posted: action={action}, bucket={bucket}, object={object_path}")
+        return True
+    except httpx.TimeoutException:
+        logger.error(f"Event service timeout posting {action} on {bucket}/{object_path}")
+        return False
+    except httpx.RequestError as e:
+        logger.error(f"Event service request error: {e}")
+        return False
     except Exception as e:
-        logger.warning("Failed to post S3 event: %s", e)
+        logger.error(f"Unexpected error posting S3 event: {e}", exc_info=True)
+        return False

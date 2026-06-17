@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 
 from api.routers.access_control_changed import router as access_control_changed_router
+from api.routers.events import router as events_router
 from api.routers.minio import router as minio_router
 
 logger = logging.getLogger("hs-s3-auth")
@@ -25,6 +26,7 @@ app.add_middleware(
 app.include_router(minio_router, tags=["HS S3 Authorization"], prefix="/minio")
 app.include_router(access_control_changed_router, tags=[
                    "Access Control Webhook"], prefix="/access")
+app.include_router(events_router, tags=["S3 Events"], prefix="/s3")
 
 openapi_schema = get_openapi(
     title="S3 Authorization API",

@@ -10,8 +10,6 @@ RUN python -m pip config set global.break-system-packages true
 
 RUN apt-get update
 RUN apt-get -y upgrade
-RUN curl -1sLf 'https://dl.redpanda.com/nzc4ZYQK3WRGd9sy/redpanda/cfg/setup/bash.deb.sh' | bash
-RUN apt install -y redpanda-rpk redpanda-connect
 
 RUN curl -O https://dl.min.io/client/mc/release/linux-amd64/mc \
     && chmod +x mc \
@@ -25,6 +23,6 @@ COPY hs_extract hs_extract
 COPY hs_cloudnative_schemas hs_extract/hs_cloudnative_schemas
 COPY hydroshare/settings.py hydroshare/settings.py
 
-ENV PYTHONPATH "${PYTHONPATH}:/app/hs_extract/hsextract/:/app/hs_extract/hs_cloudnative_schemas/"
+ENV PYTHONPATH "${PYTHONPATH}:/app/hs_extract/hsextract/:/app/hs_extract/hs_cloudnative_schemas/:/app:/app/hs_extract"
 
-ENTRYPOINT ["rpk", "connect", "run", "--rpc-plugins=/app/hs_extract/extract_metadata_plugin.yaml", "/app/hs_extract/extract_metadata_pipeline.yaml"]
+CMD ["celery", "-A", "hs_extract.celery_app", "worker", "-Q", "extract", "--loglevel=info"]

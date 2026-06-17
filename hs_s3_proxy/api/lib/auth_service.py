@@ -106,44 +106,33 @@ def verify_signature_sync(
         return {"allow": False, "reason": "auth_service_error"}
 
 
-def verify_csrf_token_sync(session_id: str, csrf_token: str | None) -> dict:
-    """Delegate session+CSRF validation to hs-s3-auth when available.
+def verify_csrf_token_sync(session_id: str, csrf_token: str = None) -> dict:
+    """Resolve a Django session to a user via hs-s3-auth.
 
-    Returns:
-      {"allow": bool, "reason": str?, "user_id": int?, "username": str?}
+    Sends ``session_id`` (the ``sessionid`` cookie value) and optionally the
+    ``csrf_token`` (the ``csrftoken`` cookie value) to the auth service.
+
+    Returns {"allow": True, "user_id": int, "username": str} on success,
+    or {"allow": False, "reason": str} on failure.
     """
-    if not session_id:
-        return {"allow": False, "reason": "missing_session_id"}
-
     url = f"{AUTH_SERVICE_URL}/minio/verify-csrf/"
-    payload = {
-        "session_id": session_id,
-        "csrf_token": csrf_token,
-    }
+    payload = {"session_id": session_id}
+    if csrf_token:
+        payload["csrf_token"] = csrf_token
 
     try:
         with httpx.Client(timeout=AUTH_SERVICE_TIMEOUT) as client:
             response = client.post(url, json=payload)
         if response.status_code != 200:
-            logger.warning("CSRF auth endpoint returned %s", response.status_code)
+            logger.error(f"Auth service returned {response.status_code} for CSRF verification: {response.text}")
             return {"allow": False, "reason": "auth_service_error"}
-        data = response.json()
-        if "allow" in data:
-            return data
-        # Support wrapped response shapes if auth service returns one.
-        result = data.get("result", {}) if isinstance(data, dict) else {}
-        return {
-            "allow": bool(result.get("allow", False)),
-            "reason": result.get("reason"),
-            "user_id": result.get("user_id"),
-            "username": result.get("username"),
-        }
+        return response.json()
     except httpx.TimeoutException:
-        logger.error("Auth service timeout during CSRF verification")
+        logger.error("Auth service timeout during CSRF token verification")
         return {"allow": False, "reason": "auth_service_error"}
     except httpx.RequestError as e:
-        logger.error(f"Auth service request error: {e}")
+        logger.error(f"Auth service request error during CSRF verification: {e}")
         return {"allow": False, "reason": "auth_service_error"}
     except Exception as e:
-        logger.error(f"Unexpected error calling auth service: {e}", exc_info=True)
+        logger.error(f"Unexpected error during CSRF token verification: {e}", exc_info=True)
         return {"allow": False, "reason": "auth_service_error"}

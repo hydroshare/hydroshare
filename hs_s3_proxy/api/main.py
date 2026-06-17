@@ -1,71 +1,58 @@
+
+# --- Dual-app pattern: external (auth) and internal (no-auth) FastAPI apps ---
+import asyncio
 import logging
 import os
+import re
 
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from api.routes.external import router as external_router
+
+# ...existing code...
 
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger("hs_s3_proxy")
+DEBUG_HEADERS = os.environ.get("S3_PROXY_DEBUG_HEADERS", "false").lower() == "true"
 
-ROUTER_MODE_ENV = "S3_PROXY_ROUTER_MODE"
-DEFAULT_ROUTER_MODE = "external"
+BACKEND_BUCKET = os.environ.get("S3_BACKEND_BUCKET")
+RESOURCE_ID_RE = re.compile(r"^[0-9a-f]{32}$")
 
+# --- External proxy app (auth enforced, fires events) ---
+external_app = FastAPI(title="HydroShare S3 Proxy (external)")
+external_app.add_middleware(
+    CORSMiddleware,
+    allow_origins=['*'],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+external_app.include_router(external_router)
 
-def _get_router_mode() -> str:
-    mode = os.environ.get(ROUTER_MODE_ENV, DEFAULT_ROUTER_MODE).strip().lower()
-    if mode not in {"external", "internal"}:
-        raise ValueError(
-            "Invalid {} value: {}. Expected one of: external, internal".format(
-                ROUTER_MODE_ENV, mode
-            )
-        )
-    return mode
-
-
-def _cors_settings() -> tuple[list[str], bool]:
-    raw_origins = os.environ.get("CORS_ALLOWED_ORIGINS", "")
-    origins = [origin.strip() for origin in raw_origins.split(",") if origin.strip()]
-    if not origins:
-        return ["*"], False
-    return origins, True
-
-
-def create_app() -> FastAPI:
-    mode = _get_router_mode()
-    app = FastAPI(title="HydroShare S3 Proxy ({})".format(mode))
-
-    cors_origins, cors_credentials = _cors_settings()
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=cors_origins,
-        allow_credentials=cors_credentials,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
-
-    if mode == "external":
-        from api.routes.external import router
-    else:
-        from api.routes.internal import router
-
-    app.include_router(router)
-    logger.info("Loaded S3 proxy router mode: %s", mode)
-    return app
+# --- Internal proxy app (no auth, fires events) ---
+internal_app = FastAPI(title="HydroShare S3 Proxy (internal)")
+internal_app.add_middleware(
+    CORSMiddleware,
+    allow_origins=['*'],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
-app = create_app()
+class Server(uvicorn.Server):
+    def handle_exit(self, sig: int, frame) -> None:
+        return super().handle_exit(sig, frame)
 
+
+async def main():
+    server = Server(config=uvicorn.Config(external_app, workers=1, loop="asyncio",
+                                          host="0.0.0.0", port=9000, forwarded_allow_ips="*"))
+    await server.serve()
 
 if __name__ == "__main__":
-    uvicorn.run(
-        "api.main:app",
-        host="0.0.0.0",
-        port=int(os.environ.get("PORT", "9000")),
-        workers=1,
-        loop="asyncio",
-        forwarded_allow_ips="*",
-    )
+    asyncio.run(main())

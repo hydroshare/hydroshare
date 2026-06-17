@@ -16,7 +16,8 @@ from api.cache import (
     # user_has_view_access_cache,
 )
 from api.database import (
-    get_user_token_and_id,
+    get_user_by_session_id,
+    get_user_service_account_secrets_and_id,
     is_superuser_and_id,
     resource_discoverability,
     user_has_edit_access,
@@ -29,17 +30,48 @@ from api.sigv4 import verify_signature_v4
 router = APIRouter()
 logger = logging.getLogger("hs-s3-auth")
 
-VIEW_ACTIONS = os.environ.get(
-    "S#_VIEW_ACTIONS",
+
+class CsrfVerifyRequest(BaseModel):
+    session_id: str
+    csrf_token: Optional[str] = None
+
+
+@router.post("/verify-csrf/")
+async def verify_csrf(request: CsrfVerifyRequest):
+    """Authenticate a browser request using the Django session cookie.
+
+    The caller must supply ``session_id`` (the value of the ``sessionid``
+    cookie).  The optional ``csrf_token`` (``csrftoken`` cookie) is accepted
+    but not separately verified here — Django's own middleware handles CSRF
+    protection on the origin server; this endpoint only resolves the session
+    to an authenticated user.
+    """
+    result = get_user_by_session_id(request.session_id)
+    if not result:
+        logger.warning("CSRF/session verification failed: session not found or expired")
+        return {"allow": False, "reason": "invalid_session"}
+
+    user_id, username = result
+    logger.info(f"CSRF/session authentication succeeded for user: {username} (id={user_id})")
+    return {"allow": True, "user_id": user_id, "username": username}
+
+
+def _parse_action_list(env_var: str, default: str) -> List[str]:
+    return [action.strip() for action in os.environ.get(env_var, default).split(",") if action.strip()]
+
+
+VIEW_ACTIONS = _parse_action_list(
+    "S3_VIEW_ACTIONS",
     "s3:GetObject,s3:ListObjects,s3:ListObjectsV2,s3:ListBucket,s3:GetObjectRetention,s3:GetObjectLegalHold,\
         s3:HeadObject",
-).split(",")
-WRITE_ACTIONS = os.environ.get(
-    "S3_WRITE_ACTIONS", "s3:PutObject,s3:UploadPart,s3:PutObjectLegalHold"
-).split(",")
-DELETE_ACTIONS = os.environ.get(
-    "S3_DELETE_ACTIONS", "s3:DeleteObject,s3:DeleteObjects"
-).split(",")
+)
+WRITE_ACTIONS = _parse_action_list(
+    "S3_WRITE_ACTIONS", "s3:PutObject,s3:CreateMultipartUpload,s3:UploadPart,"
+    "s3:CompleteMultipartUpload,s3:PutObjectLegalHold"
+)
+DELETE_ACTIONS = _parse_action_list(
+    "S3_DELETE_ACTIONS", "s3:DeleteObject,s3:DeleteObjects,s3:AbortMultipartUpload"
+)
 EDIT_ACTIONS = WRITE_ACTIONS + DELETE_ACTIONS
 
 
@@ -132,7 +164,8 @@ async def hs_s3_authorization_check(auth_request: AuthRequest):
     # only
     resource_ids_and_is_contents_path = [
         (prefix.split(
-            "/")[0], True) if prefix.split("/", 1)[1].startswith("data/contents/") else (prefix.split("/")[0], False)
+            "/")[0], True) if (prefix.split("/", 1)[1].startswith("data/contents/")
+                               or prefix.split("/", 1)[1].startswith(".hsmetadata/")) else (prefix.split("/")[0], False)
         for prefix in prefixes
     ]
     # check the user and each resource against the action
@@ -206,29 +239,38 @@ class SignatureVerifyRequest(BaseModel):
 
 @router.post("/verify-signature/")
 async def verify_signature(request: SignatureVerifyRequest):
-    username = request.auth_info.get("access_key")
-    if not username:
+    access_key = request.auth_info.get("access_key")
+    if not access_key:
         return {"allow": False, "reason": "missing_access_key"}
 
-    row = get_user_token_and_id(username)
-    if row is None:
-        logger.warning(f"No token found for username: {username}")
-        return {"allow": False, "reason": "user_not_found"}
+    rows = get_user_service_account_secrets_and_id(access_key)
+    candidate_secrets = []
+    if rows:
+        candidate_secrets = [(secret_key, int(user_id)) for secret_key, user_id in rows]
+    else:
+        # SigV4 requests when no DB token exists for that access key.
+        if access_key == os.environ.get("S3_BACKEND_ACCESS_KEY", ""):
+            token_key = os.environ.get("S3_BACKEND_SECRET_KEY", "")
+            if not token_key:
+                logger.warning("Missing S3_BACKEND_SECRET_KEY for cuahsi signature verification")
+                return {"allow": False, "reason": "user_not_found"}
+            candidate_secrets = [(token_key, 0)]
+        else:
+            logger.warning(f"No token found for access_key: {access_key}")
+            return {"allow": False, "reason": "user_not_found"}
 
-    token_key, user_id = row
+    for token_key, user_id in candidate_secrets:
+        valid = verify_signature_v4(
+            method=request.method,
+            path=request.path,
+            headers=request.headers,
+            query_params=request.query_params,
+            payload_hash=request.payload_hash,
+            secret_key=token_key,
+            auth_info=request.auth_info,
+        )
+        if valid:
+            return {"allow": True, "user_id": int(user_id)}
 
-    valid = verify_signature_v4(
-        method=request.method,
-        path=request.path,
-        headers=request.headers,
-        query_params=request.query_params,
-        payload_hash=request.payload_hash,
-        secret_key=token_key,
-        auth_info=request.auth_info,
-    )
-
-    if not valid:
-        logger.warning(f"Invalid signature for username: {username}")
-        return {"allow": False, "reason": "invalid_signature"}
-
-    return {"allow": True, "user_id": int(user_id)}
+    logger.warning(f"Invalid signature for access_key: {access_key}")
+    return {"allow": False, "reason": "invalid_signature"}

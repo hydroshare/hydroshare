@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>HydroShare Resource Metadata Editor</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Source+Sans+3:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f5f7f4;
+  --paper: rgba(255,255,255,.9);
+  --paper-strong: #ffffff;
+  --line: #d8e0d5;
+  --text: #20312a;
+  --muted: #60756a;
+  --accent: #0f766e;
+  --accent-soft: #d8f0ec;
+  --danger: #b42318;
+  --radius: 16px;
+  --shadow: 0 20px 60px rgba(32,49,42,.08);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: 'Source Sans 3', sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(circle at top left, rgba(15,118,110,.12), transparent 28%),
+    radial-gradient(circle at top right, rgba(217,119,6,.08), transparent 24%),
+    linear-gradient(180deg, #f8faf7 0%, #eef4ee 100%);
+  min-height: 100vh;
+}
+
+.page {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 32px 20px 56px;
+}
+
+.hero {
+  background: linear-gradient(135deg, rgba(255,255,255,.92), rgba(244,250,247,.92));
+  border: 1px solid rgba(216,224,213,.9);
+  border-radius: 24px;
+  box-shadow: var(--shadow);
+  padding: 28px;
+  backdrop-filter: blur(8px);
+}
+
+.eyebrow,
+.section h2,
+.label,
+.mono,
+.button {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.eyebrow {
+  color: var(--accent);
+  font-size: 12px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.hero h1 {
+  margin: 0;
+  font-size: clamp(30px, 4vw, 46px);
+  line-height: 1.05;
+}
+
+.subtitle {
+  margin: 14px 0 0;
+  max-width: 860px;
+  font-size: 18px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.button,
+.button:visited {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--paper-strong);
+  color: var(--text);
+  text-decoration: none;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.button.danger {
+  background: #fef3f2;
+  border-color: #fecdca;
+  color: var(--danger);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.card {
+  background: var(--paper);
+  border: 1px solid rgba(216,224,213,.95);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.section {
+  padding: 22px;
+}
+
+.section h2 {
+  margin: 0 0 16px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--accent);
+}
+
+.form-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--muted);
+}
+
+input[type="text"],
+textarea,
+input[type="file"] {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: #fff;
+  color: var(--text);
+  font: inherit;
+}
+
+textarea {
+  min-height: 130px;
+  resize: vertical;
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.status {
+  margin-top: 12px;
+  min-height: 22px;
+  font-size: 14px;
+}
+
+.status.error { color: var(--danger); }
+.status.success { color: #037847; }
+
+.file-list {
+  display: grid;
+  gap: 10px;
+}
+
+.file-item {
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.file-main {
+  overflow: hidden;
+}
+
+.file-name {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.file-meta {
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+.hint {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+pre {
+  margin: 0;
+  padding: 14px;
+  overflow: auto;
+  border-radius: 12px;
+  background: #14211c;
+  color: #e7f3ed;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+@media (max-width: 920px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+  .page {
+    padding: 20px 14px 40px;
+  }
+  .hero,
+  .section {
+    padding: 18px;
+  }
+}
+</style>
+</head>
+<body>
+<main class="page">
+  <section class="hero card">
+    <div class="eyebrow">HydroShare Metadata Editor</div>
+    <h1 id="resource-title">Loading resource...</h1>
+    <p class="subtitle">Edit name, description, and keywords by writing to <span class="mono">.hsmetadata/user_metadata.json</span>. Manage files directly under <span class="mono">data/contents</span> using S3 protocol operations.</p>
+    <div class="hero-actions">
+      <a class="button" id="open-resource" href="#" target="_blank" rel="noreferrer">Open Resource</a>
+      <a class="button" id="open-viewer" href="#">Metadata Viewer</a>
+      <button class="button" id="refresh-all" type="button">Refresh</button>
+    </div>
+  </section>
+
+  <div class="grid">
+    <section class="card section">
+      <h2>Edit Metadata JSON</h2>
+      <form id="metadata-form" class="form-grid">
+        <div>
+          <label class="label" for="name-input">Name</label>
+          <input id="name-input" name="name" type="text" required />
+        </div>
+        <div>
+          <label class="label" for="description-input">Description</label>
+          <textarea id="description-input" name="description"></textarea>
+        </div>
+        <div>
+          <label class="label" for="keywords-input">Keywords</label>
+          <input id="keywords-input" name="keywords" type="text" placeholder="comma,separated,keywords" />
+          <div class="hint">Stored as an array in <span class="mono">user_metadata.json</span>.</div>
+        </div>
+        <div class="row">
+          <button class="button primary" id="save-metadata" type="submit">Save Metadata</button>
+          <button class="button" id="reload-metadata" type="button">Reload JSON</button>
+        </div>
+      </form>
+      <div id="metadata-status" class="status"></div>
+    </section>
+
+    <section class="card section">
+      <h2>Manage data/contents Files</h2>
+      <div class="form-grid">
+        <div>
+          <label class="label" for="upload-file">Upload File to data/contents</label>
+          <input id="upload-file" type="file" />
+        </div>
+        <div>
+          <label class="label" for="upload-relative-path">Relative path (optional)</label>
+          <input id="upload-relative-path" type="text" placeholder="subfolder/example.txt" />
+          <div class="hint">If blank, file is uploaded at <span class="mono">data/contents/&lt;filename&gt;</span>.</div>
+        </div>
+        <div class="row">
+          <button class="button primary" id="upload-btn" type="button">Upload</button>
+          <button class="button" id="refresh-files" type="button">Refresh Files</button>
+        </div>
+      </div>
+      <div id="files-status" class="status"></div>
+      <div id="file-list" class="file-list"></div>
+    </section>
+  </div>
+
+  <section class="card section" style="margin-top:18px;">
+    <h2>Current user_metadata.json</h2>
+    <pre id="raw-user-json">Loading...</pre>
+  </section>
+</main>
+
+<script>
+const RESOURCE_ID = (() => {
+  const parts = window.location.pathname.split('/').filter(Boolean);
+  const idx = parts.indexOf('resource-metadata-edit');
+  return (idx >= 0 && parts[idx + 1]) ? parts[idx + 1] : '';
+})();
+
+function getS3Origin() {
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    return `${window.location.protocol}//${window.location.hostname}:9002`;
+  }
+  return `${window.location.protocol}//s3.${window.location.hostname}`;
+}
+
+const S3_ORIGIN = getS3Origin();
+const USER_META_KEY = `${RESOURCE_ID}/.hsmetadata/user_metadata.json`;
+const USER_META_URL = `${S3_ORIGIN}/resource/${USER_META_KEY}`;
+const CONTENTS_PREFIX = `${RESOURCE_ID}/data/contents/`;
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
+function setStatus(id, message, kind = '') {
+  const el = document.getElementById(id);
+  el.className = `status ${kind}`.trim();
+  el.textContent = message || '';
+}
+
+function parseKeywordsInput(raw) {
+  return raw
+    .split(',')
+    .map(v => v.trim())
+    .filter(Boolean);
+}
+
+function toKeywordsInput(keywords) {
+  if (!Array.isArray(keywords)) return '';
+  return keywords.join(', ');
+}
+
+async function fetchJson(url) {
+  const resp = await fetch(url, { credentials: 'include' });
+  if (!resp.ok) {
+    throw new Error(`Request failed (${resp.status}) for ${url}`);
+  }
+  return resp.json();
+}
+
+async function fetchText(url) {
+  const resp = await fetch(url, { credentials: 'include' });
+  if (!resp.ok) {
+    throw new Error(`Request failed (${resp.status}) for ${url}`);
+  }
+  return resp.text();
+}
+
+let currentUserMetadata = {};
+
+function populateMetadataForm(data) {
+  document.getElementById('name-input').value = data.name || '';
+  document.getElementById('description-input').value = data.description || '';
+  document.getElementById('keywords-input').value = toKeywordsInput(data.keywords);
+  document.getElementById('raw-user-json').textContent = JSON.stringify(data, null, 2);
+  document.getElementById('resource-title').textContent = data.name || `Resource ${RESOURCE_ID}`;
+}
+
+async function loadUserMetadata() {
+  setStatus('metadata-status', 'Loading user metadata...');
+  try {
+    currentUserMetadata = await fetchJson(USER_META_URL);
+    populateMetadataForm(currentUserMetadata);
+    setStatus('metadata-status', 'Metadata loaded.', 'success');
+  } catch (error) {
+    setStatus('metadata-status', error.message, 'error');
+    document.getElementById('raw-user-json').textContent = String(error.stack || error);
+  }
+}
+
+async function saveUserMetadata(event) {
+  event.preventDefault();
+  setStatus('metadata-status', 'Saving user_metadata.json...');
+
+  const nextMetadata = {
+    ...currentUserMetadata,
+    name: document.getElementById('name-input').value.trim(),
+    description: document.getElementById('description-input').value.trim(),
+    keywords: parseKeywordsInput(document.getElementById('keywords-input').value),
+  };
+
+  try {
+    const resp = await fetch(USER_META_URL, {
+      method: 'PUT',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(nextMetadata, null, 2),
+    });
+
+    if (!resp.ok) {
+      const body = await resp.text();
+      throw new Error(`Save failed (${resp.status}): ${body}`);
+    }
+
+    currentUserMetadata = nextMetadata;
+    populateMetadataForm(currentUserMetadata);
+    setStatus('metadata-status', 'Saved user_metadata.json successfully.', 'success');
+  } catch (error) {
+    setStatus('metadata-status', error.message, 'error');
+  }
+}
+
+function formatBytes(bytes) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
+}
+
+function parseS3ListXml(xmlText) {
+  const xml = new DOMParser().parseFromString(xmlText, 'application/xml');
+  const errors = xml.querySelectorAll('parsererror');
+  if (errors.length) {
+    throw new Error('Unable to parse S3 listing response.');
+  }
+
+  const contents = [...xml.getElementsByTagName('Contents')];
+  const files = contents.map(node => {
+    const key = node.getElementsByTagName('Key')[0]?.textContent || '';
+    const sizeText = node.getElementsByTagName('Size')[0]?.textContent || '0';
+    const modified = node.getElementsByTagName('LastModified')[0]?.textContent || '';
+    return {
+      key,
+      size: Number(sizeText),
+      modified,
+    };
+  }).filter(f => f.key.startsWith(CONTENTS_PREFIX));
+
+  return files;
+}
+
+function renderFiles(files) {
+  const container = document.getElementById('file-list');
+  if (!files.length) {
+    container.innerHTML = '<div class="hint">No files found under data/contents.</div>';
+    return;
+  }
+
+  container.innerHTML = files.map(file => {
+    const relativePath = file.key.slice(CONTENTS_PREFIX.length);
+    const fileUrl = `${S3_ORIGIN}/resource/${file.key}`;
+    const modified = file.modified ? new Date(file.modified).toLocaleString() : 'Unknown';
+    return `
+      <div class="file-item">
+        <div class="file-main">
+          <div class="file-name">${escapeHtml(relativePath)}</div>
+          <div class="file-meta">${escapeHtml(formatBytes(file.size))} | ${escapeHtml(modified)}</div>
+          <div class="file-meta"><a href="${escapeHtml(fileUrl)}" target="_blank" rel="noreferrer">Open file</a></div>
+        </div>
+        <div class="row">
+          <button class="button danger" data-delete-key="${escapeHtml(file.key)}" type="button">Delete</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  container.querySelectorAll('button[data-delete-key]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const key = btn.getAttribute('data-delete-key');
+      await deleteFileByKey(key);
+    });
+  });
+}
+
+async function loadFiles() {
+  setStatus('files-status', 'Loading files from data/contents...');
+  const url = `${S3_ORIGIN}/resource?list-type=2&prefix=${encodeURIComponent(CONTENTS_PREFIX)}`;
+  try {
+    const xmlText = await fetchText(url);
+    const files = parseS3ListXml(xmlText);
+    renderFiles(files);
+    setStatus('files-status', `Loaded ${files.length} file(s).`, 'success');
+  } catch (error) {
+    setStatus('files-status', error.message, 'error');
+  }
+}
+
+function sanitizeRelativePath(path) {
+  return path
+    .split('/')
+    .map(seg => seg.trim())
+    .filter(Boolean)
+    .join('/');
+}
+
+async function uploadFile() {
+  const fileInput = document.getElementById('upload-file');
+  const file = fileInput.files[0];
+  if (!file) {
+    setStatus('files-status', 'Select a file first.', 'error');
+    return;
+  }
+
+  const relativePathRaw = document.getElementById('upload-relative-path').value.trim();
+  const relativePath = sanitizeRelativePath(relativePathRaw || file.name);
+  if (!relativePath) {
+    setStatus('files-status', 'Invalid relative path.', 'error');
+    return;
+  }
+  const objectUrl = `${S3_ORIGIN}/resource/${CONTENTS_PREFIX}${relativePath}`;
+
+  setStatus('files-status', `Uploading ${relativePath} ...`);
+  try {
+    const resp = await fetch(objectUrl, {
+      method: 'PUT',
+      credentials: 'include',
+      headers: {
+        'Content-Type': file.type || 'application/octet-stream',
+      },
+      body: file,
+    });
+
+    if (!resp.ok) {
+      const body = await resp.text();
+      throw new Error(`Upload failed (${resp.status}): ${body}`);
+    }
+
+    fileInput.value = '';
+    setStatus('files-status', `Uploaded ${relativePath}.`, 'success');
+    await loadFiles();
+  } catch (error) {
+    setStatus('files-status', error.message, 'error');
+  }
+}
+
+async function deleteFileByKey(key) {
+  if (!confirm(`Delete ${key.slice(CONTENTS_PREFIX.length)}?`)) {
+    return;
+  }
+
+  const objectUrl = `${S3_ORIGIN}/resource/${key}`;
+  setStatus('files-status', `Deleting ${key.slice(CONTENTS_PREFIX.length)} ...`);
+  try {
+    const resp = await fetch(objectUrl, {
+      method: 'DELETE',
+      credentials: 'include',
+    });
+    if (!resp.ok) {
+      const body = await resp.text();
+      throw new Error(`Delete failed (${resp.status}): ${body}`);
+    }
+    setStatus('files-status', 'File deleted.', 'success');
+    await loadFiles();
+  } catch (error) {
+    setStatus('files-status', error.message, 'error');
+  }
+}
+
+function wireStaticLinks() {
+  document.getElementById('open-resource').href = `/resource/${RESOURCE_ID}/`;
+  document.getElementById('open-viewer').href = `/resource-metadata-view/${RESOURCE_ID}/`;
+}
+
+async function refreshAll() {
+  await Promise.all([loadUserMetadata(), loadFiles()]);
+}
+
+function boot() {
+  if (!RESOURCE_ID) {
+    document.getElementById('resource-title').textContent = 'Missing resource id';
+    setStatus('metadata-status', 'URL must include resource id.', 'error');
+    return;
+  }
+
+  wireStaticLinks();
+  document.getElementById('metadata-form').addEventListener('submit', saveUserMetadata);
+  document.getElementById('reload-metadata').addEventListener('click', loadUserMetadata);
+  document.getElementById('upload-btn').addEventListener('click', uploadFile);
+  document.getElementById('refresh-files').addEventListener('click', loadFiles);
+  document.getElementById('refresh-all').addEventListener('click', refreshAll);
+
+  refreshAll();
+}
+
+boot();
+</script>
+</body>
+</html>

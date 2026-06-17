@@ -1,4 +1,7 @@
+import base64
+import json
 import os
+import zlib
 
 from sqlalchemy import create_engine, text
 
@@ -24,20 +27,33 @@ def quota_is_exceeded(resource_id: int):
     return True
 
 
-def get_user_token_and_id(username: str):
-    # return (token_key, user_id) or None
-    query = """SELECT authtoken_token.key, authtoken_token.user_id
+def get_user_service_account_secrets_and_id(access_key: str):
+    # return [(secret_key, user_id), ...]
+    # Required access key format: <username>:<service_account_key>
+    if ":" not in access_key:
+        return []
+
+    username, service_account_key = access_key.split(":", 1)
+    query = """SELECT knox_authtoken.digest AS secret_key, knox_authtoken.user_id
+    FROM knox_authtoken
+    INNER JOIN auth_user ON knox_authtoken.user_id = auth_user.id
+    WHERE auth_user.username = :username
+    AND knox_authtoken.token_key = :service_account_key
+    UNION ALL
+    SELECT authtoken_token.key AS secret_key, authtoken_token.user_id
     FROM authtoken_token
     INNER JOIN auth_user ON authtoken_token.user_id = auth_user.id
-    WHERE auth_user.username = :username"""
+    WHERE auth_user.username = :username
+    AND authtoken_token.key = :service_account_key"""
+    parameters = dict(username=username, service_account_key=service_account_key)
 
     with engine.connect() as con:
         rs = con.execute(statement=text(query),
-                         parameters=dict(username=username))
-        row = rs.fetchone()
-        if row:
-            return row
-    return None
+                         parameters=parameters)
+        rows = rs.fetchall()
+        if rows:
+            return rows
+    return []
 
 
 def is_superuser_and_id(username: str):
@@ -141,3 +157,75 @@ def user_has_edit_access(user_id: int, resource_id: str):
         if result:
             return True
         return False
+
+
+def _decode_django_session_data(session_data: str) -> dict:
+    """Decode Django session data from the database.
+
+    Handles two storage formats:
+      - New (Django 2.0+): ``.{base64url_zlib_payload}:{timestamp}:{signature}``
+      - Old             : ``base64({40-char-hash}:{json})``
+    The HMAC signature is intentionally not verified here because the service
+    already trusts the database; the expiry check in the SQL query is the
+    security gate.
+    """
+    if session_data.startswith('.'):
+        # New compressed format — payload precedes the first ':'
+        payload_b64 = session_data.split(':', 1)[0][1:]  # strip leading '.'
+        # Restore base64url padding
+        padding = (4 - len(payload_b64) % 4) % 4
+        payload_b64 += '=' * padding
+        compressed = base64.urlsafe_b64decode(payload_b64)
+        return json.loads(zlib.decompress(compressed))
+    else:
+        # Old format: standard base64(hash:json)
+        padding = (4 - len(session_data) % 4) % 4
+        decoded = base64.b64decode(session_data + '=' * padding)
+        colon_idx = decoded.index(b':')
+        return json.loads(decoded[colon_idx + 1:])
+
+
+def get_user_by_session_id(session_id: str):
+    """Return ``(user_id, username)`` for a valid, non-expired Django session.
+
+    Returns ``None`` if the session does not exist, has expired, or has no
+    authenticated user.
+    """
+    session_query = """
+        SELECT session_data
+        FROM django_session
+        WHERE session_key = :session_id
+          AND expire_date > NOW()
+    """
+    with engine.connect() as con:
+        rs = con.execute(statement=text(session_query), parameters=dict(session_id=session_id))
+        row = rs.fetchone()
+        if not row:
+            return None
+        session_data = row[0]
+
+    try:
+        session_dict = _decode_django_session_data(session_data)
+    except Exception:
+        return None
+
+    raw_user_id = session_dict.get('_auth_user_id')
+    if not raw_user_id:
+        return None
+
+    try:
+        user_id = int(raw_user_id)
+    except (ValueError, TypeError):
+        return None
+
+    user_query = """
+        SELECT id, username
+        FROM auth_user
+        WHERE id = :user_id
+    """
+    with engine.connect() as con:
+        rs = con.execute(statement=text(user_query), parameters=dict(user_id=user_id))
+        row = rs.fetchone()
+        if row:
+            return row[0], row[1]
+    return None

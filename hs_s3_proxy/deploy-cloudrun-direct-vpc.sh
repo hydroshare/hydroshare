@@ -1,6 +1,15 @@
 #!/bin/bash
 set -e
 
+PROJECT_ID=hydroshare-403701
+SERVICE_ACCOUNT=micro-auth-proxy@${PROJECT_ID}.iam.gserviceaccount.com
+AUTH_SERVICE_URL=http://10.128.0.113:80
+S3_BACKEND_URL=https://storage.googleapis.com
+S3_BACKEND_BUCKET=hydroshare-resources
+S3_BACKEND_ACCESS_KEY=GOOG1EQ2KX3UZJEN3D4ADSJITQABGI5WN7DRIM566AC6A5OKBOFZ47HFYCQT4
+S3_PROXY_TIMEOUT=300
+CORS_ALLOWED_ORIGINS="${CORS_ALLOWED_ORIGINS:-https://beta.hydroshare.org,https://hydroshare.org}"
+
 # Configuration - from environment
 # Required: PROJECT_ID, SERVICE_ACCOUNT, AUTH_SERVICE_URL,
 #           S3_BACKEND_BUCKET, S3_BACKEND_ACCESS_KEY, S3_BACKEND_SECRET_KEY
@@ -17,7 +26,7 @@ S3_BACKEND_URL="${S3_BACKEND_URL:-https://storage.googleapis.com}"
 
 # Build and push the container image
 echo "Building container image..."
-docker build -t ${IMAGE_NAME}:latest .
+docker build --platform linux/amd64 -t ${IMAGE_NAME}:latest .
 
 echo "Pushing to Container Registry..."
 docker push ${IMAGE_NAME}:latest
@@ -47,6 +56,8 @@ gcloud run deploy ${SERVICE_NAME} \
   --set-env-vars "S3_BACKEND_ACCESS_KEY=${S3_BACKEND_ACCESS_KEY}" \
   --set-env-vars "S3_BACKEND_SECRET_KEY=${S3_BACKEND_SECRET_KEY}" \
   --set-env-vars "S3_PROXY_TIMEOUT=300" \
+  --set-env-vars "^|^CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS}" \
+  --set-env-vars "PROXY_MODE=external" \
   --allow-unauthenticated
 
 echo ""

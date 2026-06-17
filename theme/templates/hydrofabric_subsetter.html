@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Hydrofabric Viewer</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Source+Sans+3:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+  <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet"/>
+  <script src="https://unpkg.com/pmtiles@4.0.1/dist/pmtiles.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.11.0/sql-wasm.js"></script>
+  <style>@import "{% static 'css/style.css' %}";</style>
+</head>
+<body>
+
+<div id="map-container">
+  <div id="map"></div>
+  <div id="map-right"></div>
+  <div id="label-left"  class="map-label">Researcher Data</div>
+  <div id="label-right" class="map-label">Reference</div>
+</div>
+
+<div id="sidebar">
+  <header>
+    <h1>&#9651; HYDROFABRIC VIEWER</h1>
+    <p>Displaying researcher subset. Enable split view to compare against the reference hydrofabric.</p>
+  </header>
+
+  <div id="controls-collapsible">
+    <button id="controls-toggle" type="button" onclick="handlers.toggleControls()" aria-expanded="false" aria-controls="controls-content">
+      <span class="arrow">&#x21AA;</span>
+      <span>Details</span>
+    </button>
+
+    <div id="controls-content">
+      <div id="status-bar">
+        <div id="status-dot" class="loading"></div>
+        <span id="status-text">Initializing...</span>
+      </div>
+
+      <div id="meta-panel">
+        <div class="meta-row">
+          <span class="meta-label">VPU ID</span>
+          <span class="meta-value accent" id="meta-vpuid">—</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-label">Catchments</span>
+          <span class="meta-value researcher" id="meta-catchments">—</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-label">Flowpaths</span>
+          <span class="meta-value researcher" id="meta-flowpaths">—</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-label">Render</span>
+          <span class="meta-value" id="meta-render">—</span>
+        </div>
+      </div>
+
+      <div id="layer-panel">
+        <h2>Layers</h2>
+        <div class="layer-row">
+          <label class="toggle-switch">
+            <input type="checkbox" id="toggle-divides" checked
+                   onchange="handlers.toggleDivides(this.checked)"/>
+            <span class="slider"></span>
+          </label>
+          <span class="layer-label">Divides</span>
+          <span class="layer-swatch poly" style="border-color:#a78bfa"></span>
+        </div>
+        <div class="layer-row">
+          <label class="toggle-switch">
+            <input type="checkbox" id="toggle-flowpaths" checked
+                   onchange="handlers.toggleFlowpaths(this.checked)"/>
+            <span class="slider"></span>
+          </label>
+          <span class="layer-label">Flowpaths</span>
+          <span class="layer-swatch" style="background:#38bdf8;height:2px;margin-top:6px"></span>
+        </div>
+        <div class="layer-row">
+          <label class="toggle-switch">
+            <input type="checkbox" id="toggle-nexus"
+                   onchange="handlers.toggleNexus(this.checked)"/>
+            <span class="slider"></span>
+          </label>
+          <span class="layer-label">Nexus Points</span>
+          <span class="layer-swatch poly" style="border-color:#f59e0b;border-radius:50%;width:12px;height:12px"></span>
+        </div>
+        <div class="layer-row">
+          <label class="toggle-switch">
+            <input type="checkbox" id="toggle-split"
+                   onchange="handlers.toggleSplit(this.checked)"/>
+            <span class="slider"></span>
+          </label>
+          <span class="layer-label">Split View</span>
+        </div>
+      </div>
+
+      <div id="progress-bar"><div id="progress-fill"></div></div>
+      <div id="log-container"><div id="log"></div></div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { useMap } from "{% static 'js/src/composables/useMap.js' %}";
+  import { useViewer, ensureNexusLayer } from "{% static 'js/src/useViewer.js' %}";
+  import { state, log, setProgress } from "{% static 'js/src/config.js' %}";
+
+  const { initMap, toggleSplitView, fitToBbox } = useMap();
+  const { bootViewer, setLayerVisibility } = useViewer();
+
+  function setStatus(text, dotClass = 'loading') {
+    document.getElementById('status-text').textContent = text;
+    document.getElementById('status-dot').className = dotClass;
+  }
+  function showMeta({ vpuid, catchments, flowpaths, renderMode }) {
+    document.getElementById('meta-vpuid').textContent = vpuid ?? '—';
+    document.getElementById('meta-catchments').textContent = catchments != null ? catchments.toLocaleString() : '—';
+    document.getElementById('meta-flowpaths').textContent = flowpaths  != null ? flowpaths.toLocaleString()  : '—';
+    document.getElementById('meta-render').textContent = renderMode ?? '—';
+    document.getElementById('meta-panel').classList.add('visible');
+  }
+  function setVisibilityBoth(leftIds, rightIds, visible) {
+    const v = visible ? 'visible' : 'none';
+    for (const id of leftIds) {
+      if (state.map?.getLayer(id)) state.map.setLayoutProperty(id, 'visibility', v);
+    }
+    if (state.mapRight) {
+      for (const id of rightIds) {
+        if (state.mapRight.getLayer(id)) state.mapRight.setLayoutProperty(id, 'visibility', v);
+      }
+    }
+  }
+  window.handlers = {
+    toggleControls() {
+      const wrapper = document.getElementById('controls-collapsible');
+      const button = document.getElementById('controls-toggle');
+      const expanded = wrapper.classList.toggle('expanded');
+      button.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+    },
+    toggleDivides(checked) {
+      setVisibilityBoth(
+        ['res-divides-fill', 'res-divides-line'],
+        ['ref-divides-fill', 'ref-divides-line'],
+        checked
+      );
+    },
+    toggleFlowpaths(checked) {
+      setVisibilityBoth(
+        ['res-flowpaths-line'],
+        ['ref-flowpaths-line'],
+        checked
+      );
+    },
+    async toggleNexus(checked) {
+      await ensureNexusLayer();
+      setLayerVisibility(['res-nexus-circle'], checked);
+    },
+    toggleSplit(checked) {
+      toggleSplitView(checked);
+    },
+  };
+
+  (async () => {
+    initMap();
+    await new Promise(resolve => state.map.on('load', resolve));
+    setStatus('Loading data...', 'loading');
+    try {
+      const meta = await bootViewer();
+      showMeta(meta);
+      setProgress(100);
+      if (meta.bbox) fitToBbox(meta.bbox);
+      setStatus('Ready', 'ready');
+      log('Viewer ready.', 'success');
+    } catch(err) {
+      log(`Fatal: ${err.message}`, 'error');
+      setStatus('Error loading data', 'error');
+      console.error(err);
+    }
+  })();
+</script>
+</body>
+</html>
