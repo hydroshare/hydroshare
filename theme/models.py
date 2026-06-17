@@ -237,8 +237,10 @@ class UserQuota(models.Model):
         related_query_name="quotas",
     )
 
-    allocated_value = models.FloatField(default=20)
-    unit = models.CharField(max_length=10, default="GB")
+    UNIT_CHOICES = (("B", "B"), ("MB", "MB"), ("GB", "GB"), ("TB", "TB"))
+
+    allocated_value = models.FloatField(validators=[MinValueValidator(0)], default=20)
+    unit = models.CharField(max_length=10, choices=UNIT_CHOICES, default="GB")
     zone = models.CharField(max_length=100, default="hydroshare")
 
     class Meta:
@@ -253,7 +255,7 @@ class UserQuota(models.Model):
 
     def save_allocated_value(self, allocated_value, unit):
         """
-        Save the allocated value to the database and update the quota on MinIO.
+        Save the allocated value to the database.
         """
         self.allocated_value = allocated_value
         self.unit = unit
