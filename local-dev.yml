@@ -64,17 +64,6 @@ services:
     container_name: rabbitmq
     volumes:
       - "rabbitmq_data_vol:/var/lib/rabbitmq"
-  solr:
-    image: solr:6.6
-    platform: linux/amd64
-    container_name: solr
-    volumes:
-      # hydroshare repository
-      - ".:/hydroshare"
-      - "solr_data_vol:/opt/solr/server/solr"
-    ports:
-      - "8983"
-    command: ["solr-foreground"]
   hydroshare:
     platform: linux/amd64
     build:
@@ -93,8 +82,6 @@ services:
       POSTGIS_USER: postgres
       PGPASSWORD: postgres
       RABBITMQ_PORT_5672_TCP_ADDR: rabbitmq
-      SOLR_PORT_8983_TCP_ADDR: solr
-      SOLR_HOST: solr
       TMP: /tmp
       POSTGIS_PORT_5432_TCP_ADDR: pgbouncer
       POSTGIS_DISABLE_SERVER_SIDE_CURSORS: "True"
@@ -122,13 +109,11 @@ services:
       - "8000:8000"
     links:
       - postgis:postgis
-      - solr:solr
       - rabbitmq:rabbitmq
       - minio:minio
     depends_on:
       - postgis
       - pgbouncer
-      - solr
       - rabbitmq
       - minio
       - redis
@@ -151,8 +136,6 @@ services:
       PGPASSWORD: postgres
       C_FORCE_ROOT: 1
       RABBITMQ_PORT_5672_TCP_ADDR: rabbitmq
-      SOLR_PORT_8983_TCP_ADDR: solr
-      SOLR_HOST: solr
       POSTGIS_PORT_5432_TCP_ADDR: pgbouncer
       POSTGIS_DISABLE_SERVER_SIDE_CURSORS: "True"
       HS_PATH: ${PWD}
@@ -171,7 +154,6 @@ services:
     depends_on:
       - hydroshare
       - pgbouncer
-      - solr
       - rabbitmq
     stdin_open: true
     tty: true
@@ -189,8 +171,6 @@ services:
       POSTGIS_USER: postgres
       PGPASSWORD: postgres
       C_FORCE_ROOT: 1
-      SOLR_PORT_8983_TCP_ADDR: solr
-      SOLR_HOST: solr
       POSTGIS_PORT_5432_TCP_ADDR: pgbouncer
       POSTGIS_DISABLE_SERVER_SIDE_CURSORS: "True"
       HS_PATH: ${PWD}
@@ -207,7 +187,6 @@ services:
     depends_on:
       - hydroshare
       - pgbouncer
-      - solr
       - redpanda
     stdin_open: true
     tty: true
@@ -230,8 +209,6 @@ services:
       POSTGIS_USER: postgres
       PGPASSWORD: postgres
       C_FORCE_ROOT: 1
-      SOLR_PORT_8983_TCP_ADDR: solr
-      SOLR_HOST: solr
       POSTGIS_PORT_5432_TCP_ADDR: pgbouncer
       POSTGIS_DISABLE_SERVER_SIDE_CURSORS: "True"
       HS_PATH: ${PWD}
@@ -254,7 +231,6 @@ services:
     depends_on:
       - hydroshare
       - pgbouncer
-      - solr
       - redpanda
     stdin_open: true
     tty: true
@@ -328,7 +304,6 @@ services:
     depends_on:
       - hydroshare
       - pgbouncer
-      - solr
       - redpanda
     stdin_open: true
     tty: true
@@ -451,7 +426,6 @@ services:
   #       condition: service_healthy
 volumes:
   postgis_data_vol:
-  solr_data_vol:
   mongodb_data_vol:
   mongodb_config_vol:
   mongodb_mongot_vol:
