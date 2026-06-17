@@ -1964,10 +1964,6 @@ a.tag:hover {
     margin-left: 10px;
 }
 
-#solr-help-info {
-	align-self: center;
-}
-
 .resource-search input {
     padding: 0 5px;
 	width: 100%;

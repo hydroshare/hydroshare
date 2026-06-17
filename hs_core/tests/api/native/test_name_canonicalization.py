@@ -4,7 +4,7 @@ Test name canonicalization
 """
 
 from unittest import TestCase
-from hs_core.search_indexes import normalize_name
+from hs_core.hydroshare.utils import normalize_name
 
 
 class NameTest(TestCase):
