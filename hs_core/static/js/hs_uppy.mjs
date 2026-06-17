@@ -5,7 +5,7 @@ import {
   GoldenRetriever,
   GoogleDrivePicker,
   DropTarget,
-} from "./uppy.min.mjs";
+} from "https://cdn.jsdelivr.net/npm/uppy@5.2.1/dist/uppy.min.mjs";
 
 let uppy = null;
 if (HS_S_ID === "") {

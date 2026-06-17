@@ -17,6 +17,12 @@ export const routes: RouteRecordRaw[] = [
     meta: {
       title: "Search",
     },
+    beforeEnter(to) {
+      // If no query parameters are provided, default to published filter sorted by date created descending
+      if (Object.keys(to.query).length === 0) {
+        return { name: "search", query: { sortBy: "datePublished", order: "desc", a: "Published" } };
+      }
+    },
   },
   {
     name: "landing",

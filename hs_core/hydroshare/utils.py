@@ -4,6 +4,7 @@ from functools import lru_cache
 import logging
 import mimetypes
 import os
+import re
 import shutil
 import tempfile
 import urllib
@@ -12,6 +13,7 @@ from urllib.request import pathname2url, url2pathname
 from uuid import uuid4
 
 import aiohttp
+import probablepeople
 from asgiref.sync import sync_to_async
 from django.apps import apps
 from django.contrib.auth.models import Group, User
@@ -23,6 +25,7 @@ from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.utils.timezone import now
 from mezzanine.conf import settings
+from nameparser import HumanName
 
 from django_s3.exceptions import SessionException
 from django_s3.storage import S3Storage
@@ -1130,3 +1133,75 @@ def decode_resource_url(url):
     url_encoded_path = url2pathname(parsed_url.path)
     encoded_url = parsed_url._replace(path=url_encoded_path).geturl()
     return encoded_url
+
+
+def normalize_name(name):
+    """
+    Normalize a name for sorting and indexing.
+
+    This uses two powerful python libraries for differing reasons.
+
+    `probablepeople` contains a discriminator between company and person names.
+    This is used to determine whether to parse into last, first, middle or to
+    leave the name alone.
+
+    However, the actual name parser in `probablepeople` is unnecessarily complex,
+    so that strings that it determines to be human names are parsed instead by
+    the simpler `nameparser`.
+
+    """
+    sname = name.strip()  # remove leading and trailing spaces
+
+    # Recognizer tends to mistake concatenated initials for Corporation name.
+    # Pad potential initials with spaces before running recognizer
+    # For any character A-Z followed by "." and another character A-Z, add a space after the first.
+    # (?=[A-Z]) means to find A-Z after the match string but not match it.
+    nname = re.sub("(?P<thing>[A-Z]\\.)(?=[A-Z])", "\\g<thing> ", sname)
+
+    try:
+        # probablepeople doesn't understand utf-8 encoding. Hand it pure unicode.
+        _, type = probablepeople.tag(nname)  # discard parser result
+    except probablepeople.RepeatedLabelError:  # if it can't understand the name, it's foreign
+        type = 'Unknown'
+
+    if type == 'Corporation':
+        return sname  # do not parse and reorder company names
+
+    # special case for capitalization: flag as corporation
+    if (re.compile("[A-Z][A-Z]").match(sname)):
+        return sname
+
+    # treat anything else as a human name
+    nameparts = HumanName(nname)
+    normalized = ""
+    if nameparts.last:
+        normalized = nameparts.last
+
+    if nameparts.suffix:
+        if not normalized:
+            normalized = nameparts.suffix
+        else:
+            normalized = normalized + ' ' + nameparts.suffix
+
+    if normalized:
+        normalized = normalized + ','
+
+    if nameparts.title:
+        if not normalized:
+            normalized = nameparts.title
+        else:
+            normalized = normalized + ' ' + nameparts.title
+
+    if nameparts.first:
+        if not normalized:
+            normalized = nameparts.first
+        else:
+            normalized = normalized + ' ' + nameparts.first
+
+    if nameparts.middle:
+        if not normalized:
+            normalized = nameparts.middle
+        else:
+            normalized = ' ' + normalized + ' ' + nameparts.middle
+
+    return normalized.strip()

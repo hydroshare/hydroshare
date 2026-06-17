@@ -20,7 +20,6 @@ typing-extensions
 xarray==2025.6.0
 zarr
 rasterio
-pytest
 redpanda-connect
 setuptools
 h5netcdf==1.6.4

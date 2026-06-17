@@ -1,37 +1,15 @@
-import datetime
-import json
-import logging
-import time
-from collections import namedtuple
-
-from django.conf import settings
-from django.core.paginator import Paginator
-from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.generic import TemplateView
-from haystack.query import SearchQuerySet, SQ
-from haystack.inputs import Exact
-from rest_framework.views import APIView
-from hs_core.discovery_parser import ParseSQ
-
-logger = logging.getLogger(__name__)
-
-DateRange = namedtuple('DateRange', ['start', 'end'])
-
-
-class SearchView(TemplateView):
-
-    def get(self, request, *args, **kwargs):
-        maps_key = settings.MAPS_KEY if hasattr(settings, 'MAPS_KEY') else ''
-        return render(request, 'hs_discover/index.html', {'maps_key': maps_key})
 
 
 class AtlasSearchView(TemplateView):
 
     def get(self, request, *args, **kwargs):
-        target_origin = request.scheme + "://" + request.get_host()
-        context = {"targetOrigin": target_origin, "iframeSrc": target_origin + "/discover/"}
-        return render(request, 'hs_discover/atlas.html', context)
+        iframe_src = target_origin + "/discover/"
+        if request.META.get('QUERY_STRING'):
+            iframe_src += "?" + request.META['QUERY_STRING']
+        context = {"targetOrigin": target_origin, "iframeSrc": iframe_src}
+        return render(request, 'pages/search.html', context)
 
 
 class AtlasLandingView(TemplateView):
