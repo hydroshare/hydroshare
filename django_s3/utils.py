@@ -8,19 +8,15 @@ def bucket_and_zone(path):
         zone_config = get_default_zone_config()
         return zone_config.bucket_name, get_default_zone_name()
     res_id = path.split("/")[0] if "/" in path else path
-    resource_query = 'SELECT quota_holder_id \
-                        FROM hs_core_genericresource \
-                        WHERE short_id = %s'
+    zone_query = '''
+        SELECT uq.zone
+        FROM hs_core_genericresource gr
+        JOIN theme_userquota uq ON uq.user_id = gr.quota_holder_id
+        WHERE gr.short_id = %s
+    '''
 
     with connection.cursor() as cursor:
-        cursor.execute(resource_query, [res_id])
-        row = cursor.fetchone()
-        if row is None:
-            raise Exception(f"Resource with short_id {res_id} not found")
-        owner_id = row[0]
-    with connection.cursor() as cursor:
-        zone_userquota_query = 'SELECT zone FROM theme_userquota WHERE user_id = %s'
-        cursor.execute(zone_userquota_query, [owner_id])
+        cursor.execute(zone_query, [res_id])
         row = cursor.fetchone()
         zone = row[0]
 
