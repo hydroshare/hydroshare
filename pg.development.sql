@@ -25119,20 +25119,20 @@ SELECT pg_catalog.setval('public.theme_siteconfiguration_id_seq', 1, true);
 --
 
 COPY public.theme_userprofile (id, picture, title, subject_areas, organization, phone_1, phone_1_type, phone_2, phone_2_type, public, cv, details, user_id, country, middle_name, state, user_type, website, create_irods_user_account, identifiers, email_opt_out) FROM stdin;
-4		Research Software Engineer		RENCI		Mobile		Mobile	t			4	Unspecified		Unspecified			f		f
-5		\N	\N	asdf	\N	Mobile	\N	Mobile	t			5	Unspecified	\N	Unspecified	\N	\N	f		f
-6		\N	\N	CZO	\N	Mobile	\N	Mobile	t			6	Unspecified	\N	Unspecified	\N	\N	f		f
-7		\N	\N	CZO	\N	Mobile	\N	Mobile	t			7	Unspecified	\N	Unspecified	\N	\N	f		f
-8		\N	\N	CZO	\N	Mobile	\N	Mobile	t			8	Unspecified	\N	Unspecified	\N	\N	f		f
-9		\N	\N	CZO	\N	Mobile	\N	Mobile	t			9	Unspecified	\N	Unspecified	\N	\N	f		f
-10		\N	\N	CZO	\N	Mobile	\N	Mobile	t			10	Unspecified	\N	Unspecified	\N	\N	f		f
-11		\N	\N	CZO	\N	Mobile	\N	Mobile	t			11	Unspecified	\N	Unspecified	\N	\N	f		f
-12		\N	\N	CZO	\N	Mobile	\N	Mobile	t			12	Unspecified	\N	Unspecified	\N	\N	f		f
-13		\N	\N	CZO	\N	Mobile	\N	Mobile	t			13	Unspecified	\N	Unspecified	\N	\N	f		f
-14		\N	\N	CZO	\N	Mobile	\N	Mobile	t			14	Unspecified	\N	Unspecified	\N	\N	f		f
-15		\N	\N	CZO	\N	Mobile	\N	Mobile	t			15	Unspecified	\N	Unspecified	\N	\N	f		f
-16		\N	\N	CZO	\N	Mobile	\N	Mobile	t			16	Unspecified	\N	Unspecified	\N	\N	f		f
-17		\N	\N	CZO	\N	Mobile	\N	Mobile	t			17	Unspecified	\N	Unspecified	\N	\N	f		f
+4		Research Software Engineer		RENCI		Mobile		Mobile	t			4	US		New Hampshire	Researcher		f		f
+5		\N	\N	asdf	\N	Mobile	\N	Mobile	t			5	US	\N	New Hampshire	Organization	\N	f		f
+6		\N	\N	CZO	\N	Mobile	\N	Mobile	t			6	US	\N	New Hampshire	Organization	\N	f		f
+7		\N	\N	CZO	\N	Mobile	\N	Mobile	t			7	US	\N	New Hampshire	Organization	\N	f		f
+8		\N	\N	CZO	\N	Mobile	\N	Mobile	t			8	US	\N	New Hampshire	Organization	\N	f		f
+9		\N	\N	CZO	\N	Mobile	\N	Mobile	t			9	US	\N	New Hampshire	Organization	\N	f		f
+10		\N	\N	CZO	\N	Mobile	\N	Mobile	t			10	US	\N	New Hampshire	Organization	\N	f		f
+11		\N	\N	CZO	\N	Mobile	\N	Mobile	t			11	US	\N	New Hampshire	Organization	\N	f		f
+12		\N	\N	CZO	\N	Mobile	\N	Mobile	t			12	US	\N	New Hampshire	Organization	\N	f		f
+13		\N	\N	CZO	\N	Mobile	\N	Mobile	t			13	US	\N	New Hampshire	Organization	\N	f		f
+14		\N	\N	CZO	\N	Mobile	\N	Mobile	t			14	US	\N	New Hampshire	Organization	\N	f		f
+15		\N	\N	CZO	\N	Mobile	\N	Mobile	t			15	US	\N	New Hampshire	Organization	\N	f		f
+16		\N	\N	CZO	\N	Mobile	\N	Mobile	t			16	US	\N	New Hampshire	Organization	\N	f		f
+17		\N	\N	CZO	\N	Mobile	\N	Mobile	t			17	US	\N	New Hampshire	Organization	\N	f		f
 \.
 
 

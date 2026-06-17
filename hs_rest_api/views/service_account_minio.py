@@ -6,12 +6,9 @@ from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from rest_framework import status
 from hs_core.models import get_user
-from django.conf import settings
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
 
 logger = logging.getLogger(__name__)
-
-hs_s3_auth_service_url = getattr(settings, 'HS_S3_AUTH_SERVICE_URL', 'http://hs-s3-auth/sa/auth/minio/sa/')
 
 
 class MinIOServiceAccounts(APIView):

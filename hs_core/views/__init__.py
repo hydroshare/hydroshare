@@ -1001,10 +1001,7 @@ def delete_resource(request, shortkey, usertext, *args, **kwargs):
     if is_ajax(request):
         task_id = get_resource_delete_task(shortkey)
         if not task_id:
-            # make resource being deleted not discoverable to inform solr to remove this resource from solr index
-            # deletion of a discoverable resource corrupts SOLR.
-            # Fix by making the resource undiscoverable.
-            # This has the side-effect of deleting the resource from SOLR.
+            # make resource being deleted not discoverable trigger removal from search index
             res.set_discoverable(False)
             res.extra_data["to_be_deleted"] = True
             res.save()
@@ -1026,7 +1023,7 @@ def delete_resource(request, shortkey, usertext, *args, **kwargs):
         return JsonResponse(task_dict)
     else:
         try:
-            # make resource being deleted not discoverable to inform solr to remove this resource from solr index
+            # make resource being deleted not discoverable trigger removal from search index
             res.set_discoverable(False)
             hydroshare.delete_resource(shortkey, request_username=request.user.username)
             signals.pre_delete_resource.send(
