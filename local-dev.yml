@@ -240,7 +240,6 @@ services:
     depends_on:
       - hydroshare
       - pgbouncer
-      - solr
     stdin_open: true
     tty: true
   companion:
