@@ -660,7 +660,7 @@ def validate_user_quota(user_or_username, size):
         user = None
 
     if user:
-        uq = user.quotas.filter(zone='hydroshare').first()
+        uq = user.quotas.filter().first()
 
         if uq:
             if not QuotaMessage.objects.exists():
@@ -700,10 +700,10 @@ def get_remaining_user_quota(user_or_username, units='MB'):
         user = None
 
     if user and user.is_active:
-        uq = user.quotas.filter(zone='hydroshare').first()
+        uq = user.quotas.filter().first()
         if not uq:
             # create a quota object for the user
-            uq = user.quotas.create(zone='hydroshare')
+            uq = user.quotas.create()
         remaining = uq.allocated_value - uq.used_value
         remaining = convert_file_size_to_unit(remaining, to_unit=units, from_unit=uq.unit) or 0
         return max(remaining, 0)

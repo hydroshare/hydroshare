@@ -285,12 +285,6 @@ echo "  - docker restart hydroshare defaultworker"
 echo
 docker restart hydroshare defaultworker hydroshare-hs_event_s3-1 hydroshare-discovery_collection_worker-1
 
-echo
-echo "  - docker exec hydroshare python manage.py add_missing_bucket_names"
-echo
-docker exec hydroshare python manage.py add_missing_bucket_names
-
-
 # Parse arguments
 SEED_DEV_RESOURCES=false
 for arg in "$@"; do

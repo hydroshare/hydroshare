@@ -1,5 +1,4 @@
 import os
-import subprocess
 import tempfile
 import zipfile
 import logging
@@ -15,7 +14,6 @@ from hs_core.exceptions import QuotaException
 from . import models as m
 from .utils import (
     bucket_and_name,
-    normalized_bucket_name,
     is_metadata_xml_file,
     is_metadata_json_file,
     is_schema_json_file,
@@ -421,55 +419,6 @@ class S3Storage(S3Storage):
         except Exception:
             # TODO check if something went wrong vs not found
             return False
-
-    def create_bucket(self, bucket_name):
-        if not self.bucket_exists(bucket_name):
-            self.connection.create_bucket(Bucket=bucket_name)
-            # TODO: to run tests locally, comment out these lines
-            subprocess.run(["mc", "event", "add", f"hydroshare/{bucket_name}",
-                            "arn:minio:sqs::RESOURCEFILE:kafka", "--event", "put,delete"], check=True)
-            if settings.MINIO_LIFECYCLE_POLICY:
-                subprocess.run(["mc", "ilm", "rule", "add" "--transition-days", "0", "--transition-tier",
-                                settings.MINIO_LIFECYCLE_POLICY, f"hydroshare/{bucket_name}"], check=True)
-
-    def delete_bucket(self, bucket_name):
-        # disable events before deleting files to avoid new files being written during deletion
-        subprocess.run(["mc", "event", "rm", f"hydroshare/{bucket_name}", "arn:minio:sqs::RESOURCEFILE:kafka",
-                        "--event", "put,delete"], check=True)
-        bucket = self.connection.Bucket(bucket_name)
-        bucket.objects.all().delete()
-        self.connection.meta.client.delete_bucket(Bucket=bucket_name)
-
-    def new_quota_holder(self, resource_id, new_quota_holder_id):
-        """
-        Create a new bucket for the resource
-        :param resource_id: the resource id
-        """
-        src_bucket, src_name = bucket_and_name(resource_id)
-        dst_bucket = normalized_bucket_name(new_quota_holder_id)
-        dest_name = src_name
-
-        bucket = self.connection.Bucket(src_bucket)
-        files_to_delete = []
-        for file in bucket.objects.filter(Prefix=src_name):
-            src_file_path = file.key
-            dst_file_path = file.key.replace(src_name, dest_name)
-            try:
-                self.connection.meta.client.copy_object(
-                    Bucket=dst_bucket,
-                    Key=dst_file_path,
-                    CopySource={"Bucket": src_bucket, "Key": src_file_path},
-                )
-            except ClientError as e:
-                if "XMinioAdminBucketQuotaExceeded" in str(e):
-                    raise QuotaException(
-                        "Bucket quota exceeded. Please contact your system administrator."
-                    )
-                raise e
-            files_to_delete.append(src_file_path)
-
-        for src_file_path in files_to_delete:
-            self.connection.Object(src_bucket, src_file_path).delete()
 
     def bucket_exists(self, bucket_name):
         try:
