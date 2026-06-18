@@ -1765,7 +1765,7 @@ class Coverage(AbstractMetaDataElement):
                 key_value = key_value.strip()
                 k, v = key_value.split("=")
                 if k in ['start', 'end']:
-                    v = parser.parse(v).strftime("%Y/%m/%d %H:%M:%S")
+                    v = parser.parse(v).strftime("%Y-%m-%d")
                 value_dict[k] = v
             Coverage.create(type=type, value=value_dict, content_object=content_object)
 
