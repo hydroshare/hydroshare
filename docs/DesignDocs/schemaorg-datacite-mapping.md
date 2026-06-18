@@ -34,6 +34,47 @@ The mapping below groups the fields by intent so the relationship is easier to f
 | Schema version marker | n/a | `schemaVersion` | DataCite schema version reference |
 | Provider / catalog | n/a | `provider`, `includedInDataCatalog` | Repository / catalog context |
 
+## Proposed Distribution Contact Mapping
+
+HydroShare does not currently expose a first-class `distributionContact` metadata element on the landing page. In MetaDIG terms, this field is best understood as the main person responsible for the content. The implementation should therefore build a schema.org contact object from the same profile-backed fields used for authors.
+
+Recommended source order:
+
+1. An explicit distribution-contact record, if HydroShare ever stores one.
+2. The first creator / first author record.
+3. The public creator profile fields for that record.
+
+This is a semantic mapping, not an existing stored field. If HydroShare needs to satisfy a check that specifically looks for `resource.distributionContact.present`, the implementation should render a schema.org `contactPoint` object, or an equivalent contact structure, from the selected source record. The object should carry the public contact name, email, affiliation, identifier, homepage, phone, and profile URL when available.
+
+This makes the mapping deterministic and keeps the fallback aligned with the MetaDIG intent.
+
+The best current source is the creator/contact data already emitted in the landing page JSON-LD author block in [hs_core/templates/pages/baseresource.html](../../hs_core/templates/pages/baseresource.html). That block already includes profile-derived name, email, organization, identifiers, homepage, phone, and profile URL.
+
+| Proposed `distributionContact` field | Likely HydroShare source | Notes |
+| --- | --- | --- |
+| `name` | creator full name / profile display name | Use the public profile name when available |
+| `email` | `author.email` | Already present in the landing page author object |
+| `affiliation` / organization | `author.organization` | Comes from the user profile organization field |
+| `identifier` | `author.identifiers` | Can carry ORCID or other public identifiers |
+| `url` / homepage | `author.homepage` | Use the profile or personal website if present |
+| `telephone` | `author.phone` | Use the public phone value from the profile |
+| `sameAs` / profile URL | `author.profileUrl` | Useful if the profile page itself should be treated as the contact landing page |
+
+Code-generation rule:
+
+- Use `contactPoint` as the primary schema.org property.
+- Populate `name`, `email`, `affiliation`, `identifier`, `url`, and `telephone` from the chosen contact source.
+- Use the first author only as the fallback source when no explicit contact exists.
+- Do not infer contact responsibility from author order unless the fallback path is needed.
+
+Implementation recipe:
+
+1. Select the contact source in this order: explicit contact record, first creator record, public profile for that person.
+2. Build a schema.org `ContactPoint` object from that source.
+3. Map `name`, `email`, `affiliation`, `identifier`, `url`, `telephone`, and `sameAs` from the selected source.
+4. Emit the object as `contactPoint` in the landing page JSON-LD.
+5. Keep the output deterministic so the same resource always produces the same contact object.
+
 ## Relation Mapping
 
 HydroShare relation handling is the main place where the internal vocabulary and schema.org vocabulary diverge.
@@ -89,6 +130,8 @@ The main implementation pattern is:
 - Store HydroShare metadata in the native model vocabulary.
 - Map that vocabulary to schema.org JSON-LD in the landing page template.
 - Preserve DataCite semantics where the HydroShare internal term differs, especially for relations such as `source` -> `isBasedOn`.
+
+See [MetaDIG FAIR Suite Comparison](metadig-fair-suite-comparison.md) for a check-by-check comparison between the DataONE FAIR suite and HydroShare schema.org output.
 
 ## What Changed In HydroShare
 
