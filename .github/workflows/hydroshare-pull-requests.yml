@@ -36,3 +36,4 @@ jobs:
     - name: Run HydroShare Tests
       run: |
         docker exec hydroshare ./run-tests-jenkins
+        docker exec hydroshare-hs_extract-1 cd /app/hs_extract && pytest

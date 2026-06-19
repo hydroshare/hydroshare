@@ -98,12 +98,12 @@ class S3Storage(s3.S3Storage):
                 config=self.client_config,
                 verify=self.verify,
             )
-            self._register_mutation_hooks(resource, zone_config.aws_s3_endpoint_url)
+            self._register_mutation_hooks(resource, zone)
             connection[zone] = resource
         self._connections.connection = connection
         return connection[zone]
 
-    def _register_mutation_hooks(self, resource, endpoint_url):
+    def _register_mutation_hooks(self, resource, zone):
         events = resource.meta.client.meta.events
         if getattr(events, "_hs_mutation_hooks_registered", False):
             return
@@ -116,6 +116,7 @@ class S3Storage(s3.S3Storage):
                 return
             context["_hs_bucket"] = params.get("Bucket")
             context["_hs_key"] = params.get("Key")
+            context["_hs_zone"] = zone
             context["_hs_action"] = {
                 "PutObject": "s3:PutObject",
                 "DeleteObject": "s3:DeleteObjects",
@@ -126,9 +127,10 @@ class S3Storage(s3.S3Storage):
             action = context.get("_hs_action")
             bucket = context.get("_hs_bucket")
             object_path = context.get("_hs_key")
+            zone = context.get("_hs_zone")
             status_code = getattr(http_response, "status_code", None)
 
-            if not action or not bucket or not object_path:
+            if not action or not bucket or not object_path or not zone:
                 return
             if status_code not in (200, 204):
                 return
@@ -136,7 +138,7 @@ class S3Storage(s3.S3Storage):
                 action=action,
                 bucket=bucket,
                 object_path=object_path,
-                status_code=status_code,
+                zone=zone,
             )
 
         events.register("before-parameter-build.s3.PutObject", before_parameter_build)
@@ -146,7 +148,7 @@ class S3Storage(s3.S3Storage):
         events.register("after-call.s3.DeleteObject", after_call)
         events.register("after-call.s3.CompleteMultipartUpload", after_call)
 
-    def _dispatch_s3_mutation_hook(self, action, bucket, object_path, status_code):
+    def _dispatch_s3_mutation_hook(self, action, bucket, object_path, zone):
         event_url = setting("S3_AUTH_EVENT_ENDPOINT", "http://hs-s3-auth/s3/event/")
         timeout = float(setting("S3_AUTH_EVENT_TIMEOUT", 5))
         username = setting("S3_AUTH_EVENT_USERNAME", "cuahsi")
@@ -155,6 +157,7 @@ class S3Storage(s3.S3Storage):
             "action": action,
             "bucket": bucket,
             "object_path": object_path,
+            "zone": zone,
             "username": username,
             "user_id": None,
             "file_size": 0,
@@ -164,19 +167,21 @@ class S3Storage(s3.S3Storage):
             response = requests.post(event_url, json=payload, timeout=timeout)
             if response.status_code not in (200, 204):
                 logger.error(
-                    "S3 event endpoint returned %s for action=%s bucket=%s object=%s: %s",
+                    "S3 event endpoint returned %s for action=%s bucket=%s object=%s zone=%s: %s",
                     response.status_code,
                     action,
                     bucket,
                     object_path,
+                    zone,
                     response.text,
                 )
         except requests.RequestException:
             logger.exception(
-                "S3 event endpoint request failed for action=%s bucket=%s object=%s",
+                "S3 event endpoint request failed for action=%s bucket=%s object=%s zone=%s",
                 action,
                 bucket,
                 object_path,
+                zone,
             )
 
     def bucket(self, name, zone):

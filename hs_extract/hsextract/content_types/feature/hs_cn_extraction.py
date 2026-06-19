@@ -10,7 +10,7 @@ from hs_cloudnative_schemas.schema import base
 from hs_cloudnative_schemas.schema import dataset
 from hs_cloudnative_schemas.schema import datavariable
 from hsextract.utils.file import file_metadata
-from hsextract.utils.s3 import s3_client as s3
+from hsextract.utils.s3 import get_s3_client
 
 
 mimetypes.add_type("image/tiff", ".tif")
@@ -23,7 +23,7 @@ def replace_extension(filepath, new_ext):
     return '.'.join(filepath.split('.')[:-1]) + new_ext
 
 
-def encode_vector_metadata(filepath, validate_bbox=True):
+def encode_vector_metadata(filepath, zone: str, validate_bbox=True):
 
     # get all file names that match the pattern of the input filepath
     search_path = f"{'.'.join(filepath.split('.')[:-1])}.*"
@@ -33,6 +33,7 @@ def encode_vector_metadata(filepath, validate_bbox=True):
     temp_dir = tempfile.gettempdir()
     local_copy = os.path.join(temp_dir, os.path.basename(filepath))
     bucket, key = filepath.split("/", 1)
+    s3 = get_s3_client(zone)
     s3.download_file(bucket, key, local_copy)
     s3.download_file(bucket, replace_extension(key, ".shx"), replace_extension(local_copy, ".shx"))
     # Read the Shapefile
@@ -113,7 +114,7 @@ def encode_vector_metadata(filepath, validate_bbox=True):
 
     files = []
     for fpath in associated_files:
-        file_md, _ = file_metadata(fpath)
+        file_md, _ = file_metadata(fpath, zone)
         files.append(file_md)
 
     return dataset.ScientificDataset(

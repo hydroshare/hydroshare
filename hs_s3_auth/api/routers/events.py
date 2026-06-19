@@ -17,6 +17,7 @@ class S3Event(BaseModel):
     username: str
     user_id: Optional[int] = None
     file_size: int = 0
+    zone: str
 
 
 @router.post("/event/", status_code=204)
@@ -39,6 +40,7 @@ async def receive_s3_event(event: S3Event):
             "object_path": event.object_path,
             "username": event.username,
             "user_id": event.user_id,
+            "zone": event.zone
         },
         queue="s3_events",
     )
@@ -51,6 +53,7 @@ async def receive_s3_event(event: S3Event):
                 "action": event.action,
                 "bucket": event.bucket,
                 "object_path": event.object_path,
+                "zone": event.zone
             },
             queue="s3_events",
         )
@@ -65,6 +68,7 @@ async def receive_s3_event(event: S3Event):
                 "bucket": event.bucket,
                 "object_path": event.object_path,
                 "file_size": event.file_size,
+                "zone": event.zone
             },
             queue="extract",
         )

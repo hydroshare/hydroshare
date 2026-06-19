@@ -1,3 +1,5 @@
+import ast
+import json
 import logging
 import os
 
@@ -9,6 +11,35 @@ AUTH_SERVICE_URL = os.environ.get("AUTH_SERVICE_URL", "http://localhost:8001")
 EVENT_SERVICE_TIMEOUT = float(os.environ.get("EVENT_SERVICE_TIMEOUT", "5.0"))
 
 
+def _build_bucket_zone_map() -> dict[str, str]:
+    raw = os.environ.get("S3_ZONE_CONFIG", "")
+    if not raw:
+        return {}
+    try:
+        parsed = json.loads(raw)
+    except json.JSONDecodeError:
+        try:
+            parsed = ast.literal_eval(raw)
+        except Exception:
+            return {}
+    mapping: dict[str, str] = {}
+    for zone, config in parsed.items():
+        if not isinstance(config, dict):
+            continue
+        bucket_name = config.get("bucket_name")
+        for b in ([bucket_name] if isinstance(bucket_name, str) else (config.get("buckets") or [])):
+            if b:
+                mapping[b] = zone
+    return mapping
+
+
+_BUCKET_ZONE_MAP: dict[str, str] = _build_bucket_zone_map()
+
+
+def zone_for_bucket(bucket: str) -> str:
+    return _BUCKET_ZONE_MAP.get(bucket, "")
+
+
 def post_s3_event(
     action: str,
     bucket: str,
@@ -16,6 +47,7 @@ def post_s3_event(
     username: str,
     user_id: int,
     file_size: int = 0,
+    zone: str = "",
 ) -> bool:
     """Notify hs-s3-auth of a completed S3 write or delete event.
 
@@ -31,6 +63,7 @@ def post_s3_event(
         "username": username,
         "user_id": user_id,
         "file_size": file_size,
+        "zone": zone or zone_for_bucket(bucket),
     }
 
     try:

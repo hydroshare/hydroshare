@@ -15,12 +15,12 @@ class TimeSeriesMetadataObject(FileMetadataObject):
 
     def extract_metadata(self):
         if self.file_object_path.endswith(".csv"):
-            metadata = extract_metadata_csv(self.file_object_path)
+            metadata = extract_metadata_csv(self.file_object_path, self.zone)
         else:
-            metadata = extract_metadata(self.file_object_path)
+            metadata = extract_metadata(self.file_object_path, self.zone)
         return metadata
 
     @classmethod
-    def is_content_type(cls, file_object_path: str) -> bool:
+    def is_content_type(cls, file_object_path: str, zone: str) -> bool:
         _, extension = os.path.splitext(file_object_path.lower())
         return extension in cls._extensions()

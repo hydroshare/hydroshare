@@ -5,7 +5,7 @@ import xml.etree.ElementTree as ET
 from fastapi import APIRouter, Request, Response
 from api.lib.auth_service import verify_csrf_token_sync, verify_signature_sync
 from api.lib.authorization import check_s3_authorization
-from api.lib.event_service import post_s3_event
+from api.lib.event_service import post_s3_event, zone_for_bucket
 from api.lib.s3_auth import (
     get_s3_action_from_request,
     parse_authorization_header,
@@ -193,11 +193,13 @@ async def proxy_s3_request(request: Request, full_path: str):
         post_s3_event(
             action=action, bucket=authz_bucket, object_path=authz_prefix,
             username=username, user_id=user_id, file_size=file_size,
+            zone=zone_for_bucket(authz_bucket),
         )
     if action in ["s3:DeleteObjects"] and response.status_code in [200, 204]:
         post_s3_event(
             action=action, bucket=authz_bucket, object_path=authz_prefix,
             username=username, user_id=user_id,
+            zone=zone_for_bucket(authz_bucket),
         )
         logger.info(f"Successfully proxied {action} for user {username} on {authz_bucket}/{authz_prefix}")
     return response
