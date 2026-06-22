@@ -31,6 +31,7 @@ export interface IResult {
   views: number;
   temporalCoverage?: { startDate: string, endDate: string }
   _showMore?: boolean; // Used to toggle 'show more...' button
+  _isClamped?: boolean; // True when the description is visually clamped
   _paginationToken: string;
 }
 

@@ -3,11 +3,17 @@
     class="cd-search-results text-body-1"
     :class="{ 'is-small': $vuetify.display.mdAndDown }"
   >
-    <div class="d-flex align-baseline">
+    <div class="d-flex align-baseline flex-wrap">
       <div class="text-h5 font-weight-bold mr-2">Discover</div>
-      <div class="text-medium-emphasis text-body-1 font-italic">
+      <div class="text-medium-emphasis text-body-1 font-italic mr-auto">
         Public resources shared with the community
       </div>
+      <a
+        href="https://help.hydroshare.org/discovering-resources/discovering-data-and-models-from-hydroshare-users/"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="text-body-2 w-100 w-sm-auto mt-1 mt-sm-0"
+      >Learn more about discovering data</a>
     </div>
     <v-divider class="mt-2 mb-6"></v-divider>
     <div class="d-md-block d-lg-flex">
@@ -198,7 +204,7 @@
                           <div class="flex-grow-1">
                             <!-- CREATORS -->
                             <div class="d-flex">
-                              <b class="flex-shrink-0">Creators</b>:
+                              <b class="flex-shrink-0">Author(s)</b>:
                               <p
                                 class="mb-2 ml-1"
                                 v-html="
@@ -252,10 +258,11 @@
                               stacked
                               class="pa-0 pb-4"
                               :border="0"
-                              ref="el"
+                              :ref="(el) => setBannerRef(el, item)"
                             >
                               <template v-slot:actions>
                                 <v-btn
+                                  v-if="item._isClamped || item._showMore"
                                   @click="item._showMore = !item._showMore"
                                   size="x-small"
                                   >{{
@@ -409,6 +416,7 @@ const sortOptions: SortOption[] = [
   { key: "creatorName", title: "First Author", order: "asc" },
   { key: "dateCreated", title: "Date Created", order: "asc" },
   { key: "lastModified", title: "Last Modified", order: "asc" },
+  { key: "datePublished", title: "Date Published", order: "desc" },
 ];
 
 @Component({
@@ -678,6 +686,18 @@ class CdSearchResults extends Vue {
     return Search.$state.results;
   }
 
+  public setBannerRef(el: any, item: IResult) {
+    if (el && !item._showMore) {
+      this.$nextTick(() => {
+        const bannerEl = el.$el || el;
+        const textEl = bannerEl.querySelector(".v-banner-text");
+        if (textEl) {
+          item._isClamped = textEl.scrollHeight > textEl.clientHeight;
+        }
+      });
+    }
+  }
+
   public get isSomeFilterActive() {
     return this.registeredFilters.some((f) => f.isActive());
   }
@@ -702,7 +722,9 @@ class CdSearchResults extends Vue {
     return params;
   }
 
-  /** Route query parameters with short keys. These are parameters needed to replicate a search. */
+  /** Route query parameters with short keys. These are parameters needed to replicate a search.
+   * Paremeter values are encoded using encodeURIComponent
+  */
   public get routeParams(): EnumDictionary<EnumShortParams, any> {
     let params: { [key: string]: string } = {
       [EnumShortParams.QUERY]: this.searchQuery,
@@ -720,47 +742,16 @@ class CdSearchResults extends Vue {
     return params as EnumDictionary<EnumShortParams, any>;
   }
 
-  // Handles received route parameters from HydroShare page
-  handleMessage(event) {
-    const parentOrigin = APP_ORIGIN;
-    if (event.origin !== parentOrigin) {
-      return;
-    }
-
-    if (event.data.parentSearch) {
-      const rawParams = event.data.parentSearch.substr(1, event.data.parentSearch.length).split('&')
-      const params = {}
-      rawParams.forEach(p => {
-        const tuple = p.split('=')
-        const key = tuple[0]
-        const val = tuple[1]
-        if (val != undefined) {
-          if (params[key]) {
-            if (typeof params[key] === 'object') {
-              params[key] = [...params[key], val]
-            }
-            else {
-              params[key] = [params[key], val]
-            }
-          }
-          else {
-            params[key] = val
-          }
-        }
-      })
-
-      this.router
-          .push({ name: "search", query: params })
-          .catch(sameRouteNavigationErrorHandler);
-    }
+  created() {
+    this._loadRouteParams();
+    this.sendRouteParams();
+    this._onSearch();
   }
 
-  created() {
-    window.addEventListener("message", this.handleMessage, false);
-    this._loadRouteParams();
+  sendRouteParams() {
+    // Some properties of routeParams are proxy objects. We need to deconstruct them so that `postMessage` can copy them.
+    const paramsCopy: {[key:string]: string} = { }
 
-    // Some properties of this.routeParams are proxy objects. We need to deconstruct them so that `postMessage` can copy them.
-    const paramsCopy = { }
     Object.entries(this.routeParams).forEach(([key, value]) => {
       if (value != undefined) {
         if (typeof value === 'object') {
@@ -773,8 +764,6 @@ class CdSearchResults extends Vue {
     })
 
     window.parent.postMessage({ childParams: paramsCopy }, APP_ORIGIN);
-
-    this._onSearch();
   }
 
   public onIntersect(_isIntersecting: boolean, entries: any[], _observer: any) {
@@ -812,8 +801,6 @@ class CdSearchResults extends Vue {
 
     try {
       this.logHistory();
-
-      
 
       // This will reload the component because the router-view in the App component has `:key="route.fullPath"`
       this.router

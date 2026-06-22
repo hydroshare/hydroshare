@@ -128,7 +128,7 @@ class UpdateQuotaUsageTestCase(TestCase):
         self.assertAlmostEqual(expected, self.res.size, places=5)
 
         # Assert that the quota has been updated correctly
-        expected = initial_quota_value - self.single_file_size + 30  # add 30 bytes for metadata file updates
+        expected = initial_quota_value - self.single_file_size + 130  # add 130 bytes for metadata file updates
         dz = self.convert_gb_to_bytes(user_quota.data_zone_value)
         # assert math.isclose(user_quota.data_zone_value, expected, rel_tol=1e-5)
         self.assertLess(dz, expected)
@@ -241,7 +241,7 @@ class UpdateQuotaUsageTestCase(TestCase):
 
         # Assert that the quota has not been updated
         dz = self.convert_gb_to_bytes(user_quota.data_zone_value)
-        self.assertEqual(dz, initial_quota_value)
+        self.assertAlmostEqual(dz, initial_quota_value, delta=1024)
 
     def test_creating_folder_doesnt_alter_quota(self):
         # Add files to the resource

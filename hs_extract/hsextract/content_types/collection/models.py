@@ -7,9 +7,11 @@ class FileSetMetadataObject(FolderMetadataObject):
     content_type = ContentType.FILE_SET
 
     def content_type_associated_media(self):
-        return [m for m in self.resource_associated_media
-                if m["contentUrl"].split(os.environ.get('AWS_S3_ENDPOINT_URL', ''))[1].strip("/").startswith(
-                    self.content_type_contents_path)]
+        return [
+            media_object
+            for media_object in self.iter_resource_associated_media()
+            if self.media_object_path(media_object).startswith(self.content_type_contents_path)
+        ]
 
     def extract_metadata(self):
         return {}

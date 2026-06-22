@@ -2,12 +2,12 @@
 
 {% if not resource_edit_mode %}
     {% if show_relations_section or belongs_to_collections %}
-        <div class="col-xs-12 content-block">
+        <div class="col-sm-12 content-block">
             <h3>Related Resources</h3>
         </div>
     {% endif %}
     {% if show_relations_section %}
-        <div class="col-xs-12 content-block">
+        <div class="col-sm-12 content-block">
             <table class="table hs-table info-table">
                 {% for relation in relations %}
                     {% if relation.type|lower != "haspart" and relation.type|lower != "ispartof" %}
@@ -23,7 +23,7 @@
         </div>
     {% endif %}
 {% else %}
-    <div class="col-xs-12 content-block">
+    <div class="col-sm-12 content-block">
         <br>
         <h3>Related Resources
             <a id="add-relation" class="btn btn-success btn-xs" data-toggle="modal" title="Add Relation
@@ -81,7 +81,7 @@ Click this button to add a relationship to another resource, external website, o
 {% endif %}
 
 {% if belongs_to_collections %}
-    <div class="col-xs-12 content-block">
+    <div class="col-sm-12 content-block">
         <legend>This resource belongs to the following collections:</legend>
         <table id="collected-by-table" class="table-hover table-striped resource-custom-table" width="100%">
             <thead>

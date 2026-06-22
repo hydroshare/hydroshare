@@ -1,7 +1,6 @@
 import json
 import tempfile
 
-from django.core.management import call_command
 from django.urls import reverse
 from rest_framework import status
 from unittest import skip
@@ -16,8 +15,8 @@ class TestDiscoverResourceDelete(HSRESTTestCase):
 
         self.temp_dir = tempfile.mkdtemp()
         self.resources_to_delete = []
-        # delete any existing records from haystack
-        call_command('clear_index', "--noinput")
+        # delete any existing records from search index
+        # call_command('clear_index', "--noinput")
 
         self.admin = hydroshare.create_account(
             'admin@gmail.com',
@@ -39,12 +38,12 @@ class TestDiscoverResourceDelete(HSRESTTestCase):
 
     def tearDown(self):
         super(TestDiscoverResourceDelete, self).tearDown()
-        # clean up haystack
-        call_command('clear_index', "--noinput")
+        # clean up search index
+        # call_command('clear_index', "--noinput")
 
     @skip("TODO: https://github.com/hydroshare/hydroshare/issues/5736")
     def test_discover_res_delete(self):
-        """Test that deleting user account cascades to remove resource from solr index
+        """Test that deleting user account cascades to remove resource from search index
         """
         response = self.client.get(reverse('discover-hsapi', kwargs={}))
         self.assertEqual(response.status_code, status.HTTP_200_OK)

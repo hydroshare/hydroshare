@@ -1,3 +1,5 @@
+import os
+
 from hsextract.content_types.models import ContentType, FileMetadataObject
 from hsextract.content_types.timeseries.utils import extract_metadata_csv, extract_metadata
 
@@ -7,10 +9,9 @@ class TimeSeriesMetadataObject(FileMetadataObject):
 
     @classmethod
     def _extensions(cls) -> list[str]:
+        # TODO: The use of csv here assumes that csv data has to be timeseries data.
+        # We probably need a separate CSV content type for non-timeseries csv data
         return [".csv", ".sqlite"]
-
-    def content_type_associated_media(self):
-        return [m for m in self.resource_associated_media if m["contentUrl"].endswith(self.file_object_path)]
 
     def extract_metadata(self):
         if self.file_object_path.endswith(".csv"):
@@ -18,3 +19,8 @@ class TimeSeriesMetadataObject(FileMetadataObject):
         else:
             metadata = extract_metadata(self.file_object_path)
         return metadata
+
+    @classmethod
+    def is_content_type(cls, file_object_path: str) -> bool:
+        _, extension = os.path.splitext(file_object_path.lower())
+        return extension in cls._extensions()
