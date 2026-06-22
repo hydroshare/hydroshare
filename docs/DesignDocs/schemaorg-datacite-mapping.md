@@ -28,7 +28,7 @@ The mapping below groups the fields by intent so the relationship is easier to f
 | Contributor | `contributor` | `contributor` | Contributor |
 | Alternate identifier | `identifier` | `identifier` | Alternate identifier |
 | Rights statement / license | `rights` | `license` | Rights / license |
-| Language | `language` | `inLanguage` | Language |
+| Language | hardcoded `"en-US"` | `inLanguage` | Language |
 | Funding | `fundingagency` | `funding` | Funding reference |
 | Publication state | resource access state | `creativeWorkStatus`, `isAccessibleForFree`, `datePublished`, `dateAccepted` | Publication / availability metadata |
 | Creation date | `cm.created` | `dateCreated` | Date (Created) |
@@ -154,9 +154,9 @@ See [MetaDIG FAIR Suite Comparison](metadig-fair-suite-comparison.md) for a chec
 
 ## What Changed In HydroShare
 
-The code changes that enabled the mapping were concentrated in two places:
+The code changes were in two files:
 
-- [hs_core/models.py](../../hs_core/models.py) defines the supported relation vocabulary and makes HydroShare relation terms available as first-class metadata elements.
-- [hs_core/templates/pages/baseresource.html](../../hs_core/templates/pages/baseresource.html) translates those stored values into schema.org JSON-LD, including creator, contributor, spatial coverage, temporal coverage, relations, rights, funding, and content URL fields.
+- [hs_core/templatetags/hydroshare_tags.py](../../hs_core/templatetags/hydroshare_tags.py) — added a `relation_values_json` template filter that extracts relation values by type from the cached metadata and returns them as a JSON array string. This filter is what makes the typed relation fields below possible without duplicating logic in the template.
+- [hs_core/templates/pages/baseresource.html](../../hs_core/templates/pages/baseresource.html) — extended the landing-page JSON-LD block with the new fields described in this document. The `about` block that previously emitted URL-valued geospatial relations as bare `Place` objects was also removed; those relations are now represented through the explicit named relation fields (`isPartOf`, `hasPart`, etc.) and the generic `citation` fallback.
 
-That separation is what allows HydroShare to keep an internal metadata model that is practical for the application while still emitting web-friendly schema.org markup with DataCite-aligned meaning.
+The relation vocabulary itself (`source`, `isVersionOf`, `isPartOf`, etc.) already existed in the HydroShare metadata model before this PR. No changes were made to `hs_core/models.py`.

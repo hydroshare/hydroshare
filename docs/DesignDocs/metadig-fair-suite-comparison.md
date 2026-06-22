@@ -15,7 +15,7 @@ The key point is that MetaDIG checks are written against EML-style metadata comp
 | `resource.landingPage.present` | `url`, `contentUrl`, `subjectOf` | Direct support for a landing page plus downloadable content |
 | `resource.license.present` | `license` | Direct mapping |
 | `resource.accessControlRules.present` | `creativeWorkStatus`, `isAccessibleForFree` | Partial overlap; HydroShare expresses publication/access state rather than the full EML access-control vocabulary |
-| `resource.publisher.present` / `resource.publisherIdentifier.present` | `publisher`, `provider`, `includedInDataCatalog` | This applies to published resources only; HydroShare can emit a stable publisher object with name `CUAHSI` and ROR `https://ror.org/04s2bx355` |
+| `resource.publisher.present` / `resource.publisherIdentifier.present` | `publisher`, `provider`, `includedInDataCatalog` | Implemented for published resources; the template emits a full `Organization` object with `@type`, `@id`, `name`, and `url` sourced dynamically from `cm.cached_metadata.publisher`. No explicit ROR identifier property is emitted — `@id` carries the publisher URL. `resource.publisherIdentifier.present` via a dedicated identifier field remains partial. |
 | `resource.distributionContact.present` / `resource.distributionContactIdentifier.present` | not fully represented in schema.org output | Treat this as the main person responsible for the content. Use an explicit contact record if it exists, otherwise use the first author record and its public profile fields |
 | `resource.spatialExtent.present` / `geographic.description.present` | `spatialCoverage.geo` | Direct overlap for point and box coverage; descriptive geographic text is partial |
 | `resource.temporalExtent.present` | `temporalCoverage` | Direct overlap |
@@ -49,7 +49,7 @@ The checks below are the best candidates for future HydroShare work because they
 | MetaDIG FAIR check | Why it is currently incomplete | Practical HydroShare implementation path |
 | --- | --- | --- |
 | `resource.distributionContact.present` / `resource.distributionContactIdentifier.present` | The landing page does not emit a dedicated `contactPoint` object today; contact data only exists through creator/profile metadata | Emit schema.org `contactPoint` from an explicit contact record when available, otherwise from the first creator profile, and populate `name`, `email`, `affiliation`, `identifier`, `url`, `telephone`, and `sameAs` |
-| `resource.publisher.present` / `resource.publisherIdentifier.present` | Publisher metadata is only emitted for published resources and is fixed to the CUAHSI publisher record | Emit a stable `publisher` object when `cm.raccess.published` is true, with `name: CUAHSI`, `url: https://www.cuahsi.org`, and the ROR `https://ror.org/04s2bx355` |
+| `resource.publisherIdentifier.present` | `publisher` is already emitted with `name` and `url`; no dedicated identifier property (e.g. ROR) is currently included | Add an explicit `identifier` or `sameAs` on the `publisher` object pointing to the ROR URL for CUAHSI |
 | `resource.methods.present` | Methods text is not exposed as a dedicated landing page field | No clear schema.org mapping exists in the current landing page model |
 | `provenance.trace.present` | The landing page has relations and dates, but not a structured provenance object | Build a provenance structure that captures the full lineage history using `source`, `isPartOf`, `hasPart`, version links, and publication dates |
 | `provenance.sourceEntity.present` | Source relationships exist as generic relations, but not as explicit provenance fields | Derive the schema.org `sourceEntity` tag from HydroShare relation metadata such as `source` or `isVersionOf`, and point it at the previous version or parent resource. If there is no earlier version or parent, leave `sourceEntity` absent |
@@ -115,7 +115,7 @@ The checks in the "Needs work" bucket can be implemented by using the metadata H
 | MetaDIG FAIR check | HydroShare metadata source | Suggested mapping approach |
 | --- | --- | --- |
 | `resource.creatorIdentifier.present` | creator records | Emit an `identifier` value for each creator when ORCID or another persistent identifier is available |
-| `resource.publisher.present` / `resource.publisherIdentifier.present` | `cm.cached_metadata.publisher` | Emit `publisher` only for published resources, using the CUAHSI name, website, and ROR identifier |
+| `resource.publisherIdentifier.present` | `cm.cached_metadata.publisher` | `resource.publisher.present` is already satisfied; add an explicit `identifier` or `sameAs` with the ROR URL to satisfy `resource.publisherIdentifier.present` |
 | `resource.distributionContact.present` / `resource.distributionContactIdentifier.present` | contact metadata or first author profile | Emit `contactPoint` from an explicit contact source when available; otherwise use the first creator profile and map its public contact fields |
 | `resource.methods.present` | resource methods / description metadata | No clear schema.org mapping exists in the current landing page model |
 | `provenance.trace.present` | relation metadata, version metadata, publication state | Build a provenance object that records the full lineage history from `source`, `isPartOf`, `hasPart`, version links, and publication dates. If the resource has no earlier version, `trace` can still be present as lineage context without a `sourceEntity` |
@@ -130,7 +130,7 @@ The checks in the "Needs work" bucket can be implemented by using the metadata H
 
 ### Suggested implementation order
 
-1. **Add creator and publisher identifiers first.** These are the easiest to wire because HydroShare already stores creator and publisher records, and the gain for FAIR validation is immediate.
+1. **Add creator identifiers first.** These are the easiest to wire because HydroShare already stores creator records, and the gain for FAIR validation is immediate. Publisher name and URL are already emitted; a dedicated publisher identifier (e.g. ROR) is the remaining gap.
 2. **Add contact metadata next.** `distributionContact` should become a `contactPoint` emitted from the explicit contact source or first creator profile.
 3. **Expose methods and provenance as structured landing-page fields.** HydroShare already has relations, publication state, and resource history that can be assembled into a provenance object.
 4. **Add entity-level identifiers, names, formats, and checksums.** This requires iterating over the resource’s files or aggregations, but it is still a focused metadata serialization task.
@@ -156,8 +156,6 @@ If the check depends on per-column semantics, units, measurement scale, or enume
 - `resource.distributionContact.present` / `resource.distributionContactIdentifier.present`
 
 These are the easiest to justify because they build on existing resource-level metadata and mostly need better serialization.
-
-`resource.publisher.present` / `resource.publisherIdentifier.present` should also be treated as a quick win for published resources because the publisher is fixed to CUAHSI and can be emitted with the ROR identifier.
 
 **Medium effort**
 
