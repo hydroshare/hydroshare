@@ -264,4 +264,3 @@ class TestFileBasedJSON(HSRESTTestCase):
         self.assertIsNotNone(temporal)
         self.assertEqual(temporal.value['start'], '2026-06-14')
         self.assertEqual(temporal.value['end'], '2026-06-16')
-        
