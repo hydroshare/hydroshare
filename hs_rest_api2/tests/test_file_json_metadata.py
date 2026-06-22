@@ -243,3 +243,25 @@ class TestFileBasedJSON(HSRESTTestCase):
         response = self.client.put(reverse("hsapi2:referenced_time_series_metadata_json",
                                            kwargs=kwargs), data=in_json, content_type='application/json')
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_period_coverage_date_format(self):
+        kwargs = {"pk": self.res.short_id}
+        in_json = {
+            "title": "abc",
+            "period_coverage": {
+                "start": "2026-06-14T00:00:00",
+                "end": "2026-06-16T00:00:00"
+            }
+        }
+        response = self.client.put(
+            reverse("hsapi2:resource_metadata_json", kwargs=kwargs),
+            data=in_json,
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        temporal = self.res.metadata.temporal_coverage
+        self.assertIsNotNone(temporal)
+        self.assertEqual(temporal.value['start'], '2026-06-14')
+        self.assertEqual(temporal.value['end'], '2026-06-16')
+
