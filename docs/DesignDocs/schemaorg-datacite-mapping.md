@@ -23,6 +23,7 @@ The mapping below groups the fields by intent so the relationship is easier to f
 | Title | `title` | `name` | Title |
 | Abstract | `abstract` | `description` | Description |
 | Keywords / subjects | subject list | `keywords` | Subject / keyword terms |
+| Resource type | `cm.cached_metadata.type` | `additionalType` | ResourceType |
 | Creator | `creator` | `creator` | Creator |
 | Contributor | `contributor` | `contributor` | Contributor |
 | Alternate identifier | `identifier` | `identifier` | Alternate identifier |
@@ -30,8 +31,12 @@ The mapping below groups the fields by intent so the relationship is easier to f
 | Language | `language` | `inLanguage` | Language |
 | Funding | `fundingagency` | `funding` | Funding reference |
 | Publication state | resource access state | `creativeWorkStatus`, `isAccessibleForFree`, `datePublished`, `dateAccepted` | Publication / availability metadata |
+| Creation date | `cm.created` | `dateCreated` | Date (Created) |
+| Modification date | `cm.last_updated` | `dateModified` | Date (Updated) |
+| File formats | `cm.metadata.formats.all` | `encodingFormat` | Format |
 | Download / bag URL | bag URL or resource URL | `contentUrl` | Landing/download link |
-| Schema version marker | n/a | `schemaVersion` | DataCite schema version reference |
+| Publisher | `cm.cached_metadata.publisher` | `publisher` (`Organization`) | Publisher; only emitted for published resources |
+| Schema version marker | n/a | `schemaVersion` | DataCite schema URI reference |
 | Provider / catalog | n/a | `provider`, `includedInDataCatalog` | Repository / catalog context |
 
 ## Proposed Distribution Contact Mapping
@@ -119,9 +124,23 @@ These fields are important for discovery and are exposed on the landing page eve
 
 | HydroShare concept | schema.org field | Notes |
 | --- | --- | --- |
-| Point coverage | `spatialCoverage.geo` with `GeoCoordinates` | Uses latitude and longitude |
-| Box coverage | `spatialCoverage.geo` with `GeoShape` | Uses the bounding box |
+| Point coverage | `spatialCoverage` → `Place` → `geo` with `GeoCoordinates` | Nested under a `Place` object; uses `latitude` and `longitude` |
+| Box coverage | `spatialCoverage` → `Place` → `geo` with `GeoShape` | Nested under a `Place` object; uses the bounding box as a space-separated `box` string in south west north east order |
 | Temporal coverage | `temporalCoverage` | Rendered as `start/end` in the landing page |
+
+The `geo` property is a sub-property of `spatialCoverage` and is not emitted as a top-level property. The correct structure is `spatialCoverage.geo`, not a bare `geo` at the Dataset root level.
+
+## Distribution Metadata
+
+The landing page emits two download-related objects that are not pure HydroShare metadata fields:
+
+| schema.org field | Source | Notes |
+| --- | --- | --- |
+| `subjectOf` | Dublin Core metadata XML endpoint | `DataDownload` pointing to `hsapi/resource/{id}/scimeta/` with `encodingFormat: application/rdf+xml` |
+| `distribution` | Bag download endpoint | `DataDownload` with `contentSize` (human-readable), `encodingFormat: application/zip`, `contentUrl`, and `dateModified` |
+| `distribution.identifier` | `cm.bag_checksum` | For published resources only: an MD5 `PropertyValue` using the bag checksum stored in `extra_data`; unpublished resources receive a bare URL identifier only |
+
+The `distribution.identifier` bag checksum is the only checksum exposed on the public landing page. Per-file checksums exist internally and via the REST API but are not included in the JSON-LD.
 
 ## Practical Takeaway
 
