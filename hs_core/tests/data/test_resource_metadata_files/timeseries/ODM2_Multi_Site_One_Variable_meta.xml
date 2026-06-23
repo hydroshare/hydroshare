@@ -221,7 +221,7 @@
     </hsterms:timeSeriesResult>
     <dc:coverage>
       <dcterms:period>
-        <rdf:value>start=2008-01-01T00:00:00; end=2008-01-30T23:30:00</rdf:value>
+        <rdf:value>start=2008-01-01T00:00:00; end=2008-01-30T00:00:00</rdf:value>
       </dcterms:period>
     </dc:coverage>
     <dc:rights>
