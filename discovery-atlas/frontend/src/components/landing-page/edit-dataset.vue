@@ -1,5 +1,16 @@
 <template>
   <v-container>
+    <div class="d-flex align-center gap-2">
+      <v-btn
+        variant="text"
+        size="small"
+        prepend-icon="mdi-arrow-left"
+        @click="$router.push({ name: 'landing', params: { resourceId } })"
+      >
+        Back
+      </v-btn>
+      <v-spacer></v-spacer>
+    </div>
     <div class="d-flex gap-1">
       <div class="text-h5">Edit Resource</div>
       <v-spacer></v-spacer>
@@ -59,17 +70,20 @@
         <template #prepend>
           <span />
         </template>
+        <template #drop-area>
+          <HsUppy
+            ref="hsUppyRef"
+            :s3Info="s3Info"
+            :s3Host="s3Host"
+            :accessKey="accessKey"
+            :secretKey="secretKey"
+            :fileExplorer="fileExplorer"
+            :upload-prefix="`${resourceId}/data/contents/`"
+            @file-uploaded="onUppyFileUploaded"
+          />
+        </template>
       </cz-file-explorer>
-      <HsUppy
-        v-if="wasLoaded && !isLoadingFiles"
-        ref="hsUppyRef"
-        :s3Info="s3Info"
-        :s3Host="s3Host"
-        :accessKey="accessKey"
-        :secretKey="secretKey"
-        :fileExplorer="fileExplorer"
-      />
-      <v-skeleton-loader class="mb-12" v-else type="card"></v-skeleton-loader>
+      <v-skeleton-loader v-else class="mb-12" type="card"></v-skeleton-loader>
 
       <v-skeleton-loader
         v-if="isFetchingMetadata"
@@ -194,12 +208,25 @@ class App extends Vue {
     return User.$state.isLoggedIn;
   }
 
+  // Env vars take priority over User.$state.credentials so the dev MinIO
+  // service-account keys win over per-user keys (which may not have write
+  // access to the resource's bucket). Mirrors the env-first logic in
+  // landing-page.vue's startS3Client. Per-user creds still apply in prod
+  // where VITE_MINIO_* is empty.
   protected get accessKey(): string {
-    return User.$state.credentials.accessKey;
+    return (
+      import.meta.env.VITE_MINIO_ACCESS_KEY ||
+      User.$state.credentials.accessKey ||
+      ""
+    );
   }
 
   protected get secretKey(): string {
-    return User.$state.credentials.secretKey;
+    return (
+      import.meta.env.VITE_MINIO_SECRET_KEY ||
+      User.$state.credentials.secretKey ||
+      ""
+    );
   }
 
   schema!: any;
@@ -261,13 +288,17 @@ class App extends Vue {
   };
 
   startS3Client() {
+    // Env vars take priority over User.$state.credentials so a stale
+    // persisted value (vuex-persistedstate caches the whole User state in
+    // localStorage) can't shadow the explicit dev/prod minio creds set in
+    // .env.{development,production}. Mirrors landing-page.vue.
     const accessKeyId =
-      User.$state.credentials.accessKey ||
       import.meta.env.VITE_MINIO_ACCESS_KEY ||
+      User.$state.credentials.accessKey ||
       "";
     const secretAccessKey =
-      User.$state.credentials.secretKey ||
       import.meta.env.VITE_MINIO_SECRET_KEY ||
+      User.$state.credentials.secretKey ||
       "";
     this.s3Client = new S3Client({
       region: "us-central-2",
@@ -354,6 +385,49 @@ class App extends Vue {
     }
     this.isFetchingMetadata = false;
     this.isLoadingFiles = false;
+  }
+
+  /**
+   * HsUppy emits this once per successfully uploaded file. We own the
+   * file-explorer ref directly (vs. HsUppy, which only sees it as a prop and
+   * can't react to its delayed binding) so we shape the item the same way
+   * readRootFolder does and push it into the right folder. Idempotent — skips
+   * if the name already exists in the target folder.
+   */
+  onUppyFileUploaded(file: any) {
+    if (!this.fileExplorer || !file) return;
+    const root = this.rootDirectory as any;
+    if (!root || !Array.isArray(root.children)) return;
+
+    const folderPath: string | null =
+      file?.meta?.existing_path_in_resource || null;
+    const targetFolder = this.findExplorerFolder(root, folderPath) || root;
+
+    if (targetFolder.children.some((c: any) => c.name === file.name)) return;
+    targetFolder.children.push({
+      name: file.name,
+      isUploaded: true,
+      file: null,
+      uploadedSize: file.size,
+      contentKey: file?.meta?.dynamic_key,
+    });
+  }
+
+  private findExplorerFolder(root: any, path: string | null): any | null {
+    if (!path) return root;
+    const parts = path.split("/").filter(Boolean);
+    let current = root;
+    for (const segment of parts) {
+      const next = (current.children || []).find(
+        (c: any) =>
+          c &&
+          c.name === segment &&
+          Object.prototype.hasOwnProperty.call(c, "children"),
+      );
+      if (!next) return null;
+      current = next;
+    }
+    return current;
   }
 
   // cz-form's array control calls .map() on the bound value, so any array
@@ -754,6 +828,12 @@ class App extends Vue {
   ): Promise<void> {
     const isFolder = Object.prototype.hasOwnProperty.call(item, "children");
 
+    // s3Info.prefix is set to `<id>/.hsjsonld/` for metadata fetching — the
+    // file tree lives under `<id>/data/contents/`. Use the contents path
+    // explicitly so copy/head/list/delete operations target the actual
+    // objects (matches what deleteFileOrFolder already does).
+    const basePrefix = `${this.resourceId}/data/contents/`;
+
     // --- in-scope utils ---
     const normalizeRel = (p: string) => {
       let s = (p || "").trim();
@@ -821,7 +901,7 @@ class App extends Vue {
           await this.s3Client.send(
             new HeadObjectCommand({
               Bucket: this.s3Info.bucket,
-              Key: `${this.s3Info.prefix}${asFolder(candidate)}`,
+              Key: `${basePrefix}${asFolder(candidate)}`,
             }),
           );
           treatAsFolder = true;
@@ -838,8 +918,8 @@ class App extends Vue {
           : candidate;
     }
 
-    const oldKey = `${this.s3Info.prefix}${oldRel}`;
-    const newKey = `${this.s3Info.prefix}${newRel}`;
+    const oldKey = `${basePrefix}${oldRel}`;
+    const newKey = `${basePrefix}${newRel}`;
 
     // self / no-op guard
     if (sameRel(oldRel, newRel)) {
@@ -857,7 +937,7 @@ class App extends Vue {
       if (!isFolder) {
         const { parent: destParent } = splitParentBase(newRel, false);
         if (destParent) {
-          const destFolderKey = `${this.s3Info.prefix}${asFolder(destParent)}`;
+          const destFolderKey = `${basePrefix}${asFolder(destParent)}`;
           try {
             await this.s3Client.send(
               new HeadObjectCommand({
@@ -948,7 +1028,7 @@ class App extends Vue {
       const cleanupEmptyAncestors = async (startParentRel: string) => {
         let cur = startParentRel;
         while (cur) {
-          const markerKey = `${this.s3Info.prefix}${asFolder(cur)}`;
+          const markerKey = `${basePrefix}${asFolder(cur)}`;
           const probe = await this.s3Client.send(
             new ListObjectsV2Command({
               Bucket: this.s3Info.bucket,

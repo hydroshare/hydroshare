@@ -329,6 +329,21 @@ services:
       COMPANION_GOOGLE_SECRET: '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'
       # https://uppy.io/docs/companion/#enablegooglepickerendpoint-companion_enable_google_picker_endpoint
       COMPANION_ENABLE_GOOGLE_PICKER_ENDPOINT: 'true'
+      # S3 backend (local MinIO). Without these, Companion returns 404 for
+      # /companion/s3/params and /companion/s3/multipart instead of registering
+      # the endpoints, and Uppy's AwsS3 plugin reports "Failed to upload".
+      # The metadata.bucket_name / metadata.dynamic_key sent by the client
+      # override the defaults at upload time.
+      COMPANION_AWS_KEY: 'cuahsi'
+      COMPANION_AWS_SECRET: 'devpassword'
+      COMPANION_AWS_REGION: 'us-east-1'
+      COMPANION_AWS_BUCKET: 'asdf'
+      # MUST be browser-reachable. Companion bakes this URL into the signed
+      # POST URL it returns; the browser then PUTs/POSTs there directly. The
+      # docker-internal name `minio` doesn't resolve in the browser, so we
+      # use the host-port mapping (minio is exposed at host port 9000).
+      COMPANION_AWS_ENDPOINT: 'http://localhost:9000'
+      COMPANION_AWS_FORCE_PATH_STYLE: 'true'
     ports:
       - "3020:3020"
     volumes:

@@ -6,6 +6,108 @@
     ></v-skeleton-loader>
 
     <template v-if="!isFetchingMetadata && wasLoaded">
+      <!-- Legacy landing-page warnings/notifications. Each Django session-driven
+           value (just_created / just_copied) plus resource-state checks
+           (missing metadata, replaced/version-of, review/published) gets its
+           own dismissable alert above the title. -->
+      <div v-if="showNewVersionAlert" class="mb-4">
+        <v-alert
+          type="success"
+          variant="tonal"
+          closable
+          @click:close="dismissedAlerts.newVersion = true"
+        >
+          <strong>Congratulations!</strong>
+          Your new version has been created. A link to the older version has
+          been added below the resource title. To modify this new version or
+          change the sharing status, click the Edit button. Note that this new
+          version is created as a private resource by default — if you want it
+          to be discoverable, you need to make it public, discoverable, or
+          published.
+        </v-alert>
+      </div>
+
+      <div v-if="showCopyAlert" class="mb-4">
+        <v-alert
+          type="success"
+          variant="tonal"
+          closable
+          @click:close="dismissedAlerts.copy = true"
+        >
+          <strong>Congratulations!</strong>
+          Your new copy of the resource has been created. A <em>Derived From</em>
+          source metadata element has been added to this resource in the
+          Related Resources section below that links to the original resource.
+          Please respect the terms of the license of the original resource and
+          recognize the original authors as appropriate. Note that this copy is
+          created as a private resource by default.
+        </v-alert>
+      </div>
+
+      <div v-if="showMissingMetadataAlert" class="mb-4">
+        <v-alert
+          :type="alerts.justCreated ? 'success' : 'warning'"
+          variant="tonal"
+          closable
+          @click:close="dismissedAlerts.missing = true"
+        >
+          <div v-if="alerts.justCreated">
+            This is the landing page for the {{ alerts.displayName || "resource" }}
+            you just created. Add files in the content area below and enter
+            metadata where needed.
+          </div>
+          <div v-if="alerts.missingMetadata && alerts.missingMetadata.length" class="mt-2">
+            We recommend following these minimum metadata requirements before
+            making your {{ alerts.displayName || "resource" }} public or
+            discoverable:
+            <ul class="ml-4 mt-1">
+              <li v-for="el in alerts.missingMetadata" :key="el">{{ el }}</li>
+              <li v-if="alerts.isUntitled">Title: needs to be changed</li>
+              <li v-for="el in alerts.recommendedMissing || []" :key="`r-${el}`">
+                {{ el }}
+              </li>
+            </ul>
+          </div>
+          <div v-if="alerts.hasRequiredContentFiles === false" class="mt-2">
+            You must
+            <template v-if="alerts.missingMetadata && alerts.missingMetadata.length">
+              also
+            </template>
+            add content files to your {{ alerts.displayName || "resource" }}
+            before it can be published, public, or discoverable.
+          </div>
+        </v-alert>
+      </div>
+
+      <div v-if="showReplacedByAlert" class="mb-4">
+        <v-alert
+          type="info"
+          variant="tonal"
+          closable
+          @click:close="dismissedAlerts.replacedBy = true"
+        >
+          A newer version of this resource
+          <a :href="alerts.isReplacedBy || undefined" target="_blank" rel="noopener">
+            is available
+          </a>
+          that replaces this version.
+        </v-alert>
+      </div>
+
+      <div v-if="showVersionOfAlert" class="mb-4">
+        <v-alert
+          type="info"
+          variant="tonal"
+          closable
+          @click:close="dismissedAlerts.versionOf = true"
+        >
+          An older version of this resource
+          <a :href="alerts.isVersionOf || undefined" target="_blank" rel="noopener">
+            is available
+          </a>.
+        </v-alert>
+      </div>
+
       <div id="overview" class="resource-header mb-6">
         <h1 class="text-h5 font-weight-bold mb-3">
           {{ data.name }}
@@ -264,6 +366,7 @@
               :is-read-only="true"
               :has-file-metadata="() => true"
               :canDownloadItem="() => true"
+              :load-file-preview="(item) => loadFilePreview(item)"
               @download="
                 onFileDownload($event, resourceId, s3Client, s3Info.bucket)
               "
@@ -819,6 +922,25 @@ class LandingPage extends Vue {
   uischema!: any;
   onFileDownload = onFileDownload;
 
+  /**
+   * Fetches a Blob for cz-file-explorer's preview dialog. The dialog passes
+   * the explorer-annotated `item` (with `path` already set by `onPreview` →
+   * `getPathString`). Must be a real method (not an arrow class field) so
+   * vue-facing-decorator's reactive-proxy wrapping doesn't shadow s3Client —
+   * the prop site in the template wraps it in an inline arrow to bind `this`.
+   */
+  async loadFilePreview(item: any): Promise<Blob> {
+    const key = `${this.resourceId}/data/contents/${item.path || item.name}`;
+    const result = await this.s3Client.send(
+      new GetObjectCommand({ Bucket: this.s3Info.bucket, Key: key }),
+    );
+    const bytes = await result.Body?.transformToByteArray();
+    if (!bytes) throw new Error("Empty response from S3");
+    return new Blob([bytes], {
+      type: result.ContentType || "application/octet-stream",
+    });
+  }
+
   data: Record<string, any> = {};
   owners: any[] = [];
   creatorProfiles: Array<{
@@ -828,6 +950,20 @@ class LandingPage extends Vue {
     relative_uri?: string | null;
     identifiers?: Record<string, string> | null;
   }> = [];
+  alerts: {
+    justCreated?: boolean;
+    justCopied?: boolean;
+    missingMetadata?: string[];
+    recommendedMissing?: string[];
+    hasRequiredContentFiles?: boolean;
+    isUntitled?: boolean;
+    isReplacedBy?: string | null;
+    isVersionOf?: string | null;
+    reviewPending?: boolean;
+    isPublished?: boolean;
+    displayName?: string;
+  } = {};
+  dismissedAlerts: Record<string, boolean> = {};
   private onParentMessage = (event: MessageEvent) => {
     // atlas.html in the parent posts `{ parentSearch, owners }` after the
     // iframe loads. Owners are injected from the Django view because they
@@ -887,13 +1023,18 @@ class LandingPage extends Vue {
   };
 
   async startS3Client() {
+    // Env vars take priority over User.$state.credentials so a stale
+    // persisted value (vuex-persistedstate caches the whole User state in
+    // localStorage) can't shadow the explicit dev/prod minio creds set in
+    // .env.{development,production}. Per-user creds from
+    // getOrCreateS3Credentials still apply when the env vars are absent.
     const accessKeyId =
-      User.$state.credentials.accessKey ||
       import.meta.env.VITE_MINIO_ACCESS_KEY ||
+      User.$state.credentials.accessKey ||
       "";
     const secretAccessKey =
-      User.$state.credentials.secretKey ||
       import.meta.env.VITE_MINIO_SECRET_KEY ||
+      User.$state.credentials.secretKey ||
       "";
     this.s3Client = new S3Client({
       region: "us-central-2",
@@ -996,6 +1137,44 @@ class LandingPage extends Vue {
     }
   }
 
+  get showNewVersionAlert(): boolean {
+    return Boolean(
+      !this.dismissedAlerts.newVersion &&
+        this.alerts.justCreated &&
+        this.alerts.isVersionOf,
+    );
+  }
+
+  get showCopyAlert(): boolean {
+    return Boolean(
+      !this.dismissedAlerts.copy &&
+        this.alerts.justCreated &&
+        this.alerts.justCopied,
+    );
+  }
+
+  get showMissingMetadataAlert(): boolean {
+    if (this.dismissedAlerts.missing) return false;
+    const hasMissing = (this.alerts.missingMetadata || []).length > 0;
+    const noFiles = this.alerts.hasRequiredContentFiles === false;
+    return Boolean(hasMissing || this.alerts.isUntitled || noFiles);
+  }
+
+  get showReplacedByAlert(): boolean {
+    return Boolean(!this.dismissedAlerts.replacedBy && this.alerts.isReplacedBy);
+  }
+
+  get showVersionOfAlert(): boolean {
+    // Only show the "older version exists" pointer when we're NOT also showing
+    // the just-created-new-version banner (which already explains the
+    // relationship and would otherwise duplicate the message).
+    return Boolean(
+      !this.dismissedAlerts.versionOf &&
+        this.alerts.isVersionOf &&
+        !this.alerts.justCreated,
+    );
+  }
+
   get hasSpatialFeatures(): boolean {
     // `spatialCoverage` is schema.org Place; the actual geometry lives on
     // `.geo` and carries the GeoShape / GeoCoordinates type.
@@ -1092,6 +1271,9 @@ class LandingPage extends Vue {
         }
         if (Array.isArray(parentWin.HS_RESOURCE_CREATOR_PROFILES)) {
           this.creatorProfiles = parentWin.HS_RESOURCE_CREATOR_PROFILES;
+        }
+        if (parentWin.HS_RESOURCE_ALERTS && typeof parentWin.HS_RESOURCE_ALERTS === "object") {
+          this.alerts = parentWin.HS_RESOURCE_ALERTS;
         }
       }
     } catch {

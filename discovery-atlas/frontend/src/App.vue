@@ -43,6 +43,14 @@ export default toNative(App);
   gap: 1.5rem;
 }
 
+// Tighten the TOC ↔ content gap on smaller laptops so the saved space goes to
+// the content area, not the gutter.
+@media (max-width: 1439px) {
+  .app-shell {
+    gap: 1rem;
+  }
+}
+
 .app-content {
   flex: 1 1 auto;
   min-width: 0;

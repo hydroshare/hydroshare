@@ -5,6 +5,7 @@ from django.views.generic import TemplateView
 class AtlasSearchView(TemplateView):
 
     def get(self, request, *args, **kwargs):
+        target_origin = request.scheme + "://" + request.get_host()
         iframe_src = target_origin + "/discover/"
         if request.META.get('QUERY_STRING'):
             iframe_src += "?" + request.META['QUERY_STRING']
@@ -18,6 +19,7 @@ class AtlasLandingView(TemplateView):
         import json
         from hs_core.hydroshare.utils import get_resource_by_shortkey
         from hs_core.models import get_access_object
+        from hs_core.enums import RelationTypes
 
         target_origin = request.scheme + "://" + request.get_host()
         shortkey = kwargs.get('shortkey', '')
@@ -28,6 +30,53 @@ class AtlasLandingView(TemplateView):
         # the visit is recorded.
         resource = get_resource_by_shortkey(shortkey)
         resource.update_view_count()
+
+        # Pop just_created / just_copied from the session, mirroring the legacy
+        # page processor — these are set by the create/copy/new-version flows
+        # and must be consumed on first read so they don't reappear on later
+        # visits to the same resource.
+        just_created = bool(request.session.pop('just_created', False)) if request else False
+        just_copied = bool(request.session.pop('just_copied', False)) if request else False
+
+        title_value = resource.metadata.title.value if resource.metadata.title else ""
+        try:
+            missing_metadata = list(
+                resource.metadata.get_required_missing_elements()
+            )
+        except Exception:
+            missing_metadata = []
+        try:
+            recommended_missing = list(
+                resource.metadata.get_recommended_missing_elements()
+            )
+        except Exception:
+            recommended_missing = []
+        try:
+            has_required_content_files = bool(resource.has_required_content_files)
+        except Exception:
+            has_required_content_files = True
+        try:
+            is_replaced_by = resource.get_relation_version_res_url(RelationTypes.isReplacedBy) or None
+        except Exception:
+            is_replaced_by = None
+        try:
+            is_version_of = resource.get_relation_version_res_url(RelationTypes.isVersionOf) or None
+        except Exception:
+            is_version_of = None
+
+        alerts = {
+            "justCreated": just_created,
+            "justCopied": just_copied,
+            "missingMetadata": missing_metadata,
+            "recommendedMissing": recommended_missing,
+            "hasRequiredContentFiles": has_required_content_files,
+            "isUntitled": (title_value or "").strip().lower() == "untitled resource",
+            "isReplacedBy": is_replaced_by,
+            "isVersionOf": is_version_of,
+            "reviewPending": bool(resource.raccess.review_pending),
+            "isPublished": bool(resource.raccess.published),
+            "displayName": (resource.display_name or resource.resource_type or "resource").lower(),
+        }
 
         # Build the owners payload the same shape the legacy left-header
         # template feeds to its Vue widget (USERS_JSON). The iframe-hosted
@@ -62,244 +111,6 @@ class AtlasLandingView(TemplateView):
             "page_title": resource.metadata.title.value if resource.metadata.title else shortkey,
             "owners_json": json.dumps(owners),
             "creator_profiles_json": json.dumps(creator_profiles),
+            "alerts_json": json.dumps(alerts),
         }
         return render(request, 'hs_discover/atlas.html', context)
-
-
-class SearchAPI(APIView):
-
-    def __init__(self, **kwargs):
-        super(SearchAPI, self).__init__(**kwargs)
-        self.filterlimit = 20
-        self.perpage = 40
-
-    def get(self, request, *args, **kwargs):
-        """
-        Primary endpoint for retrieving resources via the index
-        Values should never be empty string or python None, instead return string "None" with str() call
-        "availability": list value, js will parse JSON as Array
-        "availabilityurl": single value, pass a string to REST client
-        "type": single value, pass a string to REST client
-        "author": single value, pass a string to REST client first author
-        "authors": list value, one for each author.
-        "creator: authors,
-                The reason for the weird name is the DataOne standard. The metadata was designed to be compliant
-                with DataOne standards. These standards do not contain an author field. Instead, the creator field
-                represents authors.
-        "contributor": list value, js will parse JSON as Array
-        "owner": list value, js will parse JSON as Array
-        "subject": list value, js will parse JSON as Array
-        "coverage_type": list point, period, ...
-        """
-        start = time.time()
-        sqs = SearchQuerySet().all()
-
-        if request.GET.get('q'):
-            q = request.GET.get('q')
-            parser = ParseSQ(handle_fields=True, handle_logic=True)
-            sq = parser.parse(q)
-            sqs = sqs.filter(sq)
-
-        try:
-            qs = request.query_params
-            filters = json.loads(qs.get('filter'))
-            # filter values expect lists, for example discoverapi/?filter={"owner":["Firstname Lastname"]}
-            if filters.get('author') and len(filters['author']) > 0:
-                for k, authortype in enumerate(filters['author']):
-                    if k == 0:
-                        phrase = SQ(author=Exact(authortype))
-                    else:
-                        phrase = phrase | SQ(author=Exact(authortype))
-                sqs = sqs.filter(phrase)
-
-            if filters.get('owner') and len(filters['owner']) > 0:
-                for k, ownertype in enumerate(filters['owner']):
-                    if k == 0:
-                        phrase = SQ(owner=Exact(ownertype))
-                    else:
-                        phrase = phrase | SQ(owner=Exact(ownertype))
-                sqs = sqs.filter(phrase)
-
-            if filters.get('subject') and len(filters['subject']) > 0:
-                for k, subjtype in enumerate(filters['subject']):
-                    if k == 0:
-                        phrase = SQ(subject=Exact(subjtype))
-                    else:
-                        phrase = phrase | SQ(subject=Exact(subjtype))
-                sqs = sqs.filter(phrase)
-
-            if filters.get('contributor') and len(filters['contributor']) > 0:
-                for k, contribtype in enumerate(filters['contributor']):
-                    if k == 0:
-                        phrase = SQ(contributor=Exact(contribtype))
-                    else:
-                        phrase = phrase | SQ(contributor=Exact(contribtype))
-                sqs = sqs.filter(phrase)
-
-            if filters.get('type') and len(filters['type']) > 0:
-                for k, restype in enumerate(filters['type']):
-                    if k == 0:
-                        phrase = SQ(content_type=Exact(restype))
-                    else:
-                        phrase = phrase | SQ(content_type=Exact(restype))
-                sqs = sqs.filter(phrase)
-
-            if filters.get('availability') and len(filters['availability']) > 0:
-                for k, availtype in enumerate(filters['availability']):
-                    if k == 0:
-                        phrase = SQ(availability=Exact(availtype))
-                    else:
-                        phrase = phrase | SQ(availability=Exact(availtype))
-                sqs = sqs.filter(phrase)
-
-            if filters.get('geofilter'):
-                sqs = sqs.filter(north__range=[-90, 90])  # return resources with geographic data
-
-            if filters.get('date'):
-                try:
-                    datefilter = DateRange(start=datetime.datetime.strptime(filters['date'][0], '%Y-%m-%d'),
-                                           end=datetime.datetime.strptime(filters['date'][1], '%Y-%m-%d'))
-
-                    # restrict to entries with dates
-                    sqs = sqs.filter(start_date__gt=datetime.datetime.strptime('1900-01-01', '%Y-%m-%d'))\
-                        .filter(end_date__lte=datetime.datetime.strptime(datetime.date.today().isoformat(), '%Y-%m-%d'))
-
-                    # filter out entries that don't fall in specified range
-                    sqs = sqs.exclude(start_date__gt=datefilter.end).exclude(end_date__lt=datefilter.start)
-
-                except ValueError as date_ex:
-                    return JsonResponse({'message': 'Filter date parsing error expecting String %Y-%m-%d : {}'
-                                        .format(str(date_ex)), 'received': request.query_params}, status=400)
-                except Exception as gen_date_ex:
-                    return JsonResponse({'message': 'Filter date parsing error expecting two date string values : {}'
-                                        .format(str(gen_date_ex)), 'received': request.query_params}, status=400)
-            # filter out old versions which are marked as replaced = True
-            sqs = sqs.filter(SQ(replaced=False))
-        except TypeError:
-            pass  # no filters passed "the JSON object must be str, bytes or bytearray not NoneType"
-
-        except json.JSONDecodeError as parse_ex:
-            return JsonResponse({'message': 'Filter JSON parsing error - {}'.format(str(parse_ex)),
-                                 'received': request.query_params}, status=400)
-
-        except Exception as gen_ex:
-            logger.warning('hs_discover API - {}: {}'.format(type(gen_ex), str(gen_ex)))
-            return JsonResponse({'message': '{}'.format('{}: query error. Contact a server administrator.'
-                                                        .format(type(gen_ex)))}, status=520)
-
-        filterdata = []
-        if request.GET.get('filterbuilder'):
-            authors = sqs.facet('author', limit=self.filterlimit).facet_counts()['fields']['author']
-            owners = sqs.facet('owner', limit=self.filterlimit).facet_counts()['fields']['owner']
-            subjects = sqs.facet('subject', limit=self.filterlimit).facet_counts()['fields']['subject']
-            contributors = sqs.facet('contributor', limit=self.filterlimit).facet_counts()['fields']['contributor']
-            types = sqs.facet('content_type', limit=self.filterlimit).facet_counts()['fields']['content_type']
-            availability = sqs.facet('availability', limit=self.filterlimit).facet_counts()['fields']['availability']
-            # TODO from Alva: to the best of my knowledge, this is invoked on every query and does absolutely nothing.
-            if request.GET.get('updatefilters'):
-                authors = [x for x in authors if x[1] > 0]
-                owners = [x for x in owners if x[1] > 0]
-                subjects = [x for x in subjects if x[1] > 0]
-                contributors = [x for x in contributors if x[1] > 0]
-                types = [x for x in types if x[1] > 0]
-                availability = [x for x in availability if x[1] > 0]
-            filterdata = [authors, owners, subjects, contributors, types, availability]
-
-        # Sort the resources by the requested field or default.
-        sort = 'modified'
-        if request.GET.get('sort'):
-            sort = request.GET.get('sort')
-            # protect against ludicrous sort orders
-            if sort != 'title' and sort != 'author' and sort != 'modified' and sort != 'created':
-                sort = 'modified'
-        asc = '-1'
-        if request.GET.get('asc'):
-            asc = request.GET.get('asc')
-
-        sort = sort if asc == '1' else '-{}'.format(sort)
-
-        sqs = sqs.order_by(sort)
-
-        resources = []
-
-        p = Paginator(sqs, self.perpage)
-
-        if request.GET.get('pnum'):
-            pnum = request.GET.get('pnum')
-            pnum = int(pnum)
-            pnum = min(pnum, p.num_pages)
-            if pnum < 1:
-                return JsonResponse({
-                    'resources': json.dumps([]),
-                    'geodata': json.dumps([]),
-                    'rescount': 0,
-                    'pagecount': 1,
-                    'perpage': self.perpage
-                }, status=200)
-        else:
-            pnum = 1  # page number not specified, implies page 1
-            pnum = min(pnum, p.num_pages)
-
-        geodata = []
-        for result in p.page(pnum):
-            contributor = 'None'  # contributor is actually a list and can have multiple values
-            owner = 'None'  # owner is actually a list and can have multiple values
-            author_link = None  # Send None to avoid anchor render
-            authors = result.creator  # SOLR list
-            author = result.author if result.author is not None else 'None'  # SOLR scalar
-            author_link = result.author_url if result.author_url is not None else 'None'  # SOLR scalar
-            contributor = result.contributor  # SOLR list
-            owner = result.owner[0] if result.owner else 'None'  # SOLR list
-
-            pt = ''  # pass empty string for the frontend to ensure the attribute exists but can be evaluated for empty
-            try:
-                if 'box' in result.coverage_type:
-                    pt = {'short_id': result.short_id, 'title': result.title, 'coverage_type': 'box'}
-                elif 'point' in result.coverage_type:
-                    pt = {'short_id': result.short_id, 'title': result.title, 'coverage_type': 'point'}
-
-                if isinstance(result.north, (int, float)):
-                    pt['north'] = result.north
-                if isinstance(result.east, (int, float)):
-                    pt['east'] = result.east
-                if isinstance(result.northlimit, (int, float)):
-                    pt['northlimit'] = result.northlimit
-                if isinstance(result.southlimit, (int, float)):
-                    pt['southlimit'] = result.southlimit
-                if isinstance(result.eastlimit, (int, float)):
-                    pt['eastlimit'] = result.eastlimit
-                if isinstance(result.westlimit, (int, float)):
-                    pt['westlimit'] = result.westlimit
-
-                geodata.append(pt)
-            except: # noqa
-                pass  # HydroShare production contains dirty data, this handling is in place, until data cleaned
-
-            resources.append({
-                "title": result.title,
-                "link": result.absolute_url,
-                "availability": result.availability,
-                "availabilityurl": f"{settings.STATIC_URL}img/{result.availability[0]}.png",
-                "type": result.resource_type,
-                "author": author,
-                "authors": authors,
-                "contributor": contributor,
-                "author_link": author_link,
-                "owner": owner,
-                "abstract": result.abstract,
-                "subject": result.subject,
-                "created": result.created.isoformat(),
-                "modified": result.modified.isoformat(),
-                "short_id": result.short_id,
-                "geo": pt
-            })
-
-        return JsonResponse({
-            'resources': json.dumps(resources),
-            'geodata': json.dumps(geodata),
-            'rescount': p.count,
-            'pagecount': p.num_pages,
-            'perpage': self.perpage,
-            'filterdata': json.dumps(filterdata),
-            'time': (time.time() - start) / 1000
-        }, status=200)

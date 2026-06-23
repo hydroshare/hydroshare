@@ -14,10 +14,11 @@
   "dependencies": {
     "@aws-crypto/sha256-js": "^5.2.0",
     "@aws-sdk/client-s3": "^3.1048.0",
+    "@aws-sdk/s3-request-presigner": "^3.1073.0",
     "@aws-sdk/signature-v4": "^3.370.0",
+    "@cznethub/cznet-vue-core": "^0.3.0",
     "@jsonforms/core": "^3.2.1",
     "@jsonforms/vue": "^3.2.1",
-    "@cznethub/cznet-vue-core": "^0.2.42",
     "@unhead/vue": "^2.1.12",
     "@uppy/aws-s3": "^5.1.0",
     "@uppy/core": "^5.2.0",

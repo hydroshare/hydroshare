@@ -18,6 +18,7 @@
   // iframe-load postMessage and the Vue component's listener registration).
   window.HS_RESOURCE_OWNERS = {{ owners_json|default:"null"|safe }};
   window.HS_RESOURCE_CREATOR_PROFILES = {{ creator_profiles_json|default:"null"|safe }};
+  window.HS_RESOURCE_ALERTS = {{ alerts_json|default:"null"|safe }};
 
   // Send the route params to the iframe when the HydroShare page loads
   iframe.addEventListener("load", () => {

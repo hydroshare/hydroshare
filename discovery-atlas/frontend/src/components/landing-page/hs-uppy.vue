@@ -1,6 +1,5 @@
 <template>
-  <div id="uppy"></div>
-  <v-btn id="uppy-button" @click.prevent>Upload files with Uppy</v-btn>
+  <div id="uppy" class="hs-uppy-dashboard"></div>
 </template>
 
 <script lang="ts">
@@ -13,6 +12,8 @@ import Dashboard from "@uppy/dashboard";
 import AwsS3 from "@uppy/aws-s3";
 import { SignatureV4 } from "@aws-sdk/signature-v4";
 import { Sha256 } from "@aws-crypto/sha256-js";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import {
   COMPANION_URL,
   GOOGLE_PICKER_CLIENT_ID,
@@ -29,6 +30,7 @@ let uppyInstance: Uppy | null = null;
   name: "hs-uppy",
   components: {},
   expose: ["getUppyInstance", "addFile", "upload"],
+  emits: ["file-uploaded"],
 })
 class HsUppy extends Vue {
   @Prop({
@@ -56,8 +58,25 @@ class HsUppy extends Vue {
   @Prop({ type: String, required: false, default: "" })
   sessionToken!: string;
 
-  @Prop({ type: CzFileExplorer, required: false, default: false })
-  fileExplorer!: InstanceType<typeof CzFileExplorer>;
+  /**
+   * S3 key prefix that user-uploaded files should land under (e.g.
+   * `<resourceId>/data/contents/`). This is intentionally different from
+   * `s3Info.prefix`, which the edit page sets to the metadata directory
+   * (`<resourceId>/.hsjsonld/`) for reading dataset_metadata.json. Without
+   * this prop the upload `dynamic_key` would point at the metadata path and
+   * files wouldn't appear when readRootFolder walks `data/contents/`.
+   */
+  @Prop({ type: String, required: false, default: "" })
+  uploadPrefix!: string;
+
+  // `default: null` (not `false`) — the parent `@Ref("fileExplorer")` is
+  // `undefined` until the explorer mounts, and HsUppy renders BEFORE that
+  // (it's now a slot child of cz-file-explorer). Falsy default + a non-Object
+  // value would trip Vue's prop validator with the boolean `false`. Allow
+  // both Object and null/undefined, since registerUploadedFile already
+  // guards against the falsy case at call time.
+  @Prop({ type: Object, required: false, default: null })
+  fileExplorer!: InstanceType<typeof CzFileExplorer> | null;
 
   @Watch("fileExplorer.selected")
   onFileSelect() {
@@ -89,6 +108,7 @@ class HsUppy extends Vue {
   getUppyInstance(): Uppy | null {
     return uppyInstance;
   }
+
 
   // Add files through the component
   addFile(fileData: any): string | null {
@@ -169,51 +189,78 @@ class HsUppy extends Vue {
       id: "uppy",
       autoProceed: true,
       onBeforeUpload: (files) => {
+        // Build the S3 key from `uploadPrefix` (e.g. `<id>/data/contents/`),
+        // any selected subfolder, and the filename. Falls back to s3Info.prefix
+        // only when uploadPrefix wasn't passed — preserves the old contract.
+        const basePrefix =
+          uppyComponent.uploadPrefix || uppyComponent.s3Info.prefix || "";
         Object.keys(files).forEach((fileId) => {
           const file = files[fileId];
-          console.log("adding metadata for", file.name);
-          console.log("s3Info:", uppyComponent.s3Info);
-          if (that.selectedFolder) {
-            console.log(
-              `selectedFolder is set, using it as prefix: ${that.selectedFolder}`,
-            );
-            file.meta.dynamic_key = file.meta.dynamic_key
-              ? file.meta.dynamic_key
-              : `${uppyComponent.s3Info.prefix}${that.selectedFolder}/${file.name}`;
-            console.log("file.meta.dynamic_key set to:", file.meta.dynamic_key);
-          }
-          if (file.meta.existing_path_in_resource) {
-            console.log(
-              "existing_path_in_resource is set, using it as prefix:",
-              file.meta.existing_path_in_resource,
-            );
-            file.meta.dynamic_key = file.meta.dynamic_key
-              ? file.meta.dynamic_key
-              : `${uppyComponent.s3Info.prefix}${file.meta.existing_path_in_resource}/${file.name}`;
-            console.log("file.meta.dynamic_key set to:", file.meta.dynamic_key);
-          }
           file.meta.bucket_name =
             file?.meta?.bucket_name || uppyComponent.s3Info.bucket;
-          file.meta.dynamic_key = file?.meta?.dynamic_key
-            ? file.meta.dynamic_key
-            : `${uppyComponent.s3Info.prefix}${file.name}`;
+          if (!file.meta.dynamic_key) {
+            const folder =
+              file.meta.existing_path_in_resource || that.selectedFolder || "";
+            const folderPart = folder ? `${folder.replace(/^\/+|\/+$/g, "")}/` : "";
+            file.meta.dynamic_key = `${basePrefix}${folderPart}${file.name}`;
+          }
+          console.log(
+            "Uppy upload key:",
+            file.meta.dynamic_key,
+            "bucket:",
+            file.meta.bucket_name,
+          );
         });
         return files;
       },
     }).use(Dashboard, {
-      inline: false,
+      inline: true,
       fileManagerSelectionType: "both",
       target: "#uppy",
       showProgressDetails: true,
-      trigger: "#uppy-button",
+      width: "100%",
+      height: 320,
       note: `TODO: quota?`,
     });
 
     uppyInstance
       .use(AwsS3, {
-        headers: headers,
-        allowedMetaFields: true,
-        endpoint: COMPANION_URL,
+        // Do NOT use Companion for signing here: companion generates a UUID
+        // S3 key (e.g. `92a92f6b-...-foo.txt`) and hardcodes it into the
+        // signature policy. Our `dynamic_key` then only lives in
+        // `x-amz-meta-dynamic_key`, not the actual object key, so files land
+        // at random root paths instead of `<resourceId>/data/contents/`.
+        // Sign client-side with the real key instead.
+        shouldUseMultipart: false,
+        getUploadParameters: async (file: any) => {
+          const s3 = new S3Client({
+            region: "us-east-1",
+            endpoint: that.s3Host,
+            forcePathStyle: true,
+            credentials: {
+              accessKeyId: that.accessKey,
+              secretAccessKey: that.secretKey,
+              sessionToken: that.sessionToken || undefined,
+            },
+          });
+          const url = await getSignedUrl(
+            s3,
+            new PutObjectCommand({
+              Bucket: file.meta.bucket_name || that.s3Info.bucket,
+              Key: file.meta.dynamic_key,
+              ContentType: file.type || "application/octet-stream",
+            }),
+            { expiresIn: 3600 },
+          );
+          return {
+            method: "PUT",
+            url,
+            fields: {},
+            headers: {
+              "Content-Type": file.type || "application/octet-stream",
+            },
+          };
+        },
       })
       .on("dashboard:modal-open", () => {
         // this is a hack to set the folder when the modal is opened
@@ -224,6 +271,13 @@ class HsUppy extends Vue {
           });
           console.log("Set dashboard folder state to:", that.selectedFolder);
         }
+      })
+      .on("upload-success", (file: any) => {
+        // Hand off to the parent (which owns the file-explorer ref directly).
+        // The `fileExplorer` prop passed in here doesn't reliably propagate
+        // as a reactive value through vue-facing-decorator, so accessing it
+        // from inside this Uppy handler is unsafe; an event side-steps that.
+        that.$emit("file-uploaded", file);
       })
       .on("error", (errorMessage) => {
         console.error("Uppy error:", errorMessage);

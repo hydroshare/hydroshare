@@ -91,6 +91,24 @@ export default toNative(Toc);
   padding-top: 0.5rem;
 }
 
+// Below 1440px (typical 13"/14" laptops at native scale), the 220px TOC plus
+// the shell gap is too greedy. Shrink the sidebar and the inner spacing.
+@media (max-width: 1439px) {
+  #app-toc {
+    width: 170px;
+    font-size: 0.875rem;
+  }
+}
+
+// Below 1100px, hide the TOC altogether — the content is too narrow for a
+// usable sidebar at that point. Users on small screens can still navigate via
+// browser-native page scroll.
+@media (max-width: 1099px) {
+  #app-toc {
+    display: none;
+  }
+}
+
 #app-toc ul {
   list-style-type: none;
   padding-left: 0;
