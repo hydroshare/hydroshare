@@ -320,30 +320,30 @@ services:
     restart: on-failure
     depends_on:
       - postgis
-  hs-s3-proxy:
-    image: hydroshare/hs-s3-proxy:latest
-    platform: linux/amd64
-    container_name: hs-s3-proxy
-    build:
-      context: ./hs_s3_proxy
-      dockerfile: Dockerfile
-    environment:
-      AUTH_SERVICE_URL: "http://hs-s3-auth"
-      AUTH_SERVICE_TIMEOUT: "5"
-      S3_BACKEND_URL: "http://minio:9000"
-      S3_BACKEND_ACCESS_KEY: "cuahsi"
-      S3_BACKEND_SECRET_KEY: "devpassword"
-      S3_BACKEND_REGION: "auto"
-      S3_PROXY_TIMEOUT: "300"
-    ports:
-      - 9002:9000
-    links:
-      - hs-s3-auth:hs-s3-auth
-      - minio:minio
-    restart: on-failure
-    depends_on:
-      - hs-s3-auth
-      - minio
+  #hs-s3-proxy:
+  #  image: hydroshare/hs-s3-proxy:latest
+  #  platform: linux/amd64
+  #  container_name: hs-s3-proxy
+  #  build:
+  #    context: ./hs_s3_proxy
+  #    dockerfile: Dockerfile
+  #  environment:
+  #    AUTH_SERVICE_URL: "http://hs-s3-auth"
+  #    AUTH_SERVICE_TIMEOUT: "5"
+  #    S3_BACKEND_URL: "http://minio:9000"
+  #    S3_BACKEND_ACCESS_KEY: "cuahsi"
+  #    S3_BACKEND_SECRET_KEY: "devpassword"
+  #    S3_BACKEND_REGION: "auto"
+  #    S3_PROXY_TIMEOUT: "300"
+  #  ports:
+  #    - 9002:9000
+  #  links:
+  #    - hs-s3-auth:hs-s3-auth
+  #    - minio:minio
+  #  restart: on-failure
+  #  depends_on:
+  #    - hs-s3-auth
+  #    - minio
   mongodb:
     image: mongodb/mongodb-atlas-local
     container_name: mongodb
