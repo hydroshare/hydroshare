@@ -2,7 +2,7 @@ import os
 import posixpath
 import logging
 import boto3
-import requests
+from celery import current_app as celery_app
 from datetime import datetime
 from datetime import timedelta
 from urllib.parse import urlencode
@@ -98,7 +98,7 @@ class S3Storage(s3.S3Storage):
                 config=self.client_config,
                 verify=self.verify,
             )
-            # self._register_mutation_hooks(resource, zone_config.aws_s3_endpoint_url)
+            self._register_mutation_hooks(resource, zone_config.aws_s3_endpoint_url)
             connection[zone] = resource
         self._connections.connection = connection
         return connection[zone]
@@ -147,8 +147,6 @@ class S3Storage(s3.S3Storage):
         events.register("after-call.s3.CompleteMultipartUpload", after_call)
 
     def _dispatch_s3_mutation_hook(self, action, bucket, object_path, status_code):
-        event_url = setting("S3_AUTH_EVENT_ENDPOINT", "http://hs-s3-auth/s3/event/")
-        timeout = float(setting("S3_AUTH_EVENT_TIMEOUT", 5))
         username = setting("S3_AUTH_EVENT_USERNAME", "cuahsi")
 
         payload = {
@@ -158,22 +156,35 @@ class S3Storage(s3.S3Storage):
             "username": username,
             "user_id": None,
             "file_size": 0,
+            "status_code": status_code,
         }
 
         try:
-            response = requests.post(event_url, json=payload, timeout=timeout)
-            if response.status_code not in (200, 204):
-                logger.error(
-                    "S3 event endpoint returned %s for action=%s bucket=%s object=%s: %s",
-                    response.status_code,
-                    action,
-                    bucket,
-                    object_path,
-                    response.text,
+            celery_app.send_task(
+                "hs_event_s3.tasks.process_s3_event",
+                kwargs=payload,
+                queue="s3_events",
+            )
+
+            # Dispatch discovery catalog sync when the jsonld metadata file changes
+            if object_path.endswith("/.hsjsonld/dataset_metadata.json"):
+                celery_app.send_task(
+                    "hs_event_s3.tasks.sync_discovery_collection",
+                    kwargs=payload,
+                    queue="s3_events",
                 )
-        except requests.RequestException:
+
+            # Dispatch metadata extraction for data file events
+            _path_lower = object_path.lower()
+            if not _path_lower.endswith(".hsjsonld/dataset_metadata.json"):
+                celery_app.send_task(
+                    "hs_extract.tasks.extract_metadata",
+                    kwargs=payload,
+                    queue="extract",
+                )
+        except Exception:
             logger.exception(
-                "S3 event endpoint request failed for action=%s bucket=%s object=%s",
+                "Failed to enqueue S3 event task for action=%s bucket=%s object=%s",
                 action,
                 bucket,
                 object_path,
