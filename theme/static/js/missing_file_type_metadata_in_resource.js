@@ -20,21 +20,8 @@ if (!checkingMissingMetadataDiv.length || !missingMetadataDiv.length || !SHORT_I
             let jsonResponse = JSON.parse(result);
             if (jsonResponse.status === "SUCCESS") {
                 if (jsonResponse.file_type_missing_metadata.length) {
-                    let alert = document.createElement("DIV");
-                    alert.className = "alert alert-warning alert-dismissible";
-                    alert.setAttribute("role", "alert");
-
-                    let closeBtn = document.createElement("BUTTON");
-                    closeBtn.type = "button";
-                    closeBtn.className = "close";
-                    closeBtn.setAttribute("data-dismiss", "alert");
-                    closeBtn.setAttribute("aria-label", "Close");
-                    closeBtn.innerHTML = '<span aria-hidden="true">&times;</span>';
-                    alert.appendChild(closeBtn);
-
-                    let introText = document.createElement("SPAN");
-                    introText.textContent = "The following content type metadata are still required to make this resource public or discoverable:";
-                    alert.appendChild(introText);
+                    let modalBody = missingMetadataDiv.find(".modal-body");
+                    modalBody.empty();
 
                     for (let i = 0; i < jsonResponse.file_type_missing_metadata.length; i++) {
                         let item = jsonResponse.file_type_missing_metadata[i];
@@ -51,25 +38,11 @@ if (!checkingMissingMetadataDiv.length || !missingMetadataDiv.length || !SHORT_I
 
                         outerLi.appendChild(innerUl);
                         outerUl.appendChild(outerLi);
-                        alert.appendChild(outerUl);
+                        modalBody.append(outerUl);
                     }
-
-                    if (RESOURCE_MODE !== "Edit") {
-                        let divider = document.createElement("HR");
-                        alert.appendChild(divider);
-
-                        let icon = document.createElement("SPAN");
-                        icon.className = "glyphicon glyphicon-question-sign";
-                        alert.appendChild(icon);
-
-                        let helpText = document.createElement("SMALL");
-                        helpText.innerHTML = ' Click on the edit button ( <span class="glyphicon glyphicon-pencil"></span> ) below to edit this resource.';
-                        alert.appendChild(helpText);
-                    }
-
-                    missingMetadataDiv.empty();
-                    missingMetadataDiv.append(alert);
                     missingMetadataDiv.show();
+                } else {
+                    missingMetadataDiv.hide();
                 }
             } else if (jsonResponse.status === "ERROR") {
                 console.log(jsonResponse.error);
