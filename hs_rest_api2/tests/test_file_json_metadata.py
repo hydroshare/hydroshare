@@ -255,7 +255,7 @@ class TestFileBasedJSON(HSRESTTestCase):
         }
         response = self.client.put(
             reverse("hsapi2:resource_metadata_json", kwargs=kwargs),
-            data=in_json,
+            data=json.dumps(in_json),
             content_type='application/json'
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
