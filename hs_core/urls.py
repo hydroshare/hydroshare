@@ -269,6 +269,11 @@ urlpatterns = [
         name="get_non_preferred_paths",
     ),
     re_path(
+        r"^_internal/(?P<shortkey>[0-9a-f-]+)/missing-file-type-metadata/$",
+        views.get_missing_file_type_metadata,
+        name="get_missing_file_type_metadata",
+    ),
+    re_path(
         r"^_internal/(?P<shortkey>[0-9a-f-]+)/manage-access-data/$",
         views.get_manage_access_data,
         name="get_manage_access_data",

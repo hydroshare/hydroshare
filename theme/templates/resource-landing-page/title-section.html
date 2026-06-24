@@ -126,36 +126,12 @@
     {% endwith %}
 {% endif %}
 
-{# ======= Missing file level metadata notification =======#}
+{# ======= Missing content type metadata notification =======#}
 {% if cm.resource_type == "CompositeResource" %}
-    {% if file_type_missing_metadata %}
-        <div class="col-sm-12">
-            <div id="missing-metadata-file-type" class="alert {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible" role="alert">
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
-                        aria-hidden="true">&times;</span></button>
-
-                <span>The following aggregation level metadata are still required to
-                      make this resource public or discoverable:</span>
-                {% for item in file_type_missing_metadata %}
-                    <ul>
-                        <li>Aggregation name: {{ item.file_path }}
-                            <ul>
-                                {% for element in item.missing_elements %}
-                                    <li>{{ element }}</li>
-                                {% endfor %}
-                            </ul>
-                        </li>
-                    </ul>
-                {% endfor %}
-
-                {% if not resource_edit_mode %}
-                    <hr>
-                    <span class="glyphicon glyphicon-question-sign"></span>
-                    <small> Click on the edit button ( <span class="glyphicon glyphicon-pencil"></span> ) below to edit this resource.</small>
-                {% endif %}
-            </div>
-        </div>
-    {% endif %}
+    <div id="checking-missing-metadata" class="col-sm-12">
+        <p class="alert alert-warning">Checking for missing content type metadata ...</p>
+    </div>
+    <div id="missing-metadata-file-type-container" class="col-sm-12"></div>
     <div id="checking-for-paths" class="col-sm-12">
         <p class="alert alert-warning">Checking for non-preferred file/folder path names (may take a long time depending on the number of files/folders) ...</p>
     </div>
@@ -416,6 +392,7 @@
     </style>
 
     {#        vue-mover uses Sortable.min.js#}
+    <script src="{% static 'js/missing_file_type_metadata_in_resource.js' %}"></script>
     <script src="{% static 'js/non_preferred_paths_in_resource.js' %}"></script>
     <script src="{% static 'js/aggregation_files_to_sync.js' %}"></script>
     <script src="{% static 'js/Sortable.min.js' %}"></script>
