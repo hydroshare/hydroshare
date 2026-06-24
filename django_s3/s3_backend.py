@@ -98,7 +98,7 @@ class S3Storage(s3.S3Storage):
                 config=self.client_config,
                 verify=self.verify,
             )
-            self._register_mutation_hooks(resource, zone_config.aws_s3_endpoint_url)
+            # self._register_mutation_hooks(resource, zone_config.aws_s3_endpoint_url)
             connection[zone] = resource
         self._connections.connection = connection
         return connection[zone]
