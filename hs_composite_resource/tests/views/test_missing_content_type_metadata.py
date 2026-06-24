@@ -22,7 +22,7 @@ class TestContentTypeMissingMetadataViewFunction(MockS3TestCaseMixin, CompositeR
             groups=[]
         )
         self.composite_resource = None
-    
+
     def tearDown(self):
         if self.composite_resource:
             self.composite_resource.delete()

@@ -2960,7 +2960,7 @@ def get_missing_file_type_metadata(request, shortkey):
     try:
         resource, _, _ = authorize(
             request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE
-        )    
+        )
     except NotFound as ex:
         data = {"status": "ERROR", "error": str(ex.detail)}
         return JsonResponse(data)
