@@ -28,7 +28,7 @@ router = APIRouter()
 logger = logging.getLogger("micro-auth")
 
 VIEW_ACTIONS = os.environ.get(
-    "S#_VIEW_ACTIONS",
+    "S3_VIEW_ACTIONS",
     "s3:GetObject,s3:ListObjects,s3:ListObjectsV2,s3:ListBucket,s3:GetObjectRetention,s3:GetObjectLegalHold",
 ).split(",")
 WRITE_ACTIONS = os.environ.get(

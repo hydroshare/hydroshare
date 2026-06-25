@@ -7,13 +7,12 @@ engine = create_engine(DATABASE_URL)
 
 
 def quota_is_exceeded(resource_id: int):
-    query = """SELECT (SELECT U0.exceeded
-                       FROM theme_userquota U0
-                       WHERE U0.user_id = (hs_core_genericresource.user_id) LIMIT 1) AS exceeded
-               FROM hs_core_genericresource
-               INNER JOIN pages_page
-               ON (hs_core_genericresource.page_ptr_id = pages_page.id)
-               WHERE hs_core_genericresource.short_id = :resource_id"""
+    query = """SELECT uq.exceeded
+    FROM hs_core_genericresource gr
+    JOIN theme_userquota uq
+        ON uq.user_id = gr.quota_holder_id
+    WHERE gr.short_id = :resource_id
+    LIMIT 1"""
 
     with engine.connect() as con:
         rs = con.execute(statement=text(query),
