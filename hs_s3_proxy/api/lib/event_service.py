@@ -37,7 +37,20 @@ _BUCKET_ZONE_MAP: dict[str, str] = _build_bucket_zone_map()
 
 
 def zone_for_bucket(bucket: str) -> str:
-    return _BUCKET_ZONE_MAP.get(bucket, "")
+    zone = (_BUCKET_ZONE_MAP.get(bucket) or "").strip()
+    if zone:
+        return zone
+
+    # Re-read configuration in case S3_ZONE_CONFIG was injected after import.
+    refreshed_map = _build_bucket_zone_map()
+    if refreshed_map != _BUCKET_ZONE_MAP:
+        _BUCKET_ZONE_MAP.clear()
+        _BUCKET_ZONE_MAP.update(refreshed_map)
+
+    zone = (_BUCKET_ZONE_MAP.get(bucket) or "").strip()
+    if zone:
+        return zone
+    return ""
 
 
 def post_s3_event(
@@ -63,8 +76,15 @@ def post_s3_event(
         "username": username,
         "user_id": user_id,
         "file_size": file_size,
-        "zone": zone or zone_for_bucket(bucket),
+        "zone": (zone or "").strip() or zone_for_bucket(bucket),
     }
+
+    if not payload["zone"]:
+        logger.warning(
+            "Unable to resolve zone for bucket=%s object=%s; sending event with empty zone",
+            bucket,
+            object_path,
+        )
 
     try:
         with httpx.Client(timeout=EVENT_SERVICE_TIMEOUT) as client:

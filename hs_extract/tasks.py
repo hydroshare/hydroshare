@@ -1,12 +1,13 @@
 import logging
 
 from hs_extract.celery_app import celery_app
+from hsextract.utils.s3 import get_configured_zones, resolve_zone
 
 logger = logging.getLogger("hs_extract")
 
 
 @celery_app.task(name="hs_extract.tasks.extract_metadata", bind=True, max_retries=3)
-def extract_metadata(self, action: str, bucket: str, object_path: str, file_size: int, zone: str):
+def extract_metadata(self, action: str, bucket: str, object_path: str, file_size: int, zone: str, **kwargs) -> None:
     """Extract metadata for a resource file following an S3 event.
 
     Args:
@@ -20,10 +21,26 @@ def extract_metadata(self, action: str, bucket: str, object_path: str, file_size
     key = f"{bucket}/{object_path}"
     file_updated = not action.startswith("s3:ObjectRemoved") and not action.startswith("s3:DeleteObject")
 
-    logger.info(f"extract_metadata: key={key}, file_updated={file_updated}, file_size={file_size}, zone={zone}")
+    resolved_zone = resolve_zone(zone)
+    if not resolved_zone:
+        logger.error(
+            "extract_metadata skipping key=%s due to empty/unknown zone '%s'. Available zones: %s",
+            key,
+            zone,
+            ", ".join(get_configured_zones()),
+        )
+        return
+
+    logger.info(
+        "extract_metadata: key=%s, file_updated=%s, file_size=%s, zone=%s",
+        key,
+        file_updated,
+        file_size,
+        resolved_zone,
+    )
 
     try:
-        _handle_extract_event(key, file_size, file_updated, zone)
+        _handle_extract_event(key, file_size, file_updated, resolved_zone)
     except Exception as exc:
         logger.error(f"extract_metadata failed for key={key}: {exc}", exc_info=True)
         raise self.retry(exc=exc, countdown=2 ** self.request.retries)

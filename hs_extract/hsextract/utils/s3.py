@@ -101,11 +101,26 @@ def refresh_s3_clients_from_env() -> None:
         _register_mutation_hooks(_client, zone)
 
 
+def resolve_zone(zone: str | None) -> str:
+    """Resolve an S3 zone, returning empty string if zone is empty or unknown."""
+    normalized_zone = (zone or "").strip()
+    if not normalized_zone:
+        return ""
+    if normalized_zone not in zone_s3_config:
+        return ""
+    return normalized_zone
+
+
+def get_configured_zones() -> list[str]:
+    return list(zone_s3_config.keys())
+
+
 def _get_s3_client(zone: str):
-    client = s3_clients.get(zone)
+    resolved_zone = resolve_zone(zone)
+    client = s3_clients.get(resolved_zone)
     if client is None:
         raise KeyError(
-            f"No S3 client configured for zone '{zone}'. "
+            f"No S3 client configured for zone '{resolved_zone}'. "
             f"Set {S3_ZONE_CONFIG_ENV_VAR} with this zone."
             f" Available zones: {', '.join(s3_clients.keys())}"
         )
@@ -117,10 +132,11 @@ def get_s3_client(zone: str):
 
 
 def get_public_endpoint_url(zone: str) -> str:
-    zone_config = zone_s3_config.get(zone)
+    resolved_zone = resolve_zone(zone)
+    zone_config = zone_s3_config.get(resolved_zone)
     if zone_config is None:
         raise KeyError(
-            f"No zone config found for zone '{zone}'. "
+            f"No zone config found for zone '{resolved_zone}'. "
             f"Set {S3_ZONE_CONFIG_ENV_VAR} with this zone."
             f" Available zones: {', '.join(zone_s3_config.keys())}"
         )

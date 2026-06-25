@@ -32,7 +32,7 @@ def _link_s3_file_to_resource(resource, short_path: str):
     max_retries=3,
     default_retry_delay=10,
 )
-def process_s3_event(self, action: str, bucket: str, object_path: str, username: str, user_id: int, zone: str):
+def process_s3_event(self, action: str, bucket: str, object_path: str, username: str, user_id: int, **kwargs):
     """Process a completed S3 write or delete event from hs-s3-proxy.
 
     Updates Django resource metadata to reflect the S3 change.
@@ -79,7 +79,7 @@ def process_s3_event(self, action: str, bucket: str, object_path: str, username:
     max_retries=3,
     default_retry_delay=10,
 )
-def sync_discovery_collection(self, action: str, bucket: str, object_path: str, zone: str):
+def sync_discovery_collection(self, action: str, bucket: str, object_path: str, **kwargs):
     """Sync the Atlas discovery catalog when dataset_metadata.json changes.
 
     Only fires for keys matching {resource_id}/.hsjsonld/dataset_metadata.json.
