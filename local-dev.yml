@@ -100,7 +100,6 @@ services:
       - postgis:postgis
       - redis:redis
       - minio:minio
-      - hs-s3-proxy:hs-s3-proxy
     depends_on:
       - postgis
       - pgbouncer

@@ -40,8 +40,8 @@ class MinIOServiceAccounts(APIView):
         if expiry_days <= 0:
             return None, Response({"detail": "expiry must be a positive integer (days)."},
                                   status=status.HTTP_400_BAD_REQUEST)
-
-        return timedelta(days=expiry_days), None
+        # add a couple seconds to ensure the created date is always less than the expiry date.
+        return timedelta(days=expiry_days, seconds=2), None
 
     @swagger_auto_schema(
         operation_description="Creates a service account with access key/secret for the user. "
