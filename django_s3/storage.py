@@ -140,6 +140,8 @@ class S3Storage(S3Storage):
                       transport_params={'client': self.connection(out_zone).meta.client}) as out_file:
                 with zipfile.ZipFile(out_file, 'w', zipfile.ZIP_DEFLATED) as zip_archive:
                     for in_name in in_names:
+                        # TODO: check if zip file location will always be in the same bucket as the output file.
+                        # If so, we do can save a database lookup for the output zone
                         in_bucket_name, in_zone = bucket_and_zone(in_name)
                         resource_id = in_name.split('/')[0]
                         in_bucket = self.connection(in_zone).Bucket(in_bucket_name)
@@ -281,10 +283,18 @@ class S3Storage(S3Storage):
         delete_src: delete the source file after copying when set to True. Default is False
         """
         src_bucket, src_zone = bucket_and_zone(src_path)
+        dst_bucket, dest_zone = bucket_and_zone(dest_path)
         bucket = self.connection(src_zone).Bucket(src_bucket)
 
         if self.isFile(src_path):
-            self._streaming_copy(src_path, dest_path)
+            self._streaming_copy(
+                src_path,
+                dest_path,
+                src_bucket=src_bucket,
+                src_zone=src_zone,
+                dst_bucket=dst_bucket,
+                dest_zone=dest_zone,
+            )
 
             if delete_src:
                 self.connection(src_zone).Object(src_bucket, src_path).delete()
@@ -293,7 +303,14 @@ class S3Storage(S3Storage):
             for file in bucket.objects.filter(Prefix=src_path):
                 src_file_path = file.key
                 dst_file_path = file.key.replace(src_path, dest_path)
-                self._streaming_copy(src_file_path, dst_file_path)
+                self._streaming_copy(
+                    src_file_path,
+                    dst_file_path,
+                    src_bucket=src_bucket,
+                    src_zone=src_zone,
+                    dst_bucket=dst_bucket,
+                    dest_zone=dest_zone,
+                )
                 if delete_src:
                     self.connection(src_zone).Object(src_bucket, src_file_path).delete()
 
@@ -403,20 +420,33 @@ class S3Storage(S3Storage):
             # TODO check if something went wrong vs not found
             return False
 
-    def _streaming_copy(self, src_path, dest_path):
+    def _streaming_copy(
+        self,
+        src_path,
+        dest_path,
+        src_bucket,
+        src_zone,
+        dst_bucket,
+        dest_zone,
+    ):
         """
-        Stream a file from src_path (src_zone) to dest_path (dest_zone) without loading into memory.
-        This is useful for copying between different S3 endpoints or zones where copy_object is not supported.
+        Copy an object from src_path to dest_path.
+
+        When source and destination are in the same zone, this uses server-side copy_object.
+        When zones differ, it falls back to streaming upload_fileobj to support cross-endpoint copies.
         """
-        src_bucket, src_zone = bucket_and_zone(src_path)
-        dst_bucket, dest_zone = bucket_and_zone(dest_path)
-
-        src_obj = self.connection(src_zone).Object(src_bucket, src_path)
-        dst_bucket_obj = self.connection(dest_zone).Bucket(dst_bucket)
-
         try:
-            with src_obj.get()['Body'] as body:
-                dst_bucket_obj.upload_fileobj(body, dest_path)
+            if src_zone == dest_zone:
+                self.connection(src_zone).meta.client.copy_object(
+                    Bucket=dst_bucket,
+                    Key=dest_path,
+                    CopySource={"Bucket": src_bucket, "Key": src_path},
+                )
+            else:
+                src_obj = self.connection(src_zone).Object(src_bucket, src_path)
+                dst_bucket_obj = self.connection(dest_zone).Bucket(dst_bucket)
+                with src_obj.get()['Body'] as body:
+                    dst_bucket_obj.upload_fileobj(body, dest_path)
         except ClientError as e:
             if "XMinioAdminBucketQuotaExceeded" in str(e):
                 raise QuotaException(

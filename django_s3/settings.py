@@ -13,7 +13,7 @@ class ZoneConfig(BaseModel):
     bucket_name: str
 
 
-class SettingsConfig(BaseModel):
+class ZonesConfig(BaseModel):
     resource_s3_zones_config: Dict[str, ZoneConfig] = {}
     resource_s3_default_zone: str = "hydroshare"
 
@@ -41,8 +41,8 @@ def get_zone_config(zone_name: str) -> ZoneConfig:
 
 
 @lru_cache(maxsize=None)
-def get_resource_s3_zones_config() -> SettingsConfig:
-    return SettingsConfig(
+def get_resource_s3_zones_config() -> ZonesConfig:
+    return ZonesConfig(
         resource_s3_zones_config={
             zone: ZoneConfig(**config)
             for zone, config in getattr(django_settings, "RESOURCE_S3_ZONES_CONFIG", {}).items()
