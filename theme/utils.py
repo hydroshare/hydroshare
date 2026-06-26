@@ -47,9 +47,9 @@ def get_quota_message(user):
     soft_limit = qmsg.soft_limit_percent
     return_msg = ''
     for uq in user.quotas.all():
-        percent = uq.used_value * 100.0 / uq.allocated_value
+        percent = uq.data_zone_value * 100.0 / uq.allocated_value
         rounded_percent = round(percent, 2)
-        rounded_used_val = round(uq.used_value, 4)
+        rounded_used_val = round(uq.data_zone_value, 4)
 
         if percent >= 100:
             # return quota enforcement message
