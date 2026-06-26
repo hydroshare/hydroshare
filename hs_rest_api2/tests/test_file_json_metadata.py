@@ -62,7 +62,8 @@ class TestFileBasedJSON(HSRESTTestCase):
 
     def tearDown(self):
         super(TestFileBasedJSON, self).tearDown()
-        os.remove(self.test_bag_path)
+        if os.path.exists(self.test_bag_path):
+            os.remove(self.test_bag_path)
         self.res.delete()
 
     def _test_metadata_update_retrieve(self, endpoint, schema_in, json_put_file, aggregation_path=None):
