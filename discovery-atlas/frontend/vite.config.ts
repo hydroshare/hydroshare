@@ -29,6 +29,16 @@ export default defineConfig(({ mode }) => {
         "@jsonforms/core",
         "@jsonforms/vue",
         "vue-facing-decorator",
+        // ajv stores generated `Name` objects in module-level state. Two
+        // physical copies (one in the consumer, one in the linked
+        // cznet-vue-core's node_modules) end up exchanging Names across
+        // instances, and the receiving ajv stringifies the foreign Names as
+        // `{"str":"..."}`, producing invalid generated code. Dedupe so a
+        // single ajv copy wins for both the consumer and cznet-vue-core.
+        "ajv",
+        "ajv-formats",
+        "ajv-keywords",
+        "ajv-errors",
       ],
     },
 

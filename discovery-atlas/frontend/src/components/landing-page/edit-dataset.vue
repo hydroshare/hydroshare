@@ -54,8 +54,7 @@
       <cz-file-explorer
         v-if="!isLoadingFiles"
         ref="fileExplorer"
-        id="cz-folder-structure"
-        v-model:valid-items="toUpload"
+        @update:valid-items="toUpload = $event"
         :root-directory="rootDirectory"
         :has-folders="fileExplorerConfig.hasFolders"
         :is-read-only="false"
