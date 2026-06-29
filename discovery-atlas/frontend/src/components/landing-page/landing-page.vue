@@ -158,106 +158,109 @@
           </v-menu>
         </div>
 
-        <div class="d-flex flex-wrap align-center gc-4 gr-1 mb-3">
-          <div class="d-flex align-center ga-2">
-            <img
-              v-if="resourceTypeIcon"
-              :src="resourceTypeIcon"
-              :alt="resourceTypeLabel"
-              :title="resourceTypeLabel"
-              class="resource-type-icon flex-shrink-0"
-            />
+        <!-- Meta info + (desktop) action buttons on the same row. The action
+             group is pushed to the right via ml-auto and hidden on mobile,
+             where the same actions live in the 3-dot menu next to the title. -->
+        <div class="d-flex flex-wrap align-center ga-3">
+          <div class="d-flex flex-wrap align-center gc-4 gr-1">
+            <div class="d-flex align-center ga-2">
+              <img
+                v-if="resourceTypeIcon"
+                :src="resourceTypeIcon"
+                :alt="resourceTypeLabel"
+                :title="resourceTypeLabel"
+                class="resource-type-icon flex-shrink-0"
+              />
 
-            <v-chip
-              v-if="data.creativeWorkStatus"
-              size="small"
-              :color="getStatusColor(data.creativeWorkStatus.name)"
-              :title="data.creativeWorkStatus.description"
-              variant="flat"
-              label
+              <v-chip
+                v-if="data.creativeWorkStatus"
+                size="small"
+                :color="getStatusColor(data.creativeWorkStatus.name)"
+                :title="data.creativeWorkStatus.description"
+                variant="flat"
+                label
+              >
+                {{ data.creativeWorkStatus.name }}
+              </v-chip>
+            </div>
+
+            <span
+              v-if="data.dateModified"
+              class="text-body-2 text-medium-emphasis"
             >
-              {{ data.creativeWorkStatus.name }}
-            </v-chip>
+              Updated {{ parseDate(data.dateModified) }}
+              <span class="font-weight-light"
+                >(<timeago :datetime="data.dateModified" />)</span
+              >
+            </span>
+
+            <span
+              v-if="data.viewCount != null"
+              class="text-body-2 text-medium-emphasis"
+            >
+              <v-icon size="14" class="mr-1">mdi-eye-outline</v-icon
+              >{{ data.viewCount.toLocaleString() }}
+              {{ data.viewCount === 1 ? "view" : "views" }}
+            </span>
           </div>
 
-          <span
-            v-if="data.dateModified"
-            class="text-body-2 text-medium-emphasis"
+          <div
+            v-if="
+              !isLoadingFiles &&
+              !isFetchingMetadata &&
+              !$vuetify.display.smAndDown
+            "
+            class="d-flex flex-wrap align-center ga-1 ml-auto"
           >
-            Updated {{ parseDate(data.dateModified) }}
-            <span class="font-weight-light"
-              >(<timeago :datetime="data.dateModified" />)</span
+            <v-menu width="500" :close-on-content-click="false">
+              <template v-slot:activator="{ props }">
+                <v-btn
+                  size="small"
+                  v-bind="props"
+                  prepend-icon="mdi-cog"
+                  variant="text"
+                  >Settings</v-btn
+                >
+              </template>
+              <v-card>
+                <v-card-title
+                  class="bg-grey-lighten-3 text-body-1 text-medium-emphasis"
+                  >Settings</v-card-title
+                >
+                <v-divider></v-divider>
+                <v-card-text flat>
+                  <s3-form
+                    :prefix="s3Info.prefix"
+                    :bucket="s3Info.bucket"
+                    :s3-host="s3Host"
+                    :hydroshare-host="hydroshareHost"
+                    :accessKey="credentials.accessKey"
+                    :secret-key="credentials.secretKey"
+                    @apply-changes="onS3FormUpdate"
+                    @restore-defaults="onRestoreDefaults"
+                  ></s3-form>
+                </v-card-text>
+              </v-card>
+            </v-menu>
+
+            <v-btn
+              v-if="isLoggedIn"
+              size="small"
+              prepend-icon="mdi-account-multiple"
+              variant="outlined"
+              @click="showManageAccess = true"
+              >Manage access</v-btn
             >
-          </span>
 
-          <span
-            v-if="data.viewCount != null"
-            class="text-body-2 text-medium-emphasis"
-          >
-            <v-icon size="14" class="mr-1">mdi-eye-outline</v-icon
-            >{{ data.viewCount.toLocaleString() }}
-            {{ data.viewCount === 1 ? "view" : "views" }}
-          </span>
-        </div>
-
-        <!-- Desktop / tablet: full action buttons row. On mobile the same
-             actions live inside the 3-dot menu next to the title. -->
-        <div
-          v-if="
-            !isLoadingFiles &&
-            !isFetchingMetadata &&
-            !$vuetify.display.smAndDown
-          "
-          class="d-flex flex-wrap align-center ga-1"
-        >
-          <v-menu width="500" :close-on-content-click="false">
-            <template v-slot:activator="{ props }">
-              <v-btn
-                size="small"
-                v-bind="props"
-                prepend-icon="mdi-cog"
-                variant="text"
-                >Settings</v-btn
-              >
-            </template>
-            <v-card>
-              <v-card-title
-                class="bg-grey-lighten-3 text-body-1 text-medium-emphasis"
-                >Settings</v-card-title
-              >
-              <v-divider></v-divider>
-              <v-card-text flat>
-                <s3-form
-                  :prefix="s3Info.prefix"
-                  :bucket="s3Info.bucket"
-                  :s3-host="s3Host"
-                  :hydroshare-host="hydroshareHost"
-                  :accessKey="credentials.accessKey"
-                  :secret-key="credentials.secretKey"
-                  @apply-changes="onS3FormUpdate"
-                  @restore-defaults="onRestoreDefaults"
-                ></s3-form>
-              </v-card-text>
-            </v-card>
-          </v-menu>
-
-          <v-btn
-            v-if="isLoggedIn"
-            size="small"
-            prepend-icon="mdi-account-multiple"
-            variant="outlined"
-            @click="showManageAccess = true"
-            >Manage access</v-btn
-          >
-
-          <v-btn
-            size="small"
-            color="primary"
-            prepend-icon="mdi-pen"
-            variant="outlined"
-            @click="$router.push({ name: 'edit-dataset' })"
-            >Edit</v-btn
-          >
+            <v-btn
+              size="small"
+              color="primary"
+              prepend-icon="mdi-pen"
+              variant="outlined"
+              @click="$router.push({ name: 'edit-dataset' })"
+              >Edit</v-btn
+            >
+          </div>
         </div>
 
         <!-- Mobile-only Settings dialog (the 3-dot menu's "Settings" item
@@ -1696,16 +1699,12 @@ export default toNative(LandingPage);
 }
 
 .readme-container {
-  // Drop the bulk of Vuetify's default 16px v-card-text padding. Keep some
-  // vertical breathing room (so the README content isn't flush against the
-  // header/divider) but trim horizontal so the README renders close to the
-  // card's left/right edges.
   .v-card-text {
     min-height: 5rem;
     height: 40rem;
     overflow: auto;
     resize: vertical;
-    padding: 0.75rem 0.5rem;
+    padding: 1rem;
   }
 
   // github-markdown-css ships with `padding: 45px` and `max-width: 980px` on
