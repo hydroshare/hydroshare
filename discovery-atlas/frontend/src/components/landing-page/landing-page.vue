@@ -109,12 +109,57 @@
       </div>
 
       <div id="overview" class="resource-header mb-6">
-        <h1 class="text-h5 font-weight-bold mb-3">
-          {{ data.name }}
-        </h1>
+        <div class="d-flex align-start ga-3 mb-2">
+          <h1 class="text-h5 font-weight-bold flex-grow-1 ma-0">
+            {{ data.name }}
+          </h1>
 
-        <div class="d-flex align-center gap-3 mb-1">
-          <div class="d-flex align-center" style="gap: 0.4rem">
+          <!-- Mobile: 3-dot menu sits flush-right next to the title. -->
+          <v-menu
+            v-if="$vuetify.display.smAndDown && !isLoadingFiles && !isFetchingMetadata"
+          >
+            <template v-slot:activator="{ props }">
+              <v-btn
+                v-bind="props"
+                icon="mdi-dots-vertical"
+                size="small"
+                variant="text"
+                aria-label="More actions"
+                class="flex-shrink-0"
+              />
+            </template>
+            <v-list density="compact" class="title-actions-menu" min-width="180">
+              <v-list-item
+                title="Edit"
+                @click="$router.push({ name: 'edit-dataset' })"
+              >
+                <template #prepend>
+                  <v-icon size="18">mdi-pen</v-icon>
+                </template>
+              </v-list-item>
+              <v-list-item
+                v-if="isLoggedIn"
+                title="Manage access"
+                @click="showManageAccess = true"
+              >
+                <template #prepend>
+                  <v-icon size="18">mdi-account-multiple</v-icon>
+                </template>
+              </v-list-item>
+              <v-list-item
+                title="Settings"
+                @click="showSettingsDialog = true"
+              >
+                <template #prepend>
+                  <v-icon size="18">mdi-cog</v-icon>
+                </template>
+              </v-list-item>
+            </v-list>
+          </v-menu>
+        </div>
+
+        <div class="d-flex flex-wrap align-center gc-4 gr-1 mb-3">
+          <div class="d-flex align-center ga-2">
             <img
               v-if="resourceTypeIcon"
               :src="resourceTypeIcon"
@@ -153,63 +198,96 @@
             >{{ data.viewCount.toLocaleString() }}
             {{ data.viewCount === 1 ? "view" : "views" }}
           </span>
-
-          <v-spacer></v-spacer>
-
-          <div
-            v-if="!isLoadingFiles && !isFetchingMetadata"
-            class="d-flex align-center gap-1 flex-shrink-0"
-          >
-            <v-menu width="500" :close-on-content-click="false">
-              <template v-slot:activator="{ props }">
-                <v-btn
-                  size="small"
-                  v-bind="props"
-                  prepend-icon="mdi-cog"
-                  variant="text"
-                  >Settings</v-btn
-                >
-              </template>
-              <v-card>
-                <v-card-title
-                  class="bg-grey-lighten-3 text-body-1 text-medium-emphasis"
-                  >Settings</v-card-title
-                >
-                <v-divider></v-divider>
-                <v-card-text flat>
-                  <s3-form
-                    :prefix="s3Info.prefix"
-                    :bucket="s3Info.bucket"
-                    :s3-host="s3Host"
-                    :hydroshare-host="hydroshareHost"
-                    :accessKey="credentials.accessKey"
-                    :secret-key="credentials.secretKey"
-                    @apply-changes="onS3FormUpdate"
-                    @restore-defaults="onRestoreDefaults"
-                  ></s3-form>
-                </v-card-text>
-              </v-card>
-            </v-menu>
-
-            <v-btn
-              v-if="isLoggedIn"
-              size="small"
-              prepend-icon="mdi-account-multiple"
-              variant="outlined"
-              @click="showManageAccess = true"
-              >Manage access</v-btn
-            >
-
-            <v-btn
-              size="small"
-              color="primary"
-              prepend-icon="mdi-pen"
-              variant="outlined"
-              @click="$router.push({ name: 'edit-dataset' })"
-              >Edit</v-btn
-            >
-          </div>
         </div>
+
+        <!-- Desktop / tablet: full action buttons row. On mobile the same
+             actions live inside the 3-dot menu next to the title. -->
+        <div
+          v-if="
+            !isLoadingFiles &&
+            !isFetchingMetadata &&
+            !$vuetify.display.smAndDown
+          "
+          class="d-flex flex-wrap align-center ga-1"
+        >
+          <v-menu width="500" :close-on-content-click="false">
+            <template v-slot:activator="{ props }">
+              <v-btn
+                size="small"
+                v-bind="props"
+                prepend-icon="mdi-cog"
+                variant="text"
+                >Settings</v-btn
+              >
+            </template>
+            <v-card>
+              <v-card-title
+                class="bg-grey-lighten-3 text-body-1 text-medium-emphasis"
+                >Settings</v-card-title
+              >
+              <v-divider></v-divider>
+              <v-card-text flat>
+                <s3-form
+                  :prefix="s3Info.prefix"
+                  :bucket="s3Info.bucket"
+                  :s3-host="s3Host"
+                  :hydroshare-host="hydroshareHost"
+                  :accessKey="credentials.accessKey"
+                  :secret-key="credentials.secretKey"
+                  @apply-changes="onS3FormUpdate"
+                  @restore-defaults="onRestoreDefaults"
+                ></s3-form>
+              </v-card-text>
+            </v-card>
+          </v-menu>
+
+          <v-btn
+            v-if="isLoggedIn"
+            size="small"
+            prepend-icon="mdi-account-multiple"
+            variant="outlined"
+            @click="showManageAccess = true"
+            >Manage access</v-btn
+          >
+
+          <v-btn
+            size="small"
+            color="primary"
+            prepend-icon="mdi-pen"
+            variant="outlined"
+            @click="$router.push({ name: 'edit-dataset' })"
+            >Edit</v-btn
+          >
+        </div>
+
+        <!-- Mobile-only Settings dialog (the 3-dot menu's "Settings" item
+             opens this). Sits outside the action rows so layout isn't
+             affected. -->
+        <v-dialog
+          v-if="$vuetify.display.smAndDown"
+          v-model="showSettingsDialog"
+          max-width="500"
+        >
+          <v-card>
+            <v-card-title
+              class="bg-grey-lighten-3 text-body-1 text-medium-emphasis"
+              >Settings</v-card-title
+            >
+            <v-divider></v-divider>
+            <v-card-text>
+              <s3-form
+                :prefix="s3Info.prefix"
+                :bucket="s3Info.bucket"
+                :s3-host="s3Host"
+                :hydroshare-host="hydroshareHost"
+                :accessKey="credentials.accessKey"
+                :secret-key="credentials.secretKey"
+                @apply-changes="(p) => { showSettingsDialog = false; onS3FormUpdate(p); }"
+                @restore-defaults="() => { showSettingsDialog = false; onRestoreDefaults(); }"
+              ></s3-form>
+            </v-card-text>
+          </v-card>
+        </v-dialog>
       </div>
 
       <cd-manage-access
@@ -220,7 +298,31 @@
 
       <v-divider></v-divider>
 
-      <div class="d-flex gap-4 mt-6">
+      <v-select
+        v-if="tocItems.length"
+        class="mobile-toc mt-4"
+        :items="tocItems"
+        item-title="text"
+        item-value="to"
+        density="compact"
+        variant="outlined"
+        hide-details
+        prepend-inner-icon="mdi-format-list-bulleted"
+        label="Jump to section"
+        :model-value="null"
+        @update:model-value="scrollToSection"
+      >
+        <template #item="{ props, item }">
+          <v-list-item
+            v-bind="props"
+            :class="{
+              'ps-8': item.raw.level && item.raw.level >= 4,
+            }"
+          />
+        </template>
+      </v-select>
+
+      <div class="d-flex flex-column flex-lg-row ga-6 mt-6">
         <v-container
           class="page-content pa-0"
           :class="{ 'is-sm': $vuetify.display.mdAndDown }"
@@ -232,7 +334,7 @@
                 <v-col cols="12" sm="6" class="dataset-info">
                   <div v-bind="infoLabelAttr">Authors:</div>
 
-                  <div class="infoValueAttr">
+                  <div v-bind="infoValueAttr">
                     <cd-author-profile
                       v-for="(creator, index) of data.creator"
                       :key="index"
@@ -355,26 +457,32 @@
           <div class="mb-6 field" id="content">
             <div v-bind="headingAttr">Content</div>
 
-            <cz-file-explorer
-              @showMetadata="onShowMetadata($event)"
-              id="fileExplorer"
-              class="ma-4"
+            <!-- CzFileExplorer renders a fragment root, so id/class passed
+                 directly to it are dropped by Vue. Wrap so #fileExplorer
+                 exists for the TOC anchor and the :deep selectors. -->
+            <div
               v-if="!isLoadingFiles"
-              ref="fileExplorer"
-              :root-directory="rootDirectory"
-              :has-folders="fileExplorerConfig.hasFolders"
-              :is-read-only="true"
-              :has-file-metadata="() => true"
-              :canDownloadItem="() => true"
-              :load-file-preview="(item) => loadFilePreview(item)"
-              @download="
-                onFileDownload($event, resourceId, s3Client, s3Info.bucket)
-              "
+              id="fileExplorer"
+              class="my-4"
             >
-              <template #prepend>
-                <span />
-              </template>
-            </cz-file-explorer>
+              <cz-file-explorer
+                @showMetadata="onShowMetadata($event)"
+                ref="fileExplorer"
+                :root-directory="rootDirectory"
+                :has-folders="fileExplorerConfig.hasFolders"
+                :is-read-only="true"
+                :has-file-metadata="() => true"
+                :canDownloadItem="() => true"
+                :load-file-preview="(item) => loadFilePreview(item)"
+                @download="
+                  onFileDownload($event, resourceId, s3Client, s3Info.bucket)
+                "
+              >
+                <template #prepend>
+                  <span />
+                </template>
+              </cz-file-explorer>
+            </div>
             <!-- <v-skeleton-loader
             class="mb-12"
             v-else
@@ -384,11 +492,11 @@
             <v-card
               v-if="readmeMd || isLoadingMD"
               id="readme"
-              class="readme-container mx-4"
+              class="readme-container"
               variant="outlined"
               border="grey thin"
             >
-              <v-card-title class="text-overline d-flex gap-2"
+              <v-card-title class="text-overline d-flex ga-2"
                 ><div>README</div>
                 <div class="text-caption text-medium-emphasis">
                   {{ readMeFileName }}
@@ -407,9 +515,9 @@
                 <div
                   v-if="!hasTxtReadme"
                   v-html="readmeMd"
-                  class="markdown-body px-4"
+                  class="markdown-body"
                 ></div>
-                <pre v-else class="px-4" style="white-space: pre-wrap">{{
+                <pre v-else style="white-space: pre-wrap">{{
                   readmeMd
                 }}</pre>
               </v-card-text>
@@ -494,35 +602,35 @@
           >
             <div v-bind="headingAttr">Related Resources</div>
             <v-card variant="outlined" border="grey thin">
-              <v-table>
+              <v-table class="related-resources-table">
                 <template v-slot:default>
                   <tbody>
                     <tr
                       v-for="(part, index) in data.hasPart"
                       :key="`hp-${index}`"
                     >
-                      <td class="">Has part</td>
-                      <td>
+                      <td class="relation-label">Has part</td>
+                      <td class="relation-url">
                         <a :href="part.url">{{ part.url }}</a>
                       </td>
                     </tr>
 
                     <tr
                       v-for="(part, index) in data.isPartOf"
-                      :key="`hp-${index}`"
+                      :key="`ipo-${index}`"
                     >
-                      <td class="">Is part of</td>
-                      <td>
+                      <td class="relation-label">Is part of</td>
+                      <td class="relation-url">
                         <a :href="part.url">{{ part.url }}</a>
                       </td>
                     </tr>
 
                     <tr
                       v-for="(part, index) in data.subjectOf"
-                      :key="`hp-${index}`"
+                      :key="`so-${index}`"
                     >
-                      <td class="">Subject of</td>
-                      <td>
+                      <td class="relation-label">Subject of</td>
+                      <td class="relation-url">
                         <a :href="part.url">{{ part.url }}</a>
                       </td>
                     </tr>
@@ -532,113 +640,9 @@
             </v-card>
           </div>
 
-          <div
-            v-if="hasSpatialFeatures && $vuetify.display.mdAndDown"
-            class="mb-6 field text-body-1"
-            id="coverage"
-          >
-            <div v-bind="headingAttr">Spatial Coverage</div>
-            <v-row>
-              <v-col cols="12" sm="8">
-                <v-card variant="outlined" border="grey thin">
-                  <cd-spatial-coverage-map :feature="data.spatialCoverage.geo" />
-                  <v-divider></v-divider>
-                  <v-card-text
-                    v-if="data.spatialCoverage.geo['type'] == 'GeoShape'"
-                  >
-                    <v-row class="align-start">
-                      <v-col cols="12" sm="6" class="dataset-info">
-                        <div v-bind="infoLabelAttr">North Latitude:</div>
-                        <div v-bind="infoValueAttr">
-                          {{ boxCoordinates.north }}°
-                        </div>
-
-                        <div v-bind="infoLabelAttr">East Longitude:</div>
-                        <div v-bind="infoValueAttr">
-                          {{ boxCoordinates.east }}°
-                        </div>
-                      </v-col>
-                      <v-col cols="12" sm="6" class="dataset-info">
-                        <div v-bind="infoLabelAttr">South Latitude:</div>
-                        <div v-bind="infoValueAttr">
-                          {{ boxCoordinates.south }}°
-                        </div>
-
-                        <div v-bind="infoLabelAttr">West Longitude:</div>
-                        <div v-bind="infoValueAttr">
-                          {{ boxCoordinates.west }}°
-                        </div>
-                      </v-col>
-                    </v-row>
-                  </v-card-text>
-
-                  <v-card-text
-                    v-if="data.spatialCoverage.geo['type'] == 'GeoCoordinates'"
-                  >
-                    <v-row class="align-start">
-                      <v-col cols="12" sm="6" class="dataset-info">
-                        <div v-bind="infoLabelAttr">Latitude:</div>
-                        <div v-bind="infoValueAttr">
-                          {{ data.spatialCoverage.geo.latitude }}°
-                        </div>
-                      </v-col>
-
-                      <v-col cols="12" sm="6" class="dataset-info">
-                        <div v-bind="infoLabelAttr">Longitude:</div>
-                        <div v-bind="infoValueAttr">
-                          {{ data.spatialCoverage.geo.longitude }}°
-                        </div>
-                      </v-col>
-                    </v-row>
-                  </v-card-text>
-                </v-card>
-              </v-col>
-              <v-col cols="12" sm="4" class="dataset-info one-col">
-                <div v-bind="infoLabelAttr">
-                  Coordinate System/Geographic Projection:
-                </div>
-                <div v-bind="infoValueAttr">WGS 84 EPSG:4326</div>
-
-                <div v-bind="infoLabelAttr">Coordinate Units:</div>
-                <div v-bind="infoValueAttr">Decimal degrees</div>
-
-                <div v-bind="infoLabelAttr">Place/Area Name:</div>
-                <div v-bind="infoValueAttr">
-                  {{ data.spatialCoverage.name }}
-                </div>
-              </v-col>
-            </v-row>
-          </div>
-
-          <div
-            v-if="data.temporalCoverage && $vuetify.display.mdAndDown"
-            class="mb-6 field text-body-1"
-          >
-            <div v-bind="headingAttr">Temporal Coverage</div>
-
-            <v-timeline align-top density="compact" line-color="info">
-              <v-timeline-item dot-color="primary">
-                <div>
-                  <div class="font-weight-normal">
-                    <strong>Start Date</strong>
-                  </div>
-                  <div>{{ parseDate(data.temporalCoverage.startDate) }}</div>
-                </div>
-              </v-timeline-item>
-
-              <v-timeline-item dot-color="orange">
-                <div>
-                  <div class="font-weight-normal">
-                    <strong>End Date</strong>
-                  </div>
-                  <div>{{ parseDate(data.temporalCoverage.endDate) }}</div>
-                </div>
-              </v-timeline-item>
-            </v-timeline>
-          </div>
         </v-container>
 
-        <div v-if="!$vuetify.display.mdAndDown" class="sidebar break-word">
+        <div class="sidebar break-word">
           <div>
             <v-card v-if="data.keywords?.length" id="subject" variant="flat" class="mb-6">
               <v-card-title class="pa-0 pb-2 text-subtitle-2 font-weight-bold text-uppercase" style="letter-spacing: 0.05em; color: #4BB5C1;">
@@ -773,7 +777,7 @@
                 :key="index"
                 class="pa-0 text-body-2 text-medium-emphasis"
               >
-                <div class="d-flex align-center justify-space-between gap-1">
+                <div class="d-flex align-center justify-space-between ga-3">
                   <div class="citation-text">
                     {{ citation }}
                   </div>
@@ -913,6 +917,7 @@ class LandingPage extends Vue {
   showDescription = false;
   isDescriptionClamped = false;
   showManageAccess = false;
+  showSettingsDialog = false;
   readmeMd = "";
   readMeFileName = "";
   hasTxtReadme = false;
@@ -1043,14 +1048,20 @@ class LandingPage extends Vue {
       credentials: { accessKeyId, secretAccessKey },
     });
   }
+  // Labels read as supporting context (small, uppercase, muted) so values
+  // — the actual data — stand out as the primary content.
   infoLabelAttr = {
-    class: "text-subtitle-2 font-weight-medium",
+    class:
+      "text-caption text-uppercase text-medium-emphasis font-weight-medium dataset-info__label",
   };
   selectedMetadata: any = false;
   showMetadata = false;
 
+  // mb-2 used to live here; it doubled-up with the grid's row-gap and made
+  // spacing between rows inconsistent (text rows had a margin but card-based
+  // rows like author profiles did not). The grid handles spacing now.
   infoValueAttr = {
-    class: "text-body-2 mb-2 text-medium-emphasis",
+    class: "text-body-2 dataset-info__value",
   };
   headingAttr = {
     class:
@@ -1070,6 +1081,39 @@ class LandingPage extends Vue {
   onCopy(text: string) {
     navigator.clipboard.writeText(text);
     Notifications.toast({ message: "Copied to clipboard", type: "info" });
+  }
+
+  get tocItems() {
+    return User.$state.toc;
+  }
+
+  scrollToSection(hash: string | null) {
+    if (!hash) return;
+    const el = document.querySelector(hash) as HTMLElement | null;
+    if (!el) return;
+
+    // Mirror toc.vue: the iframe has scrolling="no" and is auto-sized to
+    // content, so window.scrollTo inside the iframe is a no-op. Reach across
+    // to the same-origin parent and scroll there.
+    if (window.parent && window.parent !== window) {
+      const frame = window.frameElement as HTMLIFrameElement | null;
+      if (frame) {
+        try {
+          const parentWin = window.parent as Window;
+          const iframeTop =
+            frame.getBoundingClientRect().top +
+            (parentWin.scrollY || parentWin.pageYOffset || 0);
+          const elTop = el.getBoundingClientRect().top;
+          parentWin.scrollTo({ top: iframeTop + elTop - 16, behavior: "smooth" });
+          return;
+        } catch {
+          // Cross-origin — fall through to in-iframe scroll.
+        }
+      }
+    }
+
+    const top = el.getBoundingClientRect().top + window.scrollY - 16;
+    window.scrollTo({ top, behavior: "smooth" });
   }
 
   setDescriptionBannerRef(el: any) {
@@ -1521,6 +1565,51 @@ export default toNative(LandingPage);
   flex-basis: 22rem;
   flex-shrink: 0;
   min-width: 0;
+
+  @media (max-width: 1279px) {
+    flex-basis: auto;
+    width: 100%;
+  }
+}
+
+// Mobile title 3-dot menu: tighten the gap between each item's prepend icon
+// and its title. Vuetify renders a separate `.v-list-item__spacer` div after
+// the icon whose width is driven by `--v-list-prepend-gap` (default 32px,
+// which feels airy for a compact dropdown). Override the variable here
+// instead of fighting `padding`/`margin` on the prepend wrapper — that
+// padding doesn't control the icon→title gap.
+.title-actions-menu {
+  --v-list-prepend-gap: 10px;
+
+  :deep(.v-list-item__prepend) {
+    width: auto;
+    min-width: 0;
+  }
+
+  :deep(.v-list-item__prepend > .v-icon) {
+    opacity: 0.7;
+  }
+
+  :deep(.v-list-item-title) {
+    font-size: 0.875rem;
+    line-height: 1.25;
+  }
+
+  :deep(.v-list-item) {
+    min-height: 36px;
+    padding-inline: 0.875rem;
+  }
+}
+
+.mobile-toc {
+  background: rgb(var(--v-theme-surface));
+
+  // The desktop TOC (toc.vue) hides itself below 1100px via its own media
+  // query. Show this mobile select only in that same range so the two never
+  // overlap.
+  @media (min-width: 1100px) {
+    display: none !important;
+  }
 }
 
 .page-content {
@@ -1528,10 +1617,24 @@ export default toNative(LandingPage);
   max-width: 100%;
   min-width: 0;
 
+  // Below the desktop column threshold the details grid collapses to a
+  // single column. Keep a small row-gap so stacked label/value pairs don't
+  // run together, but leave column-gap at 0 since there's only one column.
   &.is-sm {
     .dataset-info {
-      grid-template-columns: auto;
-      gap: 0;
+      grid-template-columns: 1fr;
+      column-gap: 0;
+      row-gap: 0.25rem;
+    }
+
+    .dataset-info__label {
+      // Tighten the gap between a label and its value when stacked, while
+      // still giving room above to separate from the previous pair.
+      margin-top: 0.5rem;
+    }
+
+    .dataset-info__label:first-child {
+      margin-top: 0;
     }
   }
 }
@@ -1547,41 +1650,74 @@ export default toNative(LandingPage);
 
 .dataset-info {
   display: grid;
-  grid-template-columns: auto auto;
-  gap: 0.1rem 1rem;
+  grid-template-columns: max-content 1fr;
+  column-gap: 1.5rem;
+  row-gap: 0.5rem;
   justify-content: start;
   align-items: baseline;
   align-content: baseline;
 
   &.one-col {
     grid-template-columns: 1fr;
+    row-gap: 0.25rem;
   }
+}
+
+// Visual separator under each label so the eye can pick out the "this is a
+// field name" rows from the values without relying on color alone.
+.dataset-info__label {
+  letter-spacing: 0.05em;
+  line-height: 1.4;
+}
+
+.dataset-info__value {
+  line-height: 1.4;
 }
 
 :deep(#fileExplorer .v-sheet) {
   background-color: #f6f6f6 !important;
 }
 
+// Related Resources table: long URLs were overflowing and forcing a
+// horizontal scrollbar on the table. Wrap long URLs at any character so the
+// URL column fits; keep the relation label ("Has part", "Is part of",
+// "Subject of") on one line so it stays readable.
+.related-resources-table {
+  :deep(.relation-label) {
+    white-space: nowrap;
+    padding-right: 1.5rem !important;
+  }
+
+  :deep(.relation-url),
+  :deep(.relation-url a) {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+}
+
 .readme-container {
+  // Drop the bulk of Vuetify's default 16px v-card-text padding. Keep some
+  // vertical breathing room (so the README content isn't flush against the
+  // header/divider) but trim horizontal so the README renders close to the
+  // card's left/right edges.
   .v-card-text {
     min-height: 5rem;
     height: 40rem;
     overflow: auto;
     resize: vertical;
+    padding: 0.75rem 0.5rem;
   }
 
+  // github-markdown-css ships with `padding: 45px` and `max-width: 980px` on
+  // .markdown-body — both are meant for full-page documents and look way too
+  // padded when the README is embedded in a card. Override to use only the
+  // surrounding v-card-text padding.
   .markdown-body {
     box-sizing: border-box;
     min-width: 200px;
-    max-width: 980px;
-    padding: 45px;
+    max-width: 100%;
+    padding: 0;
     font-family: inherit;
-  }
-
-  @media (max-width: 767px) {
-    .markdown-body {
-      padding: 15px;
-    }
   }
 }
 </style>
