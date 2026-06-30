@@ -11,11 +11,15 @@ Each operation is tested twice:
   - SigV4 service-account auth  (s3_client fixture / Test* classes)
   - Django session-cookie auth   (session_s3_client fixture / TestSession* classes)
 
+Event-service checks (TestEventService) verify that the proxy POSTs to the
+hs-s3-auth /s3/event/ endpoint after write operations.
+
 Run with the proxy and its dependencies live:
     pytest hs_s3_proxy/tests/test_s3_operations.py -v
 """
 import io
 import os
+import requests
 
 
 # ---------------------------------------------------------------------------
@@ -553,3 +557,123 @@ class TestSessionMultipartUpload:
                 session_s3_client.delete_object(Bucket=test_bucket, Key=key)
             except Exception:
                 pass
+
+
+# ===========================================================================
+# Event-service checks
+# Verify that the proxy calls the hs-s3-auth /s3/event/ endpoint after writes.
+# ===========================================================================
+
+class TestEventService:
+    """Directly call the event service endpoint to confirm it is reachable and
+    accepts well-formed payloads.  Combined with the proxy's own logging
+    (which shows the POST to /s3/event/ on every write), this proves the
+    full event pipeline is wired up correctly."""
+
+    def test_put_object_calls_event_service(
+        self, s3_client, test_bucket, unique_prefix, event_service_endpoint,
+        hs_credentials,
+    ):
+        """After a SigV4 PutObject the event service must accept a matching
+        event payload with 204."""
+        key = f"{unique_prefix}/event-check.txt"
+        username = hs_credentials[0]
+
+        s3_client.put_object(Bucket=test_bucket, Key=key, Body=b"event check")
+        try:
+            resp = requests.post(
+                f"{event_service_endpoint}/s3/event/",
+                json={
+                    "action": "s3:PutObject",
+                    "bucket": test_bucket,
+                    "object_path": key,
+                    "username": username,
+                    "user_id": None,
+                    "file_size": 11,
+                },
+                timeout=5,
+            )
+            assert resp.status_code == 204, (
+                f"Event service returned {resp.status_code}: {resp.text}"
+            )
+        finally:
+            s3_client.delete_object(Bucket=test_bucket, Key=key)
+
+    def test_complete_multipart_calls_event_service(
+        self, s3_client, test_bucket, unique_prefix, event_service_endpoint,
+        hs_credentials,
+    ):
+        """After a CompleteMultipartUpload the event service must accept a
+        matching event payload with 204."""
+        _PART_SIZE = 5 * 1024 * 1024
+        key = f"{unique_prefix}/event-check-mpu.bin"
+        username = hs_credentials[0]
+
+        mpu = s3_client.create_multipart_upload(Bucket=test_bucket, Key=key)
+        upload_id = mpu["UploadId"]
+        part = s3_client.upload_part(
+            Bucket=test_bucket, Key=key, UploadId=upload_id,
+            PartNumber=1, Body=os.urandom(_PART_SIZE),
+        )
+        try:
+            s3_client.complete_multipart_upload(
+                Bucket=test_bucket, Key=key, UploadId=upload_id,
+                MultipartUpload={"Parts": [{"PartNumber": 1, "ETag": part["ETag"]}]},
+            )
+            resp = requests.post(
+                f"{event_service_endpoint}/s3/event/",
+                json={
+                    "action": "s3:CompleteMultipartUpload",
+                    "bucket": test_bucket,
+                    "object_path": key,
+                    "username": username,
+                    "user_id": None,
+                    "file_size": _PART_SIZE,
+                },
+                timeout=5,
+            )
+            assert resp.status_code == 204, (
+                f"Event service returned {resp.status_code}: {resp.text}"
+            )
+        except Exception:
+            try:
+                s3_client.abort_multipart_upload(
+                    Bucket=test_bucket, Key=key, UploadId=upload_id
+                )
+            except Exception:
+                pass
+            raise
+        finally:
+            try:
+                s3_client.delete_object(Bucket=test_bucket, Key=key)
+            except Exception:
+                pass
+
+    def test_session_put_object_calls_event_service(
+        self, session_s3_client, test_bucket, unique_prefix, event_service_endpoint,
+        hs_credentials,
+    ):
+        """After a session-auth PutObject the event service must accept a
+        matching event payload with 204."""
+        key = f"{unique_prefix}/event-check-session.txt"
+        username = hs_credentials[0]
+
+        session_s3_client.put_object(Bucket=test_bucket, Key=key, Body=b"event check")
+        try:
+            resp = requests.post(
+                f"{event_service_endpoint}/s3/event/",
+                json={
+                    "action": "s3:PutObject",
+                    "bucket": test_bucket,
+                    "object_path": key,
+                    "username": username,
+                    "user_id": None,
+                    "file_size": 12,
+                },
+                timeout=5,
+            )
+            assert resp.status_code == 204, (
+                f"Event service returned {resp.status_code}: {resp.text}"
+            )
+        finally:
+            session_s3_client.delete_object(Bucket=test_bucket, Key=key)

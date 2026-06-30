@@ -8,6 +8,7 @@ HS_USERNAME         HydroShare username           (default: asdf)
 HS_PASSWORD         HydroShare password           (default: asdf)
 S3_PROXY_ENDPOINT   S3 proxy base URL             (default: http://localhost:9002)
 S3_TEST_BUCKET      Bucket name                   (default: resource)
+AUTH_SERVICE_URL    hs-s3-auth base URL           (default: http://localhost:8001)
 
 The fixtures automatically:
   1. Create an S3 service account via POST /hsapi/user/service/accounts/s3/
@@ -353,3 +354,13 @@ def session_cookies(hs_api_endpoint, hs_credentials):
 def session_s3_client(proxy_endpoint, test_bucket, session_cookies):
     """RawSessionS3Client authenticated with Django session cookies."""
     return RawSessionS3Client(session_cookies, proxy_endpoint, test_bucket)
+
+
+# ---------------------------------------------------------------------------
+# Event-service fixture
+# ---------------------------------------------------------------------------
+
+@pytest.fixture(scope="session")
+def event_service_endpoint() -> str:
+    """Base URL of the hs-s3-auth event service (AUTH_SERVICE_URL)."""
+    return os.environ.get("AUTH_SERVICE_URL", "http://localhost:8001")
