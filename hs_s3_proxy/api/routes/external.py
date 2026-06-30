@@ -54,6 +54,72 @@ def _get_query_value_case_insensitive(query_params: dict, key: str):
     return None
 
 
+def _verify_sigv4_request(method, path, headers, query_params, body, auth_info, is_presigned):
+    """Validate a SigV4 or presigned request and return the user or an error response."""
+    payload_hash = headers.get('x-amz-content-sha256') or headers.get('X-Amz-Content-Sha256')
+    if not payload_hash and is_presigned:
+        payload_hash = _get_query_value_case_insensitive(query_params, 'X-Amz-Content-Sha256')
+    # Presigned GET/HEAD requests commonly use unsigned payload semantics.
+    if not payload_hash and is_presigned:
+        payload_hash = 'UNSIGNED-PAYLOAD'
+    if not payload_hash:
+        payload_hash = hashlib.sha256(body if body else b'').hexdigest()
+
+    result = verify_signature_sync(
+        method=method, path=path, headers=headers,
+        query_params=query_params, payload_hash=payload_hash,
+        auth_info=auth_info,
+    )
+    if result.get("allow"):
+        return result.get("user_id"), None
+
+    error = result.get("reason")
+    if error == "invalid_signature":
+        return None, Response(content=b"<Error><Code>SignatureDoesNotMatch</Code><Message>The request signature we "
+                              b"calculated does not match the signature you provided.</Message></Error>",
+                              status_code=403, media_type="application/xml")
+    if error == "auth_service_error":
+        return None, Response(content=b"<Error><Code>InternalError</Code><Message>Internal Server Error</Message>"
+                              b"</Error>", status_code=500, media_type="application/xml")
+    return None, Response(content=b"<Error><Code>AccessDenied</Code><Message>Access Denied</Message></Error>",
+                          status_code=403, media_type="application/xml")
+
+
+def _verify_csrf_session_request(request: Request):
+    """Authenticate a request using session and CSRF cookies."""
+    csrf_token = request.cookies.get("csrftoken")
+    session_id = request.cookies.get("sessionid")
+    if not session_id:
+        logger.warning("No valid authorization (header/presigned) or session cookie found")
+        return None, None, Response(
+            content=b"<Error><Code>AccessDenied</Code><Message>Access Denied</Message></Error>",
+            status_code=403,
+            media_type="application/xml",
+        )
+
+    logger.info("No SigV4 auth header; attempting CSRF/session authentication.")
+    csrf_result = verify_csrf_token_sync(session_id=session_id, csrf_token=csrf_token)
+    if not csrf_result.get("allow"):
+        reason = csrf_result.get("reason", "unknown")
+        if reason == "auth_service_error":
+            return None, None, Response(
+                content=b"<Error><Code>InternalError</Code><Message>Internal Server Error</Message></Error>",
+                status_code=500,
+                media_type="application/xml",
+            )
+        logger.warning(f"CSRF token authentication failed: {reason}")
+        return None, None, Response(
+            content=b"<Error><Code>AccessDenied</Code><Message>Access Denied</Message></Error>",
+            status_code=403,
+            media_type="application/xml",
+        )
+
+    user_id = csrf_result.get("user_id")
+    username = csrf_result.get("username", "")
+    logger.info(f"CSRF authentication succeeded for user: {username}")
+    return user_id, username, None
+
+
 @router.get("/health")
 async def health_check():
     return {"status": "healthy"}
@@ -80,7 +146,7 @@ async def proxy_s3_request(request: Request, full_path: str):
     path = f"/{full_path}"
     bucket, object_path = parse_s3_path(path)
     object_path = query_params.get("prefix", object_path)
-    logger.info(f"[external] Received {method} request for bucket={bucket}, object={object_path}")
+    logger.info(f"Received {method} request for bucket={bucket}, object={object_path}")
 
     auth_header = headers.get('authorization', '')
     auth_info = parse_authorization_header(auth_header)
@@ -89,59 +155,24 @@ async def proxy_s3_request(request: Request, full_path: str):
         auth_info = parse_presigned_auth_query(query_params)
         is_presigned = auth_info is not None
 
-    # --- SigV4 path ---
     if auth_info:
         username = auth_info['access_key'].split(":")[0]
-        payload_hash = headers.get('x-amz-content-sha256') or headers.get('X-Amz-Content-Sha256')
-        if not payload_hash and is_presigned:
-            payload_hash = _get_query_value_case_insensitive(query_params, 'X-Amz-Content-Sha256')
-        # Presigned GET/HEAD requests commonly use unsigned payload semantics.
-        if not payload_hash and is_presigned:
-            payload_hash = 'UNSIGNED-PAYLOAD'
-        if not payload_hash:
-            payload_hash = hashlib.sha256(body if body else b'').hexdigest()
-        result = verify_signature_sync(
-            method=method, path=path, headers=headers,
-            query_params=query_params, payload_hash=payload_hash,
+        user_id, error_response = _verify_sigv4_request(
+            method=method,
+            path=path,
+            headers=headers,
+            query_params=query_params,
+            body=body,
             auth_info=auth_info,
+            is_presigned=is_presigned,
         )
-        if result.get("allow"):
-            user_id = result.get("user_id")
-        else:
-            error = result.get("reason")
-            if error == "invalid_signature":
-                return Response(content=b"<Error><Code>SignatureDoesNotMatch</Code><Message>The request signature we "
-                                        b"calculated does not match the signature you provided.</Message></Error>",
-                                status_code=403, media_type="application/xml")
-            if error == "auth_service_error":
-                return Response(content=b"<Error><Code>InternalError</Code><Message>Internal Server Error</Message>"
-                                        b"</Error>", status_code=500, media_type="application/xml")
-            return Response(content=b"<Error><Code>AccessDenied</Code><Message>Access Denied</Message></Error>",
-                            status_code=403, media_type="application/xml")
-    # --- CSRF cookie path ---
     else:
-        csrf_token = request.cookies.get("csrftoken")
-        session_id = request.cookies.get("sessionid")
-        if not session_id:
-            logger.warning("No valid authorization (header/presigned) or session cookie found")
-            return Response(content=b"<Error><Code>AccessDenied</Code><Message>Access Denied</Message></Error>",
-                            status_code=403, media_type="application/xml")
-        logger.info("No SigV4 auth header; attempting CSRF/session authentication.")
-        csrf_result = verify_csrf_token_sync(session_id=session_id, csrf_token=csrf_token)
-        if not csrf_result.get("allow"):
-            reason = csrf_result.get("reason", "unknown")
-            if reason == "auth_service_error":
-                return Response(content=b"<Error><Code>InternalError</Code><Message>Internal Server Error</Message>"
-                                        b"</Error>", status_code=500, media_type="application/xml")
-            logger.warning(f"CSRF token authentication failed: {reason}")
-            return Response(content=b"<Error><Code>AccessDenied</Code><Message>Access Denied</Message></Error>",
-                            status_code=403, media_type="application/xml")
-        user_id = csrf_result.get("user_id")
-        username = csrf_result.get("username", "")
-        logger.info(f"CSRF authentication succeeded for user: {username}")
+        user_id, username, error_response = _verify_csrf_session_request(request)
+    if error_response:
+        return error_response
 
     action = get_s3_action_from_request(method, path, query_params)
-    logger.info(f"[external] S3 Action: {action} for user: {username}")
+    logger.info(f"S3 Action: {action} for user: {username}")
 
     authz_bucket = bucket or ""
     authz_prefix = object_path or ""
