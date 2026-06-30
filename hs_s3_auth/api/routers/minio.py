@@ -36,7 +36,7 @@ class CsrfVerifyRequest(BaseModel):
     csrf_token: Optional[str] = None
 
 
-@router.post("/verify-csrf/")
+@router.post("/verify-session/")
 async def verify_csrf(request: CsrfVerifyRequest):
     """Authenticate a browser request using the Django session cookie.
 

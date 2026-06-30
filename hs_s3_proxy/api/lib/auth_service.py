@@ -115,7 +115,7 @@ def verify_csrf_token_sync(session_id: str, csrf_token: str = None) -> dict:
     Returns {"allow": True, "user_id": int, "username": str} on success,
     or {"allow": False, "reason": str} on failure.
     """
-    url = f"{AUTH_SERVICE_URL}/minio/verify-csrf/"
+    url = f"{AUTH_SERVICE_URL}/minio/verify-session/"
     payload = {"session_id": session_id}
     if csrf_token:
         payload["csrf_token"] = csrf_token
