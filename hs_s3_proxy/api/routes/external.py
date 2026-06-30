@@ -2,6 +2,7 @@ import logging
 import os
 import hashlib
 import xml.etree.ElementTree as ET
+import re
 from fastapi import APIRouter, Request, Response
 from api.lib.auth_service import verify_csrf_token_sync, verify_signature_sync
 from api.lib.authorization import check_s3_authorization
@@ -18,12 +19,7 @@ logger = logging.getLogger("hs_s3_proxy")
 DEBUG_HEADERS = os.environ.get("S3_PROXY_DEBUG_HEADERS", "false").lower() == "true"
 BACKEND_BUCKET = os.environ.get("S3_BACKEND_BUCKET")
 
-RESOURCE_ID_RE = ET.ElementTree
-try:
-    import re
-    RESOURCE_ID_RE = re.compile(r"^[0-9a-f]{32}$")
-except Exception:
-    RESOURCE_ID_RE = None
+RESOURCE_ID_RE = re.compile(r"^[0-9a-f]{32}$")
 
 
 def _parse_delete_object_keys(body: bytes) -> list[str]:
