@@ -73,7 +73,7 @@ def verify_signature_sync(
     payload_hash: str,
     auth_info: dict,
 ) -> dict:
-    """Delegate SigV4 verification to hs-s3-auth.
+    """Delegate SigV4 verification to micro-auth.
 
     Returns the parsed response body: {"allow": bool, "reason": str?, "user_id": int?}.
     On transport failure, returns {"allow": False, "reason": "auth_service_error"}.
@@ -103,36 +103,4 @@ def verify_signature_sync(
         return {"allow": False, "reason": "auth_service_error"}
     except Exception as e:
         logger.error(f"Unexpected error calling auth service: {e}", exc_info=True)
-        return {"allow": False, "reason": "auth_service_error"}
-
-
-def verify_csrf_token_sync(session_id: str, csrf_token: str = None) -> dict:
-    """Resolve a Django session to a user via hs-s3-auth.
-
-    Sends ``session_id`` (the ``sessionid`` cookie value) and optionally the
-    ``csrf_token`` (the ``csrftoken`` cookie value) to the auth service.
-
-    Returns {"allow": True, "user_id": int, "username": str} on success,
-    or {"allow": False, "reason": str} on failure.
-    """
-    url = f"{AUTH_SERVICE_URL}/minio/verify-csrf/"
-    payload = {"session_id": session_id}
-    if csrf_token:
-        payload["csrf_token"] = csrf_token
-
-    try:
-        with httpx.Client(timeout=AUTH_SERVICE_TIMEOUT) as client:
-            response = client.post(url, json=payload)
-        if response.status_code != 200:
-            logger.error(f"Auth service returned {response.status_code} for CSRF verification: {response.text}")
-            return {"allow": False, "reason": "auth_service_error"}
-        return response.json()
-    except httpx.TimeoutException:
-        logger.error("Auth service timeout during CSRF token verification")
-        return {"allow": False, "reason": "auth_service_error"}
-    except httpx.RequestError as e:
-        logger.error(f"Auth service request error during CSRF verification: {e}")
-        return {"allow": False, "reason": "auth_service_error"}
-    except Exception as e:
-        logger.error(f"Unexpected error during CSRF token verification: {e}", exc_info=True)
         return {"allow": False, "reason": "auth_service_error"}

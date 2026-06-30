@@ -1,7 +1,7 @@
 import logging
 import os
 from typing import Optional
-from urllib.parse import quote
+from urllib.parse import urlencode, quote
 from xml.sax.saxutils import escape as xml_escape
 
 import httpx
@@ -9,52 +9,8 @@ from botocore.auth import S3SigV4Auth
 from botocore.awsrequest import AWSRequest
 from botocore.credentials import Credentials
 from fastapi import Response
-from fastapi.responses import StreamingResponse
-from starlette.background import BackgroundTask
 
 logger = logging.getLogger("hs_s3_proxy")
-DEBUG_HEADERS = os.environ.get("S3_PROXY_DEBUG_HEADERS", "true").lower() == "true"
-
-
-def _encode_query_params(query_params: dict) -> str:
-    # Use RFC3986 encoding (space -> %20, not '+') for SigV4 compatibility.
-    encoded_pairs = []
-    for key, value in query_params.items():
-        encoded_key = quote(str(key), safe='-_.~')
-        encoded_value = quote(str(value), safe='-_.~')
-        encoded_pairs.append((encoded_key, encoded_value))
-    encoded_pairs.sort(key=lambda pair: (pair[0], pair[1]))
-    return '&'.join(f"{k}={v}" for k, v in encoded_pairs)
-
-
-def _decode_aws_chunked_body(body: bytes) -> bytes:
-    """Decode an aws-chunked (SigV4 streaming) payload to raw content bytes.
-
-    boto3 wraps each chunk as::
-
-        {hex-size};chunk-signature={sig}\r\n{data}\r\n
-
-    A final zero-sized chunk signals the end.  We strip all framing and return
-    only the concatenated data bytes so the backend receives a plain body.
-    """
-    result = bytearray()
-    pos = 0
-    while pos < len(body):
-        line_end = body.find(b'\r\n', pos)
-        if line_end == -1:
-            break
-        header = body[pos:line_end].decode('ascii', errors='replace')
-        hex_size = header.split(';')[0].strip()
-        try:
-            chunk_size = int(hex_size, 16)
-        except ValueError:
-            break
-        if chunk_size == 0:
-            break
-        data_start = line_end + 2
-        result.extend(body[data_start:data_start + chunk_size])
-        pos = data_start + chunk_size + 2  # skip trailing \r\n after chunk data
-    return bytes(result)
 
 
 def _s3_error_xml(code: str, message: str) -> bytes:
@@ -94,32 +50,21 @@ class S3ProxyClient:
         body: Optional[bytes] = None
     ) -> Response:
         """Proxy an S3 request to the backend storage, re-signing with backend credentials."""
-        query_params = self._strip_presign_auth_query_params(query_params)
+        path_parts = [p for p in path.split('/') if p]
+        if len(path_parts) < 2:
+            return Response(
+                content=_s3_error_xml("InvalidRequest", "Path must include a bucket and key"),
+                status_code=400, media_type="application/xml",
+            )
 
         encoded_parts = [quote(part, safe='') for part in path.split('/')]
         encoded_path = '/'.join(encoded_parts)
         url = f"{self.backend_url}{encoded_path}"
         if query_params:
-            url = f"{url}?{_encode_query_params(query_params)}"
+            url = f"{url}?{urlencode(query_params)}"
 
         outbound_headers = self._filter_headers(headers)
-        # Force uncompressed backend responses so the proxy can stream raw bytes
-        # without needing to decompress or re-advertise encoding to the client.
-        outbound_headers['accept-encoding'] = 'identity'
         outbound_body = body or b""
-
-        # boto3 streaming uploads use aws-chunked encoding which embeds per-chunk
-        # SigV4 signatures in the body framing.  We re-sign with backend credentials
-        # so the embedded signatures are meaningless to the backend; decode to raw
-        # bytes and strip the related headers so the backend stores the correct content.
-        content_encoding = outbound_headers.get('content-encoding', '').lower()
-        sha256_hdr = outbound_headers.get('x-amz-content-sha256', '')
-        if content_encoding == 'aws-chunked' or sha256_hdr.upper().startswith('STREAMING-'):
-            outbound_body = _decode_aws_chunked_body(outbound_body)
-            outbound_headers.pop('content-encoding', None)
-            outbound_headers.pop('Content-Encoding', None)
-            outbound_headers.pop('x-amz-decoded-content-length', None)
-            outbound_headers.pop('X-Amz-Decoded-Content-Length', None)
 
         if self._signer:
             aws_req = AWSRequest(method=method, url=url, data=outbound_body, headers=outbound_headers)
@@ -129,39 +74,14 @@ class S3ProxyClient:
         logger.info(f"Proxying {method} request to {url}")
 
         try:
-            client = httpx.AsyncClient(timeout=self.timeout)
-            request = client.build_request(
-                method=method,
-                url=url,
-                headers=outbound_headers,
-                content=outbound_body if outbound_body else None,
-            )
-            response = await client.send(request, stream=True, follow_redirects=False)
-            response_headers = self._filter_response_headers(dict(response.headers))
-            # For streamed responses, avoid strict length assertions on downstream
-            # when upstream content encoding/decoding behavior differs by transport.
-            if method.upper() != "HEAD":
-                response_headers.pop("content-length", None)
-                response_headers.pop("Content-Length", None)
-            if DEBUG_HEADERS:
-                logger.info(
-                    "Proxy response debug: status=%s backend_header_names=%s outgoing_header_names=%s",
-                    response.status_code,
-                    sorted(response.headers.keys()),
-                    sorted(response_headers.keys()),
+            async with httpx.AsyncClient(timeout=self.timeout) as client:
+                response = await client.request(
+                    method=method, url=url, headers=outbound_headers,
+                    content=outbound_body if outbound_body else None, follow_redirects=False,
                 )
-
-            async def _close_stream() -> None:
-                await response.aclose()
-                await client.aclose()
-
-            return StreamingResponse(
-                # Preserve exact upstream bytes to keep Content-Length accurate.
-                response.aiter_raw(),
-                status_code=response.status_code,
-                headers=response_headers,
-                background=BackgroundTask(_close_stream),
-            )
+                response_headers = self._filter_response_headers(dict(response.headers))
+                return Response(content=response.content, status_code=response.status_code,
+                                headers=response_headers)
 
         except httpx.TimeoutException:
             logger.error("Timeout proxying request")
@@ -200,70 +120,14 @@ class S3ProxyClient:
             k: v for k, v in headers.items()
             if k.lower() in allow
             or (k.lower().startswith('x-amz-')
-                and k.lower() not in {
-                    'x-amz-date', 'x-amz-content-sha256', 'x-amz-security-token',
-            })
+                and k.lower() not in {'x-amz-date', 'x-amz-content-sha256', 'x-amz-security-token', })
         }
 
     def _filter_response_headers(self, headers: dict) -> dict:
-        """Return only browser-safe response headers from the backend.
-
-        For successful object fetches we do not want to leak arbitrary upstream
-        headers back to the browser. Keep the S3/object metadata that matters to
-        clients and drop everything else, especially anything cookie-related.
-        """
-        allow = {
-            'accept-ranges',
-            'cache-control',
-            'content-disposition',
-            'content-encoding',
-            'content-length',
-            'content-language',
-            'content-range',
-            'content-type',
-            'etag',
-            'expires',
-            'last-modified',
-            'x-amz-checksum-crc32',
-            'x-amz-checksum-crc32c',
-            'x-amz-checksum-crc64nvme',
-            'x-amz-checksum-sha1',
-            'x-amz-checksum-sha256',
-            'x-amz-checksum-type',
-            'x-amz-delete-marker',
-            'x-amz-expiration',
-            'x-amz-mp-parts-count',
-            'x-amz-restore',
-            'x-amz-server-side-encryption',
-            'x-amz-version-id',
-            'x-goog-generation',
-            'x-goog-hash',
-            'x-goog-metageneration',
-            'x-goog-storage-class',
+        """Filter out hop-by-hop headers from the backend response."""
+        exclude = {
+            'connection', 'keep-alive', 'proxy-authenticate', 'proxy-authorization',
+            'te', 'trailer', 'transfer-encoding', 'upgrade',
+            'content-encoding', 'content-length'
         }
-        return {k: v for k, v in headers.items() if k.lower() in allow}
-
-    def _strip_presign_auth_query_params(self, query_params: dict) -> dict:
-        """Drop SigV4 presigned auth params before backend re-signing.
-
-        The proxy authenticates/authorizes client requests itself, then signs
-        upstream calls with backend credentials. Forwarding client presign
-        signature fields would create mixed auth types at the backend.
-        """
-        if not query_params:
-            return query_params
-
-        sigv4_query_fields = {
-            'x-amz-algorithm',
-            'x-amz-credential',
-            'x-amz-date',
-            'x-amz-expires',
-            'x-amz-signedheaders',
-            'x-amz-signature',
-            'x-amz-security-token',
-            'x-amz-content-sha256',
-        }
-        return {
-            k: v for k, v in query_params.items()
-            if str(k).lower() not in sigv4_query_fields
-        }
+        return {k: v for k, v in headers.items() if k.lower() not in exclude}

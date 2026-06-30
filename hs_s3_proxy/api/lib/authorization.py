@@ -1,23 +1,15 @@
 import logging
-from typing import List, Optional
 
 from api.lib.auth_service import check_authorization_sync
 
 logger = logging.getLogger("hs_s3_proxy")
 
 
-def check_s3_authorization(
-    username: str,
-    action: str,
-    bucket: str,
-    object_path: str,
-    prefixes: Optional[List[str]] = None,
-) -> bool:
+def check_s3_authorization(username: str, action: str, bucket: str, object_path: str) -> bool:
     if not action.startswith("s3:"):
         action = f"s3:{action}"
 
-    if prefixes is None:
-        prefixes = [object_path] if object_path else []
+    prefixes = [object_path] if object_path else []
 
     return check_authorization_sync(
         username=username,
