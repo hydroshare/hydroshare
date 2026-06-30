@@ -129,6 +129,10 @@ class S3ProxyClient:
         """Return the _ZoneBackend for *bucket*, or None if not configured."""
         return self._zone_backends.get(bucket)
 
+    def is_configured_bucket(self, bucket: str) -> bool:
+        """Return True when *bucket* exists in S3_ZONE_CONFIG."""
+        return bucket in self._zone_backends
+
     async def close(self) -> None:
         await self._client.aclose()
 

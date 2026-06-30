@@ -17,7 +17,6 @@ from api.lib.s3_proxy import S3ProxyClient
 
 logger = logging.getLogger("hs_s3_proxy")
 DEBUG_HEADERS = os.environ.get("S3_PROXY_DEBUG_HEADERS", "false").lower() == "true"
-BACKEND_BUCKET = os.environ.get("S3_BACKEND_BUCKET")
 
 RESOURCE_ID_RE = re.compile(r"^[0-9a-f]{32}$")
 
@@ -172,7 +171,7 @@ async def proxy_s3_request(request: Request, full_path: str):
 
     authz_bucket = bucket or ""
     authz_prefix = object_path or ""
-    if BACKEND_BUCKET and bucket == BACKEND_BUCKET:
+    if s3_proxy.is_configured_bucket(bucket):
         path_parts = (object_path or "").split("/", 2)
         if len(path_parts) >= 2 and RESOURCE_ID_RE.fullmatch(path_parts[1]):
             authz_bucket = path_parts[0]
