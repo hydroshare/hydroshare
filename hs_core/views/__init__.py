@@ -18,6 +18,7 @@ from django.db import Error, IntegrityError
 from django.db.models import Q, F
 from django.forms.models import model_to_dict
 from django.http import (
+    HttpRequest,
     HttpResponse,
     HttpResponseBadRequest,
     HttpResponseForbidden,
@@ -908,6 +909,56 @@ def delete_metadata_element(
 
     update_doi_metadata_with_datacite(short_id=shortkey, element_name=element_name, payload={})
     return HttpResponseRedirect(request.headers["referer"])
+
+
+@login_required
+def delete_resource_coverage(request: HttpRequest, resource_id: str, coverage_type: str, **kwargs) -> JsonResponse:
+    """Deletes resource coverage
+    :param  request: an instance of HttpRequest
+    :param  resource_id: id of resource for which coverage needs to be deleted
+    :param  coverage_type: a value of either temporal or spatial
+    :return an instance of JsonResponse type
+    """
+    resource, authorized, _ = authorize(
+        request,
+        resource_id,
+        needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
+        raises_exception=False,
+    )
+
+    error_response = {"status": "error"}
+    if not authorized:
+        err_msg = "Permission denied"
+        error_response["message"] = err_msg
+        return JsonResponse(error_response, status=status.HTTP_401_UNAUTHORIZED)
+
+    if resource.resource_type not in ["CompositeResource", "CollectionResource"]:
+        err_msg = "Coverage can be only be deleted for Composite and Collection type resources."
+        error_response["message"] = err_msg
+        return JsonResponse(error_response, status=status.HTTP_400_BAD_REQUEST)
+
+    coverage_type = coverage_type.lower()
+    if coverage_type not in ("temporal", "spatial"):
+        err_msg = "Invalid coverage type specified."
+        error_response["message"] = err_msg
+        return JsonResponse(error_response, status=status.HTTP_400_BAD_REQUEST)
+
+    resource.delete_coverage(coverage_type=coverage_type)
+    resource_modified(resource, request.user, overwrite_bag=False)
+    update_doi_metadata_with_datacite(short_id=resource_id, element_name="coverage", payload={})
+
+    response_data = {
+        "status": "success",
+        "message": f"Resource {coverage_type} coverage was deleted successfully."
+    }
+
+    coverage_dict = get_coverage_data_dict(resource, coverage_type)
+    if coverage_type == "spatial":
+        response_data["spatial_coverage"] = coverage_dict
+    else:
+        response_data["temporal_coverage"] = coverage_dict
+
+    return JsonResponse(response_data, status=status.HTTP_200_OK)
 
 
 def delete_author(request, shortkey, element_id, *args, **kwargs):
