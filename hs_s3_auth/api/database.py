@@ -3,6 +3,8 @@ import json
 import os
 import zlib
 
+from fastapi import logger
+
 from sqlalchemy import create_engine, text
 
 DATABASE_URL = os.environ.get("HS_DATABASE_URL")
@@ -161,9 +163,7 @@ def user_has_edit_access(user_id: int, resource_id: str):
 def _decode_django_session_data(session_data: str) -> dict:
     """Decode Django session data from the database.
 
-    Handles two storage formats:
-      - New (Django 2.0+): ``.{base64url_zlib_payload}:{timestamp}:{signature}``
-      - Old             : ``base64({40-char-hash}:{json})``
+    - (Django 2.0+): ``.{base64url_zlib_payload}:{timestamp}:{signature}``
     The HMAC signature is intentionally not verified here because the service
     already trusts the database; the expiry check in the SQL query is the
     security gate.
@@ -176,12 +176,6 @@ def _decode_django_session_data(session_data: str) -> dict:
         payload_b64 += '=' * padding
         compressed = base64.urlsafe_b64decode(payload_b64)
         return json.loads(zlib.decompress(compressed))
-    else:
-        # Old format: standard base64(hash:json)
-        padding = (4 - len(session_data) % 4) % 4
-        decoded = base64.b64decode(session_data + '=' * padding)
-        colon_idx = decoded.index(b':')
-        return json.loads(decoded[colon_idx + 1:])
 
 
 def get_user_by_session_id(session_id: str):
@@ -200,12 +194,14 @@ def get_user_by_session_id(session_id: str):
         rs = con.execute(statement=text(session_query), parameters=dict(session_id=session_id))
         row = rs.fetchone()
         if not row:
+            logger.info(f"No valid session found for session_id={session_id}")
             return None
         session_data = row[0]
 
     try:
         session_dict = _decode_django_session_data(session_data)
     except Exception:
+        logger.error(f"Error decoding session data for session_id={session_id}", exc_info=True)
         return None
 
     raw_user_id = session_dict.get('_auth_user_id')
@@ -215,6 +211,7 @@ def get_user_by_session_id(session_id: str):
     try:
         user_id = int(raw_user_id)
     except (ValueError, TypeError):
+        logger.error(f"Invalid user_id in session data for session_id={session_id}: {raw_user_id}", exc_info=True)
         return None
 
     user_query = """
@@ -227,4 +224,5 @@ def get_user_by_session_id(session_id: str):
         row = rs.fetchone()
         if row:
             return row[0], row[1]
+    logger.info(f"No valid user found for user_id={user_id}")
     return None
