@@ -128,9 +128,9 @@ class S3ProxyClient:
     ) -> Response:
         """Proxy an S3 request to the backend storage, re-signing with backend credentials."""
         path_parts = [p for p in path.split('/') if p]
-        if len(path_parts) < 2:
+        if len(path_parts) < 1:
             return Response(
-                content=_s3_error_xml("InvalidRequest", "Path must include a bucket and key"),
+                content=_s3_error_xml("InvalidRequest", "Path must include a bucket"),
                 status_code=400, media_type="application/xml",
             )
 
