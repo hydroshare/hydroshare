@@ -13,6 +13,10 @@ from botocore.credentials import Credentials
 from fastapi import Response
 
 logger = logging.getLogger("hs_s3_proxy")
+S3_PROXY_POOL_MAX_CONNECTIONS = int(os.environ.get("S3_PROXY_POOL_MAX_CONNECTIONS", "50"))
+S3_PROXY_POOL_MAX_KEEPALIVE_CONNECTIONS = int(
+    os.environ.get("S3_PROXY_POOL_MAX_KEEPALIVE_CONNECTIONS", "20")
+)
 
 
 def _s3_error_xml(code: str, message: str) -> bytes:
@@ -98,6 +102,13 @@ class S3ProxyClient:
     def __init__(self):
         self.timeout = float(os.environ.get("S3_PROXY_TIMEOUT", "300"))
         self._zone_backends: dict[str, _ZoneBackend] = _load_zone_config()
+        self._client = httpx.AsyncClient(
+            timeout=self.timeout,
+            limits=httpx.Limits(
+                max_connections=S3_PROXY_POOL_MAX_CONNECTIONS,
+                max_keepalive_connections=S3_PROXY_POOL_MAX_KEEPALIVE_CONNECTIONS,
+            ),
+        )
         logger.info(f"S3 Proxy initialized: zone_buckets={sorted(self._zone_backends)}")
 
     # ------------------------------------------------------------------
@@ -117,6 +128,9 @@ class S3ProxyClient:
     def _backend_for_bucket(self, bucket: str) -> Optional[_ZoneBackend]:
         """Return the _ZoneBackend for *bucket*, or None if not configured."""
         return self._zone_backends.get(bucket)
+
+    async def close(self) -> None:
+        await self._client.aclose()
 
     async def proxy_request(
         self,
@@ -161,14 +175,13 @@ class S3ProxyClient:
         logger.info(f"Proxying {method} request to {url}")
 
         try:
-            async with httpx.AsyncClient(timeout=self.timeout) as client:
-                response = await client.request(
-                    method=method, url=url, headers=outbound_headers,
-                    content=outbound_body if outbound_body else None, follow_redirects=False,
-                )
-                response_headers = self._filter_response_headers(dict(response.headers))
-                return Response(content=response.content, status_code=response.status_code,
-                                headers=response_headers)
+            response = await self._client.request(
+                method=method, url=url, headers=outbound_headers,
+                content=outbound_body if outbound_body else None, follow_redirects=False,
+            )
+            response_headers = self._filter_response_headers(dict(response.headers))
+            return Response(content=response.content, status_code=response.status_code,
+                            headers=response_headers)
 
         except httpx.TimeoutException:
             logger.error("Timeout proxying request")

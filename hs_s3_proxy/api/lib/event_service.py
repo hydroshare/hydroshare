@@ -7,6 +7,22 @@ logger = logging.getLogger("hs_s3_proxy")
 
 AUTH_SERVICE_URL = os.environ.get("AUTH_SERVICE_URL", "http://localhost:8001")
 EVENT_SERVICE_TIMEOUT = float(os.environ.get("EVENT_SERVICE_TIMEOUT", "5.0"))
+EVENT_SERVICE_POOL_MAX_CONNECTIONS = int(os.environ.get("EVENT_SERVICE_POOL_MAX_CONNECTIONS", "10"))
+EVENT_SERVICE_POOL_MAX_KEEPALIVE_CONNECTIONS = int(
+    os.environ.get("EVENT_SERVICE_POOL_MAX_KEEPALIVE_CONNECTIONS", "5")
+)
+EVENT_SERVICE_LIMITS = httpx.Limits(
+    max_connections=EVENT_SERVICE_POOL_MAX_CONNECTIONS,
+    max_keepalive_connections=EVENT_SERVICE_POOL_MAX_KEEPALIVE_CONNECTIONS,
+)
+EVENT_SERVICE_CLIENT = httpx.Client(
+    timeout=EVENT_SERVICE_TIMEOUT,
+    limits=EVENT_SERVICE_LIMITS,
+)
+
+
+def close_event_service_client() -> None:
+    EVENT_SERVICE_CLIENT.close()
 
 
 def post_s3_event(
@@ -36,8 +52,7 @@ def post_s3_event(
     }
 
     try:
-        with httpx.Client(timeout=EVENT_SERVICE_TIMEOUT) as client:
-            response = client.post(url, json=payload)
+        response = EVENT_SERVICE_CLIENT.post(url, json=payload)
         if response.status_code not in (200, 204):
             logger.error(
                 f"Event service returned {response.status_code} for {action} "
