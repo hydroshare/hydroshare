@@ -1,5 +1,7 @@
+import json
 import logging
 import os
+from dataclasses import dataclass
 from typing import Optional
 from urllib.parse import urlencode, quote
 from xml.sax.saxutils import escape as xml_escape
@@ -21,25 +23,100 @@ def _s3_error_xml(code: str, message: str) -> bytes:
     ).encode("utf-8")
 
 
+@dataclass
+class _ZoneBackend:
+    """Per-bucket backend configuration resolved from S3_ZONE_CONFIG."""
+    zone: str
+    endpoint: str
+    signer: Optional[S3SigV4Auth]
+
+
+def _build_signer(access_key: str, secret_key: str, region: str) -> Optional[S3SigV4Auth]:
+    if access_key and secret_key:
+        return S3SigV4Auth(Credentials(access_key, secret_key), "s3", region)
+    return None
+
+
+def _load_zone_config() -> dict[str, _ZoneBackend]:
+    """Parse S3_ZONE_CONFIG (JSON) into a bucket-name → _ZoneBackend map.
+
+    Expected JSON shape::
+
+        {
+          "resource": {
+            "zone":       "hydroshare",   // logical zone name (defaults to bucket name)
+            "endpoint":   "http://minio:9000",
+            "access_key": "cuahsi",
+            "secret_key": "devpassword",
+            "region":     "auto"          // optional, defaults to "auto"
+          },
+          "ciroh": { ... }
+        }
+
+    Buckets not present in the map are rejected with NoSuchBucket.
+    """
+    raw = os.environ.get("S3_ZONE_CONFIG", "").strip()
+    if not raw:
+        return {}
+
+    try:
+        mapping: dict = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        logger.error(f"Invalid S3_ZONE_CONFIG JSON: {exc}")
+        return {}
+
+    backends: dict[str, _ZoneBackend] = {}
+    for bucket, cfg in mapping.items():
+        if not isinstance(cfg, dict):
+            logger.warning(f"S3_ZONE_CONFIG: ignoring non-dict entry for bucket {bucket!r}")
+            continue
+        endpoint = cfg.get("endpoint")
+        ak = cfg.get("access_key", "")
+        sk = cfg.get("secret_key", "")
+        region = cfg.get("region", "auto")
+        zone_name = cfg.get("zone", bucket)
+        if not endpoint:
+            logger.warning(f"S3_ZONE_CONFIG: bucket {bucket!r} has no endpoint, skipping")
+            continue
+        backends[bucket] = _ZoneBackend(
+            zone=zone_name,
+            endpoint=endpoint,
+            signer=_build_signer(ak, sk, region),
+        )
+        logger.info(f"Zone config: bucket={bucket!r} → zone={zone_name!r} endpoint={endpoint}")
+
+    return backends
+
+
 class S3ProxyClient:
-    """Proxies S3 requests to a backend S3-compatible storage service."""
+    """Proxies S3 requests to a backend S3-compatible storage service.
+
+    All bucket → backend routing is driven exclusively by S3_ZONE_CONFIG.
+    Requests for unconfigured buckets are rejected with 404 NoSuchBucket.
+    """
 
     def __init__(self):
-        self.backend_url = os.environ.get("S3_BACKEND_URL", "http://localhost:9000")
-        self.backend_access_key = os.environ.get("S3_BACKEND_ACCESS_KEY", "")
-        self.backend_secret_key = os.environ.get("S3_BACKEND_SECRET_KEY", "")
-        self.region = os.environ.get("S3_BACKEND_REGION", "auto")
         self.timeout = float(os.environ.get("S3_PROXY_TIMEOUT", "300"))
+        self._zone_backends: dict[str, _ZoneBackend] = _load_zone_config()
+        logger.info(f"S3 Proxy initialized: zone_buckets={sorted(self._zone_backends)}")
 
-        if self.backend_access_key and self.backend_secret_key:
-            self._signer = S3SigV4Auth(
-                Credentials(self.backend_access_key, self.backend_secret_key),
-                "s3", self.region,
-            )
-        else:
-            self._signer = None
+    # ------------------------------------------------------------------
+    # Public helpers used by external.py for event routing
+    # ------------------------------------------------------------------
 
-        logger.info(f"S3 Proxy initialized with backend: {self.backend_url}")
+    def zone_for_bucket(self, bucket: str) -> str:
+        """Return the logical zone name for *bucket*, or the bucket name itself
+        when no zone mapping is configured."""
+        backend = self._zone_backends.get(bucket)
+        return backend.zone if backend else bucket
+
+    # ------------------------------------------------------------------
+    # Internal routing
+    # ------------------------------------------------------------------
+
+    def _backend_for_bucket(self, bucket: str) -> Optional[_ZoneBackend]:
+        """Return the _ZoneBackend for *bucket*, or None if not configured."""
+        return self._zone_backends.get(bucket)
 
     async def proxy_request(
         self,
@@ -57,18 +134,28 @@ class S3ProxyClient:
                 status_code=400, media_type="application/xml",
             )
 
+        # Resolve the bucket-specific backend; reject buckets not in zone config.
+        bucket = path_parts[0]
+        zone_backend = self._backend_for_bucket(bucket)
+        if zone_backend is None:
+            logger.warning(f"No zone config for bucket={bucket!r}")
+            return Response(
+                content=_s3_error_xml("NoSuchBucket", f"Bucket {bucket!r} is not served by this endpoint"),
+                status_code=404, media_type="application/xml",
+            )
+
         encoded_parts = [quote(part, safe='') for part in path.split('/')]
         encoded_path = '/'.join(encoded_parts)
-        url = f"{self.backend_url}{encoded_path}"
+        url = f"{zone_backend.endpoint}{encoded_path}"
         if query_params:
             url = f"{url}?{urlencode(query_params)}"
 
         outbound_headers = self._filter_headers(headers)
         outbound_body = body or b""
 
-        if self._signer:
+        if zone_backend.signer:
             aws_req = AWSRequest(method=method, url=url, data=outbound_body, headers=outbound_headers)
-            self._signer.add_auth(aws_req)
+            zone_backend.signer.add_auth(aws_req)
             outbound_headers = dict(aws_req.headers)
 
         logger.info(f"Proxying {method} request to {url}")

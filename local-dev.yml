@@ -329,10 +329,12 @@ services:
     environment:
       AUTH_SERVICE_URL: "http://hs-s3-auth"
       AUTH_SERVICE_TIMEOUT: "5"
-      S3_BACKEND_URL: "http://minio:9000"
-      S3_BACKEND_ACCESS_KEY: "cuahsi"
-      S3_BACKEND_SECRET_KEY: "devpassword"
-      S3_BACKEND_REGION: "auto"
+      S3_ZONE_CONFIG: >-
+        {
+          "resource":  {"zone": "hydroshare", "endpoint": "http://minio:9000", "access_key": "cuahsi", "secret_key": "devpassword", "region": "auto"},
+          "published": {"zone": "published",  "endpoint": "http://minio:9000", "access_key": "cuahsi", "secret_key": "devpassword", "region": "auto"},
+          "ciroh":     {"zone": "ciroh",      "endpoint": "http://minio:9000", "access_key": "cuahsi", "secret_key": "devpassword", "region": "auto"}
+        }
       S3_PROXY_TIMEOUT: "300"
     ports:
       - 9002:9000

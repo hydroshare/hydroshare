@@ -224,11 +224,13 @@ async def proxy_s3_request(request: Request, full_path: str):
         post_s3_event(
             action=action, bucket=authz_bucket, object_path=authz_prefix,
             username=username, user_id=user_id, file_size=file_size,
+            zone=s3_proxy.zone_for_bucket(authz_bucket),
         )
     if action in ["s3:DeleteObjects"] and response.status_code in [200, 204]:
         post_s3_event(
             action=action, bucket=authz_bucket, object_path=authz_prefix,
             username=username, user_id=user_id,
+            zone=s3_proxy.zone_for_bucket(authz_bucket),
         )
         logger.info(f"Successfully proxied {action} for user {username} on {authz_bucket}/{authz_prefix}")
     return response
