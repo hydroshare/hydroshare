@@ -85,7 +85,7 @@ def _verify_csrf_session_request(request: Request):
     """Authenticate a request using session and CSRF cookies."""
     csrf_token = request.cookies.get("csrftoken")
     session_id = request.cookies.get("sessionid")
-    if not session_id:
+    if not session_id or not csrf_token:
         logger.warning("No valid authorization (header/presigned) or session cookie found")
         return None, None, Response(
             content=b"<Error><Code>AccessDenied</Code><Message>Access Denied</Message></Error>",

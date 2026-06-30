@@ -1,5 +1,6 @@
 import logging
 import os
+import string
 from typing import AnyStr, List, Optional
 
 from fastapi import APIRouter
@@ -29,11 +30,23 @@ from api.sigv4 import verify_signature_v4
 
 router = APIRouter()
 logger = logging.getLogger("hs-s3-auth")
+CSRF_ALLOWED_CHARS = set(string.ascii_letters + string.digits)
+CSRF_SECRET_LENGTH = 32
+CSRF_TOKEN_LENGTH = 64
+
+
+def _is_valid_csrf_token(token: str) -> bool:
+    """Validate Django CSRF token shape (masked or unmasked)."""
+    if not token:
+        return False
+    if len(token) not in (CSRF_SECRET_LENGTH, CSRF_TOKEN_LENGTH):
+        return False
+    return all(ch in CSRF_ALLOWED_CHARS for ch in token)
 
 
 class CsrfVerifyRequest(BaseModel):
     session_id: str
-    csrf_token: Optional[str] = None
+    csrf_token: str
 
 
 @router.post("/verify-session/")
@@ -41,11 +54,13 @@ async def verify_csrf(request: CsrfVerifyRequest):
     """Authenticate a browser request using the Django session cookie.
 
     The caller must supply ``session_id`` (the value of the ``sessionid``
-    cookie).  The optional ``csrf_token`` (``csrftoken`` cookie) is accepted
-    but not separately verified here — Django's own middleware handles CSRF
-    protection on the origin server; this endpoint only resolves the session
-    to an authenticated user.
+    cookie) and ``csrf_token`` (the ``csrftoken`` cookie). The CSRF token is
+    required and must be in a valid Django CSRF token format.
     """
+    if not _is_valid_csrf_token(request.csrf_token):
+        logger.warning("CSRF/session verification failed: invalid CSRF token format")
+        return {"allow": False, "reason": "invalid_csrf_token"}
+
     result = get_user_by_session_id(request.session_id)
     if not result:
         logger.warning("CSRF/session verification failed: session not found or expired")
