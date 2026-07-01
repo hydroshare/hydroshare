@@ -1,11 +1,12 @@
 import base64
 import json
+import logging
 import os
 import zlib
 
-from fastapi import logger
-
 from sqlalchemy import create_engine, text
+
+logger = logging.getLogger("hs-s3-auth")
 
 DATABASE_URL = os.environ.get("HS_DATABASE_URL")
 engine = create_engine(DATABASE_URL)
