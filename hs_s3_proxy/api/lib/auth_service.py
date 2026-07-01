@@ -106,7 +106,7 @@ def verify_signature_sync(
         return {"allow": False, "reason": "auth_service_error"}
 
 
-def verify_csrf_sync(session_id: str, csrf_token: str) -> dict:
+def verify_csrf_sync(session_id: str, csrf_token: str, request_method: str, request_headers: dict) -> dict:
     """Resolve a Django session to a user via hs-s3-auth.
 
     Sends ``session_id`` (the ``sessionid`` cookie value) and optionally the
@@ -116,7 +116,12 @@ def verify_csrf_sync(session_id: str, csrf_token: str) -> dict:
     or {"allow": False, "reason": str} on failure.
     """
     url = f"{AUTH_SERVICE_URL}/minio/verify-csrf/"
-    payload = {"session_id": session_id, "csrf_token": csrf_token}
+    payload = {
+        "session_id": session_id,
+        "csrf_token": csrf_token,
+        "request_method": request_method,
+        "request_headers": request_headers,
+    }
 
     try:
         with httpx.Client(timeout=AUTH_SERVICE_TIMEOUT) as client:

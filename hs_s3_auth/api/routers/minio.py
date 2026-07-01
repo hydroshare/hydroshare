@@ -1,10 +1,12 @@
 import logging
 import os
 import string
-from typing import AnyStr, List, Optional
+import hmac
+from typing import AnyStr, Dict, List, Optional
+from urllib.parse import urlparse
 
 from fastapi import APIRouter
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from api.cache import (
     backfill_edit_access,
@@ -34,6 +36,130 @@ _CSRF_CHARS = string.ascii_letters + string.digits
 CSRF_ALLOWED_CHARS = set(_CSRF_CHARS)
 CSRF_SECRET_LENGTH = 32
 CSRF_TOKEN_LENGTH = 64
+SAFE_METHODS = {"GET", "HEAD", "OPTIONS", "TRACE"}
+
+
+def _lower_headers(headers: Optional[Dict[str, str]]) -> Dict[str, str]:
+    return {str(k).lower(): str(v) for k, v in (headers or {}).items()}
+
+
+def _unmask_cipher_token(token: str) -> str:
+    mask = token[:CSRF_SECRET_LENGTH]
+    cipher = token[CSRF_SECRET_LENGTH:]
+    chars = _CSRF_CHARS
+    char_map = {c: i for i, c in enumerate(chars)}
+    return "".join(chars[(char_map[c] - char_map[m]) % len(chars)] for c, m in zip(cipher, mask))
+
+
+def _normalize_csrf_secret(secret: str) -> Optional[str]:
+    if not _is_valid_csrf_token(secret):
+        return None
+    if len(secret) == CSRF_TOKEN_LENGTH:
+        return _unmask_cipher_token(secret)
+    return secret
+
+
+def _does_token_match(request_csrf_token: str, csrf_secret: str) -> bool:
+    if len(request_csrf_token) == CSRF_TOKEN_LENGTH:
+        request_csrf_token = _unmask_cipher_token(request_csrf_token)
+    return hmac.compare_digest(request_csrf_token, csrf_secret)
+
+
+def _is_same_domain(host: str, pattern: str) -> bool:
+    host = (host or "").split(":", 1)[0].lower()
+    pattern = (pattern or "").split(":", 1)[0].lower()
+    if not host or not pattern:
+        return False
+    if pattern.startswith("."):
+        pattern = pattern[1:]
+    return host == pattern or host.endswith(f".{pattern}")
+
+
+def _get_trusted_origins() -> List[str]:
+    raw = os.environ.get("CSRF_TRUSTED_ORIGINS", "")
+    return [origin.strip() for origin in raw.split(",") if origin.strip()]
+
+
+def _origin_verified(headers: Dict[str, str], is_secure: bool) -> bool:
+    origin = headers.get("origin")
+    if not origin:
+        return True
+
+    trusted_origins = _get_trusted_origins()
+    host = headers.get("x-forwarded-host") or headers.get("host", "")
+    scheme = headers.get("x-forwarded-proto") or ("https" if is_secure else "http")
+    good_origin = f"{scheme}://{host}"
+    if origin == good_origin:
+        return True
+
+    if origin in trusted_origins:
+        return True
+
+    try:
+        parsed_origin = urlparse(origin)
+    except ValueError:
+        return False
+    if not parsed_origin.scheme or not parsed_origin.netloc:
+        return False
+
+    origin_host = parsed_origin.netloc
+    for trusted in trusted_origins:
+        try:
+            parsed_trusted = urlparse(trusted)
+        except ValueError:
+            continue
+        if not parsed_trusted.scheme or not parsed_trusted.netloc:
+            continue
+        if parsed_trusted.scheme != parsed_origin.scheme:
+            continue
+        trusted_host = parsed_trusted.netloc
+        if trusted_host.startswith("*."):
+            if _is_same_domain(origin_host, trusted_host[2:]):
+                return True
+        elif origin_host.lower() == trusted_host.lower():
+            return True
+
+    return False
+
+
+def _check_referer(headers: Dict[str, str], is_secure: bool) -> bool:
+    if not is_secure:
+        return True
+
+    referer = headers.get("referer")
+    if not referer:
+        return False
+
+    try:
+        parsed = urlparse(referer)
+    except ValueError:
+        return False
+    if parsed.scheme != "https" or not parsed.netloc:
+        return False
+
+    referer_host = parsed.netloc
+
+    for trusted in _get_trusted_origins():
+        try:
+            parsed_trusted = urlparse(trusted)
+        except ValueError:
+            continue
+        if not parsed_trusted.netloc:
+            continue
+        trusted_host = parsed_trusted.netloc
+        if trusted_host.startswith("*."):
+            if _is_same_domain(referer_host, trusted_host[2:]):
+                return True
+        elif _is_same_domain(referer_host, trusted_host):
+            return True
+
+    cookie_domain = os.environ.get("COOKIE_DOMAIN", "").strip()
+    good_host = cookie_domain or headers.get("x-forwarded-host") or headers.get("host", "")
+    return _is_same_domain(referer_host, good_host)
+
+
+def _extract_request_csrf_token(headers: Dict[str, str]) -> str:
+    return headers.get("x-csrftoken") or headers.get("x-csrf-token") or ""
 
 
 def _is_valid_csrf_token(token: str) -> bool:
@@ -45,20 +171,11 @@ def _is_valid_csrf_token(token: str) -> bool:
     return all(ch in CSRF_ALLOWED_CHARS for ch in token)
 
 
-def _unmask_csrf_token(token: str) -> str:
-    """Reverse Django's CSRF masking to recover the 32-char secret."""
-    mask = token[:CSRF_SECRET_LENGTH]
-    ciphertext = token[CSRF_SECRET_LENGTH:]
-    chars_len = len(_CSRF_CHARS)
-    return ''.join(
-        _CSRF_CHARS[(_CSRF_CHARS.index(c) - _CSRF_CHARS.index(m)) % chars_len]
-        for c, m in zip(ciphertext, mask)
-    )
-
-
 class CsrfVerifyRequest(BaseModel):
     session_id: str
     csrf_token: str
+    request_method: str = "GET"
+    request_headers: Dict[str, str] = Field(default_factory=dict)
 
 
 @router.post("/verify-csrf/")
@@ -69,8 +186,17 @@ async def verify_csrf(request: CsrfVerifyRequest):
     cookie) and ``csrf_token`` (the CSRF token value carried by the browser
     cookie or request).
     """
+    headers = _lower_headers(request.request_headers)
+    method = (request.request_method or "GET").upper()
+    is_secure = (headers.get("x-forwarded-proto") or "").lower() == "https"
+
     if not _is_valid_csrf_token(request.csrf_token):
         logger.warning("CSRF/session verification failed: invalid CSRF token format")
+        return {"allow": False, "reason": "invalid_csrf_token"}
+
+    csrf_secret = _normalize_csrf_secret(request.csrf_token)
+    if not csrf_secret:
+        logger.warning("CSRF/session verification failed: invalid CSRF secret")
         return {"allow": False, "reason": "invalid_csrf_token"}
 
     result = get_user_by_session_id(request.session_id)
@@ -80,13 +206,25 @@ async def verify_csrf(request: CsrfVerifyRequest):
 
     user_id, username = result
 
-    # When Django stores the CSRF secret in the cookie instead of the session,
-    # the proxy forwards that cookie value here. We can still validate the token
-    # shape and the authenticated session identity.
-    if len(request.csrf_token) == CSRF_TOKEN_LENGTH:
-        # Accept masked tokens too when callers still forward them.
-        logger.info(f"CSRF/session authentication succeeded for user: {username} (id={user_id})")
-        return {"allow": True, "user_id": user_id, "username": username}
+    if method not in SAFE_METHODS:
+        if not _origin_verified(headers, is_secure=is_secure):
+            logger.warning("CSRF/session verification failed: bad origin")
+            return {"allow": False, "reason": "bad_origin"}
+
+        if not headers.get("origin") and not _check_referer(headers, is_secure=is_secure):
+            logger.warning("CSRF/session verification failed: bad referer")
+            return {"allow": False, "reason": "bad_referer"}
+
+        request_csrf_token = _extract_request_csrf_token(headers)
+        if not request_csrf_token:
+            logger.warning("CSRF/session verification failed: missing request CSRF token")
+            return {"allow": False, "reason": "missing_csrf_token"}
+        if not _is_valid_csrf_token(request_csrf_token):
+            logger.warning("CSRF/session verification failed: invalid request CSRF token format")
+            return {"allow": False, "reason": "invalid_csrf_token"}
+        if not _does_token_match(request_csrf_token, csrf_secret):
+            logger.warning("CSRF/session verification failed: CSRF token mismatch")
+            return {"allow": False, "reason": "csrf_token_mismatch"}
 
     logger.info(f"CSRF/cookie authentication succeeded for user: {username} (id={user_id})")
     return {"allow": True, "user_id": user_id, "username": username}
