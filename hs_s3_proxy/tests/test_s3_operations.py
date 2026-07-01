@@ -11,15 +11,18 @@ Each operation is tested twice:
   - SigV4 service-account auth  (s3_client fixture / Test* classes)
   - Django session-cookie auth   (session_s3_client fixture / TestSession* classes)
 
-Event-service checks (TestEventService) verify that the proxy POSTs to the
-hs-s3-auth /s3/event/ endpoint after write operations.
+Event-service checks (TestEventService) verify Celery tasks are enqueued in
+Redis after write operations.
 
 Run with the proxy and its dependencies live:
     pytest hs_s3_proxy/tests/test_s3_operations.py -v
 """
 import io
 import os
-import requests
+import threading
+import time
+
+import redis
 
 
 # ---------------------------------------------------------------------------
@@ -561,53 +564,77 @@ class TestSessionMultipartUpload:
 
 # ===========================================================================
 # Event-service checks
-# Verify that the proxy calls the hs-s3-auth /s3/event/ endpoint after writes.
+# Verify that writes enqueue Celery tasks through Redis.
 # ===========================================================================
 
 class TestEventService:
-    """Directly call the event service endpoint to confirm it is reachable and
-    accepts well-formed payloads.  Combined with the proxy's own logging
-    (which shows the POST to /s3/event/ on every write), this proves the
-    full event pipeline is wired up correctly."""
+    """Verify S3 writes enqueue expected Celery tasks via Redis."""
+
+    @staticmethod
+    def _capture_redis_commands_during(trigger, timeout_seconds=2.5):
+        redis_host = os.environ.get("REDIS_HOST", "localhost")
+        redis_port = int(os.environ.get("REDIS_PORT", "6379"))
+        redis_db = int(os.environ.get("REDIS_DB", "0"))
+        client = redis.Redis(
+            host=redis_host,
+            port=redis_port,
+            db=redis_db,
+            decode_responses=True,
+        )
+
+        commands = []
+        ready = threading.Event()
+
+        def _watch():
+            with client.monitor() as monitor:
+                ready.set()
+                deadline = time.time() + timeout_seconds
+                for item in monitor.listen():
+                    command = item.get("command", "")
+                    if command:
+                        commands.append(command)
+                    if time.time() >= deadline:
+                        break
+
+        watcher = threading.Thread(target=_watch, daemon=True)
+        watcher.start()
+        assert ready.wait(1.0), "Redis MONITOR did not start in time"
+
+        # Give MONITOR a moment to subscribe before triggering the S3 request.
+        time.sleep(0.1)
+        trigger()
+        watcher.join(timeout_seconds + 1.0)
+        return commands
+
+    @staticmethod
+    def _count_task_pushes(commands, task_name, object_path):
+        return sum(
+            1
+            for cmd in commands
+            if "LPUSH" in cmd and task_name in cmd and object_path in cmd
+        )
 
     def test_put_object_calls_event_service(
-        self, s3_client, test_bucket, unique_prefix, event_service_endpoint,
-        hs_credentials,
+        self, s3_client, test_bucket, unique_prefix,
     ):
-        """After a SigV4 PutObject the event service must accept a matching
-        event payload with 204."""
+        """A SigV4 PutObject must enqueue hs_event_s3 and extract tasks."""
         key = f"{unique_prefix}/event-check.txt"
-        username = hs_credentials[0]
 
-        s3_client.put_object(Bucket=test_bucket, Key=key, Body=b"event check")
+        commands = self._capture_redis_commands_during(
+            lambda: s3_client.put_object(Bucket=test_bucket, Key=key, Body=b"event check")
+        )
         try:
-            resp = requests.post(
-                f"{event_service_endpoint}/s3/event/",
-                json={
-                    "action": "s3:PutObject",
-                    "bucket": test_bucket,
-                    "object_path": key,
-                    "username": username,
-                    "user_id": None,
-                    "file_size": 11,
-                },
-                timeout=5,
-            )
-            assert resp.status_code == 204, (
-                f"Event service returned {resp.status_code}: {resp.text}"
-            )
+            assert self._count_task_pushes(commands, "hs_event_s3.tasks.process_s3_event", key) >= 1
+            assert self._count_task_pushes(commands, "hs_extract.tasks.extract_metadata", key) >= 1
         finally:
             s3_client.delete_object(Bucket=test_bucket, Key=key)
 
     def test_complete_multipart_calls_event_service(
-        self, s3_client, test_bucket, unique_prefix, event_service_endpoint,
-        hs_credentials,
+        self, s3_client, test_bucket, unique_prefix,
     ):
-        """After a CompleteMultipartUpload the event service must accept a
-        matching event payload with 204."""
+        """A CompleteMultipartUpload must enqueue hs_event_s3 and extract tasks."""
         _PART_SIZE = 5 * 1024 * 1024
         key = f"{unique_prefix}/event-check-mpu.bin"
-        username = hs_credentials[0]
 
         mpu = s3_client.create_multipart_upload(Bucket=test_bucket, Key=key)
         upload_id = mpu["UploadId"]
@@ -616,25 +643,16 @@ class TestEventService:
             PartNumber=1, Body=os.urandom(_PART_SIZE),
         )
         try:
-            s3_client.complete_multipart_upload(
-                Bucket=test_bucket, Key=key, UploadId=upload_id,
-                MultipartUpload={"Parts": [{"PartNumber": 1, "ETag": part["ETag"]}]},
+            commands = self._capture_redis_commands_during(
+                lambda: s3_client.complete_multipart_upload(
+                    Bucket=test_bucket,
+                    Key=key,
+                    UploadId=upload_id,
+                    MultipartUpload={"Parts": [{"PartNumber": 1, "ETag": part["ETag"]}]},
+                )
             )
-            resp = requests.post(
-                f"{event_service_endpoint}/s3/event/",
-                json={
-                    "action": "s3:CompleteMultipartUpload",
-                    "bucket": test_bucket,
-                    "object_path": key,
-                    "username": username,
-                    "user_id": None,
-                    "file_size": _PART_SIZE,
-                },
-                timeout=5,
-            )
-            assert resp.status_code == 204, (
-                f"Event service returned {resp.status_code}: {resp.text}"
-            )
+            assert self._count_task_pushes(commands, "hs_event_s3.tasks.process_s3_event", key) >= 1
+            assert self._count_task_pushes(commands, "hs_extract.tasks.extract_metadata", key) >= 1
         except Exception:
             try:
                 s3_client.abort_multipart_upload(
@@ -650,30 +668,52 @@ class TestEventService:
                 pass
 
     def test_session_put_object_calls_event_service(
-        self, session_s3_client, test_bucket, unique_prefix, event_service_endpoint,
-        hs_credentials,
+        self, session_s3_client, test_bucket, unique_prefix,
     ):
-        """After a session-auth PutObject the event service must accept a
-        matching event payload with 204."""
+        """A session-auth PutObject must enqueue hs_event_s3 and extract tasks."""
         key = f"{unique_prefix}/event-check-session.txt"
-        username = hs_credentials[0]
 
-        session_s3_client.put_object(Bucket=test_bucket, Key=key, Body=b"event check")
+        commands = self._capture_redis_commands_during(
+            lambda: session_s3_client.put_object(Bucket=test_bucket, Key=key, Body=b"event check")
+        )
         try:
-            resp = requests.post(
-                f"{event_service_endpoint}/s3/event/",
-                json={
-                    "action": "s3:PutObject",
-                    "bucket": test_bucket,
-                    "object_path": key,
-                    "username": username,
-                    "user_id": None,
-                    "file_size": 12,
-                },
-                timeout=5,
-            )
-            assert resp.status_code == 204, (
-                f"Event service returned {resp.status_code}: {resp.text}"
-            )
+            assert self._count_task_pushes(commands, "hs_event_s3.tasks.process_s3_event", key) >= 1
+            assert self._count_task_pushes(commands, "hs_extract.tasks.extract_metadata", key) >= 1
         finally:
             session_s3_client.delete_object(Bucket=test_bucket, Key=key)
+
+    def test_deleteobjects_posts_event_for_each_object(
+        self, s3_client, test_bucket, unique_prefix,
+    ):
+        """DeleteObjects must enqueue at least one hs_event_s3 task."""
+        keys = [
+            f"{unique_prefix}/event-delete-one.txt",
+            f"{unique_prefix}/event-delete-two.txt",
+        ]
+
+        for key in keys:
+            s3_client.put_object(Bucket=test_bucket, Key=key, Body=b"event delete")
+
+        delete_response = {}
+        commands = self._capture_redis_commands_during(
+            lambda: delete_response.update(
+                s3_client.delete_objects(
+                    Bucket=test_bucket,
+                    Delete={"Objects": [{"Key": key} for key in keys]},
+                )
+            )
+        )
+        assert delete_response["ResponseMetadata"]["HTTPStatusCode"] in (200, 204)
+
+        deleted_keys = {obj["Key"] for obj in delete_response.get("Deleted", [])}
+        for key in keys:
+            assert key in deleted_keys
+
+        deleteobjects_pushes = sum(
+            1
+            for cmd in commands
+            if "LPUSH" in cmd
+            and "hs_event_s3.tasks.process_s3_event" in cmd
+            and "s3:DeleteObjects" in cmd
+        )
+        assert deleteobjects_pushes >= 1
