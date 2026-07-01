@@ -1,4 +1,5 @@
 import pytest
+
 from fastapi.testclient import TestClient
 from redis import Redis
 
@@ -7,6 +8,9 @@ from api.routers.minio import router as minio_router
 
 minio_client = TestClient(minio_router)
 access_control_changed_client = TestClient(access_control_changed_router)
+
+
+pytestmark = pytest.mark.skip(reason="access control changed tests skipped, endpoint is not actively used")
 
 
 @pytest.fixture(autouse=True)

@@ -1,0 +1,75 @@
+{
+    "input": {
+      "conditions": {
+        "preferred_username": [],
+        "username": [
+          "user1"
+        ],
+        "Prefix": [],
+        "prefix": [],
+        "content_length": [
+          "13488670"
+        ],
+        "Accept-Encoding": [
+          "zstd,gzip"
+        ],
+        "Content-Type": [
+          "application/pdf"
+        ],
+        "CurrentTime": [
+          "2025-06-11T15:02:12Z"
+        ],
+        "EpochTime": [
+          "1749654132"
+        ],
+        "Referer": [
+          ""
+        ],
+        "SecureTransport": [
+          "false"
+        ],
+        "SourceIp": [
+          "192.168.65.1"
+        ],
+        "User-Agent": [
+          "MinIO (darwin; arm64) minio-go/v7.0.88 mc/RELEASE.2025-03-12T17-29-24Z"
+        ],
+        "UserAgent": [
+          "MinIO (darwin; arm64) minio-go/v7.0.88 mc/RELEASE.2025-03-12T17-29-24Z"
+        ],
+        "X-Amz-Content-Sha256": [
+          "STREAMING-AWS4-HMAC-SHA256-PAYLOAD"
+        ],
+        "X-Amz-Date": [
+          "20250611T150212Z"
+        ],
+        "X-Amz-Decoded-Content-Length": [
+          "13470045"
+        ],
+        "authType": [
+          "REST-HEADER"
+        ],
+        "principaltype": [
+          "Account"
+        ],
+        "signatureversion": [
+          "AWS4-HMAC-SHA256"
+        ],
+        "userid": [
+          "user1"
+        ],
+        "versionid": [
+          ""
+        ]
+      },
+      "action": "s3:PutObjectLegalHold",
+      "bucket": "user1",
+      "object": "f211b93642f84c55a0bdd1b12880e32e/data/contents/nintendo-magazine-holiday2025.pdf",
+      "account": "user1",
+      "groups": null,
+      "originalAction": "",
+      "owner": true,
+      "claims": {},
+      "denyOnly": false
+    }
+  }

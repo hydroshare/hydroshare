@@ -337,6 +337,19 @@ ALTER SEQUENCE public.auth_user_user_permissions_id_seq OWNED BY public.auth_use
 
 
 --
+-- Name: authtoken_token; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.authtoken_token (
+    key character varying(40) NOT NULL,
+    created timestamp with time zone NOT NULL,
+    user_id integer NOT NULL
+);
+
+
+ALTER TABLE public.authtoken_token OWNER TO postgres;
+
+--
 -- Name: blog_blogcategory; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -3818,6 +3831,7 @@ CREATE TABLE public.hs_core_genericresource (
     spam_allowlisted boolean NOT NULL,
     bag_last_downloaded timestamp with time zone,
     quota_holder_id integer,
+    cached_metadata jsonb NOT NULL,
     CONSTRAINT hs_core_genericresource_download_count_check CHECK ((download_count >= 0)),
     CONSTRAINT hs_core_genericresource_object_id_check CHECK ((object_id >= 0)),
     CONSTRAINT hs_core_genericresource_view_count_check CHECK ((view_count >= 0))
@@ -6888,6 +6902,21 @@ ALTER SEQUENCE public.hs_tracking_visitor_id_seq OWNED BY public.hs_tracking_vis
 
 
 --
+-- Name: knox_authtoken; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.knox_authtoken (
+    digest character varying(128) NOT NULL,
+    created timestamp with time zone NOT NULL,
+    user_id integer NOT NULL,
+    expiry timestamp with time zone,
+    token_key character varying(25) NOT NULL
+);
+
+
+ALTER TABLE public.knox_authtoken OWNER TO postgres;
+
+--
 -- Name: oauth2_provider_accesstoken_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
@@ -7627,7 +7656,10 @@ ALTER SEQUENCE public.theme_userprofile_id_seq OWNED BY public.theme_userprofile
 CREATE TABLE public.theme_userquota (
     id integer NOT NULL,
     zone character varying(100) NOT NULL,
-    user_id integer NOT NULL
+    user_id integer NOT NULL,
+    allocated_value double precision NOT NULL,
+    unit character varying(10) NOT NULL,
+    exceeded boolean NOT NULL
 );
 
 
@@ -10469,6 +10501,18 @@ COPY public.auth_permission (id, name, content_type_id, codename) FROM stdin;
 1084	Can view test model	289	view_testmodel
 1085	Can view post gis geometry columns	13	view_postgisgeometrycolumns
 1086	Can view post gis spatial ref sys	14	view_postgisspatialrefsys
+1087	Can add Token	290	add_token
+1088	Can change Token	290	change_token
+1089	Can delete Token	290	delete_token
+1090	Can view Token	290	view_token
+1091	Can add Token	291	add_tokenproxy
+1092	Can change Token	291	change_tokenproxy
+1093	Can delete Token	291	delete_tokenproxy
+1094	Can view Token	291	view_tokenproxy
+1095	Can add auth token	292	add_authtoken
+1096	Can change auth token	292	change_authtoken
+1097	Can delete auth token	292	delete_authtoken
+1098	Can view auth token	292	view_authtoken
 \.
 
 
@@ -10537,6 +10581,14 @@ COPY public.auth_user_groups (id, user_id, group_id) FROM stdin;
 --
 
 COPY public.auth_user_user_permissions (id, user_id, permission_id) FROM stdin;
+\.
+
+
+--
+-- Data for Name: authtoken_token; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.authtoken_token (key, created, user_id) FROM stdin;
 \.
 
 
@@ -10964,6 +11016,9 @@ COPY public.django_content_type (id, app_label, model) FROM stdin;
 287	hs_file_types	csvlogicalfile
 288	hs_dictionary	subjectarea
 289	db	testmodel
+290	authtoken	token
+291	authtoken	tokenproxy
+292	knox	authtoken
 \.
 
 
@@ -11476,6 +11531,24 @@ COPY public.django_migrations (id, app, name, applied) FROM stdin;
 414	theme	0036_auto_20240702_1847_squashed_0037_remove_userprofile_create_irods_user_account	2025-06-10 22:58:50.601034+00
 415	db	0001_initial	2025-06-10 22:58:50.606661+00
 416	theme	0042_userprofile_minio_access_key_and_more	2025-06-10 23:14:01.903937+00
+417	authtoken	0001_initial	2026-07-01 15:01:12.674319+00
+418	authtoken	0002_auto_20160226_1747	2026-07-01 15:01:12.859094+00
+419	authtoken	0003_tokenproxy	2026-07-01 15:01:12.86758+00
+420	authtoken	0004_alter_tokenproxy_options	2026-07-01 15:01:12.87882+00
+421	hs_core	0086_baseresource_cached_metadata	2026-07-01 15:01:12.958782+00
+422	hs_core	0087_populate_resource_cached_metadata	2026-07-01 15:01:13.30141+00
+423	hs_core	0088_re_populate_resource_cached_metadata	2026-07-01 15:01:13.535301+00
+424	knox	0001_initial	2026-07-01 15:01:13.63244+00
+425	knox	0002_auto_20150916_1425	2026-07-01 15:01:13.747212+00
+426	knox	0003_auto_20150916_1526	2026-07-01 15:01:13.822088+00
+427	knox	0004_authtoken_expires	2026-07-01 15:01:13.863826+00
+428	knox	0005_authtoken_token_key	2026-07-01 15:01:13.907764+00
+429	knox	0006_auto_20160818_0932	2026-07-01 15:01:14.03628+00
+430	knox	0007_auto_20190111_0542	2026-07-01 15:01:14.074535+00
+431	knox	0008_remove_authtoken_salt	2026-07-01 15:01:14.11191+00
+432	knox	0009_extend_authtoken_field	2026-07-01 15:01:14.151805+00
+433	theme	0042_userquota_allocated_value_userquota_unit	2026-07-01 15:01:14.341631+00
+434	theme	0043_userquota_exceeded	2026-07-01 15:01:14.37695+00
 \.
 
 
@@ -12283,12 +12356,12 @@ COPY public.hs_core_fundingagency (id, object_id, agency_name, award_title, awar
 -- Data for Name: hs_core_genericresource; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.hs_core_genericresource (page_ptr_id, comments_count, rating_count, rating_sum, rating_average, content, short_id, doi, object_id, content_type_id, creator_id, last_changed_by_id, user_id, resource_type, file_unpack_message, file_unpack_status, locked_time, extra_metadata, extra_data, download_count, view_count, repaired, files_checked, spam_allowlisted, bag_last_downloaded, quota_holder_id) FROM stdin;
-16	0	0	0	0	asdf	ad0b5df2e8434a5aaad455a322bc1fd5		1	68	4	4	4	CompositeResource	\N	\N	\N			0	0	\N	\N	f	\N	4
-17	0	0	0	0	asdf	f211b93642f84c55a0bdd1b12880e32e		2	68	18	18	18	CompositeResource	\N	\N	\N			0	6	\N	\N	f	\N	18
-20	0	0	0	0	discoverable resource	5670903e39d54026a729abd4cc148f99		5	68	18	18	18	CompositeResource	\N	\N	\N			0	2	\N	\N	f	\N	18
-19	0	0	0	0	public resource	a2c0df5bf3eb4d8c8a34beaffe169f91		4	68	18	18	18	CompositeResource	\N	\N	\N			0	2	\N	\N	f	\N	18
-18	0	0	0	0	private link sharing resource	d5c432ae01eb4f03a73d589e54d341b3		3	68	18	18	18	CompositeResource	\N	\N	\N			0	1	\N	\N	f	\N	18
+COPY public.hs_core_genericresource (page_ptr_id, comments_count, rating_count, rating_sum, rating_average, content, short_id, doi, object_id, content_type_id, creator_id, last_changed_by_id, user_id, resource_type, file_unpack_message, file_unpack_status, locked_time, extra_metadata, extra_data, download_count, view_count, repaired, files_checked, spam_allowlisted, bag_last_downloaded, quota_holder_id, cached_metadata) FROM stdin;
+16	0	0	0	0	asdf	ad0b5df2e8434a5aaad455a322bc1fd5		1	68	4	4	4	CompositeResource	\N	\N	\N			0	0	\N	\N	f	\N	4	{"type": "http://localhost:8000/terms/CompositeResource", "title": {"id": 1, "value": "asdf"}, "rights": {"id": 1, "url": "http://creativecommons.org/licenses/by/4.0/", "statement": "This resource is shared under the Creative Commons Attribution CC BY."}, "status": {"public": false, "published": false, "shareable": true, "discoverable": false}, "created": "2025-06-10T23:08:22.518892+00:00", "abstract": {}, "creators": [{"id": 1, "name": "Administrator, HydroShare", "email": "admin@example.com", "order": 1, "phone": null, "address": null, "homepage": null, "hs_user_id": 4, "identifiers": {}, "organization": "RENCI", "relative_uri": "/user/4/", "is_active_user": true}], "language": "eng", "modified": "2025-06-10T23:08:28.376035+00:00", "subjects": [], "publisher": {}, "relations": [], "identifiers": [{"id": 1, "url": "http://localhost:8000/resource/ad0b5df2e8434a5aaad455a322bc1fd5", "name": "hydroShareIdentifier"}], "contributors": [], "funding_agencies": [], "spatial_coverage": {"exists": false, "default_units": "Decimal degrees", "default_projection": "WGS 84 EPSG:4326"}, "temporal_coverage": {}, "geospatial_relations": []}
+17	0	0	0	0	asdf	f211b93642f84c55a0bdd1b12880e32e		2	68	18	18	18	CompositeResource	\N	\N	\N			0	6	\N	\N	f	\N	18	{"type": "http://localhost:8000/terms/CompositeResource", "title": {"id": 2, "value": "private resource"}, "rights": {"id": 2, "url": "http://creativecommons.org/licenses/by/4.0/", "statement": "This resource is shared under the Creative Commons Attribution CC BY."}, "status": {"public": false, "published": false, "shareable": true, "discoverable": false}, "created": "2025-06-10T23:15:47.717692+00:00", "abstract": {}, "creators": [{"id": 2, "name": "last, user1", "email": "user1@mail.com", "order": 1, "phone": null, "address": null, "homepage": null, "hs_user_id": 18, "identifiers": {}, "organization": "USU", "relative_uri": "/user/18/", "is_active_user": true}], "language": "eng", "modified": "2025-06-11T03:02:45.545997+00:00", "subjects": [], "publisher": {}, "relations": [], "identifiers": [{"id": 2, "url": "http://localhost:8000/resource/f211b93642f84c55a0bdd1b12880e32e", "name": "hydroShareIdentifier"}], "contributors": [], "funding_agencies": [], "spatial_coverage": {"exists": false, "default_units": "Decimal degrees", "default_projection": "WGS 84 EPSG:4326"}, "temporal_coverage": {}, "geospatial_relations": []}
+18	0	0	0	0	private link sharing resource	d5c432ae01eb4f03a73d589e54d341b3		3	68	18	18	18	CompositeResource	\N	\N	\N			0	1	\N	\N	f	\N	18	{"type": "http://localhost:8000/terms/CompositeResource", "title": {"id": 3, "value": "private link sharing resource"}, "rights": {"id": 3, "url": "http://creativecommons.org/licenses/by/4.0/", "statement": "This resource is shared under the Creative Commons Attribution CC BY."}, "status": {"public": false, "published": false, "shareable": true, "discoverable": false}, "created": "2025-06-11T03:03:56.605768+00:00", "abstract": {}, "creators": [{"id": 3, "name": "last, user1", "email": "user1@mail.com", "order": 1, "phone": null, "address": null, "homepage": null, "hs_user_id": 18, "identifiers": {}, "organization": "USU", "relative_uri": "/user/18/", "is_active_user": true}], "language": "eng", "modified": "2025-06-11T03:03:58.024818+00:00", "subjects": [], "publisher": {}, "relations": [], "identifiers": [{"id": 3, "url": "http://localhost:8000/resource/d5c432ae01eb4f03a73d589e54d341b3", "name": "hydroShareIdentifier"}], "contributors": [], "funding_agencies": [], "spatial_coverage": {"exists": false, "default_units": "Decimal degrees", "default_projection": "WGS 84 EPSG:4326"}, "temporal_coverage": {}, "geospatial_relations": []}
+19	0	0	0	0	public resource	a2c0df5bf3eb4d8c8a34beaffe169f91		4	68	18	18	18	CompositeResource	\N	\N	\N			0	2	\N	\N	f	\N	18	{"type": "http://localhost:8000/terms/CompositeResource", "title": {"id": 4, "value": "public resource"}, "rights": {"id": 4, "url": "http://creativecommons.org/licenses/by/4.0/", "statement": "This resource is shared under the Creative Commons Attribution CC BY."}, "status": {"public": true, "published": false, "shareable": true, "discoverable": true}, "created": "2025-06-11T15:39:25.838670+00:00", "abstract": {"id": 1, "value": "asdf"}, "creators": [{"id": 4, "name": "last, user1", "email": "user1@mail.com", "order": 1, "phone": null, "address": null, "homepage": null, "hs_user_id": 18, "identifiers": {}, "organization": "USU", "relative_uri": "/user/18/", "is_active_user": true}], "language": "eng", "modified": "2025-06-11T15:39:41.474348+00:00", "subjects": ["asdf"], "publisher": {}, "relations": [], "identifiers": [{"id": 4, "url": "http://localhost:8000/resource/a2c0df5bf3eb4d8c8a34beaffe169f91", "name": "hydroShareIdentifier"}], "contributors": [], "funding_agencies": [], "spatial_coverage": {"exists": false, "default_units": "Decimal degrees", "default_projection": "WGS 84 EPSG:4326"}, "temporal_coverage": {}, "geospatial_relations": []}
+20	0	0	0	0	discoverable resource	5670903e39d54026a729abd4cc148f99		5	68	18	18	18	CompositeResource	\N	\N	\N			0	2	\N	\N	f	\N	18	{"type": "http://localhost:8000/terms/CompositeResource", "title": {"id": 5, "value": "discoverable resource"}, "rights": {"id": 5, "url": "http://creativecommons.org/licenses/by/4.0/", "statement": "This resource is shared under the Creative Commons Attribution CC BY."}, "status": {"public": false, "published": false, "shareable": true, "discoverable": true}, "created": "2025-06-11T15:43:57.274329+00:00", "abstract": {"id": 2, "value": "water"}, "creators": [{"id": 5, "name": "last, user1", "email": "user1@mail.com", "order": 1, "phone": null, "address": null, "homepage": null, "hs_user_id": 18, "identifiers": {}, "organization": "USU", "relative_uri": "/user/18/", "is_active_user": true}], "language": "eng", "modified": "2025-06-11T15:44:37.009957+00:00", "subjects": ["water"], "publisher": {}, "relations": [], "identifiers": [{"id": 5, "url": "http://localhost:8000/resource/5670903e39d54026a729abd4cc148f99", "name": "hydroShareIdentifier"}], "contributors": [], "funding_agencies": [], "spatial_coverage": {"exists": false, "default_units": "Decimal degrees", "default_projection": "WGS 84 EPSG:4326"}, "temporal_coverage": {}, "geospatial_relations": []}
 \.
 
 
@@ -24664,6 +24737,7 @@ COPY public.hs_tracking_variable (id, "timestamp", name, type, value, session_id
 1288	2025-06-11 15:55:18.813033+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=University Professional or Research Staff|user_email_domain=com|request_url=/hsapi/userInfo/	73	\N	\N	t	f
 1289	2025-06-11 15:55:18.841877+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=University Professional or Research Staff|user_email_domain=com|request_url=/hsapi/_internal/f211b93642f84c55a0bdd1b12880e32e/aggregation-files-to-sync/	73	\N	\N	f	f
 1290	2025-06-11 15:55:19.032872+00	visit	2	user_ip=192.168.65.1|http_method=POST|http_code=200|user_type=University Professional or Research Staff|user_email_domain=com|request_url=/hsapi/_internal/data-store-structure/	73	\N	\N	f	f
+993	2025-06-11 02:13:09.295712+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=None|user_email_domain=None|request_url=/	64	\N	\N	f	f
 959	2025-06-10 23:17:50.466545+00	visit	2	user_ip=192.168.65.1|http_method=POST|http_code=200|user_type=University Professional or Research Staff|user_email_domain=com|request_url=/hsapi/_internal/data-store-structure/	59	\N	\N	f	f
 960	2025-06-10 23:17:50.758004+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=University Professional or Research Staff|user_email_domain=com|request_url=/hsapi/_internal/f211b93642f84c55a0bdd1b12880e32e/list-referenced-content/	59	\N	\N	f	f
 961	2025-06-10 23:35:06.230092+00	begin_session	2	user_ip=192.168.65.1|user_type=University Professional or Research Staff|user_email_domain=com|user_email_domain_full=mail.com|is_human=True|user_agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:138.0) Gecko/20100101 Firefox/138.0	60	\N	\N	f	f
@@ -24698,7 +24772,6 @@ COPY public.hs_tracking_variable (id, "timestamp", name, type, value, session_id
 990	2025-06-11 02:12:40.545432+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=None|user_email_domain=None|request_url=/sign-up/	64	\N	\N	f	f
 991	2025-06-11 02:12:40.625387+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=None|user_email_domain=None|request_url=/hsapi/_internal/get_tasks_by_user/	64	\N	\N	f	f
 992	2025-06-11 02:12:54.822084+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=None|user_email_domain=None|request_url=/hsapi/dictionary/universities/	64	\N	\N	t	f
-993	2025-06-11 02:13:09.295712+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=None|user_email_domain=None|request_url=/	64	\N	\N	f	f
 994	2025-06-11 02:13:09.351307+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=None|user_email_domain=None|request_url=/hsapi/_internal/get_tasks_by_user/	64	\N	\N	f	f
 995	2025-06-11 02:13:11.289003+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=None|user_email_domain=None|request_url=/sign-up/	64	\N	\N	f	f
 996	2025-06-11 02:13:11.337798+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=None|user_email_domain=None|request_url=/hsapi/_internal/get_tasks_by_user/	64	\N	\N	f	f
@@ -24838,6 +24911,7 @@ COPY public.hs_tracking_variable (id, "timestamp", name, type, value, session_id
 1337	2025-06-11 15:57:09.927813+00	logout	2	user_ip=192.168.65.1|user_type=University Faculty|user_email_domain=com|user_email_domain_full=mail.com|is_human=True|user_agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:138.0) Gecko/20100101 Firefox/138.0	75	\N	\N	f	f
 1338	2025-06-11 15:57:09.960715+00	begin_session	2	user_ip=192.168.65.1|user_type=None|user_email_domain=None|user_email_domain_full=None|is_human=True|user_agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:138.0) Gecko/20100101 Firefox/138.0	76	\N	\N	f	f
 1339	2025-06-11 15:57:09.961463+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=None|user_email_domain=None|request_url=/	76	\N	\N	f	f
+1149	2025-06-11 15:17:50.817554+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=University Professional or Research Staff|user_email_domain=com|request_url=/user-autocomplete/	71	\N	\N	f	f
 1107	2025-06-11 03:00:52.887284+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=University Professional or Research Staff|user_email_domain=com|request_url=/hsapi/_internal/f211b93642f84c55a0bdd1b12880e32e/relevant-tools/	69	\N	\N	f	f
 1108	2025-06-11 03:00:52.89541+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=University Professional or Research Staff|user_email_domain=com|request_url=/hsapi/_internal/f211b93642f84c55a0bdd1b12880e32e/aggregation-files-to-sync/	69	\N	\N	f	f
 1109	2025-06-11 03:00:52.90097+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=University Professional or Research Staff|user_email_domain=com|request_url=/hsapi/_internal/f211b93642f84c55a0bdd1b12880e32e/list-referenced-content/	69	\N	\N	f	f
@@ -24900,7 +24974,6 @@ COPY public.hs_tracking_variable (id, "timestamp", name, type, value, session_id
 1146	2025-06-11 03:21:21.685786+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=University Professional or Research Staff|user_email_domain=com|request_url=/hsapi/_internal/f211b93642f84c55a0bdd1b12880e32e/non-preferred-paths/	70	\N	\N	f	f
 1147	2025-06-11 03:21:21.738021+00	visit	2	user_ip=192.168.65.1|http_method=POST|http_code=200|user_type=University Professional or Research Staff|user_email_domain=com|request_url=/hsapi/_internal/data-store-structure/	70	\N	\N	f	f
 1148	2025-06-11 15:17:50.815973+00	begin_session	2	user_ip=192.168.65.1|user_type=University Professional or Research Staff|user_email_domain=com|user_email_domain_full=mail.com|is_human=True|user_agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:138.0) Gecko/20100101 Firefox/138.0	71	\N	\N	f	f
-1149	2025-06-11 15:17:50.817554+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=University Professional or Research Staff|user_email_domain=com|request_url=/user-autocomplete/	71	\N	\N	f	f
 1150	2025-06-11 15:17:51.548951+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=University Professional or Research Staff|user_email_domain=com|request_url=/user-autocomplete/	71	\N	\N	f	f
 1151	2025-06-11 15:17:53.846265+00	visit	2	user_ip=192.168.65.1|http_method=POST|http_code=200|user_type=University Professional or Research Staff|user_email_domain=com|request_url=/hsapi/_internal/d5c432ae01eb4f03a73d589e54d341b3/share-resource-with-user/view/20/	71	\N	\N	f	f
 1152	2025-06-11 15:17:55.593604+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=University Professional or Research Staff|user_email_domain=com|request_url=/user-autocomplete/	71	\N	\N	f	f
@@ -24930,6 +25003,7 @@ COPY public.hs_tracking_variable (id, "timestamp", name, type, value, session_id
 1176	2025-06-11 15:39:54.827064+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=University Professional or Research Staff|user_email_domain=com|request_url=/user-autocomplete/	72	\N	\N	f	f
 1177	2025-06-11 15:39:58.709426+00	visit	2	user_ip=192.168.65.1|http_method=POST|http_code=200|user_type=University Professional or Research Staff|user_email_domain=com|request_url=/hsapi/_internal/a2c0df5bf3eb4d8c8a34beaffe169f91/share-resource-with-user/edit/22/	72	\N	\N	f	f
 1178	2025-06-11 15:40:00.278421+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=University Professional or Research Staff|user_email_domain=com|request_url=/user-autocomplete/	72	\N	\N	f	f
+1341	2025-06-11 15:57:11.608238+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=None|user_email_domain=None|request_url=/accounts/login/	76	\N	\N	f	f
 1179	2025-06-11 15:40:00.711893+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=University Professional or Research Staff|user_email_domain=com|request_url=/user-autocomplete/	72	\N	\N	f	f
 1180	2025-06-11 15:40:04.587837+00	visit	2	user_ip=192.168.65.1|http_method=POST|http_code=200|user_type=University Professional or Research Staff|user_email_domain=com|request_url=/hsapi/_internal/a2c0df5bf3eb4d8c8a34beaffe169f91/share-resource-with-user/owner/23/	72	\N	\N	f	f
 1181	2025-06-11 15:40:24.536141+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=University Professional or Research Staff|user_email_domain=com|request_url=/resource/a2c0df5bf3eb4d8c8a34beaffe169f91/	72	a2c0df5bf3eb4d8c8a34beaffe169f91	19	f	t
@@ -25026,7 +25100,6 @@ COPY public.hs_tracking_variable (id, "timestamp", name, type, value, session_id
 1324	2025-06-11 15:56:52.005012+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=University Faculty|user_email_domain=com|request_url=/home/	75	\N	\N	f	f
 1325	2025-06-11 15:56:52.067946+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=University Faculty|user_email_domain=com|request_url=/hsapi/_internal/get_tasks_by_user/	75	\N	\N	f	f
 1340	2025-06-11 15:57:10.016275+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=None|user_email_domain=None|request_url=/hsapi/_internal/get_tasks_by_user/	76	\N	\N	f	f
-1341	2025-06-11 15:57:11.608238+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=None|user_email_domain=None|request_url=/accounts/login/	76	\N	\N	f	f
 1342	2025-06-11 15:57:11.669598+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=None|user_email_domain=None|request_url=/hsapi/_internal/get_tasks_by_user/	76	\N	\N	f	f
 1343	2025-06-11 15:57:16.990866+00	login	2	user_ip=192.168.65.1|user_type=University Faculty|user_email_domain=com|user_email_domain_full=mail.com|is_human=True|user_agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:138.0) Gecko/20100101 Firefox/138.0	76	\N	\N	f	f
 1344	2025-06-11 15:57:17.038148+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=University Faculty|user_email_domain=com|request_url=/home/	76	\N	\N	f	f
@@ -25204,6 +25277,14 @@ COPY public.hs_tracking_visitor (id, first_seen, user_id) FROM stdin;
 68	2025-06-11 15:56:02.856282+00	24
 69	2025-06-11 15:57:09.958898+00	25
 70	2025-06-11 15:57:27.753199+00	\N
+\.
+
+
+--
+-- Data for Name: knox_authtoken; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.knox_authtoken (digest, created, user_id, expiry, token_key) FROM stdin;
 \.
 
 
@@ -25445,29 +25526,29 @@ COPY public.theme_userprofile (id, picture, title, subject_areas, organization, 
 -- Data for Name: theme_userquota; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.theme_userquota (id, zone, user_id) FROM stdin;
-1	hydroshare	5
-2	hydroshare	6
-3	hydroshare	7
-4	hydroshare	8
-5	hydroshare	9
-6	hydroshare	10
-7	hydroshare	11
-8	hydroshare	12
-9	hydroshare	13
-10	hydroshare	14
-11	hydroshare	15
-12	hydroshare	16
-13	hydroshare	17
-14	hydroshare	4
-15	hydroshare	18
-16	hydroshare	19
-17	hydroshare	20
-18	hydroshare	21
-19	hydroshare	22
-20	hydroshare	23
-21	hydroshare	24
-22	hydroshare	25
+COPY public.theme_userquota (id, zone, user_id, allocated_value, unit, exceeded) FROM stdin;
+1	hydroshare	5	20	GB	f
+2	hydroshare	6	20	GB	f
+3	hydroshare	7	20	GB	f
+4	hydroshare	8	20	GB	f
+5	hydroshare	9	20	GB	f
+6	hydroshare	10	20	GB	f
+7	hydroshare	11	20	GB	f
+8	hydroshare	12	20	GB	f
+9	hydroshare	13	20	GB	f
+10	hydroshare	14	20	GB	f
+11	hydroshare	15	20	GB	f
+12	hydroshare	16	20	GB	f
+13	hydroshare	17	20	GB	f
+14	hydroshare	4	20	GB	f
+15	hydroshare	18	20	GB	f
+16	hydroshare	19	20	GB	f
+17	hydroshare	20	20	GB	f
+18	hydroshare	21	20	GB	f
+19	hydroshare	22	20	GB	f
+20	hydroshare	23	20	GB	f
+21	hydroshare	24	20	GB	f
+22	hydroshare	25	20	GB	f
 \.
 
 
@@ -25545,7 +25626,7 @@ SELECT pg_catalog.setval('public.auth_group_permissions_id_seq', 2352, true);
 -- Name: auth_permission_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.auth_permission_id_seq', 1086, true);
+SELECT pg_catalog.setval('public.auth_permission_id_seq', 1098, true);
 
 
 --
@@ -25664,7 +25745,7 @@ SELECT pg_catalog.setval('public.django_comments_id_seq', 1, false);
 -- Name: django_content_type_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.django_content_type_id_seq', 289, true);
+SELECT pg_catalog.setval('public.django_content_type_id_seq', 292, true);
 
 
 --
@@ -25748,7 +25829,7 @@ SELECT pg_catalog.setval('public.django_docker_processes_overridevolume_id_seq',
 -- Name: django_migrations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.django_migrations_id_seq', 416, true);
+SELECT pg_catalog.setval('public.django_migrations_id_seq', 434, true);
 
 
 --
@@ -27007,6 +27088,22 @@ ALTER TABLE ONLY public.auth_user_user_permissions
 
 ALTER TABLE ONLY public.auth_user
     ADD CONSTRAINT auth_user_username_key UNIQUE (username);
+
+
+--
+-- Name: authtoken_token authtoken_token_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.authtoken_token
+    ADD CONSTRAINT authtoken_token_pkey PRIMARY KEY (key);
+
+
+--
+-- Name: authtoken_token authtoken_token_user_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.authtoken_token
+    ADD CONSTRAINT authtoken_token_user_id_key UNIQUE (user_id);
 
 
 --
@@ -29202,6 +29299,14 @@ ALTER TABLE ONLY public.hs_tracking_visitor
 
 
 --
+-- Name: knox_authtoken knox_authtoken_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.knox_authtoken
+    ADD CONSTRAINT knox_authtoken_pkey PRIMARY KEY (digest);
+
+
+--
 -- Name: oauth2_provider_accesstoken oauth2_provider_accesstoken_id_token_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -29574,6 +29679,13 @@ CREATE INDEX auth_user_user_permissions_e8701ad4 ON public.auth_user_user_permis
 --
 
 CREATE INDEX auth_user_username_51b3b110094b8aae_like ON public.auth_user USING btree (username varchar_pattern_ops);
+
+
+--
+-- Name: authtoken_token_key_10f0b77e_like; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX authtoken_token_key_10f0b77e_like ON public.authtoken_token USING btree (key varchar_pattern_ops);
 
 
 --
@@ -31369,6 +31481,34 @@ CREATE INDEX hs_tracking_visitor_e8701ad4 ON public.hs_tracking_visitor USING bt
 
 
 --
+-- Name: knox_authtoken_digest_188c7e77_like; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX knox_authtoken_digest_188c7e77_like ON public.knox_authtoken USING btree (digest varchar_pattern_ops);
+
+
+--
+-- Name: knox_authtoken_token_key_8f4f7d47; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX knox_authtoken_token_key_8f4f7d47 ON public.knox_authtoken USING btree (token_key);
+
+
+--
+-- Name: knox_authtoken_token_key_8f4f7d47_like; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX knox_authtoken_token_key_8f4f7d47_like ON public.knox_authtoken USING btree (token_key varchar_pattern_ops);
+
+
+--
+-- Name: knox_authtoken_user_id_e5a5d899; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX knox_authtoken_user_id_e5a5d899 ON public.knox_authtoken USING btree (user_id);
+
+
+--
 -- Name: oauth2_provider_accesstoken_6bc0a4eb; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -31840,6 +31980,14 @@ ALTER TABLE ONLY public.auth_user_groups
 
 ALTER TABLE ONLY public.auth_user_user_permissions
     ADD CONSTRAINT auth_user_user_permiss_user_id_7f0938558328534a_fk_auth_user_id FOREIGN KEY (user_id) REFERENCES public.auth_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: authtoken_token authtoken_token_user_id_35299eff_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.authtoken_token
+    ADD CONSTRAINT authtoken_token_user_id_35299eff_fk_auth_user_id FOREIGN KEY (user_id) REFERENCES public.auth_user(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -33352,6 +33500,14 @@ ALTER TABLE ONLY public.hs_tracking_variable
 
 ALTER TABLE ONLY public.hs_tracking_visitor
     ADD CONSTRAINT hs_tracking_visitor_user_id_faa35031_fk_auth_user_id FOREIGN KEY (user_id) REFERENCES public.auth_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: knox_authtoken knox_authtoken_user_id_e5a5d899_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.knox_authtoken
+    ADD CONSTRAINT knox_authtoken_user_id_e5a5d899_fk_auth_user_id FOREIGN KEY (user_id) REFERENCES public.auth_user(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
