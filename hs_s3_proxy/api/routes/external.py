@@ -93,7 +93,12 @@ def _verify_csrf_session_request(request: Request):
         )
 
     logger.info("No SigV4 auth header; attempting CSRF/session authentication.")
-    csrf_result = verify_csrf_sync(session_id=session_id, csrf_token=csrf_token)
+    csrf_result = verify_csrf_sync(
+        session_id=session_id,
+        csrf_token=csrf_token,
+        request_method=request.method,
+        request_headers=dict(request.headers),
+    )
     if not csrf_result.get("allow"):
         reason = csrf_result.get("reason", "unknown")
         if reason == "auth_service_error":
