@@ -285,11 +285,6 @@ def _get_object_size_and_checksum(bucket: str, key: str, zone: str) -> tuple[int
                 checksum = obj.get('ETag')
                 break
 
-    if size_bytes is None:
-        body_response = client.get_object(Bucket=bucket, Key=key)
-        with body_response['Body'] as stream:
-            size_bytes = len(stream.read())
-
     normalized_checksum = str(checksum or 'N/A').strip('"')
     return int(size_bytes), normalized_checksum
 

@@ -1,9 +1,17 @@
 import logging
-import re
 from typing import Optional, Tuple
 from urllib.parse import unquote
 
 logger = logging.getLogger("hs_s3_proxy")
+
+
+def _get_query_param_case_insensitive(query_params: dict, key: str) -> Optional[str]:
+    """Return query parameter value by key using case-insensitive key lookup."""
+    key_lower = key.lower()
+    for param_key, value in query_params.items():
+        if str(param_key).lower() == key_lower:
+            return value
+    return None
 
 
 def parse_authorization_header(auth_header: str) -> Optional[dict]:
@@ -11,17 +19,25 @@ def parse_authorization_header(auth_header: str) -> Optional[dict]:
     if not auth_header:
         return None
 
-    match = re.match(
-        r'AWS4-HMAC-SHA256\s+Credential=([^,]+),\s*SignedHeaders=([^,]+),\s*Signature=(.+)',
-        auth_header
-    )
-
-    if not match:
+    prefix = 'AWS4-HMAC-SHA256 '
+    if not auth_header.startswith(prefix):
         return None
 
-    credential = match.group(1)
-    signed_headers = match.group(2)
-    signature = match.group(3)
+    params_str = auth_header[len(prefix):]
+    params = {}
+    for part in params_str.split(','):
+        part = part.strip()
+        if '=' not in part:
+            continue
+        key, value = part.split('=', 1)
+        params[key.strip()] = value.strip()
+
+    credential = params.get('Credential')
+    signed_headers = params.get('SignedHeaders')
+    signature = params.get('Signature')
+
+    if not all([credential, signed_headers, signature]):
+        return None
 
     cred_parts = credential.split('/')
     if len(cred_parts) != 5:
@@ -40,23 +56,19 @@ def parse_authorization_header(auth_header: str) -> Optional[dict]:
 
 
 def parse_presigned_auth_query(query_params: dict) -> Optional[dict]:
-    """Parse SigV4 presigned URL query params into auth_info shape.
-
-    Expected query keys include X-Amz-Credential, X-Amz-SignedHeaders,
-    and X-Amz-Signature.
-    """
+    """Parse SigV4 presigned query params into auth_info-compatible fields."""
     if not query_params:
         return None
 
-    lowered = {str(k).lower(): v for k, v in query_params.items()}
-    algorithm = lowered.get("x-amz-algorithm")
-    credential = lowered.get("x-amz-credential")
-    signed_headers = lowered.get("x-amz-signedheaders")
-    signature = lowered.get("x-amz-signature")
+    algorithm = _get_query_param_case_insensitive(query_params, 'X-Amz-Algorithm')
+    credential = _get_query_param_case_insensitive(query_params, 'X-Amz-Credential')
+    signed_headers = _get_query_param_case_insensitive(query_params, 'X-Amz-SignedHeaders')
+    signature = _get_query_param_case_insensitive(query_params, 'X-Amz-Signature')
 
-    if algorithm != "AWS4-HMAC-SHA256":
+    if not all([algorithm, credential, signed_headers, signature]):
         return None
-    if not credential or not signed_headers or not signature:
+
+    if algorithm != 'AWS4-HMAC-SHA256':
         return None
 
     cred_parts = credential.split('/')
@@ -80,9 +92,7 @@ def get_s3_action_from_request(method: str, path: str, query_params: dict) -> st
     if 'uploads' in query_params:
         if method == 'POST':
             return 's3:CreateMultipartUpload'
-        if method == 'GET':
-            return 's3:ListBucketMultipartUploads'
-        return 's3:Unknown'
+        return 's3:ListMultipartUploadParts'
     if 'uploadId' in query_params:
         if method == 'POST':
             return 's3:CompleteMultipartUpload'

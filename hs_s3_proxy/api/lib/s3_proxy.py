@@ -1,7 +1,9 @@
+import json
 import logging
 import os
+from dataclasses import dataclass
 from typing import Optional
-from urllib.parse import quote
+from urllib.parse import urlencode, quote
 from xml.sax.saxutils import escape as xml_escape
 
 import httpx
@@ -9,52 +11,12 @@ from botocore.auth import S3SigV4Auth
 from botocore.awsrequest import AWSRequest
 from botocore.credentials import Credentials
 from fastapi import Response
-from fastapi.responses import StreamingResponse
-from starlette.background import BackgroundTask
 
 logger = logging.getLogger("hs_s3_proxy")
-DEBUG_HEADERS = os.environ.get("S3_PROXY_DEBUG_HEADERS", "true").lower() == "true"
-
-
-def _encode_query_params(query_params: dict) -> str:
-    # Use RFC3986 encoding (space -> %20, not '+') for SigV4 compatibility.
-    encoded_pairs = []
-    for key, value in query_params.items():
-        encoded_key = quote(str(key), safe='-_.~')
-        encoded_value = quote(str(value), safe='-_.~')
-        encoded_pairs.append((encoded_key, encoded_value))
-    encoded_pairs.sort(key=lambda pair: (pair[0], pair[1]))
-    return '&'.join(f"{k}={v}" for k, v in encoded_pairs)
-
-
-def _decode_aws_chunked_body(body: bytes) -> bytes:
-    """Decode an aws-chunked (SigV4 streaming) payload to raw content bytes.
-
-    boto3 wraps each chunk as::
-
-        {hex-size};chunk-signature={sig}\r\n{data}\r\n
-
-    A final zero-sized chunk signals the end.  We strip all framing and return
-    only the concatenated data bytes so the backend receives a plain body.
-    """
-    result = bytearray()
-    pos = 0
-    while pos < len(body):
-        line_end = body.find(b'\r\n', pos)
-        if line_end == -1:
-            break
-        header = body[pos:line_end].decode('ascii', errors='replace')
-        hex_size = header.split(';')[0].strip()
-        try:
-            chunk_size = int(hex_size, 16)
-        except ValueError:
-            break
-        if chunk_size == 0:
-            break
-        data_start = line_end + 2
-        result.extend(body[data_start:data_start + chunk_size])
-        pos = data_start + chunk_size + 2  # skip trailing \r\n after chunk data
-    return bytes(result)
+S3_PROXY_POOL_MAX_CONNECTIONS = int(os.environ.get("S3_PROXY_POOL_MAX_CONNECTIONS", "50"))
+S3_PROXY_POOL_MAX_KEEPALIVE_CONNECTIONS = int(
+    os.environ.get("S3_PROXY_POOL_MAX_KEEPALIVE_CONNECTIONS", "20")
+)
 
 
 def _s3_error_xml(code: str, message: str) -> bytes:
@@ -65,25 +27,114 @@ def _s3_error_xml(code: str, message: str) -> bytes:
     ).encode("utf-8")
 
 
+@dataclass
+class _ZoneBackend:
+    """Per-bucket backend configuration resolved from S3_ZONE_CONFIG."""
+    zone: str
+    endpoint: str
+    signer: Optional[S3SigV4Auth]
+
+
+def _build_signer(access_key: str, secret_key: str, region: str) -> Optional[S3SigV4Auth]:
+    if access_key and secret_key:
+        return S3SigV4Auth(Credentials(access_key, secret_key), "s3", region)
+    return None
+
+
+def _load_zone_config() -> dict[str, _ZoneBackend]:
+    """Parse S3_ZONE_CONFIG (JSON) into a bucket-name → _ZoneBackend map.
+
+    Expected JSON shape::
+
+        {
+          "resource": {
+            "zone":       "hydroshare",   // logical zone name (defaults to bucket name)
+            "endpoint":   "http://minio:9000",
+            "access_key": "cuahsi",
+            "secret_key": "devpassword",
+            "region":     "auto"          // optional, defaults to "auto"
+          },
+          "ciroh": { ... }
+        }
+
+    Buckets not present in the map are rejected with NoSuchBucket.
+    """
+    raw = os.environ.get("S3_ZONE_CONFIG", "").strip()
+    if not raw:
+        return {}
+
+    try:
+        mapping: dict = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        logger.error(f"Invalid S3_ZONE_CONFIG JSON: {exc}")
+        return {}
+
+    backends: dict[str, _ZoneBackend] = {}
+    for bucket, cfg in mapping.items():
+        if not isinstance(cfg, dict):
+            logger.warning(f"S3_ZONE_CONFIG: ignoring non-dict entry for bucket {bucket!r}")
+            continue
+        endpoint = cfg.get("endpoint")
+        ak = cfg.get("access_key", "")
+        sk = cfg.get("secret_key", "")
+        region = cfg.get("region", "auto")
+        zone_name = cfg.get("zone", bucket)
+        if not endpoint:
+            logger.warning(f"S3_ZONE_CONFIG: bucket {bucket!r} has no endpoint, skipping")
+            continue
+        backends[bucket] = _ZoneBackend(
+            zone=zone_name,
+            endpoint=endpoint,
+            signer=_build_signer(ak, sk, region),
+        )
+        logger.info(f"Zone config: bucket={bucket!r} → zone={zone_name!r} endpoint={endpoint}")
+
+    return backends
+
+
 class S3ProxyClient:
-    """Proxies S3 requests to a backend S3-compatible storage service."""
+    """Proxies S3 requests to a backend S3-compatible storage service.
+
+    All bucket → backend routing is driven exclusively by S3_ZONE_CONFIG.
+    Requests for unconfigured buckets are rejected with 404 NoSuchBucket.
+    """
 
     def __init__(self):
-        self.backend_url = os.environ.get("S3_BACKEND_URL", "http://localhost:9000")
-        self.backend_access_key = os.environ.get("S3_BACKEND_ACCESS_KEY", "")
-        self.backend_secret_key = os.environ.get("S3_BACKEND_SECRET_KEY", "")
-        self.region = os.environ.get("S3_BACKEND_REGION", "auto")
         self.timeout = float(os.environ.get("S3_PROXY_TIMEOUT", "300"))
+        self._zone_backends: dict[str, _ZoneBackend] = _load_zone_config()
+        self._client = httpx.AsyncClient(
+            timeout=self.timeout,
+            limits=httpx.Limits(
+                max_connections=S3_PROXY_POOL_MAX_CONNECTIONS,
+                max_keepalive_connections=S3_PROXY_POOL_MAX_KEEPALIVE_CONNECTIONS,
+            ),
+        )
+        logger.info(f"S3 Proxy initialized: zone_buckets={sorted(self._zone_backends)}")
 
-        if self.backend_access_key and self.backend_secret_key:
-            self._signer = S3SigV4Auth(
-                Credentials(self.backend_access_key, self.backend_secret_key),
-                "s3", self.region,
-            )
-        else:
-            self._signer = None
+    # ------------------------------------------------------------------
+    # Public helpers used by external.py for event routing
+    # ------------------------------------------------------------------
 
-        logger.info(f"S3 Proxy initialized with backend: {self.backend_url}")
+    def zone_for_bucket(self, bucket: str) -> str:
+        """Return the logical zone name for *bucket*, or the bucket name itself
+        when no zone mapping is configured."""
+        backend = self._zone_backends.get(bucket)
+        return backend.zone if backend else bucket
+
+    # ------------------------------------------------------------------
+    # Internal routing
+    # ------------------------------------------------------------------
+
+    def _backend_for_bucket(self, bucket: str) -> Optional[_ZoneBackend]:
+        """Return the _ZoneBackend for *bucket*, or None if not configured."""
+        return self._zone_backends.get(bucket)
+
+    def is_configured_bucket(self, bucket: str) -> bool:
+        """Return True when *bucket* exists in S3_ZONE_CONFIG."""
+        return bucket in self._zone_backends
+
+    async def close(self) -> None:
+        await self._client.aclose()
 
     async def proxy_request(
         self,
@@ -94,74 +145,47 @@ class S3ProxyClient:
         body: Optional[bytes] = None
     ) -> Response:
         """Proxy an S3 request to the backend storage, re-signing with backend credentials."""
-        query_params = self._strip_presign_auth_query_params(query_params)
+        path_parts = [p for p in path.split('/') if p]
+        if len(path_parts) < 1:
+            return Response(
+                content=_s3_error_xml("InvalidRequest", "Path must include a bucket"),
+                status_code=400, media_type="application/xml",
+            )
+
+        # Resolve the bucket-specific backend; reject buckets not in zone config.
+        bucket = path_parts[0]
+        zone_backend = self._backend_for_bucket(bucket)
+        if zone_backend is None:
+            logger.warning(f"No zone config for bucket={bucket!r}")
+            return Response(
+                content=_s3_error_xml("NoSuchBucket", f"Bucket {bucket!r} is not served by this endpoint"),
+                status_code=404, media_type="application/xml",
+            )
 
         encoded_parts = [quote(part, safe='') for part in path.split('/')]
         encoded_path = '/'.join(encoded_parts)
-        url = f"{self.backend_url}{encoded_path}"
+        url = f"{zone_backend.endpoint}{encoded_path}"
         if query_params:
-            url = f"{url}?{_encode_query_params(query_params)}"
+            url = f"{url}?{urlencode(query_params)}"
 
         outbound_headers = self._filter_headers(headers)
-        # Force uncompressed backend responses so the proxy can stream raw bytes
-        # without needing to decompress or re-advertise encoding to the client.
-        outbound_headers['accept-encoding'] = 'identity'
         outbound_body = body or b""
 
-        # boto3 streaming uploads use aws-chunked encoding which embeds per-chunk
-        # SigV4 signatures in the body framing.  We re-sign with backend credentials
-        # so the embedded signatures are meaningless to the backend; decode to raw
-        # bytes and strip the related headers so the backend stores the correct content.
-        content_encoding = outbound_headers.get('content-encoding', '').lower()
-        sha256_hdr = outbound_headers.get('x-amz-content-sha256', '')
-        if content_encoding == 'aws-chunked' or sha256_hdr.upper().startswith('STREAMING-'):
-            outbound_body = _decode_aws_chunked_body(outbound_body)
-            outbound_headers.pop('content-encoding', None)
-            outbound_headers.pop('Content-Encoding', None)
-            outbound_headers.pop('x-amz-decoded-content-length', None)
-            outbound_headers.pop('X-Amz-Decoded-Content-Length', None)
-
-        if self._signer:
+        if zone_backend.signer:
             aws_req = AWSRequest(method=method, url=url, data=outbound_body, headers=outbound_headers)
-            self._signer.add_auth(aws_req)
+            zone_backend.signer.add_auth(aws_req)
             outbound_headers = dict(aws_req.headers)
 
         logger.info(f"Proxying {method} request to {url}")
 
         try:
-            client = httpx.AsyncClient(timeout=self.timeout)
-            request = client.build_request(
-                method=method,
-                url=url,
-                headers=outbound_headers,
-                content=outbound_body if outbound_body else None,
+            response = await self._client.request(
+                method=method, url=url, headers=outbound_headers,
+                content=outbound_body if outbound_body else None, follow_redirects=False,
             )
-            response = await client.send(request, stream=True, follow_redirects=False)
             response_headers = self._filter_response_headers(dict(response.headers))
-            # For streamed responses, avoid strict length assertions on downstream
-            # when upstream content encoding/decoding behavior differs by transport.
-            if method.upper() != "HEAD":
-                response_headers.pop("content-length", None)
-                response_headers.pop("Content-Length", None)
-            if DEBUG_HEADERS:
-                logger.info(
-                    "Proxy response debug: status=%s backend_header_names=%s outgoing_header_names=%s",
-                    response.status_code,
-                    sorted(response.headers.keys()),
-                    sorted(response_headers.keys()),
-                )
-
-            async def _close_stream() -> None:
-                await response.aclose()
-                await client.aclose()
-
-            return StreamingResponse(
-                # Preserve exact upstream bytes to keep Content-Length accurate.
-                response.aiter_raw(),
-                status_code=response.status_code,
-                headers=response_headers,
-                background=BackgroundTask(_close_stream),
-            )
+            return Response(content=response.content, status_code=response.status_code,
+                            headers=response_headers)
 
         except httpx.TimeoutException:
             logger.error("Timeout proxying request")
@@ -200,70 +224,14 @@ class S3ProxyClient:
             k: v for k, v in headers.items()
             if k.lower() in allow
             or (k.lower().startswith('x-amz-')
-                and k.lower() not in {
-                    'x-amz-date', 'x-amz-content-sha256', 'x-amz-security-token',
-            })
+                and k.lower() not in {'x-amz-date', 'x-amz-content-sha256', 'x-amz-security-token', })
         }
 
     def _filter_response_headers(self, headers: dict) -> dict:
-        """Return only browser-safe response headers from the backend.
-
-        For successful object fetches we do not want to leak arbitrary upstream
-        headers back to the browser. Keep the S3/object metadata that matters to
-        clients and drop everything else, especially anything cookie-related.
-        """
-        allow = {
-            'accept-ranges',
-            'cache-control',
-            'content-disposition',
-            'content-encoding',
-            'content-length',
-            'content-language',
-            'content-range',
-            'content-type',
-            'etag',
-            'expires',
-            'last-modified',
-            'x-amz-checksum-crc32',
-            'x-amz-checksum-crc32c',
-            'x-amz-checksum-crc64nvme',
-            'x-amz-checksum-sha1',
-            'x-amz-checksum-sha256',
-            'x-amz-checksum-type',
-            'x-amz-delete-marker',
-            'x-amz-expiration',
-            'x-amz-mp-parts-count',
-            'x-amz-restore',
-            'x-amz-server-side-encryption',
-            'x-amz-version-id',
-            'x-goog-generation',
-            'x-goog-hash',
-            'x-goog-metageneration',
-            'x-goog-storage-class',
+        """Filter out hop-by-hop headers from the backend response."""
+        exclude = {
+            'connection', 'keep-alive', 'proxy-authenticate', 'proxy-authorization',
+            'te', 'trailer', 'transfer-encoding', 'upgrade',
+            'content-encoding', 'content-length'
         }
-        return {k: v for k, v in headers.items() if k.lower() in allow}
-
-    def _strip_presign_auth_query_params(self, query_params: dict) -> dict:
-        """Drop SigV4 presigned auth params before backend re-signing.
-
-        The proxy authenticates/authorizes client requests itself, then signs
-        upstream calls with backend credentials. Forwarding client presign
-        signature fields would create mixed auth types at the backend.
-        """
-        if not query_params:
-            return query_params
-
-        sigv4_query_fields = {
-            'x-amz-algorithm',
-            'x-amz-credential',
-            'x-amz-date',
-            'x-amz-expires',
-            'x-amz-signedheaders',
-            'x-amz-signature',
-            'x-amz-security-token',
-            'x-amz-content-sha256',
-        }
-        return {
-            k: v for k, v in query_params.items()
-            if str(k).lower() not in sigv4_query_fields
-        }
+        return {k: v for k, v in headers.items() if k.lower() not in exclude}

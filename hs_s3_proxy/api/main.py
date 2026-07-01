@@ -1,47 +1,45 @@
-
-# --- Dual-app pattern: external (auth) and internal (no-auth) FastAPI apps ---
 import asyncio
 import logging
 import os
-import re
 
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from api.routes.external import router as external_router
 
-# ...existing code...
+from api.routes.external import router as external_router, s3_proxy
+from api.lib.event_service import close_event_service_client
 
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger("hs_s3_proxy")
-DEBUG_HEADERS = os.environ.get("S3_PROXY_DEBUG_HEADERS", "false").lower() == "true"
 
-BACKEND_BUCKET = os.environ.get("S3_BACKEND_BUCKET")
-RESOURCE_ID_RE = re.compile(r"^[0-9a-f]{32}$")
 
-# --- External proxy app (auth enforced, fires events) ---
-external_app = FastAPI(title="HydroShare S3 Proxy (external)")
-external_app.add_middleware(
+def _parse_allow_origins() -> list[str]:
+    raw = os.environ.get("CORS_ALLOW_ORIGINS", "*").strip()
+    if not raw:
+        return ["*"]
+    return [origin.strip() for origin in raw.split(",") if origin.strip()]
+
+
+app = FastAPI(title="HydroShare S3 Proxy")
+
+app.add_middleware(
     CORSMiddleware,
-    allow_origins=['*'],
+    allow_origins=_parse_allow_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-external_app.include_router(external_router)
 
-# --- Internal proxy app (no auth, fires events) ---
-internal_app = FastAPI(title="HydroShare S3 Proxy (internal)")
-internal_app.add_middleware(
-    CORSMiddleware,
-    allow_origins=['*'],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+app.include_router(external_router)
+
+
+@app.on_event("shutdown")
+async def shutdown_event() -> None:
+    await s3_proxy.close()
+    close_event_service_client()
 
 
 class Server(uvicorn.Server):
@@ -50,9 +48,15 @@ class Server(uvicorn.Server):
 
 
 async def main():
-    server = Server(config=uvicorn.Config(external_app, workers=1, loop="asyncio",
-                                          host="0.0.0.0", port=9000, forwarded_allow_ips="*"))
-    await server.serve()
+    server = Server(
+        config=uvicorn.Config(
+            app, workers=1, loop="asyncio",
+            host="0.0.0.0", port=9000, forwarded_allow_ips="*"
+        )
+    )
+    api = asyncio.create_task(server.serve())
+    await asyncio.wait([api])
+
 
 if __name__ == "__main__":
     asyncio.run(main())

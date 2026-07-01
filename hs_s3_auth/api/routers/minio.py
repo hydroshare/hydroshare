@@ -1,5 +1,6 @@
 import logging
 import os
+import string
 from typing import AnyStr, List, Optional
 
 from fastapi import APIRouter
@@ -29,23 +30,37 @@ from api.sigv4 import verify_signature_v4
 
 router = APIRouter()
 logger = logging.getLogger("hs-s3-auth")
+CSRF_ALLOWED_CHARS = set(string.ascii_letters + string.digits)
+CSRF_SECRET_LENGTH = 32
+CSRF_TOKEN_LENGTH = 64
+
+
+def _is_valid_csrf_token(token: str) -> bool:
+    """Validate Django CSRF token shape (masked or unmasked)."""
+    if not token:
+        return False
+    if len(token) not in (CSRF_SECRET_LENGTH, CSRF_TOKEN_LENGTH):
+        return False
+    return all(ch in CSRF_ALLOWED_CHARS for ch in token)
 
 
 class CsrfVerifyRequest(BaseModel):
     session_id: str
-    csrf_token: Optional[str] = None
+    csrf_token: str
 
 
-@router.post("/verify-csrf/")
+@router.post("/verify-session/")
 async def verify_csrf(request: CsrfVerifyRequest):
     """Authenticate a browser request using the Django session cookie.
 
     The caller must supply ``session_id`` (the value of the ``sessionid``
-    cookie).  The optional ``csrf_token`` (``csrftoken`` cookie) is accepted
-    but not separately verified here — Django's own middleware handles CSRF
-    protection on the origin server; this endpoint only resolves the session
-    to an authenticated user.
+    cookie) and ``csrf_token`` (the ``csrftoken`` cookie). The CSRF token is
+    required and must be in a valid Django CSRF token format.
     """
+    if not _is_valid_csrf_token(request.csrf_token):
+        logger.warning("CSRF/session verification failed: invalid CSRF token format")
+        return {"allow": False, "reason": "invalid_csrf_token"}
+
     result = get_user_by_session_id(request.session_id)
     if not result:
         logger.warning("CSRF/session verification failed: session not found or expired")
@@ -248,16 +263,7 @@ async def verify_signature(request: SignatureVerifyRequest):
     if rows:
         candidate_secrets = [(secret_key, int(user_id)) for secret_key, user_id in rows]
     else:
-        # SigV4 requests when no DB token exists for that access key.
-        if access_key == os.environ.get("S3_BACKEND_ACCESS_KEY", ""):
-            token_key = os.environ.get("S3_BACKEND_SECRET_KEY", "")
-            if not token_key:
-                logger.warning("Missing S3_BACKEND_SECRET_KEY for cuahsi signature verification")
-                return {"allow": False, "reason": "user_not_found"}
-            candidate_secrets = [(token_key, 0)]
-        else:
-            logger.warning(f"No token found for access_key: {access_key}")
-            return {"allow": False, "reason": "user_not_found"}
+        logger.warning(f"Access key not found: {access_key}")
 
     for token_key, user_id in candidate_secrets:
         valid = verify_signature_v4(

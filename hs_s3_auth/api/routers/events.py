@@ -59,8 +59,7 @@ async def receive_s3_event(event: S3Event):
         )
 
     # Dispatch metadata extraction for data file events
-    _path_lower = event.object_path.lower()
-    if not _path_lower.endswith(".hsjsonld/dataset_metadata.json"):
+    if not event.object_path.endswith("/.hsjsonld/dataset_metadata.json"):
         celery_app.send_task(
             "hs_extract.tasks.extract_metadata",
             kwargs={

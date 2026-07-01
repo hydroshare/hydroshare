@@ -1,5 +1,5 @@
 import logging
-from typing import List, Optional
+from typing import Optional
 
 from api.lib.auth_service import check_authorization_sync
 
@@ -11,7 +11,7 @@ def check_s3_authorization(
     action: str,
     bucket: str,
     object_path: str,
-    prefixes: Optional[List[str]] = None,
+    prefixes: Optional[list[str]] = None,
 ) -> bool:
     if not action.startswith("s3:"):
         action = f"s3:{action}"
