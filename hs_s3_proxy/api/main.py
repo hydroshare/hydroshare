@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 
 import uvicorn
 from fastapi import FastAPI
@@ -14,11 +15,19 @@ logging.basicConfig(
 )
 logger = logging.getLogger("hs_s3_proxy")
 
+
+def _parse_allow_origins() -> list[str]:
+    raw = os.environ.get("CORS_ALLOW_ORIGINS", "*").strip()
+    if not raw:
+        return ["*"]
+    return [origin.strip() for origin in raw.split(",") if origin.strip()]
+
+
 app = FastAPI(title="HydroShare S3 Proxy")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=['*'],
+    allow_origins=_parse_allow_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

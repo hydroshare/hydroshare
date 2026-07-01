@@ -329,6 +329,7 @@ services:
     environment:
       AUTH_SERVICE_URL: "http://hs-s3-auth"
       AUTH_SERVICE_TIMEOUT: "5"
+      CORS_ALLOW_ORIGINS: "*"
       EVENT_SERVICE_POOL_MAX_CONNECTIONS: "10"
       EVENT_SERVICE_POOL_MAX_KEEPALIVE_CONNECTIONS: "5"
       S3_ZONE_CONFIG: >-
