@@ -6,7 +6,7 @@ import re
 from fastapi import APIRouter, Request, Response
 from api.lib.auth_service import verify_csrf_token_sync, verify_signature_sync
 from api.lib.authorization import check_s3_authorization
-from api.lib.event_service import post_s3_event, zone_for_bucket
+from api.lib.event_service import post_s3_event
 from api.lib.s3_auth import (
     get_s3_action_from_request,
     parse_authorization_header,
