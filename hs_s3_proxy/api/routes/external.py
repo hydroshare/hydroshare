@@ -82,7 +82,7 @@ def _verify_sigv4_request(method, path, headers, query_params, body, auth_info, 
 
 def _verify_csrf_session_request(request: Request):
     """Authenticate a request using session and CSRF cookies."""
-    csrf_token = request.cookies.get("csrftoken") or request.headers.get("x-csrftoken")
+    csrf_token = request.cookies.get("csrftoken")
     session_id = request.cookies.get("sessionid")
     if not session_id or not csrf_token:
         logger.warning("No valid authorization or session/CSRF token found")
