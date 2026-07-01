@@ -26,6 +26,7 @@ def base_event(**overrides):
         "username": "user1",
         "user_id": 42,
         "file_size": 1024,
+        "zone": "us-east-1",
     }
     data.update(overrides)
     return data
@@ -48,6 +49,7 @@ class TestReceiveS3Event:
                 "object_path": event["object_path"],
                 "username": event["username"],
                 "user_id": event["user_id"],
+                "zone": event["zone"],
             },
             queue="s3_events",
         )
@@ -63,6 +65,7 @@ class TestReceiveS3Event:
                 "bucket": event["bucket"],
                 "object_path": event["object_path"],
                 "file_size": event["file_size"],
+                "zone": event["zone"],
             },
             queue="extract",
         )
@@ -84,6 +87,7 @@ class TestReceiveS3Event:
                 "action": event["action"],
                 "bucket": event["bucket"],
                 "object_path": event["object_path"],
+                "zone": event["zone"],
             },
             queue="s3_events",
         )
