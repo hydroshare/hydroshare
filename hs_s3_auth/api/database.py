@@ -179,7 +179,7 @@ def _decode_django_session_data(session_data: str) -> dict:
 
 
 def get_user_by_session_id(session_id: str):
-    """Return ``(user_id, username)`` for a valid, non-expired Django session.
+    """Return ``(user_id, username, csrf_secret)`` for a valid Django session.
 
     Returns ``None`` if the session does not exist, has expired, or has no
     authenticated user.
@@ -214,6 +214,8 @@ def get_user_by_session_id(session_id: str):
         logger.error(f"Invalid user_id in session data for session_id={session_id}: {raw_user_id}", exc_info=True)
         return None
 
+    csrf_secret = session_dict.get('_csrftoken')
+
     user_query = """
         SELECT id, username
         FROM auth_user
@@ -223,6 +225,6 @@ def get_user_by_session_id(session_id: str):
         rs = con.execute(statement=text(user_query), parameters=dict(user_id=user_id))
         row = rs.fetchone()
         if row:
-            return row[0], row[1]
+            return row[0], row[1], csrf_secret
     logger.info(f"No valid user found for user_id={user_id}")
     return None

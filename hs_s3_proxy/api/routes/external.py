@@ -4,7 +4,7 @@ import hashlib
 import xml.etree.ElementTree as ET
 import re
 from fastapi import APIRouter, Request, Response
-from api.lib.auth_service import verify_csrf_token_sync, verify_signature_sync
+from api.lib.auth_service import verify_csrf_sync, verify_signature_sync
 from api.lib.authorization import check_s3_authorization
 from api.lib.event_service import post_s3_event
 from api.lib.s3_auth import (
@@ -82,10 +82,10 @@ def _verify_sigv4_request(method, path, headers, query_params, body, auth_info, 
 
 def _verify_csrf_session_request(request: Request):
     """Authenticate a request using session and CSRF cookies."""
-    csrf_token = request.cookies.get("csrftoken")
+    csrf_token = request.cookies.get("csrftoken") or request.headers.get("x-csrftoken")
     session_id = request.cookies.get("sessionid")
     if not session_id or not csrf_token:
-        logger.warning("No valid authorization (header/presigned) or session cookie found")
+        logger.warning("No valid authorization or session/CSRF token found")
         return None, None, Response(
             content=b"<Error><Code>AccessDenied</Code><Message>Access Denied</Message></Error>",
             status_code=403,
@@ -93,7 +93,7 @@ def _verify_csrf_session_request(request: Request):
         )
 
     logger.info("No SigV4 auth header; attempting CSRF/session authentication.")
-    csrf_result = verify_csrf_token_sync(session_id=session_id, csrf_token=csrf_token)
+    csrf_result = verify_csrf_sync(session_id=session_id, csrf_token=csrf_token)
     if not csrf_result.get("allow"):
         reason = csrf_result.get("reason", "unknown")
         if reason == "auth_service_error":
