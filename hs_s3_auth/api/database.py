@@ -61,8 +61,8 @@ def is_superuser_and_id(username: str):
     # return is_superuser and user_id as tuple
     query = """SELECT auth_user.is_superuser, theme_userprofile.user_id
     FROM auth_user
-    INNER JOIN theme_userprofile
-    ON auth_user.username = :username"""
+    JOIN theme_userprofile ON theme_userprofile.user_id = auth_user.id
+    WHERE auth_user.username = :username"""
 
     with engine.connect() as con:
         rs = con.execute(statement=text(query),
@@ -70,7 +70,7 @@ def is_superuser_and_id(username: str):
         row = rs.fetchone()
         if row:
             return row
-    return {False, None}
+    return False, None
 
 
 def resource_discoverability(resource_id: str):
