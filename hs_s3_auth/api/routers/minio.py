@@ -1,3 +1,4 @@
+import hmac
 import logging
 import os
 import string
@@ -30,7 +31,8 @@ from api.sigv4 import verify_signature_v4
 
 router = APIRouter()
 logger = logging.getLogger("hs-s3-auth")
-CSRF_ALLOWED_CHARS = set(string.ascii_letters + string.digits)
+_CSRF_CHARS = string.ascii_letters + string.digits
+CSRF_ALLOWED_CHARS = set(_CSRF_CHARS)
 CSRF_SECRET_LENGTH = 32
 CSRF_TOKEN_LENGTH = 64
 
@@ -44,18 +46,29 @@ def _is_valid_csrf_token(token: str) -> bool:
     return all(ch in CSRF_ALLOWED_CHARS for ch in token)
 
 
+def _unmask_csrf_token(token: str) -> str:
+    """Reverse Django's CSRF masking to recover the 32-char secret."""
+    mask = token[:CSRF_SECRET_LENGTH]
+    ciphertext = token[CSRF_SECRET_LENGTH:]
+    chars_len = len(_CSRF_CHARS)
+    return ''.join(
+        _CSRF_CHARS[(_CSRF_CHARS.index(c) - _CSRF_CHARS.index(m)) % chars_len]
+        for c, m in zip(ciphertext, mask)
+    )
+
+
 class CsrfVerifyRequest(BaseModel):
     session_id: str
     csrf_token: str
 
 
-@router.post("/verify-session/")
+@router.post("/verify-csrf/")
 async def verify_csrf(request: CsrfVerifyRequest):
     """Authenticate a browser request using the Django session cookie.
 
     The caller must supply ``session_id`` (the value of the ``sessionid``
-    cookie) and ``csrf_token`` (the ``csrftoken`` cookie). The CSRF token is
-    required and must be in a valid Django CSRF token format.
+    cookie) and ``csrf_token`` (the submitted CSRF token). The CSRF token is
+    validated against the session-stored ``_csrftoken`` secret.
     """
     if not _is_valid_csrf_token(request.csrf_token):
         logger.warning("CSRF/session verification failed: invalid CSRF token format")
@@ -66,7 +79,24 @@ async def verify_csrf(request: CsrfVerifyRequest):
         logger.warning("CSRF/session verification failed: session not found or expired")
         return {"allow": False, "reason": "invalid_session"}
 
-    user_id, username = result
+    user_id, username, csrf_secret = result
+
+    if not csrf_secret:
+        logger.warning(f"CSRF verification failed for user {username}: no _csrftoken in session")
+        return {"allow": False, "reason": "invalid_csrf_token"}
+
+    if len(request.csrf_token) != CSRF_TOKEN_LENGTH:
+        logger.warning(
+            f"CSRF verification failed for user {username}: token is not masked "
+            f"(expected {CSRF_TOKEN_LENGTH} chars)"
+        )
+        return {"allow": False, "reason": "invalid_csrf_token"}
+
+    unmasked_token = _unmask_csrf_token(request.csrf_token)
+    if not hmac.compare_digest(unmasked_token, csrf_secret):
+        logger.warning(f"CSRF verification failed for user {username}: token does not match session secret")
+        return {"allow": False, "reason": "invalid_csrf_token"}
+
     logger.info(f"CSRF/session authentication succeeded for user: {username} (id={user_id})")
     return {"allow": True, "user_id": user_id, "username": username}
 
