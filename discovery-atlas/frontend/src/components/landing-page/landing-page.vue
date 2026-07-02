@@ -749,13 +749,27 @@
               <v-card variant="outlined" border="grey thin">
                 <v-card-text>
                   <v-timeline align-top density="compact" line-color="info">
-                    <v-timeline-item dot-color="primary" icon="mdi-calendar" fill-dot>
+                    <!-- Per the schema, startDate is required and endDate is
+                         optional (open-ended periods). Render each item
+                         conditionally so an ongoing period doesn't show a
+                         dangling End Date row. -->
+                    <v-timeline-item
+                      v-if="data.temporalCoverage.startDate"
+                      dot-color="primary"
+                      icon="mdi-calendar"
+                      fill-dot
+                    >
                       <div>
                         <strong>Start Date</strong>
                         <div>{{ parseDate(data.temporalCoverage.startDate) }}</div>
                       </div>
                     </v-timeline-item>
-                    <v-timeline-item dot-color="orange-darken-2" icon="mdi-calendar" fill-dot>
+                    <v-timeline-item
+                      v-if="data.temporalCoverage.endDate"
+                      dot-color="orange-darken-2"
+                      icon="mdi-calendar"
+                      fill-dot
+                    >
                       <div>
                         <strong>End Date</strong>
                         <div>{{ parseDate(data.temporalCoverage.endDate) }}</div>

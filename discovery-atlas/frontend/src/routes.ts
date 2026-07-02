@@ -18,9 +18,11 @@ export const routes: RouteRecordRaw[] = [
       title: "Search",
     },
     beforeEnter(to) {
-      // If no query parameters are provided, default to published filter sorted by date created descending
+      // If no query parameters are provided, default the sort order — but
+      // DON'T pre-apply the `a=Published` filter, which silently hid every
+      // non-published resource and surprised users on a fresh visit.
       if (Object.keys(to.query).length === 0) {
-        return { name: "search", query: { sortBy: "datePublished", order: "desc", a: "Published" } };
+        return { name: "search", query: { sortBy: "datePublished", order: "desc" } };
       }
     },
   },
@@ -43,6 +45,7 @@ export const routes: RouteRecordRaw[] = [
     props: true,
     components: {
       content: EditDataset,
+      toc: Toc,
       footer: CdFooter,
     },
     meta: {
