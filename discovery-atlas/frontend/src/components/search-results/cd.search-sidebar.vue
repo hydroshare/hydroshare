@@ -159,7 +159,7 @@
               hide-details
               color="primary"
             ></v-switch>
-            <div class="ml-4 text-body-1 cursor-pointer">Availiability</div>
+            <div class="ml-4 text-body-1 cursor-pointer">Availability</div>
           </v-expansion-panel-title>
 
           <v-expansion-panel-text>
