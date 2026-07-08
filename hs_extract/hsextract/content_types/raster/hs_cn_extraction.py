@@ -9,7 +9,7 @@ from pydantic import ValidationError
 from hs_cloudnative_schemas.schema.base import GeoShape, SpatialReference, Place
 from hs_cloudnative_schemas.schema.dataset import ScientificDataset, AdditionalType
 from hs_cloudnative_schemas.schema.datavariable import DataVariable, Dimension
-from hsextract.utils.s3 import find, s3_client as s3
+from hsextract.utils.s3 import find, get_s3_client
 
 
 mimetypes.add_type("application/x-esri-shapefile", ".shp")
@@ -22,12 +22,13 @@ mimetypes.add_type("application/geo+json", ".geojson")
 mimetypes.add_type("application/gml+xml", ".gml")
 
 
-def list_tif_files_s3(raster_file):
+def list_tif_files_s3(raster_file, zone: str):
+    s3 = get_s3_client(zone)
     temp_dir = tempfile.gettempdir()
     vrt_file = raster_file if raster_file.endswith('.vrt') else None
     if not vrt_file:
         parent_dir = os.path.dirname(raster_file)
-        vrt_files = [file for file in find(parent_dir) if file.endswith('.vrt')]
+        vrt_files = [file for file in find(parent_dir, zone) if file.endswith('.vrt')]
         for file in vrt_files:
             local_copy = os.path.join(temp_dir, os.path.basename(file))
             bucket, key = file.split("/", 1)
@@ -56,7 +57,8 @@ def list_tif_files(vrt_file):
     return file_names_in_vrt
 
 
-def encode_raster_metadata(filepath, multiband=False, validate_bbox=True):
+def encode_raster_metadata(filepath, zone: str, multiband=False, validate_bbox=True):
+    s3 = get_s3_client(zone)
     temp_dir = tempfile.gettempdir()
     local_copy = os.path.join(temp_dir, os.path.basename(filepath))
     bucket, key = filepath.split("/", 1)

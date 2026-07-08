@@ -5,6 +5,7 @@ from django.contrib.auth.models import User, Group
 
 from hs_core.hydroshare.resource import add_resource_files, create_resource
 from hs_core.hydroshare.users import create_account
+from hs_core.hydroshare.utils import resource_file_add_pre_process
 from hs_core.models import BaseResource
 from hs_core.testing import MockS3TestCaseMixin
 from hs_core.exceptions import QuotaException
@@ -104,19 +105,21 @@ class TestAddResourceFiles(MockS3TestCaseMixin, unittest.TestCase):
     def test_add_files_over_quota(self):
 
         uquota = self.user.quotas.first()
-        # make user's quota over hard limit 125%
-        from hs_core.tests.utils.test_utils import set_quota_usage_over_hard_limit
-        set_quota_usage_over_hard_limit(uquota)
+        uquota.save_allocated_value(1, "B")
 
         # add files should raise quota exception now that the quota holder is over limit
-        files = [self.myfile1, self.myfile2, self.myfile3]
+        files = [self.n1, self.n2, self.n3]
         with self.assertRaises(QuotaException):
-            add_resource_files(self.res.short_id, *files)
+            resource_file_add_pre_process(resource=self.res, files=files,
+                                          user=self.user, folder="",
+                                          extract_metadata=False)
 
         uquota.save_allocated_value(20, "GB")
         # add files should not raise quota exception since they have not exceeded quota
         try:
-            add_resource_files(self.res.short_id, *files)
+            resource_file_add_pre_process(resource=self.res, files=files,
+                                          user=self.user, folder="",
+                                          extract_metadata=False)
         except QuotaException as ex:
             self.fail("add resource file action should not raise QuotaException for "
                       "over quota cases if quota is not enforced - Quota Exception: " + str(ex))

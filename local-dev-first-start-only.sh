@@ -249,6 +249,15 @@ echo "  - docker exec hydroshare pip install -r requirements-test.txt"
 echo
 docker exec hydroshare pip install -r requirements-test.txt
 
+echo "docker exec hydroshare mc mb hydroshare/resource"
+docker exec hydroshare mc mb hydroshare/resource
+
+echo "docker exec hydroshare mc mb hydroshare/published"
+docker exec hydroshare mc mb hydroshare/published
+
+echo "docker exec hydroshare mc mb hydroshare/ciroh"
+docker exec hydroshare mc mb hydroshare/ciroh
+
 echo
 echo '########################################################################################################################'
 echo " Setting up Atlas search index"
@@ -284,12 +293,6 @@ echo
 echo "  - docker restart hydroshare defaultworker"
 echo
 docker restart hydroshare defaultworker hydroshare-hs_event_s3-1 hydroshare-discovery_collection_worker-1
-
-echo
-echo "  - docker exec hydroshare python manage.py add_missing_bucket_names"
-echo
-docker exec hydroshare python manage.py add_missing_bucket_names
-
 
 # Parse arguments
 SEED_DEV_RESOURCES=false

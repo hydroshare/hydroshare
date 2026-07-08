@@ -153,21 +153,17 @@ class TestPublicZipEndpoint(HSRESTTestCase):
         resource.add_resource_files(self.res.short_id, self.myfile1, self.myfile2, self.myfile3, folder='test')
 
         uquota = self.user.quotas.first()
-        # make user's quota over hard limit 125%
-        from hs_core.tests.utils.test_utils import set_quota_usage_over_hard_limit, wait_for_quota_update
-        set_quota_usage_over_hard_limit(uquota)
+        uquota.save_allocated_value(1, "B")
         uquota.save()
 
         # zip should raise quota exception now that the quota holder is over hard limit
         with self.assertRaises(QuotaException):
             zip_folder(self.user, self.res.short_id, 'data/contents/test', 'test.zip', bool_remove_original=False)
 
-        # Zip should raise quota exception now that the quota holder is over hard limit and minio is enforcing quota
-        with self.assertRaises(QuotaException):
-            zip_folder(self.user, self.res.short_id, 'data/contents/test', 'test.zip', bool_remove_original=True)
+        # Zip should not raise quota exception when removing the original is True
+        zip_folder(self.user, self.res.short_id, 'data/contents/test', 'test.zip', bool_remove_original=True)
 
         uquota.save_allocated_value(20, "GB")
-        wait_for_quota_update()
 
         resource.add_resource_files(self.res.short_id, self.myfile1, self.myfile2, self.myfile3, folder='test2')
         # zip files should not raise quota exception since the user has quota

@@ -1,12 +1,13 @@
 import mimetypes
 import os
-from hsextract.utils.s3 import s3_client as s3
+from hsextract.utils.s3 import s3_clients
 from hs_cloudnative_schemas.schema.base import MediaObject
 
 
-def file_metadata(path: str):
+def file_metadata(path: str, zone: str):
     # if path == "/tmp/hs_user_meta.json":
     #    return file_metadata_local(path)
+    s3 = s3_clients.get(zone, s3_clients["default"])
     checksum = s3.checksum(path)
     if s3.isdir(path):
         size = "0 KB"

@@ -23,7 +23,7 @@ while read line; do export $line; done < <(cat ${CONFIG_DIRECTORY}/hydroshare-co
 ### Docker Variables ###
 HS_DOCKER_CONTAINERS=(hydroshare defaultworker)
 HS_DOCKER_IMAGES=(hydroshare_hydroshare hydroshare_defaultworker)
-OTHER_DOCKER_CONTAINERS=(postgis redpanda redis)
+OTHER_DOCKER_CONTAINERS=(postgis redis)
 
 ### Pre-flight Variables ###
 DEV_SERVER='runuser -p ./run-server'
@@ -250,7 +250,6 @@ rebuild_hs() {
     echo "  - docker exec hydroshare python manage.py prevent_web_crawling"
     docker exec hydroshare python manage.py prevent_web_crawling
     thumbnail_cleanup
-    fi
     restart_hs
     echo "END BUILD"
 }
