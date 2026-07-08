@@ -1,0 +1,12 @@
+The Public folder lets you easily share single files in your Dropbox. Any file you put in this folder gets its own Internet link that you can share with others -- even non-Dropbox users!
+
+Step 1:  Drop a file into the Public folder.
+
+Step 2:  Right-click this file, then choose Dropbox > Copy Public Link. This copies an Internet link to your file that you can paste anywhere: emails, instant messages, blogs, etc.
+
+That's it! To share your file, just send the link to a friend.
+
+Happy Dropboxing!
+- The Dropbox Team
+
+P.S. You can only link to actual files within your Public folder, not to folders. For help with sharing files visit http://www.dropbox.com/help/16
