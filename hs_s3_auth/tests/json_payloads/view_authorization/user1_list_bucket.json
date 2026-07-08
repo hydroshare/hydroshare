@@ -1,0 +1,81 @@
+{
+    "input": {
+        "conditions": {
+            "preferred_username": [],
+            "username": [
+                "user1"
+            ],
+            "Prefix": [],
+            "prefix": [
+                "f211b93642f84c55a0bdd1b12880e32e/"
+            ],
+            "content_length": [],
+            "Accept-Encoding": [
+                "zstd,gzip"
+            ],
+            "CurrentTime": [
+                "2025-06-11T03:21:33Z"
+            ],
+            "EpochTime": [
+                "1749612093"
+            ],
+            "Referer": [
+                ""
+            ],
+            "SecureTransport": [
+                "false"
+            ],
+            "SourceIp": [
+                "192.168.65.1"
+            ],
+            "User-Agent": [
+                "MinIO (darwin; arm64) minio-go/v7.0.88 mc/RELEASE.2025-03-12T17-29-24Z"
+            ],
+            "UserAgent": [
+                "MinIO (darwin; arm64) minio-go/v7.0.88 mc/RELEASE.2025-03-12T17-29-24Z"
+            ],
+            "X-Amz-Content-Sha256": [
+                "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            ],
+            "X-Amz-Date": [
+                "20250611T032133Z"
+            ],
+            "authType": [
+                "REST-HEADER"
+            ],
+            "delimiter": [
+                "/"
+            ],
+            "encoding-type": [
+                "url"
+            ],
+            "fetch-owner": [
+                "true"
+            ],
+            "list-type": [
+                "2"
+            ],
+            "principaltype": [
+                "Account"
+            ],
+            "signatureversion": [
+                "AWS4-HMAC-SHA256"
+            ],
+            "userid": [
+                "user1"
+            ],
+            "versionid": [
+                ""
+            ]
+        },
+        "action": "s3:ListBucket",
+        "bucket": "user1",
+        "object": "",
+        "account": "user1",
+        "groups": null,
+        "originalAction": "",
+        "owner": true,
+        "claims": {},
+        "denyOnly": false
+    }
+}

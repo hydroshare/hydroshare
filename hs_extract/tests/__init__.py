@@ -1,29 +1,42 @@
 import json
 import os
-import boto3
-import subprocess
+
+from hsextract.utils.s3 import get_s3_client
+from hsextract.utils.s3 import refresh_s3_clients_from_env
 
 
-s3_config = {
-    "endpoint_url": os.environ.get("AWS_S3_ENDPOINT", "http://minio:9000"),
-    "aws_access_key_id": os.environ.get("AWS_ACCESS_KEY_ID", "cuahsi"),
-    "aws_secret_access_key": os.environ.get("AWS_SECRET_ACCESS_KEY", "devpassword")
-}
-s3_client = boto3.client('s3', **s3_config)
-# Create a bucket for testing purposes
-try:
-    s3_client.create_bucket(Bucket="test-bucket")
-except s3_client.exceptions.BucketAlreadyOwnedByYou:
-    pass
-    # Set up S3 event notifications for put and delete events using mc
-try:
-    subprocess.run([
-        "mc", "event", "add", "hydroshare/test-bucket",
-        "arn:minio:sqs::RESOURCEFILE:kafka",
-        "--event", "put,delete"
-    ], check=True)
-except subprocess.CalledProcessError as e:
-    print(f"Failed to set up S3 event notifications: {e}")
+os.environ.setdefault(
+    "S3_ZONE_CONFIG",
+    json.dumps({
+        "hydroshare": {
+            "bucket_name": "resource",
+            "aws_s3_endpoint_url": "http://minio:9000",
+            "aws_access_key_id": "cuahsi",
+            "aws_secret_access_key": "devpassword",
+            "aws_s3_endpoint_url_public": "http://localhost:9000"
+        },
+        "published": {  # the publisher hydroshare user must be updated to use this zone, see PUBLISHER_USER_NAME
+            "bucket_name": "published",
+            "aws_s3_endpoint_url": "http://minio:9000",
+            "aws_access_key_id": "cuahsi",
+            "aws_secret_access_key": "devpassword",
+            "aws_s3_endpoint_url_public": "http://localhost:9000"
+        },
+        "ciroh": {
+            "bucket_name": "ciroh",
+            "aws_s3_endpoint_url": "http://minio:9000",
+            "aws_access_key_id": "cuahsi",
+            "aws_secret_access_key": "devpassword",
+            "aws_s3_endpoint_url_public": "http://localhost:9000"
+        }
+    }),
+)
+
+refresh_s3_clients_from_env()
+TEST_ZONE = "hydroshare"
+
+
+s3_client = get_s3_client(TEST_ZONE)
 
 
 def read_s3_json(path: str):

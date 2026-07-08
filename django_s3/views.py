@@ -8,7 +8,7 @@ from uuid import uuid4
 
 from smart_open import open
 from django_s3.storage import S3Storage
-from django_s3.utils import bucket_and_name
+from django_s3.utils import bucket_and_zone
 from django_tus.views import TusUpload
 from django_tus.tusfile import TusFile, TusChunk
 from django_tus.response import TusResponse
@@ -401,8 +401,9 @@ class CustomTusFile(TusFile):
         self.part_number = cache.get("tus-uploads/{}/part_number".format(resource_id))
         self.parts = cache.get("tus-uploads/{}/parts".format(resource_id)) or []
         self.upload_id = cache.get("tus-uploads/{}/upload_id".format(resource_id))
-        bucket, _ = bucket_and_name(self.metadata.get("hs_res_id"))
+        bucket, zone = bucket_and_zone(self.metadata.get("hs_res_id"))
         self.bucket = bucket
+        self.zone = zone
 
     def get_storage(self):
         return self.storage
@@ -435,7 +436,7 @@ class CustomTusFile(TusFile):
     def _write_file(self, path, offset, content):
         s3_url = f's3://{self.bucket}/{path}'
         transport_params = {
-            'client': self.storage.connection.meta.client
+            'client': self.storage.connection(self.zone).meta.client
         }
         with open(s3_url, 'wb', transport_params=transport_params) as out_file:
             if offset:
@@ -449,7 +450,7 @@ class CustomTusFile(TusFile):
 
     def initiate_multipart_upload(self):
         try:
-            response = self.storage.connection.meta.client.create_multipart_upload(
+            response = self.storage.connection(self.zone).meta.client.create_multipart_upload(
                 Bucket=self.bucket,
                 Key=self.path
             )
@@ -462,7 +463,7 @@ class CustomTusFile(TusFile):
 
     def upload_part(self, chunk):
         try:
-            response = self.storage.connection.meta.client.upload_part(
+            response = self.storage.connection(self.zone).meta.client.upload_part(
                 Bucket=self.bucket,
                 Key=self.path,
                 PartNumber=self.part_number,
@@ -486,7 +487,7 @@ class CustomTusFile(TusFile):
             raise e
 
     def complete_upload(self):
-        self.storage.connection.meta.client.complete_multipart_upload(
+        self.storage.connection(self.zone).meta.client.complete_multipart_upload(
             Bucket=self.bucket,
             Key=self.path,
             UploadId=self.upload_id,

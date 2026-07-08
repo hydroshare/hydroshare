@@ -7,8 +7,8 @@ from hsextract.content_types.feature.hs_cn_extraction import encode_vector_metad
 class FeatureMetadataObject(FileMetadataObject):
     content_type = ContentType.FEATURE
 
-    def __init__(self, file_object_path: str, file_updated: bool):
-        super().__init__(file_object_path, file_updated)
+    def __init__(self, file_object_path: str, file_updated: bool, zone: str):
+        super().__init__(file_object_path, file_updated, zone)
         # ensure we are working with the .shp file
         file_name, file_extension = os.path.splitext(self.file_object_path.lower())
         if file_extension != ".shp":
@@ -31,7 +31,7 @@ class FeatureMetadataObject(FileMetadataObject):
                 ".atx", ".ixs", ".mxs"]
 
     @classmethod
-    def is_content_type(cls, file_object_path: str) -> bool:
+    def is_content_type(cls, file_object_path: str, zone: str) -> bool:
         sub_file_object_path, extension = os.path.splitext(file_object_path.lower())
         if extension == ".xml":
             _, sub_extension = os.path.splitext(sub_file_object_path.lower())
@@ -62,6 +62,6 @@ class FeatureMetadataObject(FileMetadataObject):
         return self._content_type_associated_media
 
     def extract_metadata(self):
-        metadata = encode_vector_metadata(self.file_object_path)
+        metadata = encode_vector_metadata(self.file_object_path, self.zone)
         metadata = metadata.model_dump(exclude_none=True)
         return metadata

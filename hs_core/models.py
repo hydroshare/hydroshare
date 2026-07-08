@@ -2854,15 +2854,9 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
                 not new_holder.uaccess.owns_resource(self):
             raise PermissionDenied("Only owners can set or be set as quota holder for the resource")
 
-        # ensure the new holder has a bucket, buckets only exist for users with resources
-        istorage = self.get_s3_storage()
-        istorage.create_bucket(new_holder.userprofile.bucket_name)
         # QuotaException will be raised if new_holder does not have enough quota to hold this
         # new resource, in which case, set_quota_holder to the new user fails
         validate_user_quota(new_holder, self.size)
-        # if the resource is new, it does not have a quota holder yet
-        if self.quota_holder:
-            self.get_s3_storage().new_quota_holder(self.short_id, new_holder.username)
 
         self.quota_holder = new_holder
         self.save()
@@ -2942,8 +2936,10 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
         for fl in self.files.all():
             # COUCH: delete of file objects now cascades.
             fl.delete(delete_logical_file=True)
+
         self.metadata.delete()
         hs_bagit.delete_files_and_bag(self)
+
         super(AbstractResource, self).delete()
 
     @property
@@ -3583,7 +3579,7 @@ class ResourceFile(ResourceFileS3Mixin):
                 if __debug__:
                     assert (isinstance(source, str))
                 # source is a path to an S3 file to be copied here.
-                root, newfile = os.path.split(source)  # take file from source path
+                _, newfile = os.path.split(source)  # take file from source path
                 # newfile is where it should be copied to.
                 target = get_resource_file_path(resource, newfile, folder=folder)
                 if not istorage.exists(source):

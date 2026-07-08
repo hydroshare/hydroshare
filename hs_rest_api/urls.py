@@ -83,7 +83,7 @@ urlpatterns = [
     path('user/service/accounts/s3/', MinIOServiceAccounts.as_view(),
          name='minio_service_accounts'),
 
-    re_path(r'user/service/accounts/s3/(?P<service_account_key>[\w]+)', MinIOServiceAccountsDelete.as_view(),
+    re_path(r'user/service/accounts/s3/(?P<access_key>[^/]+)', MinIOServiceAccountsDelete.as_view(),
             name='minio_service_accounts_delete'),
 
     re_path(r'^resource/s3/(?P<pk>[0-9a-f-]+)/$', MinIOResourceBucketAndPrefix.as_view(),
