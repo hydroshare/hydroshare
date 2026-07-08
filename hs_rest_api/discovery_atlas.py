@@ -134,8 +134,28 @@ class SearchQuery(BaseModel):
     @property
     def _should(self):
         search_paths = ['name', 'description', 'keywords']
-        should = [{'autocomplete': {'query': self.term, 'path': key, 'fuzzy': {'maxEdits': 1}}} for key in search_paths]
+        should = [{'autocomplete': self._autocomplete_query(self.term, key)} for key in search_paths]
         return should
+
+    def _search_term_char_count(self):
+        return len(self.term.strip()) if self.term else 0
+
+    def _search_term_fuzzy_min_chars(self):
+        return getattr(settings, 'SEARCH_FUZZY_MIN_TERM_LENGTH', 10)
+
+    def _use_fuzzy_for_search_term(self):
+        return self._search_term_char_count() >= self._search_term_fuzzy_min_chars()
+
+    def _autocomplete_query(self, query, path, score=None):
+        autocomplete = {'query': query, 'path': path}
+
+        if query and query == self.term and self._use_fuzzy_for_search_term():
+            autocomplete['fuzzy'] = {'maxEdits': 1}
+
+        if score is not None:
+            autocomplete['score'] = {'boost': {'value': score}}
+
+        return autocomplete
 
     @property
     def _must(self):
@@ -216,18 +236,15 @@ class SearchQuery(BaseModel):
         if self.term:
             compound['should'] = [
                 # https://www.mongodb.com/docs/atlas/atlas-search/score/modify-score/#std-label-scoring-boost
-                {'autocomplete': {'query': self.term, 'path': 'name', 'fuzzy': {'maxEdits': 1},
-                                  'score': {"boost": {"value": settings.SEARCH_BOOST_NAME}}}},
-                {'autocomplete': {'query': self.term, 'path': 'description', 'fuzzy': {'maxEdits': 1},
-                                  'score': {"boost": {"value": settings.SEARCH_BOOST_DESCRIPTION}}}},
-                {'autocomplete': {'query': self.term, 'path': 'keywords', 'fuzzy': {'maxEdits': 1},
-                                  'score': {"boost": {"value": settings.SEARCH_BOOST_KEYWORDS}}}},
-                {'autocomplete': {'query': self.term, 'path': 'creator.name', 'fuzzy': {'maxEdits': 1},
-                                  'score': {"boost": {"value": settings.SEARCH_BOOST_CREATOR_NAME}}}},
-                {'autocomplete': {'query': self.term, 'path': 'first_creator.name', 'fuzzy': {'maxEdits': 1},
-                                  'score': {"boost": {"value": settings.SEARCH_BOOST_FIRST_CREATOR_NAME}}}},
-                {'autocomplete': {'query': self.term, 'path': 'contributor.name', 'fuzzy': {'maxEdits': 1},
-                                  'score': {"boost": {"value": settings.SEARCH_BOOST_CONTRIBUTOR_NAME}}}},
+                {'autocomplete': self._autocomplete_query(self.term, 'name', settings.SEARCH_BOOST_NAME)},
+                {'autocomplete': self._autocomplete_query(self.term, 'description', settings.SEARCH_BOOST_DESCRIPTION)},
+                {'autocomplete': self._autocomplete_query(self.term, 'keywords', settings.SEARCH_BOOST_KEYWORDS)},
+                {'autocomplete': self._autocomplete_query(self.term, 'creator.name',
+                                                          settings.SEARCH_BOOST_CREATOR_NAME)},
+                {'autocomplete': self._autocomplete_query(self.term, 'first_creator.name',
+                                                          settings.SEARCH_BOOST_FIRST_CREATOR_NAME)},
+                {'autocomplete': self._autocomplete_query(self.term, 'contributor.name',
+                                                          settings.SEARCH_BOOST_CONTRIBUTOR_NAME)},
             ]
 
         # Dedicated input filters boost the score further if matched.
