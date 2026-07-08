@@ -3,7 +3,7 @@ from enum import Enum
 
 from hs_cloudnative_schemas.schema.base import MediaObject
 
-from hsextract.utils.s3 import retrieve_file_manifest
+from hsextract.utils.s3 import iter_file_manifest
 from string import Template
 
 
@@ -40,22 +40,30 @@ class BaseMetadataObject:
         self.system_metadata_path = os.path.join(self.resource_md_path, "system_metadata.json")
         self.user_metadata_path = os.path.join(self.resource_md_path, "user_metadata.json")
         self.resource_metadata_jsonld_path = os.path.join(self.resource_md_jsonld_path, "dataset_metadata.json")
-
-        self._resource_associated_media = None
+        self.resource_associated_media_jsonld_path = os.path.join(self.resource_md_jsonld_path, "file_manifest.json")
+        self.resource_has_parts_jsonld_path = os.path.join(self.resource_md_jsonld_path, "has_parts.json")
 
         self.content_type_md_jsonld_path = None
         self.content_type_md_path = None
         self.content_type_contents_path = None
         self.content_type_main_file_path = None
         self.content_type_md_user_path = None
+        self._content_type_associated_media = None
 
     @property
-    def resource_associated_media(self):
-        if not self._resource_associated_media:
-            # file manifest is disabled, it is not needed for discovery at this time
-            self._resource_associated_media = retrieve_file_manifest(
-                self.resource_contents_path, enabled=False)
-        return self._resource_associated_media
+    def is_content_file(self) -> bool:
+        return self.file_object_path.startswith(self.resource_contents_path)
+
+    def iter_resource_associated_media(self, folder_path: str | None = None):
+        return iter_file_manifest(self.resource_contents_path, folder_path=folder_path, enabled=True)
+
+    @staticmethod
+    def media_object_path(media_object: dict) -> str:
+        endpoint_url = os.environ.get('AWS_S3_ENDPOINT_URL', '').rstrip('/')
+        content_url = media_object["contentUrl"]
+        if endpoint_url and content_url.startswith(endpoint_url):
+            return content_url[len(endpoint_url):].lstrip('/')
+        return content_url.lstrip('/')
 
     @classmethod
     def _bucket_name(cls, file_object_path: str) -> str:
@@ -115,21 +123,58 @@ class FileMetadataObject(BaseMetadataObject):
     def __init__(self, file_object_path: str, file_updated: bool):
         super().__init__(file_object_path, file_updated)
         relative_path = os.path.relpath(self.file_object_path, self.resource_contents_path)
+        file_parent_directory = os.path.dirname(relative_path)
         self.content_type_md_jsonld_path = os.path.join(self.resource_md_jsonld_path, relative_path + ".json")
         self.content_type_md_path = os.path.join(self.resource_md_path, relative_path + ".json")
-        self.content_type_contents_path = None
+        self.content_type_contents_path = os.path.join(self.resource_contents_path, file_parent_directory)
         self.content_type_main_file_path = os.path.join(self.resource_contents_path, relative_path)
         self.content_type_md_user_path = os.path.join(self.resource_md_path, relative_path + ".user_metadata.json")
+
+    def get_file_name(self) -> str:
+        if self.file_object_path.endswith(".user_metadata.json"):
+            relative_path = os.path.relpath(self.file_object_path, self.resource_md_path)
+            relative_path = relative_path[:-len(".user_metadata.json")]
+            return os.path.basename(relative_path)
+        else:
+            return os.path.basename(self.file_object_path)
+
+    def get_folder_path(self) -> str | None:
+        relative_path = os.path.relpath(self.content_type_contents_path, self.resource_contents_path)
+        if relative_path == ".":
+            relative_path = None
+        return relative_path
+
+    def content_type_associated_media(self):
+        if self._content_type_associated_media is not None:
+            return self._content_type_associated_media
+        data_file_path = os.path.join(self.content_type_contents_path, self.get_file_name())
+        folder_path = self.get_folder_path()
+        self._content_type_associated_media = next(
+            (
+                [media_object]
+                for media_object in self.iter_resource_associated_media(folder_path=folder_path)
+                if self.media_object_path(media_object) == data_file_path
+            ),
+            [],
+        )
+        return self._content_type_associated_media
+
+    @classmethod
+    def is_content_type(cls, file_object_path: str) -> bool:
+        return False
 
 
 class FolderMetadataObject(BaseMetadataObject):
     def __init__(self, file_object_path: str, file_updated: bool):
         super().__init__(file_object_path, file_updated)
-
-        parent_directory = os.path.dirname(self.file_object_path)
-        relative_path = os.path.relpath(parent_directory, self.resource_contents_path)
+        _, extension = os.path.splitext(self.file_object_path)
+        if extension:
+            self.file_object_path = os.path.dirname(self.file_object_path)
+        relative_path = os.path.relpath(self.file_object_path, self.resource_contents_path)
         self.content_type_md_jsonld_path = os.path.join(self.resource_md_jsonld_path, relative_path,
                                                         "dataset_metadata.json")
+        self.content_type_associated_media_jsonld_path = os.path.join(self.resource_md_jsonld_path, relative_path,
+                                                                      "file_manifest.json")
         self.content_type_md_path = os.path.join(self.resource_md_path, relative_path, "user_metadata.json")
         self.content_type_contents_path = os.path.join(self.resource_contents_path, relative_path)
         self.content_type_main_file_path = os.path.join(self.resource_contents_path, relative_path)

@@ -12,6 +12,8 @@
     "up": "taze major -I"
   },
   "dependencies": {
+    "@jsonforms/core": "^3.2.1",
+    "@jsonforms/vue": "^3.2.1",
     "@cznethub/cznet-vue-core": "^0.2.42",
     "@unhead/vue": "^2.1.12",
     "@vueuse/core": "^14.2.1",
@@ -62,6 +64,9 @@
     "vite-ssg-sitemap": "^0.10.0",
     "vitest": "^4.1.0",
     "vue-tsc": "^3.2.5"
+  },
+  "engines": {
+    "node": "^24.3.0"
   },
   "lint-staged": {
     "*": "eslint --fix"

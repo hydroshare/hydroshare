@@ -1,8 +1,11 @@
 import os
+import shutil
+import tempfile
 
 from django.contrib.auth.models import Group
 from django.test import TransactionTestCase
 from django.core.files.uploadedfile import UploadedFile
+from unittest_parametrize import ParametrizedTestCase, parametrize, param
 
 from hs_core.hydroshare.resource import add_resource_files
 from hs_core import hydroshare
@@ -10,9 +13,14 @@ from hs_core.testing import MockS3TestCaseMixin
 from hs_core.views.utils import create_folder
 
 
-class TestReadmeResourceFile(MockS3TestCaseMixin, TransactionTestCase):
+TEST_FILE_CONTENT = "test file content"
+
+
+class TestReadmeResourceFile(MockS3TestCaseMixin, ParametrizedTestCase, TransactionTestCase):
     def setUp(self):
         super(TestReadmeResourceFile, self).setUp()
+        self.composite_resource = None
+        self.temp_dir = tempfile.mkdtemp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
         self.user = hydroshare.create_account(
             'user1@nowhere.com',
@@ -22,122 +30,85 @@ class TestReadmeResourceFile(MockS3TestCaseMixin, TransactionTestCase):
             superuser=False,
             groups=[self.group]
         )
-        # create readme files
-        self.readme_txt = "readme.txt"
-        self.README_TXT = "README.TXT"
-        self.readme_md = "readme.md"
-        self.README_MD = "README.MD"
-        self.some_txt = "some.txt"
-        self.some_md = "some.md"
-
-        self.readme_txt_file = open(self.readme_txt, 'w')
-        self.readme_txt_file.write("This is a readme text file")
-        self.readme_txt_file.close()
-
-        self.README_TXT_file = open(self.README_TXT, 'w')
-        self.README_TXT_file.write("This is a readme text file with file name in uppercase")
-        self.README_TXT_file.close()
-
-        self.README_MD_file = open(self.README_MD, 'w')
-        self.README_MD_file.write("##This is a readme markdown file file name in uppercase")
-        self.README_MD_file.close()
-
-        self.readme_md_file = open(self.readme_md, 'w')
-        self.readme_md_file.write("##This is a readme markdown file")
-        self.readme_md_file.close()
-
-        self.some_txt_file = open(self.some_txt, 'w')
-        self.some_txt_file.write("This is NOT a readme text file")
-        self.some_txt_file.close()
-
-        self.some_md_file = open(self.some_md, 'w')
-        self.some_md_file.write("##This is NOT a readme markdown file")
-        self.some_md_file.close()
 
     def tearDown(self):
         super(TestReadmeResourceFile, self).tearDown()
         if self.composite_resource:
             self.composite_resource.delete()
-        self.readme_txt_file.close()
-        os.remove(self.readme_txt_file.name)
-        self.readme_md_file.close()
-        os.remove(self.readme_md_file.name)
-        self.some_txt_file.close()
-        os.remove(self.some_txt_file.name)
-        self.some_md_file.close()
-        os.remove(self.some_md_file.name)
+        shutil.rmtree(self.temp_dir)
 
-    def test_readme_file_1(self):
-        """Test that when we upload a readme.txt file to the root,
-        this file is considered as the readme file of the resource"""
+    def _write_test_file(self, filename):
+        file_path = os.path.join(self.temp_dir, filename)
+        with open(file_path, 'w') as test_file:
+            test_file.write(TEST_FILE_CONTENT)
+        return file_path
+
+    def _write_test_files(self, filenames):
+        return [self._write_test_file(filename) for filename in filenames]
+
+    @parametrize(
+        "filenames,expected_file_count,readme_file_expected,expected_readme_file_name",
+        [
+            param(
+                ["readme.txt"], 1, True, "readme.txt", id="txt_file",
+            ),
+            param(
+                ["readme.md"], 1, True, "readme.md", id="md_file",
+            ),
+            param(
+                ["README.TXT"], 1, True, "README.TXT", id="txt_file_uppercase",
+            ),
+            param(
+                ["README.MD"], 1, True, "README.MD", id="md_file_uppercase",
+            ),
+            param(
+                ["readme.txt", "readme.md"], 2, True, "readme.md", id="both_file_types",
+            ),
+            param(
+                ["some.txt", "some.md"], 2, False, None, id="non_readme_files",
+            ),
+        ],
+    )
+    def test_root_level_readme_detection(
+        self,
+        filenames,
+        expected_file_count,
+        readme_file_expected,
+        expected_readme_file_name,
+    ):
+        """Test readme file detection for root-level uploads."""
 
         self._create_composite_resource()
+        files_to_add = self._write_test_files(filenames)
         # resource should not have any file at this point
         self.assertEqual(self.composite_resource.files.count(), 0)
         # resource has no readme file
         self.assertEqual(self.composite_resource.readme_file, None)
-        # add the readme.txt file to the resource at the root level
-        files_to_add = [self.readme_txt]
         self._add_files_to_resource(files_to_add)
-        # resource should have one file at this point
-        self.assertEqual(self.composite_resource.files.count(), 1)
-        # resource has a readme file
-        self.assertNotEqual(self.composite_resource.readme_file, None)
-        self.assertNotEqual(self.composite_resource.get_readme_file_content(), None)
 
-    def test_readme_file_2(self):
-        """Test that when we upload a readme.md file to the root,
-        this file is considered as the readme file of the resource"""
+        self.assertEqual(self.composite_resource.files.count(), expected_file_count)
+        if readme_file_expected:
+            self.assertIsNotNone(self.composite_resource.readme_file)
+            self.assertIsNotNone(self.composite_resource.get_readme_file_content())
+            self.assertEqual(self.composite_resource.readme_file.file_name, expected_readme_file_name)
+        else:
+            self.assertIsNone(self.composite_resource.readme_file)
+            self.assertIsNone(self.composite_resource.get_readme_file_content())
 
-        self._create_composite_resource()
-        # resource should not have any file at this point
-        self.assertEqual(self.composite_resource.files.count(), 0)
-        # resource has no readme file
-        self.assertEqual(self.composite_resource.readme_file, None)
-        # add the readme.md file to the resource at the root level
-        files_to_add = [self.readme_md]
-        self._add_files_to_resource(files_to_add)
-        # resource should have one file at this point
-        self.assertEqual(self.composite_resource.files.count(), 1)
-        # resource has a readme file
-        self.assertNotEqual(self.composite_resource.readme_file, None)
-        self.assertNotEqual(self.composite_resource.get_readme_file_content(), None)
-
-    def test_readme_file_3(self):
-        """Test that when we upload a readme.txt file and readme.md file to the root,
-        the readme.md file is considered as the readme file for the resource"""
-
-        self._create_composite_resource()
-        # resource should not have any file at this point
-        self.assertEqual(self.composite_resource.files.count(), 0)
-        # resource has no readme file
-        self.assertEqual(self.composite_resource.readme_file, None)
-        # add the readme.txt file to the resource at the root level
-        files_to_add = [self.readme_txt]
-        self._add_files_to_resource(files_to_add)
-        # add the readme.md file to the resource at the root level
-        files_to_add = [self.readme_md]
-        self._add_files_to_resource(files_to_add)
-        # resource should have two files at this point
-        self.assertEqual(self.composite_resource.files.count(), 2)
-        # resource has a readme file
-        self.assertNotEqual(self.composite_resource.readme_file, None)
-        self.assertNotEqual(self.composite_resource.get_readme_file_content(), None)
-        # check that the readme.md file is the readme file for the resource
-        self.assertEqual(self.composite_resource.readme_file.file_name, 'readme.md')
-
-    def test_readme_file_4(self):
+    def test_readme_file_in_folder(self):
         """Test that when we upload a readme.txt or a readme.md file to a folder,
         such a file is NOT considered as the readme file of the resource"""
 
         self._create_composite_resource()
+        readme_txt = self._write_test_file("readme.txt")
+        readme_md = self._write_test_file("readme.md")
         # resource should not have any file at this point
         self.assertEqual(self.composite_resource.files.count(), 0)
         # create the folder
         new_folder_path = os.path.join("data", "contents", "my-new-folder")
         create_folder(self.composite_resource.short_id, new_folder_path)
         # add the readme.txt file to the resource at the folder 'my-new-folder'
-        files_to_add = [self.readme_txt]
+        files_to_add = [readme_txt]
         self._add_files_to_resource(files_to_add, upload_folder=new_folder_path)
         # resource should have one file at this point
         self.assertEqual(self.composite_resource.files.count(), 1)
@@ -145,87 +116,25 @@ class TestReadmeResourceFile(MockS3TestCaseMixin, TransactionTestCase):
         self.assertEqual(self.composite_resource.readme_file, None)
 
         # add the readme.md file to the resource at the folder 'my-new-folder'
-        files_to_add = [self.readme_md]
+        files_to_add = [readme_md]
         self._add_files_to_resource(files_to_add, upload_folder=new_folder_path)
         # resource should have two files at this point
         self.assertEqual(self.composite_resource.files.count(), 2)
         # resource has no readme file
         self.assertEqual(self.composite_resource.readme_file, None)
 
-    def test_readme_file_5(self):
-        """Test that when we upload a txt file or md file that does not have file name as
-        'readme.txt' or 'readme.md' to the root folder,
-        such a file is NOT considered as the readme file of the resource"""
-
-        self._create_composite_resource()
-        # resource should not have any file at this point
-        self.assertEqual(self.composite_resource.files.count(), 0)
-        # resource has no readme file
-        self.assertEqual(self.composite_resource.readme_file, None)
-
-        # add the some.txt file to the resource at the root level
-        files_to_add = [self.some_txt]
-        self._add_files_to_resource(files_to_add)
-        # resource should have one file at this point
-        self.assertEqual(self.composite_resource.files.count(), 1)
-        # resource has no readme file
-        self.assertEqual(self.composite_resource.readme_file, None)
-
-        # add the some.md file to the resource at the root level
-        files_to_add = [self.some_md]
-        self._add_files_to_resource(files_to_add)
-        # resource should have two files at this point
-        self.assertEqual(self.composite_resource.files.count(), 2)
-        # resource has no readme file
-        self.assertEqual(self.composite_resource.readme_file, None)
-
-    def test_readme_file_6(self):
-        """Test that when we upload a README.TXT (file name all in uppercase) to the root,
-        this file is considered as the readme file of the resource"""
-
-        self._create_composite_resource()
-        # resource should not have any file at this point
-        self.assertEqual(self.composite_resource.files.count(), 0)
-        # resource has no readme file
-        self.assertEqual(self.composite_resource.readme_file, None)
-        # add the README.TXT file to the resource at the root level
-        files_to_add = [self.README_TXT]
-        self._add_files_to_resource(files_to_add)
-        # resource should have one file at this point
-        self.assertEqual(self.composite_resource.files.count(), 1)
-        # resource has a readme file
-        self.assertNotEqual(self.composite_resource.readme_file, None)
-        self.assertNotEqual(self.composite_resource.get_readme_file_content(), None)
-
-    def test_readme_file_7(self):
-        """Test that when we upload a README.MD (file name all in uppercase) to the root,
-        this file is considered as the readme file of the resource"""
-
-        self._create_composite_resource()
-        # resource should not have any file at this point
-        self.assertEqual(self.composite_resource.files.count(), 0)
-        # resource has no readme file
-        self.assertIsNone(self.composite_resource.readme_file)
-        # add the README.MD file to the resource at the root level
-        files_to_add = [self.README_MD]
-        self._add_files_to_resource(files_to_add)
-        # resource should have one file at this point
-        self.assertEqual(self.composite_resource.files.count(), 1)
-        # resource has a readme file
-        self.assertIsNotNone(self.composite_resource.readme_file)
-        self.assertIsNotNone(self.composite_resource.get_readme_file_content())
-
-    def test_readme_file_8(self):
+    def test_readme_file_in_folder_empty_string(self):
         """Test that when a README.md file with file_folder as '' instead of None,
         this file is considered as the readme file of the resource"""
 
         self._create_composite_resource()
+        readme_md_upper = self._write_test_file("README.MD")
         # resource should not have any file at this point
         self.assertEqual(self.composite_resource.files.count(), 0)
         # resource has no readme file
         self.assertEqual(self.composite_resource.readme_file, None)
         # add the README.MD file to the resource at the root level
-        files_to_add = [self.README_MD]
+        files_to_add = [readme_md_upper]
         self._add_files_to_resource(files_to_add)
         # resource should have one file at this point
         self.assertEqual(self.composite_resource.files.count(), 1)
