@@ -939,7 +939,7 @@ def delete_resource_coverage(request: HttpRequest, resource_id: str, coverage_ty
 
     coverage_type = coverage_type.lower()
     if coverage_type not in ("temporal", "spatial"):
-        err_msg = "Invalid coverage type specified."
+        err_msg = f"Invalid coverage type {coverage_type} specified."
         error_response["message"] = err_msg
         return JsonResponse(error_response, status=status.HTTP_400_BAD_REQUEST)
 

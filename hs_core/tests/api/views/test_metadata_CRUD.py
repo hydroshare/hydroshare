@@ -232,7 +232,7 @@ class TestCRUDMetadata(MockS3TestCaseMixin, ParametrizedTestCase, ViewTestCase):
             json.loads(response.content.decode()),
             {
                 'status': 'error',
-                'message': 'Invalid coverage type specified.'
+                'message': f'Invalid coverage type {coverage_type} specified.'
             }
         )
 
