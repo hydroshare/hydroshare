@@ -358,10 +358,8 @@ class SearchQuery(BaseModel):
         order = 1 if self.order == "asc" else -1
 
         # These sorts can occur inside the $search stage
-        if not self.term and not self.has_filters:
-            # override search to most recently modified if no search criteria is provided
-            search_stage["$search"]['sort'] = {"dateModified": -1}
-        elif self.sortBy == "name":
+
+        if self.sortBy == "name":
             search_stage["$search"]['sort'] = {"name": order}
         elif self.sortBy == "dateCreated":
             search_stage["$search"]['sort'] = {"dateCreated": order}
@@ -371,6 +369,9 @@ class SearchQuery(BaseModel):
             search_stage["$search"]['sort'] = {"first_creator.name": order}
         elif self.sortBy == "viewCount":
             search_stage["$search"]['sort'] = {"viewCount": order}
+        # If no sort is provided, default to sort by dateModified descending
+        else:
+            search_stage["$search"]['sort'] = {"dateModified": -1}
 
         stages.append(search_stage)
 

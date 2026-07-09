@@ -292,6 +292,28 @@ class TestSearchQuery(ParametrizedTestCase):
 
         self.assertFalse(any("fuzzy" in clause["autocomplete"] for clause in should_clauses))
 
+    @parametrize(
+        "sort_by,order,expected_sort",
+        [
+            param(None, None, {"dateModified": -1}, id="default_sort"),
+            param("name", "asc", {"name": 1}, id="name_asc"),
+            param("dateCreated", "asc", {"dateCreated": 1}, id="date_created_asc"),
+            param("lastModified", "desc", {"dateModified": -1}, id="last_modified_desc"),
+            param("creatorName", "asc", {"first_creator.name": 1}, id="creator_name_asc"),
+            param("viewCount", "desc", {"viewCount": -1}, id="view_count_desc"),
+        ],
+    )
+    def test_stages_respects_sort_(self, sort_by, order, expected_sort):
+        search_query = SearchQuery(
+            sortBy=sort_by,
+            order=order,
+            paginationToken=None,
+        )
+
+        stages = search_query.stages
+
+        self.assertEqual(stages[0]["$search"]["sort"], expected_sort)
+
     def test_stages_multiple_content_types(self):
         content_types = ["CSVLogicalFile", "CollectionResource"]
 
