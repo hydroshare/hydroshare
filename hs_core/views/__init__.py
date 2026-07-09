@@ -35,6 +35,7 @@ from mezzanine.pages.page_processors import processor_for
 from mezzanine.utils.email import send_mail_template, subject_template
 from rest_framework import status
 from rest_framework.decorators import api_view
+from rest_framework.exceptions import NotFound
 from sorl.thumbnail import ImageField as ThumbnailImageField, get_thumbnail
 
 from django_s3.exceptions import SessionException
@@ -2952,6 +2953,27 @@ def get_non_preferred_paths(request, shortkey):
         return JsonResponse(data)
 
     data = {"status": "SUCCESS", "non_preferred_paths": non_preferred_paths}
+    return JsonResponse(data)
+
+
+def get_missing_file_type_metadata(request, shortkey):
+    try:
+        resource, _, _ = authorize(
+            request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE
+        )
+    except NotFound as ex:
+        data = {"status": "ERROR", "error": str(ex.detail)}
+        return JsonResponse(data)
+    except PermissionDenied:
+        err_message = "You don't have permission for this resource"
+        data = {"status": "ERROR", "error": err_message}
+        return JsonResponse(data)
+
+    missing_metadata = []
+    if resource.resource_type == "CompositeResource":
+        missing_metadata = resource.get_missing_file_type_metadata_info()
+
+    data = {"status": "SUCCESS", "file_type_missing_metadata": missing_metadata}
     return JsonResponse(data)
 
 
