@@ -6,8 +6,15 @@ from django.conf import settings
 from django.http import JsonResponse
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-from pydantic import BaseModel, ValidationInfo, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    ValidationInfo,
+    field_validator,
+    model_validator,
+    ValidationError as PydanticValidationError,
+)
 from rest_framework.decorators import api_view
+from rest_framework import status as http_status
 
 from hs_core.hydroshare_atlas_discovery_collection import MongoDBClient
 
@@ -469,32 +476,35 @@ def convert_objectid(obj):
 )
 @api_view(["GET"])
 def search(request):
-    search_query = SearchQuery(
-        term=request.GET.get('term', None),
-        sortBy=request.GET.get('sortBy', None),
-        order=request.GET.get('order', None),
-        contentType=request.GET.getlist('contentType'),
-        providerName=request.GET.get('providerName', None),
-        creatorName=request.GET.get('creatorName', None),
-        keyword=request.GET.get('keyword', None),
-        dataCoverageStart=request.GET.get('dataCoverageStart', None),
-        dataCoverageEnd=request.GET.get('dataCoverageEnd', None),
-        publishedStart=request.GET.get('publishedStart', None),
-        publishedEnd=request.GET.get('publishedEnd', None),
-        dateCreatedStart=request.GET.get('dateCreatedStart', None),
-        dateCreatedEnd=request.GET.get('dateCreatedEnd', None),
-        dateModifiedStart=request.GET.get('dateModifiedStart', None),
-        dateModifiedEnd=request.GET.get('dateModifiedEnd', None),
-        hasPartName=request.GET.get('hasPartName', None),
-        isPartOfName=request.GET.get('isPartOfName', None),
-        associatedMediaName=request.GET.get('associatedMediaName', None),
-        fundingGrantName=request.GET.get('fundingGrantName', None),
-        fundingFunderName=request.GET.get('fundingFunderName', None),
-        creativeWorkStatus=request.GET.getlist('creativeWorkStatus'),
-        pageNumber=int(request.GET.get('pageNumber', 1)),
-        pageSize=int(request.GET.get('pageSize', 20)),
-        paginationToken=request.GET.get('paginationToken', None)
-    )
+    try:
+        search_query = SearchQuery(
+            term=request.GET.get('term', None),
+            sortBy=request.GET.get('sortBy', None),
+            order=request.GET.get('order', None),
+            contentType=request.GET.getlist('contentType'),
+            providerName=request.GET.get('providerName', None),
+            creatorName=request.GET.get('creatorName', None),
+            keyword=request.GET.get('keyword', None),
+            dataCoverageStart=request.GET.get('dataCoverageStart', None),
+            dataCoverageEnd=request.GET.get('dataCoverageEnd', None),
+            publishedStart=request.GET.get('publishedStart', None),
+            publishedEnd=request.GET.get('publishedEnd', None),
+            dateCreatedStart=request.GET.get('dateCreatedStart', None),
+            dateCreatedEnd=request.GET.get('dateCreatedEnd', None),
+            dateModifiedStart=request.GET.get('dateModifiedStart', None),
+            dateModifiedEnd=request.GET.get('dateModifiedEnd', None),
+            hasPartName=request.GET.get('hasPartName', None),
+            isPartOfName=request.GET.get('isPartOfName', None),
+            associatedMediaName=request.GET.get('associatedMediaName', None),
+            fundingGrantName=request.GET.get('fundingGrantName', None),
+            fundingFunderName=request.GET.get('fundingFunderName', None),
+            creativeWorkStatus=request.GET.getlist('creativeWorkStatus'),
+            pageNumber=int(request.GET.get('pageNumber', 1)),
+            pageSize=int(request.GET.get('pageSize', 20)),
+            paginationToken=request.GET.get('paginationToken', None)
+        )
+    except (PydanticValidationError, ValueError) as ex:
+        return JsonResponse({'detail': str(ex)}, status=http_status.HTTP_400_BAD_REQUEST)
     stages = search_query.stages
     if not search_query.paginationToken:
         stages.append({"$skip": (search_query.pageNumber - 1) * search_query.pageSize})

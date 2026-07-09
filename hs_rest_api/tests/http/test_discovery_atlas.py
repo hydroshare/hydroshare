@@ -408,3 +408,14 @@ class TestSearchEndpointUnit(SimpleTestCase):
 
         mock_collection.aggregate.assert_called_once()
         mock_cursor.to_list.assert_called_once_with(None)
+
+    @patch("hs_rest_api.discovery_atlas.MongoDBClient.get_discovery_collection")
+    def test_search_endpoint_validation_error_returns_400(self, mock_get_discovery_collection):
+        request_factory = APIRequestFactory()
+        request = request_factory.get("/discovery-atlas/search", {"dateCreatedStart": 10000}, format="json")
+
+        response = discovery_atlas_search(request)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("dateCreatedStart is not a valid year", json.loads(response.content.decode())["detail"])
+        mock_get_discovery_collection.assert_not_called()
