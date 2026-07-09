@@ -160,6 +160,48 @@ class SearchQuery(BaseModel):
     @property
     def _must(self):
         must = []
+
+        # The term is searched for in name, description, keywords and creator name
+        # TODO: should the term be searched for in all fields?
+        if self.term:
+            must.append({
+                'compound': {
+                    'should': [
+                        # https://www.mongodb.com/docs/atlas/atlas-search/score/modify-score/#std-label-scoring-boost
+                        {'autocomplete': self._autocomplete_query(
+                            self.term,
+                            'name',
+                            settings.SEARCH_BOOST_NAME
+                        )},
+                        {'autocomplete': self._autocomplete_query(
+                            self.term,
+                            'description',
+                            settings.SEARCH_BOOST_DESCRIPTION
+                        )},
+                        {'autocomplete': self._autocomplete_query(
+                            self.term,
+                            'keywords',
+                            settings.SEARCH_BOOST_KEYWORDS
+                        )},
+                        {'autocomplete': self._autocomplete_query(
+                            self.term,
+                            'creator.name',
+                            settings.SEARCH_BOOST_CREATOR_NAME
+                        )},
+                        {'autocomplete': self._autocomplete_query(
+                            self.term,
+                            'first_creator.name',
+                            settings.SEARCH_BOOST_FIRST_CREATOR_NAME
+                        )},
+                        {'autocomplete': self._autocomplete_query(
+                            self.term,
+                            'contributor.name',
+                            settings.SEARCH_BOOST_CONTRIBUTOR_NAME
+                        )},
+                    ]
+                }
+            })
+
         if self.contentType and len(self.contentType) > 0:
             # Use exact term matching for each content type to ensure precise filtering
             # Check both 'additionalType' (single value) and 'content_types' (array) fields.
@@ -231,24 +273,33 @@ class SearchQuery(BaseModel):
         stages = []
         compound = {'filter': self._filters, 'must': self._must, 'should': []}
 
-        # The term is searched for in name, description, keywords and creator name
-        # TODO: should the term be searched for in all fields?
-        if self.term:
-            compound['should'] = [
-                # https://www.mongodb.com/docs/atlas/atlas-search/score/modify-score/#std-label-scoring-boost
-                {'autocomplete': self._autocomplete_query(self.term, 'name', settings.SEARCH_BOOST_NAME)},
-                {'autocomplete': self._autocomplete_query(self.term, 'description', settings.SEARCH_BOOST_DESCRIPTION)},
-                {'autocomplete': self._autocomplete_query(self.term, 'keywords', settings.SEARCH_BOOST_KEYWORDS)},
-                {'autocomplete': self._autocomplete_query(self.term, 'creator.name',
-                                                          settings.SEARCH_BOOST_CREATOR_NAME)},
-                {'autocomplete': self._autocomplete_query(self.term, 'first_creator.name',
-                                                          settings.SEARCH_BOOST_FIRST_CREATOR_NAME)},
-                {'autocomplete': self._autocomplete_query(self.term, 'contributor.name',
-                                                          settings.SEARCH_BOOST_CONTRIBUTOR_NAME)},
-            ]
+        # Boost the score for documents with exact phrase matches on the term in name, description, and keywords
+        if self.term and len(self.term.split()) > 1:
+            compound['should'].extend([
+                {
+                    'phrase': {
+                        'query': self.term,
+                        'path': 'name',
+                        'score': {'boost': {'value': settings.SEARCH_BOOST_PHRASE_NAME}}
+                    }
+                },
+                {
+                    'phrase': {
+                        'query': self.term,
+                        'path': 'description',
+                        'score': {'boost': {'value': settings.SEARCH_BOOST_PHRASE_DESCRIPTION}}
+                    }
+                },
+                {
+                    'phrase': {
+                        'query': self.term,
+                        'path': 'keywords',
+                        'score': {'boost': {'value': settings.SEARCH_BOOST_PHRASE_KEYWORDS}}
+                    }
+                },
+            ])
 
         # Dedicated input filters boost the score further if matched.
-
         if self.creatorName:
             # Matching `creator.name` has a slightly higher score than matching `contributor.name`
             compound['should'].append({'autocomplete':
