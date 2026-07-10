@@ -12,7 +12,12 @@ class NetCDFMetadataObject(FileMetadataObject):
         return [".nc"]
 
     def extract_metadata(self):
-        metadata = encode_netcdf(self.file_object_path)
+        try:
+            metadata = encode_netcdf(self.file_object_path)
+        except Exception as e:
+            err_msg = f"Failed to extract metadata from NetCDF file {self.file_object_path}: {str(e)}"
+            print(err_msg)
+            return None
         metadata = metadata.model_dump(exclude_none=True)
         return metadata
 
