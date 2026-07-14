@@ -20,7 +20,6 @@ export interface IUserState {
   showZenodoWarning: boolean;
   toc: { to: string; text: string; level?: number }[];
   isTocReady: boolean;
-  credentials: { accessKey: string; secretKey: string };
   CSRFToken: string;
 }
 
@@ -61,7 +60,6 @@ export default class User extends Model {
       showZenodoWarning: true,
       toc: [],
       isTocReady: false,
-      credentials: { accessKey: "", secretKey: "" },
       CSRFToken: "",
     };
   }
@@ -148,52 +146,6 @@ export default class User extends Model {
       if (name === "csrftoken") return decodeURIComponent(value);
     }
     return null;
-  }
-
-  private static _buildHeaders(csrfToken: string | null): HeadersInit {
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-    };
-    if (csrfToken) headers["X-CSRFToken"] = csrfToken;
-    return headers;
-  }
-
-  static async getOrCreateS3Credentials() {
-    if (this.$state.credentials.accessKey && this.$state.credentials.secretKey) {
-      return this.$state.credentials;
-    }
-
-    const doRequest = async (csrfToken: string | null) =>
-      fetch(`/hsapi/user/service/accounts/s3/`, {
-        method: "POST",
-        credentials: "include",
-        headers: this._buildHeaders(csrfToken),
-        body: JSON.stringify({}),
-      });
-
-    try {
-      let response = await doRequest(await this.getCSRFToken());
-
-      if (response.status === 403) {
-        const body = await response.json().catch(() => ({}));
-        if (body?.detail?.includes("CSRF")) {
-          response = await doRequest(await this.getCSRFToken(true));
-        }
-      }
-
-      if (response.ok) {
-        const data = await response.json();
-        await User.commit((state) => {
-          state.credentials = {
-            accessKey: data.access_key,
-            secretKey: data.secret_key,
-          };
-        });
-      }
-    } catch (e: any) {
-      throw new Error(`Failed to create S3 credentials: ${e.message}`);
-    }
-    return this.$state.credentials;
   }
 
   static openLogInDialog(redirectTo?: RouteLocationRaw) {

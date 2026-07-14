@@ -10,10 +10,7 @@ import GoldenRetriever from "@uppy/golden-retriever";
 import GoogleDrivePicker from "@uppy/google-drive-picker";
 import Dashboard from "@uppy/dashboard";
 import AwsS3 from "@uppy/aws-s3";
-import { SignatureV4 } from "@aws-sdk/signature-v4";
-import { Sha256 } from "@aws-crypto/sha256-js";
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import User from "@/models/user.model";
 import {
   COMPANION_URL,
   GOOGLE_PICKER_CLIENT_ID,
@@ -25,6 +22,81 @@ import "@uppy/core/css/style.min.css";
 import "@uppy/dashboard/css/style.min.css";
 
 let uppyInstance: Uppy | null = null;
+
+/**
+ * Drop-in replacement for AwsS3's static uploadPartBytes, with two changes
+ * for the cookie-authenticated hs-s3-proxy:
+ *
+ * - `withCredentials` so the sessionid/csrftoken cookies ride along on the
+ *   cross-origin PUT (the proxy authenticates the session, not a signature);
+ * - a missing ETag response header is not fatal. Upstream never settles the
+ *   promise when CORS hides ETag; we only do single-part PUTs, and nothing
+ *   downstream consumes the tag.
+ */
+function cookieUploadPartBytes({
+  signature: { url, expires, headers, method = "PUT" },
+  body,
+  size = (body as Blob).size,
+  onProgress,
+  onComplete,
+  signal,
+}: any): Promise<any> {
+  if (url == null) {
+    return Promise.reject(new Error("Cannot upload to an undefined URL"));
+  }
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open(method, url, true);
+    xhr.withCredentials = true;
+    if (headers) {
+      Object.keys(headers).forEach((key) => {
+        xhr.setRequestHeader(key, headers[key]);
+      });
+    }
+    xhr.responseType = "text";
+    if (typeof expires === "number") {
+      xhr.timeout = expires * 1000;
+    }
+    function onabort() {
+      xhr.abort();
+    }
+    function cleanup() {
+      signal?.removeEventListener("abort", onabort);
+    }
+    signal?.addEventListener("abort", onabort);
+    xhr.upload.addEventListener("progress", (ev) => {
+      onProgress?.(ev);
+    });
+    xhr.addEventListener("abort", () => {
+      cleanup();
+      reject(new DOMException("Aborted", "AbortError"));
+    });
+    xhr.addEventListener("timeout", () => {
+      cleanup();
+      reject(new Error("Request has expired"));
+    });
+    xhr.addEventListener("load", () => {
+      cleanup();
+      if (xhr.status < 200 || xhr.status >= 300) {
+        const error = new Error("Non 2xx") as Error & { source: unknown };
+        error.source = xhr;
+        reject(error);
+        return;
+      }
+      onProgress?.({ loaded: size, lengthComputable: true });
+      const etag = xhr.getResponseHeader("ETag") ?? "";
+      onComplete?.(etag);
+      resolve({ ETag: etag });
+    });
+    xhr.addEventListener("error", () => {
+      cleanup();
+      const error = new Error("Unknown error") as Error & { source: unknown };
+      error.source = xhr;
+      reject(error);
+    });
+    xhr.send(body);
+  });
+}
 
 @Component({
   name: "hs-uppy",
@@ -48,15 +120,6 @@ class HsUppy extends Vue {
     default: "http://localhost:9000",
   })
   s3Host!: string;
-
-  @Prop({ type: String, required: false, default: "minioadmin" })
-  accessKey!: string;
-
-  @Prop({ type: String, required: false, default: "minioadmin" })
-  secretKey!: string;
-
-  @Prop({ type: String, required: false, default: "" })
-  sessionToken!: string;
 
   /**
    * S3 key prefix that user-uploaded files should land under (e.g.
@@ -102,7 +165,6 @@ class HsUppy extends Vue {
   }
 
   private selectedFolder: string | null = null;
-  private signatureV4: SignatureV4 | null = null;
 
   // Method to expose the Uppy instance
   getUppyInstance(): Uppy | null {
@@ -130,35 +192,10 @@ class HsUppy extends Vue {
     return Promise.reject(new Error("Uppy instance not available"));
   }
 
-  // Watch for credential changes and recreate Uppy instance
-  @Watch("accessKey")
-  @Watch("secretKey")
-  @Watch("sessionToken")
-  onCredentialsChange() {
-    console.log("Credentials changed, recreating Uppy instance");
-    this.initializeUppy();
-  }
-
   mounted() {
     this.initializeUppy();
   }
 
-  // Method to get or create the SignatureV4 instance
-  getSigner(): SignatureV4 {
-    if (!this.signatureV4) {
-      this.signatureV4 = new SignatureV4({
-        service: "s3",
-        region: "us-east-1",
-        credentials: {
-          accessKeyId: this.accessKey,
-          secretAccessKey: this.secretKey,
-          sessionToken: this.sessionToken || undefined,
-        },
-        sha256: Sha256,
-      });
-    }
-    return this.signatureV4;
-  }
   initializeUppy() {
     if (uppyInstance) {
       try {
@@ -178,9 +215,11 @@ class HsUppy extends Vue {
       }
     }
     const uppyComponent = this;
+    // Companion imports (Google Drive picker) previously carried the user's
+    // S3 keys in these headers. Cookie auth can't reach Companion — it
+    // uploads server-side — so only the bucket hint remains; Drive imports
+    // need a Companion-side follow-up.
     const headers = {
-      "s3-key": this.accessKey,
-      "s3-secret": this.secretKey,
       "s3-bucket": this.s3Info.bucket,
     };
     console.log("Initializing Uppy");
@@ -225,42 +264,29 @@ class HsUppy extends Vue {
 
     uppyInstance
       .use(AwsS3, {
-        // Do NOT use Companion for signing here: companion generates a UUID
-        // S3 key (e.g. `92a92f6b-...-foo.txt`) and hardcodes it into the
-        // signature policy. Our `dynamic_key` then only lives in
-        // `x-amz-meta-dynamic_key`, not the actual object key, so files land
-        // at random root paths instead of `<resourceId>/data/contents/`.
-        // Sign client-side with the real key instead.
+        // Do NOT use Companion here: companion generates a UUID S3 key
+        // (e.g. `92a92f6b-...-foo.txt`) and files would land at random root
+        // paths instead of `<resourceId>/data/contents/`. Upload straight to
+        // the hs-s3-proxy with the real key instead — the proxy
+        // authenticates the session cookies (plus X-CSRFToken for writes),
+        // so no signing or access keys are involved.
         shouldUseMultipart: false,
         getUploadParameters: async (file: any) => {
-          const s3 = new S3Client({
-            region: "us-east-1",
-            endpoint: that.s3Host,
-            forcePathStyle: true,
-            credentials: {
-              accessKeyId: that.accessKey,
-              secretAccessKey: that.secretKey,
-              sessionToken: that.sessionToken || undefined,
-            },
-          });
-          const url = await getSignedUrl(
-            s3,
-            new PutObjectCommand({
-              Bucket: file.meta.bucket_name || that.s3Info.bucket,
-              Key: file.meta.dynamic_key,
-              ContentType: file.type || "application/octet-stream",
-            }),
-            { expiresIn: 3600 },
-          );
+          const bucket = file.meta.bucket_name || that.s3Info.bucket;
+          const key = String(file.meta.dynamic_key || file.name);
+          const objectPath = key.split("/").map(encodeURIComponent).join("/");
+          const csrfToken = (await User.getCSRFToken()) || "";
           return {
             method: "PUT",
-            url,
+            url: `${that.s3Host}/${bucket}/${objectPath}`,
             fields: {},
             headers: {
               "Content-Type": file.type || "application/octet-stream",
+              "X-CSRFToken": csrfToken,
             },
           };
         },
+        uploadPartBytes: cookieUploadPartBytes,
       })
       .on("dashboard:modal-open", () => {
         // this is a hack to set the folder when the modal is opened

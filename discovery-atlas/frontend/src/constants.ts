@@ -9,6 +9,16 @@ export const GOOGLE_PICKER_CLIENT_ID = import.meta.env.VITE_APP_GOOGLE_PICKER_CL
 export const GOOGLE_PICKER_API_KEY = import.meta.env.VITE_APP_GOOGLE_PICKER_API_KEY || "";
 export const GOOGLE_PICKER_APP_ID = import.meta.env.VITE_APP_GOOGLE_PICKER_APP_ID || "";
 
+// Origin of the hs-s3-proxy service, which authenticates S3 requests with
+// the Django session/CSRF cookies instead of minio access keys. Locally the
+// proxy is published on host port 9002; deployed environments serve it on
+// the s3. subdomain of the app host.
+export const S3_PROXY_URL: string =
+  import.meta.env.VITE_APP_S3_PROXY_URL ||
+  (["localhost", "127.0.0.1"].includes(window.location.hostname)
+    ? `${window.location.protocol}//${window.location.hostname}:9002`
+    : `${window.location.protocol}//s3.${window.location.hostname}`);
+
 
 export const sameRouteNavigationErrorHandler = (e) => {
   // Ignore the vuex err regarding  navigating to the page they are already on.

@@ -19,22 +19,17 @@ export default defineConfig(({ mode }) => {
       alias: {
         "@/": `${path.resolve(__dirname, "src")}/`,
       },
-      // cznet-vue-core is currently linked from ../../.temp/cznet-vue-core
-      // via a file: dep. Its own node_modules contains separate copies of
-      // these peer-shaped deps; deduping forces a single resolved copy so we
-      // don't end up with two Vue / Vuetify runtimes mounted side by side.
+      // Dedupe deps shared with cznet-vue-core so a single copy is used — two
+      // Vue / Vuetify runtimes side by side would break reactivity.
       dedupe: [
         "vue",
         "vuetify",
         "@jsonforms/core",
         "@jsonforms/vue",
         "vue-facing-decorator",
-        // ajv stores generated `Name` objects in module-level state. Two
-        // physical copies (one in the consumer, one in the linked
-        // cznet-vue-core's node_modules) end up exchanging Names across
-        // instances, and the receiving ajv stringifies the foreign Names as
-        // `{"str":"..."}`, producing invalid generated code. Dedupe so a
-        // single ajv copy wins for both the consumer and cznet-vue-core.
+        // ajv keeps generated `Name` objects in module-level state; two copies
+        // exchange Names and the receiver serializes them as `{"str":"..."}`,
+        // producing invalid generated code. Keep a single ajv copy.
         "ajv",
         "ajv-formats",
         "ajv-keywords",
@@ -69,10 +64,6 @@ export default defineConfig(({ mode }) => {
         "v-mask",
         "buefy",
       ],
-      // Don't pre-bundle the locally-linked cznet-vue-core — that way Vite
-      // serves its dist/ directly and rebuilds of that package show up after
-      // a browser refresh without restarting the dev server.
-      exclude: ["@cznethub/cznet-vue-core"],
     },
 
     plugins: [
@@ -160,11 +151,6 @@ export default defineConfig(({ mode }) => {
         host: 'localhost',
         port: 5004, // Same as dev server
         clientPort: 80, // Browser connects through nginx on port 80
-      },
-      fs: {
-        // Allow Vite to serve files from outside the project root — needed
-        // so the file:-linked cznet-vue-core under ../../.temp can be read.
-        allow: [path.resolve(__dirname, "../..")],
       },
     },
   };

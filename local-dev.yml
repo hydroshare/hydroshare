@@ -325,6 +325,7 @@ services:
       ENABLE_EDIT_ACTIONS: "true"
       S3_BACKEND_ACCESS_KEY: "cuahsi"
       S3_BACKEND_SECRET_KEY: "devpassword"
+      CSRF_TRUSTED_ORIGINS: "http://localhost,https://localhost,http://localhost:5004"
     volumes:
       - "./hs_s3_auth/api:/app/api"
     ports:

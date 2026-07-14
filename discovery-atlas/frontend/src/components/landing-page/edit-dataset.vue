@@ -45,14 +45,6 @@
                     <v-icon size="18">mdi-arrow-left</v-icon>
                   </template>
                 </v-list-item>
-                <v-list-item
-                  title="Settings"
-                  @click="showSettingsDialog = true"
-                >
-                  <template #prepend>
-                    <v-icon size="18">mdi-cog</v-icon>
-                  </template>
-                </v-list-item>
               </v-list>
             </v-menu>
           </div>
@@ -102,37 +94,6 @@
               v-if="!$vuetify.display.smAndDown"
               class="d-flex flex-wrap align-center ga-1 ml-auto"
             >
-              <v-menu width="500" :close-on-content-click="false">
-                <template v-slot:activator="{ props }">
-                  <v-btn
-                    size="small"
-                    v-bind="props"
-                    prepend-icon="mdi-cog"
-                    variant="text"
-                    >Settings</v-btn
-                  >
-                </template>
-                <v-card>
-                  <v-card-title
-                    class="bg-grey-lighten-3 text-body-1 text-medium-emphasis"
-                    >Settings</v-card-title
-                  >
-                  <v-divider></v-divider>
-                  <v-card-text flat>
-                    <s3-form
-                      :prefix="s3Info.prefix"
-                      :bucket="s3Info.bucket"
-                      :s3-host="s3Host"
-                      :hydroshare-host="hydroshareHost"
-                      :accessKey="accessKey"
-                      :secret-key="secretKey"
-                      @apply-changes="onS3FormUpdate"
-                      @restore-defaults="onRestoreDefaults"
-                    ></s3-form>
-                  </v-card-text>
-                </v-card>
-              </v-menu>
-
               <v-btn
                 size="small"
                 variant="outlined"
@@ -144,42 +105,6 @@
               >
             </div>
           </div>
-
-          <v-dialog
-            v-if="$vuetify.display.smAndDown"
-            v-model="showSettingsDialog"
-            max-width="500"
-          >
-            <v-card>
-              <v-card-title
-                class="bg-grey-lighten-3 text-body-1 text-medium-emphasis"
-                >Settings</v-card-title
-              >
-              <v-divider></v-divider>
-              <v-card-text>
-                <s3-form
-                  :prefix="s3Info.prefix"
-                  :bucket="s3Info.bucket"
-                  :s3-host="s3Host"
-                  :hydroshare-host="hydroshareHost"
-                  :accessKey="accessKey"
-                  :secret-key="secretKey"
-                  @apply-changes="
-                    (p) => {
-                      showSettingsDialog = false;
-                      onS3FormUpdate(p);
-                    }
-                  "
-                  @restore-defaults="
-                    () => {
-                      showSettingsDialog = false;
-                      onRestoreDefaults();
-                    }
-                  "
-                ></s3-form>
-              </v-card-text>
-            </v-card>
-          </v-dialog>
         </div>
 
         <v-divider></v-divider>
@@ -493,8 +418,6 @@
                       ref="hsUppyRef"
                       :s3Info="s3Info"
                       :s3Host="s3Host"
-                      :accessKey="accessKey"
-                      :secretKey="secretKey"
                       :fileExplorer="fileExplorer"
                       :upload-prefix="`${resourceId}/data/contents/`"
                       @file-uploaded="onUppyFileUploaded"
@@ -508,41 +431,17 @@
                 type="card"
               ></v-skeleton-loader>
 
-              <!-- README is publisher-authored markdown stored in S3; not
-                   editable from this page, but mirrored from landing-page
-                   so the edit view shows the same context. -->
-              <v-card
-                v-if="readmeMd || isLoadingMD"
+              <!-- Editable README; see cd.readme-editor.vue. -->
+              <cd-readme-editor
+                v-if="!isLoadingFiles"
                 id="readme"
-                class="readme-container"
-                variant="outlined"
-                border="grey thin"
-              >
-                <v-card-title class="text-overline d-flex ga-2">
-                  <div>README</div>
-                  <div class="text-caption text-medium-emphasis">
-                    {{ readMeFileName }}
-                  </div>
-                </v-card-title>
-                <v-divider></v-divider>
-                <v-card-text>
-                  <div class="text-center py-4" v-if="isLoadingMD">
-                    <v-progress-circular
-                      indeterminate
-                      class="text-center"
-                      color="primary"
-                    />
-                  </div>
-                  <div
-                    v-if="!hasTxtReadme"
-                    v-html="readmeMd"
-                    class="markdown-body"
-                  ></div>
-                  <pre v-else style="white-space: pre-wrap">{{
-                    readmeMd
-                  }}</pre>
-                </v-card-text>
-              </v-card>
+                class="mt-4"
+                :resource-id="resourceId"
+                :s3-client="s3Client"
+                :bucket="s3Info.bucket"
+                :file-name="readmeFileName"
+                @change="onReadmeChange"
+              />
             </div>
 
             <!-- Funding -->
@@ -938,35 +837,13 @@ import {
 } from "@aws-sdk/client-s3";
 import { stringify } from "@/utils";
 import { fetchResource, onFileDownload, readRootFolder } from "./shared";
+import { createCookieS3Client } from "./cookie-s3-client";
 import HsUppy from "./hs-uppy.vue";
 import CdSpatialCoverageMap from "@/components/search-results/cd.spatial-coverage-map.vue";
+import CdReadmeEditor from "./cd.readme-editor.vue";
 import User from "@/models/user.model";
-import { contentTypeLabels, contentTypeLogos } from "@/constants";
-import "github-markdown-css/github-markdown-light.css";
-import markdownit from "markdown-it";
-import hljs from "highlight.js";
+import { contentTypeLabels, contentTypeLogos, S3_PROXY_URL } from "@/constants";
 import prettyBytes from "pretty-bytes";
-import { GetObjectCommand } from "@aws-sdk/client-s3";
-
-// Markdown renderer instance — mirrors landing-page.vue's setup so the
-// README on the edit page renders identically. Linkify auto-detects URLs,
-// breaks honor single-newlines, html is allowed (S3-hosted READMEs are
-// publisher-authored), and highlight.js applies syntax styling to fenced
-// code blocks.
-const md = markdownit({
-  linkify: true,
-  typographer: true,
-  breaks: true,
-  html: true,
-  highlight(str: string, lang: string) {
-    if (lang && hljs.getLanguage(lang)) {
-      try {
-        return hljs.highlight(str, { language: lang }).value;
-      } catch (__) {}
-    }
-    return "";
-  },
-});
 
 interface FormError {
   title: string;
@@ -982,6 +859,7 @@ interface FormError {
     CzFileExplorer,
     HsUppy,
     CdSpatialCoverageMap,
+    CdReadmeEditor,
   },
   name: "App",
 })
@@ -998,27 +876,6 @@ class App extends Vue {
     return User.$state.isLoggedIn;
   }
 
-  // Env vars take priority over User.$state.credentials so the dev MinIO
-  // service-account keys win over per-user keys (which may not have write
-  // access to the resource's bucket). Mirrors the env-first logic in
-  // landing-page.vue's startS3Client. Per-user creds still apply in prod
-  // where VITE_MINIO_* is empty.
-  protected get accessKey(): string {
-    return (
-      import.meta.env.VITE_MINIO_ACCESS_KEY ||
-      User.$state.credentials.accessKey ||
-      ""
-    );
-  }
-
-  protected get secretKey(): string {
-    return (
-      import.meta.env.VITE_MINIO_SECRET_KEY ||
-      User.$state.credentials.secretKey ||
-      ""
-    );
-  }
-
   schema!: any;
   uischema!: any;
   defaults!: any;
@@ -1027,13 +884,10 @@ class App extends Vue {
   isValid: boolean = false;
   errors: FormError[] = [];
   data: Record<string, any> = {};
-  showSettingsDialog = false;
 
-  // README state mirrors landing-page.vue.
-  readmeMd = "";
-  readMeFileName = "";
-  hasTxtReadme = false;
-  isLoadingMD = false;
+  // Root README name (readme.md/readme.txt, original casing) or null; passed
+  // to cd.readme-editor.vue.
+  readmeFileName: string | null = null;
 
   parseDate(value: string | null | undefined): string {
     if (!value) return "";
@@ -1475,8 +1329,7 @@ class App extends Vue {
   wasLoaded = true;
 
   s3Client!: S3Client;
-  s3Host: string = "http://localhost:9000";
-  hydroshareHost: string = "http://localhost:8000";
+  s3Host: string = S3_PROXY_URL;
   s3Info = {
     bucket: "",
     prefix: "",
@@ -1516,24 +1369,7 @@ class App extends Vue {
   };
 
   startS3Client() {
-    // Env vars take priority over User.$state.credentials so a stale
-    // persisted value (vuex-persistedstate caches the whole User state in
-    // localStorage) can't shadow the explicit dev/prod minio creds set in
-    // .env.{development,production}. Mirrors landing-page.vue.
-    const accessKeyId =
-      import.meta.env.VITE_MINIO_ACCESS_KEY ||
-      User.$state.credentials.accessKey ||
-      "";
-    const secretAccessKey =
-      import.meta.env.VITE_MINIO_SECRET_KEY ||
-      User.$state.credentials.secretKey ||
-      "";
-    this.s3Client = new S3Client({
-      region: "us-central-2",
-      endpoint: this.s3Host,
-      forcePathStyle: true,
-      credentials: { accessKeyId, secretAccessKey },
-    });
+    this.s3Client = createCookieS3Client(this.s3Host);
   }
 
   async created() {
@@ -1541,32 +1377,24 @@ class App extends Vue {
       this.resourceId = this.$route.params.resourceId as string;
     }
 
-    if (this.isLoggedIn) {
-      await User.getOrCreateS3Credentials();
-    } else {
-      const loggedIn = await User.checkLoginStatus();
-      if (loggedIn) {
-        await User.getOrCreateS3Credentials();
-      }
+    if (!this.isLoggedIn) {
+      // Refresh login state (e.g. just returned from a HydroShare login
+      // redirect). S3 access now rides on the session cookies themselves,
+      // so there are no credentials to mint.
+      await User.checkLoginStatus();
     }
-
-    // if (!this.s3Info.bucket || !this.s3Info.prefix) {
-    //   User.getResourceS3prefix(this.resourceId).then((s3info) => {
-    //     this.s3Info = s3info;
-    //     this.s3Info.prefix = `${this.resourceId}/data/contents/`; // TODO: overriding wrong api response value
-    //   });
-    // }
-
-    // this.startS3Client();
 
     if (!this.s3Info.bucket || !this.s3Info.prefix) {
       try {
         const s3info = await User.getResourceS3prefix(this.resourceId);
         if (s3info) {
           this.s3Info = s3info;
-          // Metadata lives alongside the landing-page payload — see
-          // landing-page.vue, which reads .hsjsonld/dataset_metadata.json.
-          this.s3Info.prefix = `${this.resourceId}/.hsjsonld/`;
+          // The edit page works on .hsmetadata/user_metadata.json — the
+          // user-editable metadata file. The s3 auth service only authorizes
+          // writes under data/contents/ and .hsmetadata/; the landing page's
+          // .hsjsonld/dataset_metadata.json is system-generated (hs_extract
+          // merges user_metadata.json back into it on save).
+          this.s3Info.prefix = `${this.resourceId}/.hsmetadata/`;
         }
       } catch (e) {
         this.isLoadingFiles = false;
@@ -1601,7 +1429,7 @@ class App extends Vue {
       this.resourceId,
       this.s3Client,
       this.s3Info.bucket,
-      `${this.s3Info.prefix}dataset_metadata.json`,
+      `${this.s3Info.prefix}user_metadata.json`,
     );
 
     if (resource) {
@@ -1609,9 +1437,7 @@ class App extends Vue {
       // @ts-expect-error The key property is generated when the component is initialized
       this.rootDirectory.children = resource.initialStructure;
       this.buildToc();
-      // Kick off README load in parallel — its DOM appearance patches the
-      // TOC and the rendered markdown drops into the Content section.
-      this.loadReadmeFile();
+      this.detectReadme();
     } else {
       this.wasLoaded = false;
     }
@@ -1619,11 +1445,9 @@ class App extends Vue {
     this.isLoadingFiles = false;
   }
 
-  // README loading mirrors landing-page.vue: probe the root S3 listing
-  // case-insensitively for readme.md / readme.txt, render markdown, append
-  // a TOC entry. Resource's READMEs are publisher-authored markdown
-  // hosted in S3, not editable from this page.
-  async loadReadmeFile() {
+  // Set readmeFileName (case-insensitive readme.md/readme.txt) and sync the TOC
+  // entry. Re-run whenever the file tree changes so the editor stays current.
+  detectReadme() {
     const rootFiles = (this.rootDirectory.children || []).filter(
       (c: any) => !Object.prototype.hasOwnProperty.call(c, "children"),
     );
@@ -1636,33 +1460,16 @@ class App extends Vue {
         typeof f.name === "string" && f.name.toLowerCase() === "readme.txt",
     );
     const target: any = mdFile || txtFile;
-    if (!target) return;
-    this.hasTxtReadme = !mdFile;
-    this.readMeFileName = target.name;
-
-    const key = `${this.resourceId}/data/contents/${target.name}`;
-    let result;
-    try {
-      result = await this.s3Client.send(
-        new GetObjectCommand({ Bucket: this.s3Info.bucket, Key: key }),
-      );
-    } catch (e) {
-      return;
+    this.readmeFileName = target ? target.name : null;
+    if (target) {
+      this.addReadmeToc();
+    } else {
+      this.removeReadmeToc();
     }
+  }
 
-    try {
-      this.isLoadingMD = true;
-      const rawMd = (await result.Body?.transformToString()) || "";
-      this.readmeMd = this.hasTxtReadme ? rawMd : md.render(rawMd);
-    } catch (e) {
-      console.log(e);
-    } finally {
-      this.isLoadingMD = false;
-    }
-
-    // Patch the TOC after the readme is successfully loaded so the
-    // "README" entry sits right under "Files" with the same level-4
-    // indent that landing-page uses.
+  // Add the "README" TOC entry under "Files". Idempotent.
+  private addReadmeToc() {
     const toc = User.$state.toc;
     if (toc && !toc.some((t) => t.to === "#readme")) {
       const filesIdx = toc.findIndex((t) => t.to === "#fileExplorer");
@@ -1671,6 +1478,53 @@ class App extends Vue {
         toc.splice(filesIdx + 1, 0, entry);
       } else {
         toc.push(entry);
+      }
+    }
+  }
+
+  // Remove the "README" TOC entry. Idempotent.
+  private removeReadmeToc() {
+    const toc = User.$state.toc;
+    if (!toc) return;
+    const idx = toc.findIndex((t) => t.to === "#readme");
+    if (idx >= 0) {
+      toc.splice(idx, 1);
+    }
+  }
+
+  // On an editor write, keep the file tree and TOC in sync without a reload.
+  onReadmeChange(payload: {
+    action: "created" | "saved" | "converted";
+    name: string;
+    previousName?: string;
+    size: number;
+  }) {
+    const root = this.rootDirectory as any;
+    const children: any[] = Array.isArray(root?.children) ? root.children : [];
+    this.readmeFileName = payload.name;
+
+    if (payload.action === "created") {
+      if (!children.some((c) => c.name === payload.name)) {
+        children.push({
+          name: payload.name,
+          isUploaded: true,
+          file: null,
+          uploadedSize: payload.size,
+          contentKey: `${this.resourceId}/data/contents/${payload.name}`,
+        });
+      }
+      this.addReadmeToc();
+    } else if (payload.action === "converted") {
+      const node = children.find((c) => c.name === payload.previousName);
+      if (node) {
+        node.name = payload.name;
+        node.uploadedSize = payload.size;
+        node.contentKey = `${this.resourceId}/data/contents/${payload.name}`;
+      }
+    } else {
+      const node = children.find((c) => c.name === payload.name);
+      if (node) {
+        node.uploadedSize = payload.size;
       }
     }
   }
@@ -1762,44 +1616,9 @@ class App extends Vue {
     this.errors = errors;
   }
 
-  async onS3FormUpdate(params: any) {
-    this.isFetchingMetadata = true;
-    this.isLoadingFiles = true;
-    this.s3Info.bucket = params.bucket;
-    this.s3Info.prefix = params.prefix;
-    this.hydroshareHost = params.hydroshareHost;
-    this.s3Host = params.s3Host;
-
-    if (params.accessKey || params.secretKey) {
-      User.commit((state) => {
-        state.credentials = {
-          accessKey: params.accessKey || state.credentials.accessKey,
-          secretKey: params.secretKey || state.credentials.secretKey,
-        };
-      });
-    }
-
-    this.startS3Client();
-    this.loadResource();
-  }
-
-  async onRestoreDefaults() {
-    this.isFetchingMetadata = true;
-    this.isLoadingFiles = true;
-    this.s3Host = "http://localhost:9000";
-    this.hydroshareHost = "http://localhost:8000";
-    const s3Info = await User.getResourceS3prefix(this.resourceId);
-    if (s3Info) {
-      this.s3Info = s3Info;
-      this.s3Info.prefix = `${this.resourceId}/.hsjsonld/`; // TODO: overriding wrong api response value
-      this.startS3Client();
-      this.loadResource();
-    }
-  }
-
   async submit() {
     try {
-      const key = `${this.s3Info.prefix}dataset_metadata.json`;
+      const key = `${this.s3Info.prefix}user_metadata.json`;
       const content = JSON.stringify(this.data, null, 2);
       const command = new PutObjectCommand({
         Bucket: this.s3Info.bucket,
@@ -2091,6 +1910,12 @@ class App extends Vue {
           }),
         );
         console.log(`Deleted file: ${basePrefix}${path}`);
+      }
+
+      // Deleting the README clears the editor + TOC.
+      if (!isFolder && path === this.readmeFileName) {
+        this.readmeFileName = null;
+        this.removeReadmeToc();
       }
 
       Notifications.toast({
@@ -2393,6 +2218,9 @@ class App extends Vue {
         this.s3Info.bucket,
       );
 
+      // Reflect a README rename in the editor.
+      this.detectReadme();
+
       Notifications.toast({
         title: "Success",
         message: `${hasSlash || isRootExplicit ? "Moved" : "Renamed"} ${isFolder ? "folder" : "file"} successfully!`,
@@ -2588,27 +2416,6 @@ export default toNative(App);
     &.has-errors {
       color: rgb(var(--v-theme-error));
     }
-  }
-}
-
-// README container styling mirrors landing-page so the edit page's
-// rendered README looks identical (flush horizontal padding, no
-// github-markdown-css 45px reset, vertically resizable body).
-.readme-container {
-  .v-card-text {
-    min-height: 5rem;
-    height: 40rem;
-    overflow: auto;
-    resize: vertical;
-    padding: 1rem;
-  }
-
-  .markdown-body {
-    box-sizing: border-box;
-    min-width: 200px;
-    max-width: 100%;
-    padding: 0;
-    font-family: inherit;
   }
 }
 

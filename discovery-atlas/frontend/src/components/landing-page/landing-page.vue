@@ -146,14 +146,6 @@
                   <v-icon size="18">mdi-account-multiple</v-icon>
                 </template>
               </v-list-item>
-              <v-list-item
-                title="Settings"
-                @click="showSettingsDialog = true"
-              >
-                <template #prepend>
-                  <v-icon size="18">mdi-cog</v-icon>
-                </template>
-              </v-list-item>
             </v-list>
           </v-menu>
         </div>
@@ -212,37 +204,6 @@
             "
             class="d-flex flex-wrap align-center ga-1 ml-auto"
           >
-            <v-menu width="500" :close-on-content-click="false">
-              <template v-slot:activator="{ props }">
-                <v-btn
-                  size="small"
-                  v-bind="props"
-                  prepend-icon="mdi-cog"
-                  variant="text"
-                  >Settings</v-btn
-                >
-              </template>
-              <v-card>
-                <v-card-title
-                  class="bg-grey-lighten-3 text-body-1 text-medium-emphasis"
-                  >Settings</v-card-title
-                >
-                <v-divider></v-divider>
-                <v-card-text flat>
-                  <s3-form
-                    :prefix="s3Info.prefix"
-                    :bucket="s3Info.bucket"
-                    :s3-host="s3Host"
-                    :hydroshare-host="hydroshareHost"
-                    :accessKey="credentials.accessKey"
-                    :secret-key="credentials.secretKey"
-                    @apply-changes="onS3FormUpdate"
-                    @restore-defaults="onRestoreDefaults"
-                  ></s3-form>
-                </v-card-text>
-              </v-card>
-            </v-menu>
-
             <v-btn
               v-if="isLoggedIn"
               size="small"
@@ -263,34 +224,6 @@
           </div>
         </div>
 
-        <!-- Mobile-only Settings dialog (the 3-dot menu's "Settings" item
-             opens this). Sits outside the action rows so layout isn't
-             affected. -->
-        <v-dialog
-          v-if="$vuetify.display.smAndDown"
-          v-model="showSettingsDialog"
-          max-width="500"
-        >
-          <v-card>
-            <v-card-title
-              class="bg-grey-lighten-3 text-body-1 text-medium-emphasis"
-              >Settings</v-card-title
-            >
-            <v-divider></v-divider>
-            <v-card-text>
-              <s3-form
-                :prefix="s3Info.prefix"
-                :bucket="s3Info.bucket"
-                :s3-host="s3Host"
-                :hydroshare-host="hydroshareHost"
-                :accessKey="credentials.accessKey"
-                :secret-key="credentials.secretKey"
-                @apply-changes="(p) => { showSettingsDialog = false; onS3FormUpdate(p); }"
-                @restore-defaults="() => { showSettingsDialog = false; onRestoreDefaults(); }"
-              ></s3-form>
-            </v-card-text>
-          </v-card>
-        </v-dialog>
       </div>
 
       <cd-manage-access
@@ -833,40 +766,9 @@
     >
       <v-empty-state
         icon="mdi-cloud-cancel"
-        text="Try adjusting your settings."
+        text="Sign in or check that the resource exists and you have access to it."
         title="We couldn't load this resource."
       ></v-empty-state>
-      <v-menu width="500" :close-on-content-click="false">
-        <template v-slot:activator="{ props }">
-          <v-btn
-            size="small"
-            v-bind="props"
-            color="primary"
-            prepend-icon="mdi-cog"
-            variant="outlined"
-            >Settings</v-btn
-          >
-        </template>
-        <v-card>
-          <v-card-title
-            class="bg-grey-lighten-3 text-body-1 text-medium-emphasis"
-            >Settings</v-card-title
-          >
-          <v-divider></v-divider>
-          <v-card-text flat>
-            <s3-form
-              :prefix="s3Info.prefix"
-              :bucket="s3Info.bucket"
-              :s3-host="s3Host"
-              :hydroshare-host="hydroshareHost"
-              :accessKey="credentials.accessKey"
-              :secret-key="credentials.secretKey"
-              @apply-changes="onS3FormUpdate"
-              @restore-defaults="onRestoreDefaults"
-            ></s3-form>
-          </v-card-text>
-        </v-card>
-      </v-menu>
     </div>
   </v-container>
 </template>
@@ -883,12 +785,13 @@ import type { IFolder } from "@cznethub/cznet-vue-core/dist/types";
 import { GetObjectCommand, S3Client, _Object } from "@aws-sdk/client-s3";
 import { stringify } from "@/utils";
 import { fetchResource, onFileDownload } from "./shared";
-import S3Form from "./s3-form.vue";
+import { loadReadme } from "./readme-s3";
+import { createCookieS3Client } from "./cookie-s3-client";
 import User from "@/models/user.model";
 import prettyBytes from "pretty-bytes";
 import { useGoTo } from "vuetify";
 import { EnumCreativeWorkStatus } from "@/types";
-import { contentTypeLabels, contentTypeLogos } from "@/constants";
+import { contentTypeLabels, contentTypeLogos, S3_PROXY_URL } from "@/constants";
 import markdownit from "markdown-it";
 import hljs from "highlight.js"; // https://highlightjs.org
 
@@ -914,7 +817,7 @@ const md = markdownit({
 });
 
 @Component({
-  components: { CzForm, CzFileExplorer, S3Form, CdSpatialCoverageMap, CdAuthorProfile, CdOwnerProfile, CdManageAccess },
+  components: { CzForm, CzFileExplorer, CdSpatialCoverageMap, CdAuthorProfile, CdOwnerProfile, CdManageAccess },
   name: "App",
 })
 class LandingPage extends Vue {
@@ -927,14 +830,9 @@ class LandingPage extends Vue {
     return User.$state.isLoggedIn;
   }
 
-  protected get credentials() {
-    return User.$state.credentials;
-  }
-
   showDescription = false;
   isDescriptionClamped = false;
   showManageAccess = false;
-  showSettingsDialog = false;
   readmeMd = "";
   readMeFileName = "";
   hasTxtReadme = false;
@@ -1004,8 +902,7 @@ class LandingPage extends Vue {
   wasLoaded = true;
 
   s3Client!: S3Client;
-  s3Host: string = "http://localhost:9000";
-  hydroshareHost: string = "http://localhost:8000";
+  s3Host: string = S3_PROXY_URL;
 
   s3Info = {
     bucket: "",
@@ -1044,26 +941,8 @@ class LandingPage extends Vue {
     hasFolders: true,
   };
 
-  async startS3Client() {
-    // Env vars take priority over User.$state.credentials so a stale
-    // persisted value (vuex-persistedstate caches the whole User state in
-    // localStorage) can't shadow the explicit dev/prod minio creds set in
-    // .env.{development,production}. Per-user creds from
-    // getOrCreateS3Credentials still apply when the env vars are absent.
-    const accessKeyId =
-      import.meta.env.VITE_MINIO_ACCESS_KEY ||
-      User.$state.credentials.accessKey ||
-      "";
-    const secretAccessKey =
-      import.meta.env.VITE_MINIO_SECRET_KEY ||
-      User.$state.credentials.secretKey ||
-      "";
-    this.s3Client = new S3Client({
-      region: "us-central-2",
-      endpoint: this.s3Host,
-      forcePathStyle: true,
-      credentials: { accessKeyId, secretAccessKey },
-    });
+  startS3Client() {
+    this.s3Client = createCookieS3Client(this.s3Host);
   }
   // Labels read as supporting context (small, uppercase, muted) so values
   // — the actual data — stand out as the primary content.
@@ -1163,19 +1042,18 @@ class LandingPage extends Vue {
     this.hasTxtReadme = !mdFile;
     this.readMeFileName = target.name;
 
-    const key = `${this.resourceId}/data/contents/${target.name}`;
-    let result;
+    // Cache-busting read (see loadReadme) so edits show without a cache clear.
+    let rawMd: string;
     try {
-      result = await this.s3Client.send(
-        new GetObjectCommand({ Bucket: this.s3Info.bucket, Key: key }),
-      );
+      this.isLoadingMD = true;
+      rawMd = await loadReadme(this.s3Info.bucket, this.resourceId, target.name);
     } catch (e) {
+      // Failed to load — skip rendering and the TOC entry.
+      this.isLoadingMD = false;
       return;
     }
 
     try {
-      this.isLoadingMD = true;
-      const rawMd = await result.Body?.transformToString();
       this.readmeMd = this.hasTxtReadme ? rawMd : md.render(rawMd);
     } catch (e) {
       console.log(e);
@@ -1352,17 +1230,11 @@ class LandingPage extends Vue {
       return;
     }
 
-    if (this.isLoggedIn) {
-      console.log("user is already logged in, fetching S3 credentials");
-      await User.getOrCreateS3Credentials();
-    } else {
-      console.log(
-        "checking if we just returned from HydroShare login redirect",
-      );
-      const loggedIn = await User.checkLoginStatus();
-      if (loggedIn) {
-        await User.getOrCreateS3Credentials();
-      }
+    if (!this.isLoggedIn) {
+      // Refresh login state (e.g. just returned from a HydroShare login
+      // redirect). S3 access now rides on the session cookies themselves,
+      // so there are no credentials to mint.
+      await User.checkLoginStatus();
     }
 
     if (!this.s3Info.bucket || !this.s3Info.prefix) {
@@ -1378,7 +1250,7 @@ class LandingPage extends Vue {
       }
     }
 
-    await this.startS3Client();
+    this.startS3Client();
 
     /* @ts-ignore */
     this.schema = await import(
@@ -1510,46 +1382,6 @@ class LandingPage extends Vue {
     this.isLoadingFiles = false;
   }
 
-  async onS3FormUpdate(params: any) {
-    this.isFetchingMetadata = true;
-    this.isLoadingFiles = true;
-    this.s3Info.bucket = params.bucket;
-    this.s3Info.prefix = params.prefix;
-    this.hydroshareHost = params.hydroshareHost;
-    this.s3Host = params.s3Host;
-    if (params.accessKey || params.secretKey) {
-      User.commit((state) => {
-        state.credentials = {
-          accessKey: params.accessKey || state.credentials.accessKey,
-          secretKey: params.secretKey || state.credentials.secretKey,
-        };
-      });
-    }
-
-    await this.startS3Client();
-    await this.loadResource();
-  }
-
-  async onRestoreDefaults() {
-    this.isFetchingMetadata = true;
-    this.isLoadingFiles = true;
-    this.s3Host = "http://localhost:9000";
-    this.hydroshareHost = "http://localhost:8000";
-
-    try {
-      User.getResourceS3prefix(this.resourceId).then((s3info) => {
-        if (s3info) {
-          this.s3Info = s3info;
-          this.s3Info.prefix = `${this.resourceId}/.hsjsonld/`; // TODO: overriding wrong api response value
-        }
-      });
-      await this.startS3Client();
-      await this.loadResource();
-    } catch (e) {
-      this.isLoadingFiles = false;
-      this.isFetchingMetadata = false;
-    }
-  }
 }
 export default toNative(LandingPage);
 </script>
