@@ -45,6 +45,9 @@ from rdflib.namespace import DC, DCTERMS, RDF
 from spam_patterns.worst_patterns_re import patterns
 
 from django_s3.storage import S3Storage
+
+# Matches the 32-char hex resource short_id in a HydroShare resource URL.
+RESOURCE_ID_RE = re.compile(r'/resource/([0-9a-f]{32})\b')
 from hs_core.enums import (DataciteSubmissionStatus, RelationTypes)
 from hs_core.s3 import ResourceFileS3Mixin, ResourceS3Mixin
 
@@ -4912,8 +4915,9 @@ class BaseResource(Page, AbstractResource):
             replace_relation_meta = resource.metadata.relations.all().filter(type=RelationTypes.isReplacedBy).first()
             if replace_relation_meta is not None:
                 version_citation = replace_relation_meta.value
-                if '/resource/' in version_citation:
-                    version_res_id = version_citation.split('/resource/')[-1]
+                match = RESOURCE_ID_RE.search(version_citation)
+                if match:
+                    version_res_id = match.group(1)
                     try:
                         new_version_res = get_resource_by_shortkey(version_res_id, or_404=False)
                         replaced_by_resources.append(new_version_res)
@@ -5004,10 +5008,25 @@ class BaseResource(Page, AbstractResource):
             relation_updated = False
             if relation_meta_obj.value and '/resource/' in relation_meta_obj.value:
                 version_citation = relation_meta_obj.value
-                version_res_id = version_citation.split('/resource/')[-1]
+                match = RESOURCE_ID_RE.search(version_citation)
+                if not match:
+                    logger = logging.getLogger(__name__)
+                    logger.warning(
+                        f"update_relation_meta: skipping {relation_meta_obj.type} relation "
+                        f"(id={relation_meta_obj.id}) on resource {self.short_id} — "
+                        f"could not extract resource ID from stored value: {relation_meta_obj.value[:200]!r}"
+                    )
+                    return relation_updated
+                version_res_id = match.group(1)
                 try:
                     version_res = get_resource_by_shortkey(version_res_id, or_404=False)
                 except BaseResource.DoesNotExist:
+                    logger = logging.getLogger(__name__)
+                    logger.warning(
+                        f"update_relation_meta: deleting {relation_meta_obj.type} relation "
+                        f"(id={relation_meta_obj.id}) on resource {self.short_id} — "
+                        f"linked resource id '{version_res_id}' does not exist."
+                    )
                     relation_meta_obj.delete()
                     relation_updated = True
                     return relation_updated
@@ -5017,7 +5036,7 @@ class BaseResource(Page, AbstractResource):
                     relation_meta_obj.save()
                     relation_updated = True
             return relation_updated
-
+        
         relations = self.metadata.relations.all()
         replace_relation = [rel for rel in relations if rel.type == RelationTypes.isReplacedBy]
         replace_relation_updated = False
