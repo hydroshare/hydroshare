@@ -2200,7 +2200,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
         # using update query api to update instead of self.save() to avoid triggering search index update
         type(self).objects.filter(id=self.id).update(download_count=self.download_count)
 
-    def update_cached_metadata_field(self, field_name):
+    def update_cached_metadata_field(self, field_name, relation_type=None):
         """
         Update a specific field in the cached metadata or all fields if 'all' is specified
 
@@ -2250,18 +2250,23 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
 
         # Update the modified date every time a metadata element is updated/deleted, or when 'all' is specified
         modified_date = metadata.dates.filter(type='modified').first()
-        if field_name != 'all':
-            # this is the case of updating cached metadata as part of metadata save/delete signal handler
-            copied_metadata['modified'] = now().isoformat()
-            if modified_date:
-                # this update won't trigger the post_save signal for Date model since we are using update query api
-                type(modified_date).objects.filter(id=modified_date.id).update(start_date=copied_metadata['modified'])
-        else:
+        if field_name == 'all':
             # this is the case of updating cached metadata as part of management command
             if modified_date:
                 copied_metadata['modified'] = modified_date.start_date.isoformat()
             else:
                 copied_metadata['modified'] = self.updated.isoformat()
+        # Skip bumping 'modified' for system-managed relation types (hasPart, isPartOf, etc.) —
+        # those are managed via update_collection which calls resource_modified() explicitly.
+        # User-editable relation types (isDescribedBy, references, etc.) still bump modified.
+        elif field_name != 'relation' or (
+            relation_type is not None
+            and relation_type not in {r.value for r in Relation.NOT_USER_EDITABLE}
+        ):
+            copied_metadata['modified'] = now().isoformat()
+            if modified_date:
+                # this update won't trigger the post_save signal for Date model since we are using update query api
+                type(modified_date).objects.filter(id=modified_date.id).update(start_date=copied_metadata['modified'])
 
         type(self).objects.filter(id=self.id).update(cached_metadata=copied_metadata)
 
