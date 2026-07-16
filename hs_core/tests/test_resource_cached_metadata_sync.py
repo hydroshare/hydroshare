@@ -1014,7 +1014,7 @@ class TestDenormalizedMetadataSync(TestCase):
         modified_date2 = datetime.fromisoformat(modified_date2)
         # Modified date should not change for isPartOf relation since it is not user-editable
         self.assertEqual(modified_date2, modified_date1)
-    
+
     def test_delete_user_managed_relation_updates_cached_metadata(self):
         """Test that deleting a user-managed Relation element triggers cached metadata update."""
         # Create relation first

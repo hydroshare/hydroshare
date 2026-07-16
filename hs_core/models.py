@@ -9,6 +9,7 @@ from tempfile import NamedTemporaryFile
 import unicodedata
 import urllib.parse
 from uuid import uuid4
+
 import requests
 from dateutil import parser
 from django.conf import settings
@@ -45,15 +46,15 @@ from rdflib.namespace import DC, DCTERMS, RDF
 from spam_patterns.worst_patterns_re import patterns
 
 from django_s3.storage import S3Storage
-
-# Matches the 32-char hex resource short_id in a HydroShare resource URL.
-RESOURCE_ID_RE = re.compile(r'/resource/([0-9a-f]{32})\b')
 from hs_core.enums import (DataciteSubmissionStatus, RelationTypes)
 from hs_core.s3 import ResourceFileS3Mixin, ResourceS3Mixin
-
 from .hs_rdf import (HSTERMS, RDFS1, RDF_MetaData_Mixin, RDF_Term_MixIn,
                      rdf_terms)
 from .languages_iso import languages as iso_languages
+
+
+# Matches the 32-char hex resource short_id in a HydroShare resource URL.
+RESOURCE_ID_RE = re.compile(r'/resource/([0-9a-f]{32})\b')
 
 
 def clean_abstract(original_string):
@@ -3135,7 +3136,10 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
         if len(author_parts[-1]) > 2:
             author_parts[-1] = author_parts[-1][:-2]  # strip trailing ', '
         else:
-            logger.error(f"{CITATION_ERROR} No valid creator names found in cached_metadata for resource {self.short_id}")
+            logger.error(
+                f"{CITATION_ERROR} No valid creator names found in "
+                f"cached_metadata for resource {self.short_id}"
+            )
             return CITATION_ERROR
 
         authors = "".join(author_parts)
@@ -5036,7 +5040,7 @@ class BaseResource(Page, AbstractResource):
                     relation_meta_obj.save()
                     relation_updated = True
             return relation_updated
-        
+
         relations = self.metadata.relations.all()
         replace_relation = [rel for rel in relations if rel.type == RelationTypes.isReplacedBy]
         replace_relation_updated = False
