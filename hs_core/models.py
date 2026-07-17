@@ -2201,7 +2201,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
         # using update query api to update instead of self.save() to avoid triggering search index update
         type(self).objects.filter(id=self.id).update(download_count=self.download_count)
 
-    def update_cached_metadata_field(self, field_name, relation_type=None):
+    def update_cached_metadata_field(self, field_name: str, update_modified_date: bool):
         """
         Update a specific field in the cached metadata or all fields if 'all' is specified
 
@@ -2257,13 +2257,9 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
                 copied_metadata['modified'] = modified_date.start_date.isoformat()
             else:
                 copied_metadata['modified'] = self.updated.isoformat()
-        # Skip bumping 'modified' for system-managed relation types (hasPart, isPartOf, etc.) —
-        # those are managed via update_collection which calls resource_modified() explicitly.
-        # User-editable relation types (isDescribedBy, references, etc.) still bump modified.
-        elif field_name != 'relation' or (
-            relation_type is not None
-            and relation_type not in {r.value for r in Relation.NOT_USER_EDITABLE}
-        ):
+        # Optionally update the modified date if specified -- some metadata element changes represent
+        # internal system and not user changes, therefore may not trigger modified date change
+        if update_modified_date:
             copied_metadata['modified'] = now().isoformat()
             if modified_date:
                 # this update won't trigger the post_save signal for Date model since we are using update query api
@@ -2594,7 +2590,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
         Update all fields in the cached metadata
         This method is primarily for use in management commands to refresh cached metadata
         """
-        self.update_cached_metadata_field(field_name='all')
+        self.update_cached_metadata_field(field_name='all', update_modified_date=True)
 
     # definition of resource logic
     @property

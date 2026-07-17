@@ -242,7 +242,7 @@ def resource_access_post_save_handler(sender, instance, **kwargs):
     # the post_save signal is sent for ResourceAccess
     if resource is not None and hasattr(resource, 'raccess') and resource.raccess is not None:
         try:
-            resource.update_cached_metadata_field('status')
+            resource.update_cached_metadata_field('status', update_modified_date=True)
         except Exception as ex:
             logger.error(f"Error updating status in cached metadata for resource {resource.short_id}: {str(ex)}")
 
@@ -259,9 +259,16 @@ def metadata_element_saved(sender, instance, **kwargs):
             if hasattr(instance.metadata, 'resource') and instance.metadata.resource is not None:
                 resource = instance.metadata.resource
                 meta_field_name = instance.__class__.__name__.lower()
+
+                # Don't update modified date for system-managed relation types (hasPart, isPartOf, etc.)
                 relation_type = instance.type if isinstance(instance, Relation) else None
+                update_modified_date = (
+                    relation_type is None
+                    or relation_type not in {r.value for r in Relation.NOT_USER_EDITABLE}
+                )
+
                 try:
-                    resource.update_cached_metadata_field(meta_field_name, relation_type=relation_type)
+                    resource.update_cached_metadata_field(meta_field_name, update_modified_date=update_modified_date)
                 except Exception as ex:
                     # NOTE: The error may not be related to the field that is logged here as
                     # we update other fields that might be missing in the cache as part of caching the specified field
@@ -283,9 +290,16 @@ def metadata_element_deleted(sender, instance, **kwargs):
             if hasattr(instance.metadata, 'resource') and instance.metadata.resource is not None:
                 resource = instance.metadata.resource
                 meta_field_name = instance.__class__.__name__.lower()
+
+                # Don't update modified date for system-managed relation types (hasPart, isPartOf, etc.)
                 relation_type = instance.type if isinstance(instance, Relation) else None
+                update_modified_date = (
+                    relation_type is None
+                    or relation_type not in {r.value for r in Relation.NOT_USER_EDITABLE}
+                )
+
                 try:
-                    resource.update_cached_metadata_field(meta_field_name, relation_type=relation_type)
+                    resource.update_cached_metadata_field(meta_field_name, update_modified_date=update_modified_date)
                 except Exception as ex:
                     logger.error(f"Error updating cached metadata for resource {resource.short_id}: {str(ex)}")
                     # NOTE: The error may not be related to the field that is logged here as
