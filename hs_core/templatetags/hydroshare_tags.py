@@ -361,6 +361,7 @@ def creator_json_ld_element(crs):
     for cr in crs:
         cr_dict = {}
         urls = []
+        identifiers = []
         if cr['email']:
             cr_dict["email"] = cr['email']
         if cr['address']:
@@ -392,7 +393,15 @@ def creator_json_ld_element(crs):
             urls.append(cr['homepage'])
         if cr['identifiers']:
             for k in cr['identifiers']:
-                urls.append(cr['identifiers'][k])
+                identifier_value = cr['identifiers'][k]
+                urls.append(identifier_value)
+                identifiers.append(identifier_value)
+        if len(identifiers) == 1:
+            cr_dict['identifier'] = identifiers[0]
+            cr_dict['sameAs'] = identifiers[0]
+        elif len(identifiers) > 1:
+            cr_dict['identifier'] = identifiers
+            cr_dict['sameAs'] = identifiers
         if len(urls) == 1:
             cr_dict['url'] = urls[0]
         elif len(urls) > 1:
@@ -407,6 +416,106 @@ def creator_json_ld_element(crs):
 @register.filter
 def json_dumps(value):
     return dumps(value)
+
+
+@register.filter
+def resource_files_json_ld(resource):
+    """Return a JSON-LD array of schema.org MediaObject entries for each resource file.
+    Satisfies MetaDIG entity.name.present by emitting at minimum name and encodingFormat
+    for every file in the resource."""
+    entries = []
+    for f in resource.files.all():
+        entry = {
+            "@type": "MediaObject",
+            "name": f.file_name,
+        }
+        if f.mime_type:
+            entry["encodingFormat"] = f.mime_type
+        entries.append(entry)
+    return dumps(entries, indent=4) if entries else ""
+
+
+@register.filter
+def relation_values_json(relations, relation_type):
+    values = [rel.get('value') for rel in relations if rel.get('type') == relation_type and rel.get('value')]
+    return dumps(values) if values else ""
+
+
+@register.filter
+def first_relation_value_for_types(relations, relation_types):
+    relation_type_list = [relation_type.strip() for relation_type in relation_types.split(',') if relation_type.strip()]
+    for relation_type in relation_type_list:
+        for relation in relations or []:
+            if relation.get('type') == relation_type and relation.get('value'):
+                return relation.get('value')
+    return ""
+
+
+@register.filter
+def provenance_trace_json(relations):
+    lineage_relation_types = {'source', 'isVersionOf', 'isPartOf', 'hasPart'}
+    values = [rel.get('value') for rel in (relations or [])
+              if rel.get('type') in lineage_relation_types and rel.get('value')]
+    return dumps(values) if values else ""
+
+
+@register.filter
+def schemaorg_contact_point_json(creators):
+    if not creators:
+        return ""
+
+    sorted_creators = sorted(creators, key=lambda creator: creator.get('order') if creator.get('order') is not None else 999999)
+    creator = sorted_creators[0]
+
+    contact_point = {
+        '@type': 'ContactPoint'
+    }
+
+    creator_name = creator.get('name')
+    creator_organization = creator.get('organization')
+    if creator_name:
+        contact_point['name'] = name_without_commas(creator_name)
+    elif creator_organization:
+        contact_point['name'] = creator_organization
+    else:
+        return ""
+
+    if creator.get('email'):
+        contact_point['email'] = creator['email']
+    if creator.get('phone'):
+        contact_point['telephone'] = creator['phone']
+    if creator_organization:
+        contact_point['affiliation'] = {
+            '@type': 'Organization',
+            'name': creator_organization
+        }
+
+    identifiers = []
+    if creator.get('identifiers'):
+        identifiers = [value for value in creator.get('identifiers').values() if value]
+
+    urls = []
+    if creator.get('relative_uri') and creator_name:
+        urls.append('https://www.hydroshare.org' + creator.get('relative_uri'))
+    if creator.get('homepage'):
+        urls.append(creator.get('homepage'))
+    urls.extend(identifiers)
+
+    unique_urls = list(dict.fromkeys(urls))
+    if len(unique_urls) == 1:
+        contact_point['url'] = unique_urls[0]
+    elif len(unique_urls) > 1:
+        contact_point['url'] = unique_urls
+
+    unique_identifiers = list(dict.fromkeys(identifiers))
+    if len(unique_identifiers) == 1:
+        contact_point['identifier'] = unique_identifiers[0]
+        contact_point['sameAs'] = unique_identifiers[0]
+    elif len(unique_identifiers) > 1:
+        contact_point['identifier'] = unique_identifiers
+        contact_point['sameAs'] = unique_identifiers
+
+    return dumps(contact_point, sort_keys=True, indent=4)
 
 
 @register.filter

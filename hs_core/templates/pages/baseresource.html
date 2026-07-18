@@ -19,6 +19,7 @@
 <script id="schemaorg" type="application/ld+json">
 {
     "@context": "https://schema.org",
+    "schemaVersion": "http://datacite.org/schema/kernel-4",
     {% if cm.raccess.published %}
     "@id": "https://doi.org/10.4211/hs.{{ cm.short_id }}#schemaorg",
     "sameAs": "https://www.hydroshare.org/resource/{{ cm.short_id }}",
@@ -53,29 +54,33 @@
         "url": "https://doi.org/10.4211/hs.{{ cm.short_id }}",
         "value": "doi:10.4211/hs.{{ cm.short_id }}"
       },
-      "https://www.hydroshare.org/resource/{{ cm.short_id }}"
+            "https://www.hydroshare.org/resource/{{ cm.short_id }}"
+            {% for identifier in cm.cached_metadata.identifiers %},
+            {
+                "@type": "PropertyValue",
+                "propertyID": {{ identifier.name|json_dumps|safe }},
+                "value": {{ identifier.url|json_dumps|safe }}
+            }
+            {% endfor %}
     ],
     {% else %}
     "identifier": [
-      "https://www.hydroshare.org/resource/{{ cm.short_id }}"
+            "https://www.hydroshare.org/resource/{{ cm.short_id }}"
+            {% for identifier in cm.cached_metadata.identifiers %},
+            {
+                "@type": "PropertyValue",
+                "propertyID": {{ identifier.name|json_dumps|safe }},
+                "value": {{ identifier.url|json_dumps|safe }}
+            }
+            {% endfor %}
     ],
     {% endif %}
     "creator": {{ cm.cached_metadata.creators | creator_json_ld_element | safe }},
+    {% if cm.cached_metadata.contributors %}
+    "contributor": {{ cm.cached_metadata.contributors | creator_json_ld_element | safe }},
+    {% endif %}
     {# There is discussion about adding more linked data fields for referenced items #}
     {# https://github.com/hydroshare/hydroshare/issues/4566#issuecomment-1124283370 #}
-    {% if cm.cached_metadata.geospatial_relations %}
-    "about": [
-    {% for geospatial_relation in cm.cached_metadata.geospatial_relations %}{% if geospatial_relation.value|is_url %}
-      {
-        "@id": "{{ geospatial_relation.value | escapejs }}",
-        {# We might eventually want to encode related features with more specificity than generic https://schema.org/Place #}
-        {# Examples include https://schema.org/Landform and https://schema.org/BodyOfWater #}
-        "@type": "Place",
-        "url": "{{ geospatial_relation.value | escapejs }}"
-      }{%if not forloop.last%},{%endif%}
-    {% endif %}{% endfor %}
-    ],
-    {% endif %}
     {% if cm.cached_metadata.temporal_coverage %}
     "temporalCoverage": "{{ cm.cached_metadata.temporal_coverage.start_date }}/{{ cm.cached_metadata.temporal_coverage.end_date }}",
     {% endif %}
@@ -101,10 +106,30 @@
     {% endif %}
     {% endwith %}
     {% if cm.raccess.published %}
+    {% with publisher=cm.cached_metadata.publisher %}
     "publisher": {
-        "@id": "https://www.hydroshare.org"
+        "@type": "Organization",
+        "@id": "https://ror.org/003b04c03",
+        {% if publisher.name %}
+        "name": {{ publisher.name|json_dumps|safe }},
+        {% else %}
+        "name": "CUAHSI",
+        {% endif %}
+        "identifier": "https://ror.org/003b04c03",
+        "sameAs": "https://ror.org/003b04c03",
+        {% if publisher.url %}
+        "url": "{{ publisher.url }}"
+        {% else %}
+        "url": "https://www.cuahsi.org"
+        {% endif %}
     },
+    {% endwith %}
     {% endif %}
+    {% with contact_point=cm.cached_metadata.creators|schemaorg_contact_point_json %}
+    {% if contact_point %}
+    "contactPoint": {{ contact_point|safe }},
+    {% endif %}
+    {% endwith %}
     "provider": {
         "@id": "https://www.hydroshare.org",
         "@type": "Organization",
@@ -132,6 +157,56 @@
 	{% endif %}
     {% if cm.raccess.public %} "isAccessibleForFree": true, {% endif %}
     {% if cm.cached_metadata.relations %}
+    {% with rel_is_part_of=cm.cached_metadata.relations|relation_values_json:'isPartOf' %}
+    {% if rel_is_part_of %}
+    "isPartOf": {{ rel_is_part_of|safe }},
+    {% endif %}
+    {% endwith %}
+    {% with rel_has_part=cm.cached_metadata.relations|relation_values_json:'hasPart' %}
+    {% if rel_has_part %}
+    "hasPart": {{ rel_has_part|safe }},
+    {% endif %}
+    {% endwith %}
+    {% with rel_is_based_on=cm.cached_metadata.relations|relation_values_json:'source' %}
+    {% if rel_is_based_on %}
+    "isBasedOn": {{ rel_is_based_on|safe }},
+    {% endif %}
+    {% endwith %}
+    {% with rel_source_entity=cm.cached_metadata.relations|first_relation_value_for_types:'source,isVersionOf' %}
+    {% if rel_source_entity %}
+    "sourceEntity": {{ rel_source_entity|json_dumps|safe }},
+    {% endif %}
+    {% endwith %}
+    {% with rel_is_version_of=cm.cached_metadata.relations|relation_values_json:'isVersionOf' %}
+    {% if rel_is_version_of %}
+    "isVersionOf": {{ rel_is_version_of|safe }},
+    {% endif %}
+    {% endwith %}
+    {% with provenance_trace=cm.cached_metadata.relations|provenance_trace_json %}
+    {% if provenance_trace %}
+    "provenanceTrace": {{ provenance_trace|safe }},
+    {% endif %}
+    {% endwith %}
+    {% with rel_is_replaced_by=cm.cached_metadata.relations|relation_values_json:'isReplacedBy' %}
+    {% if rel_is_replaced_by %}
+    "isReplacedBy": {{ rel_is_replaced_by|safe }},
+    {% endif %}
+    {% endwith %}
+    {% with rel_is_described_by=cm.cached_metadata.relations|relation_values_json:'isDescribedBy' %}
+    {% if rel_is_described_by %}
+    "isDescribedBy": {{ rel_is_described_by|safe }},
+    {% endif %}
+    {% endwith %}
+    {% with rel_is_referenced_by=cm.cached_metadata.relations|relation_values_json:'isReferencedBy' %}
+    {% if rel_is_referenced_by %}
+    "isReferencedBy": {{ rel_is_referenced_by|safe }},
+    {% endif %}
+    {% endwith %}
+    {% with rel_references=cm.cached_metadata.relations|relation_values_json:'references' %}
+    {% if rel_references %}
+    "references": {{ rel_references|safe }},
+    {% endif %}
+    {% endwith %}
     "citation": [
     {% for relation in cm.cached_metadata.relations %}
         "{{ relation.value | escapejs }}"{%if not forloop.last%},{%endif%}
@@ -159,6 +234,24 @@
     "dateCreated": "{{ cm.created | date:"c" }}",
     "dateModified": "{{ cm.last_updated | date:"c"}}",
     {% if cm.raccess.published %}"datePublished": "{{ cm|published_date | date:"c"}}", {% endif %}
+    {% if cm.raccess.published %}"dateAccepted": "{{ cm|published_date | date:"Y-m-d"}}", {% endif %}
+    {% if cm.metadata.formats.all %}
+    "encodingFormat": [
+    {% for format_obj in cm.metadata.formats.all %}
+        "{{ format_obj.value | escapejs }}"{%if not forloop.last%},{%endif%}
+    {% endfor %}
+    ],
+    {% endif %}
+    {% with entities=cm|resource_files_json_ld %}
+    {% if entities %}
+    "entity": {{ entities|safe }},
+    {% endif %}
+    {% endwith %}
+    {% if cm.bag_url %}
+    "contentUrl": {{ cm.bag_url|json_dumps|safe }},
+    {% else %}
+    "contentUrl": "https://www.hydroshare.org/hsapi/resource/{{ cm.short_id }}/",
+    {% endif %}
     "subjectOf": {
         "@type": "DataDownload",
         "name": "resourcemetadata.xml",
