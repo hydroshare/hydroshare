@@ -21,8 +21,8 @@ jobs:
         id: generate-token
         uses: actions/create-github-app-token@v3
         with:
-          client-id: ${{ vars.APP_CLIENT_ID }}
-          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          client-id: ${{ vars.WORKFLOWS_APP_CLIENT_ID }}
+          private-key: ${{ secrets.WORKFLOWS_APP_PRIVATE_KEY }}
 
       - name: Set Target Date when issue moves to Done
         env:
