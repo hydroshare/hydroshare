@@ -1,0 +1,77 @@
+name: update-target-date-when-done
+
+on:
+  issues:
+    types: [field_added]
+  # Manual entry point for testing this workflow against a specific issue node ID.
+  workflow_dispatch:
+    inputs:
+      issue_node_id:
+        description: 'The node ID of the issue to test'
+        required: true
+        type: string
+
+jobs:
+  update-target-date:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.issue != null }}
+
+    steps:
+      - name: Generate token
+        id: generate-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.APP_CLIENT_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - name: Set Target Date when issue moves to Done
+        env:
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+          PROJECT_ID: PVT_kwDOADSPDc4AiwwP
+          FIELD_ID: PVTF_lADOADSPDc4AiwwPzg09ncw
+          TARGET_STATUS: Done
+          ISSUE_NODE_ID: ${{ github.event_name == 'workflow_dispatch' && inputs.issue_node_id || github.event.issue.node_id }}
+        run: |
+          set -euo pipefail
+
+          # Use the current UTC date so the workflow is deterministic regardless of runner locale.
+          TODAY=$(date -u +%F)
+
+          # Read the issue's project items and the Status field from the target project.
+          gh api graphql -f query='
+            query($issueId: ID!, $fieldName: String!) {
+              node(id: $issueId) {
+                ... on Issue {
+                  projectItems(first: 20) {
+                    nodes {
+                      id
+                      project { id }
+                      fieldValueByName(name: $fieldName) {
+                        ... on ProjectV2ItemFieldSingleSelectValue {
+                          name
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }' -f issueId="$ISSUE_NODE_ID" -f fieldName="Status" > issue_payload.json
+
+          # Resolve the item's ProjectV2 item ID and the current Status name for this project.
+          ITEM_ID=$(jq -r --arg projId "$PROJECT_ID" '.data.node.projectItems.nodes | map(select(.project.id == $projId) | .id) | .[0] // empty' issue_payload.json)
+          CURRENT_STATUS=$(jq -r --arg projId "$PROJECT_ID" '.data.node.projectItems.nodes | map(select(.project.id == $projId) | .fieldValueByName.name // empty) | .[0] // empty' issue_payload.json)
+
+          if [ -z "$ITEM_ID" ]; then
+            echo "Issue is not in the Hydroshare project. Skipping update."
+            exit 0
+          fi
+
+          # Skip if this issue is not in the target status.
+          if [ "$CURRENT_STATUS" != "$TARGET_STATUS" ]; then
+            echo "Issue status is '$CURRENT_STATUS'; expected '$TARGET_STATUS'. Skipping update."
+            exit 0
+          fi
+
+          # Write today's date into the Target Date field.
+          gh api graphql -f query="mutation { updateProjectV2ItemFieldValue(input: { projectId: \"$PROJECT_ID\", itemId: \"$ITEM_ID\", fieldId: \"$FIELD_ID\", value: { date: \"$TODAY\" } }) { projectV2Item { id } } }"
+          
