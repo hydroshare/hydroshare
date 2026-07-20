@@ -817,7 +817,6 @@
 <script lang="ts">
 import { Component, Vue, toNative, Ref } from "vue-facing-decorator";
 import {
-  CzForm,
   CzFormComposed,
   CzField,
   CzFieldModal,
@@ -830,12 +829,10 @@ import {
   PutObjectCommand,
   DeleteObjectsCommand,
   ListObjectsV2Command,
-  _Object,
   HeadObjectCommand,
   DeleteObjectCommand,
   CopyObjectCommand,
 } from "@aws-sdk/client-s3";
-import { stringify } from "@/utils";
 import { fetchResource, onFileDownload, readRootFolder } from "./shared";
 import { createCookieS3Client } from "./cookie-s3-client";
 import HsUppy from "./hs-uppy.vue";
@@ -852,7 +849,6 @@ interface FormError {
 
 @Component({
   components: {
-    CzForm,
     CzFormComposed,
     CzField,
     CzFieldModal,
@@ -866,9 +862,6 @@ interface FormError {
 class App extends Vue {
   resourceId!: string;
 
-  @Ref("form") form!: InstanceType<typeof CzForm>;
-  @Ref("fileInput") fileInput!: HTMLInputElement;
-  @Ref("folderInput") folderInput!: HTMLInputElement;
   @Ref("fileExplorer") fileExplorer!: InstanceType<typeof CzFileExplorer>;
   @Ref("hsUppyRef") hsUppyRef!: InstanceType<typeof HsUppy>;
 
@@ -877,8 +870,6 @@ class App extends Vue {
   }
 
   schema!: any;
-  uischema!: any;
-  defaults!: any;
   onFileDownload = onFileDownload;
 
   isValid: boolean = false;
@@ -1319,7 +1310,6 @@ class App extends Vue {
     User.$state.toc = [];
     User.$state.isTocReady = false;
   }
-  stringify = stringify;
 
   isLoadingFiles: boolean = true;
   isSubmitting: boolean = false;
@@ -1396,7 +1386,7 @@ class App extends Vue {
           // merges user_metadata.json back into it on save).
           this.s3Info.prefix = `${this.resourceId}/.hsmetadata/`;
         }
-      } catch (e) {
+      } catch {
         this.isLoadingFiles = false;
         this.isFetchingMetadata = false;
       }
@@ -1404,18 +1394,12 @@ class App extends Vue {
 
     this.startS3Client();
 
-    // Load schema + uischema. The edit schema marks non-editable fields with
-    // `readOnly: true`, so cz-form renders them disabled automatically.
+    // Load the edit schema. Fields marked `readOnly: true` render disabled;
+    // the layout itself is composed directly in the template (no uischema).
     /* @ts-ignore */
     this.schema = await import(
       `@/schemas/hydroshare/resource_edit_schema.json`
     );
-
-    /* @ts-ignore */
-    this.uischema = await import(`@/schemas/hydroshare/edit-uischema.json`);
-
-    /* @ts-ignore */
-    this.defaults = await import(`@/schemas/hydroshare/defaults.json`);
 
     this.loadResource();
   }
@@ -1612,10 +1596,6 @@ class App extends Vue {
     return normalized;
   }
 
-  onUpdateErrors(errors: FormError[]) {
-    this.errors = errors;
-  }
-
   async submit() {
     try {
       const key = `${this.s3Info.prefix}user_metadata.json`;
@@ -1755,7 +1735,7 @@ class App extends Vue {
           // Since Uppy has autoProceed: true, it will start uploading automatically
           // Wait for the upload to complete for this specific file
           return new Promise<boolean>((resolve) => {
-            const successHandler = (successFileId: string, response: any) => {
+            const successHandler = (successFileId: string, _response: any) => {
               if (successFileId === fileId) {
                 uppy.off("upload-success", successHandler);
                 uppy.off("upload-error", errorHandler);
@@ -2284,11 +2264,6 @@ export default toNative(App);
   justify-content: start;
   align-items: baseline;
   align-content: baseline;
-
-  &.one-col {
-    grid-template-columns: 1fr;
-    row-gap: 0.25rem;
-  }
 }
 
 .dataset-info__label {
@@ -2324,13 +2299,6 @@ export default toNative(App);
     position: static;
     margin-left: 0.25rem;
   }
-}
-
-// Inline status chip field reads as a chip-sized select inline with the
-// "Last modified ..." text, not a full-width input.
-.status-chip-field {
-  min-width: 180px;
-  max-width: 260px;
 }
 
 // Same icon size landing-page uses next to its status chip.
@@ -2430,19 +2398,8 @@ export default toNative(App);
   }
 }
 
-// Sidebar collapses to full width below the desktop column threshold,
-// same breakpoint as landing-page sidebar.
-.sidebar {
-  @media (max-width: 1279px) {
-    flex-basis: auto;
-    width: 100%;
-  }
-}
-
-
 // Related Resources table — mirror landing-page's wrap-long-URLs behavior
 // so the read-only rows in the edit page look identical.
-.related-resources-table,
 .v-table {
   :deep(.relation-label) {
     white-space: nowrap;
