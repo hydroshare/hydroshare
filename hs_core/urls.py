@@ -31,6 +31,11 @@ urlpatterns = [
         name="delete_metadata_element",
     ),
     re_path(
+        r'^_internal/(?P<resource_id>[0-9a-f-]+)/(?P<coverage_type>[A-Za-z]+)/delete-coverage/$',
+        views.delete_resource_coverage,
+        name="delete_resource_coverage"
+    ),
+    re_path(
         r"^_internal/(?P<shortkey>[0-9a-f-]+)/delete-author/(?P<element_id>[A-z0-9]+)/$",
         views.delete_author,
         name="delete_author",
