@@ -9,6 +9,7 @@ from tempfile import NamedTemporaryFile
 import unicodedata
 import urllib.parse
 from uuid import uuid4
+
 import requests
 from dateutil import parser
 from django.conf import settings
@@ -47,10 +48,13 @@ from spam_patterns.worst_patterns_re import patterns
 from django_s3.storage import S3Storage
 from hs_core.enums import (DataciteSubmissionStatus, RelationTypes)
 from hs_core.s3 import ResourceFileS3Mixin, ResourceS3Mixin
-
 from .hs_rdf import (HSTERMS, RDFS1, RDF_MetaData_Mixin, RDF_Term_MixIn,
                      rdf_terms)
 from .languages_iso import languages as iso_languages
+
+
+# Matches the 32-char hex resource short_id in a HydroShare resource URL.
+RESOURCE_ID_RE = re.compile(r'/resource/([0-9a-f]{32})\b')
 
 
 def clean_abstract(original_string):
@@ -2197,7 +2201,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
         # using update query api to update instead of self.save() to avoid triggering search index update
         type(self).objects.filter(id=self.id).update(download_count=self.download_count)
 
-    def update_cached_metadata_field(self, field_name):
+    def update_cached_metadata_field(self, field_name: str, update_modified_date: bool):
         """
         Update a specific field in the cached metadata or all fields if 'all' is specified
 
@@ -2247,18 +2251,19 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
 
         # Update the modified date every time a metadata element is updated/deleted, or when 'all' is specified
         modified_date = metadata.dates.filter(type='modified').first()
-        if field_name != 'all':
-            # this is the case of updating cached metadata as part of metadata save/delete signal handler
-            copied_metadata['modified'] = now().isoformat()
-            if modified_date:
-                # this update won't trigger the post_save signal for Date model since we are using update query api
-                type(modified_date).objects.filter(id=modified_date.id).update(start_date=copied_metadata['modified'])
-        else:
+        if field_name == 'all':
             # this is the case of updating cached metadata as part of management command
             if modified_date:
                 copied_metadata['modified'] = modified_date.start_date.isoformat()
             else:
                 copied_metadata['modified'] = self.updated.isoformat()
+        # Optionally update the modified date if specified -- some metadata element changes represent
+        # internal system and not user changes, therefore may not trigger modified date change
+        if update_modified_date:
+            copied_metadata['modified'] = now().isoformat()
+            if modified_date:
+                # this update won't trigger the post_save signal for Date model since we are using update query api
+                type(modified_date).objects.filter(id=modified_date.id).update(start_date=copied_metadata['modified'])
 
         type(self).objects.filter(id=self.id).update(cached_metadata=copied_metadata)
 
@@ -2585,7 +2590,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
         Update all fields in the cached metadata
         This method is primarily for use in management commands to refresh cached metadata
         """
-        self.update_cached_metadata_field(field_name='all')
+        self.update_cached_metadata_field(field_name='all', update_modified_date=True)
 
     # definition of resource logic
     @property
@@ -3086,11 +3091,13 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
         return str(self.metadata.citation.first())
 
     def get_citation(self, forceHydroshareURI=True):
-        """Get citation or citations from resource metadata using cached_metadata."""
+        """Get citation string from resource metadata using cached_metadata.
 
+        Format: Author, A., Author2, B. (year). Title, HydroShare, url
+        """
         logger = logging.getLogger(__name__)
-        citation_str_lst = []
         CITATION_ERROR = "Failed to generate citation."
+        CITATION_TEMPLATE = "{authors} ({year}). {title}, HydroShare, {url}{pending_suffix}"
 
         # Get creators from cached_metadata
         self.refresh_from_db(fields=['cached_metadata'])
@@ -3105,42 +3112,36 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
             logger.error(f"{CITATION_ERROR} No first creator found in cached_metadata for resource {self.short_id}")
             return CITATION_ERROR
 
-        # Format first creator name
-        creator_name = first_creator.get('name', '')
-        creator_name = creator_name.strip() if creator_name else ''  # No Nonetype
-        if first_creator.get('organization', '') and not creator_name:
-            citation_str_lst.append(first_creator['organization'] + ", ")
+        # Build authors string — each parse_citation_name call appends ', '; trim the last one
+        author_parts = []
+        creator_name = (first_creator.get('name') or '').strip()
+        if first_creator.get('organization') and not creator_name:
+            author_parts.append(first_creator['organization'] + ", ")
         else:
             is_non_hs_user = not first_creator.get('hs_user_id')
-            citation_str_lst.append(self.parse_citation_name(creator_name, is_non_hs_user=is_non_hs_user))
+            author_parts.append(self.parse_citation_name(creator_name, is_non_hs_user=is_non_hs_user))
 
-        # Add other creators
-        other_creators = [c for c in cached_creators if c.get('order', 0) > 1]
-        for author in other_creators:
-            author_name = author.get('name', '')
-            author_name = author_name.strip() if author_name else ''  # No Nonetype
-            if author.get('organization', '') and not author_name:
-                citation_str_lst.append(author['organization'] + ", ")
-            elif author_name and len(author_name) != 0:
-                # Check if this is a non-HydroShare user who might have entered name incorrectly
+        for author in [c for c in cached_creators if c.get('order', 0) > 1]:
+            author_name = (author.get('name') or '').strip()
+            if author.get('organization') and not author_name:
+                author_parts.append(author['organization'] + ", ")
+            elif author_name:
                 is_non_hs_user = not author.get('hs_user_id')
-                citation_str_lst.append(self.parse_citation_name(author_name, is_non_hs_user=is_non_hs_user))
+                author_parts.append(self.parse_citation_name(author_name, is_non_hs_user=is_non_hs_user))
 
-        # Remove the last added comma and space
-        if len(citation_str_lst[-1]) > 2:
-            citation_str_lst[-1] = citation_str_lst[-1][:-2]
+        if len(author_parts[-1]) > 2:
+            author_parts[-1] = author_parts[-1][:-2]  # strip trailing ', '
         else:
-            err_msg = f"No valid creator names found in cached_metadata for resource {self.short_id}"
-            logger.error(f"{CITATION_ERROR} {err_msg}")
+            logger.error(
+                f"{CITATION_ERROR} No valid creator names found in "
+                f"cached_metadata for resource {self.short_id}"
+            )
             return CITATION_ERROR
 
-        # Get citation date from cached_metadata
-        citation_date = None
-        if self.cached_metadata.get('published', ''):
-            citation_date = self.cached_metadata['published']
-        elif self.cached_metadata.get('modified'):
-            citation_date = self.cached_metadata['modified']
+        authors = "".join(author_parts)
 
+        # Get citation year
+        citation_date = self.cached_metadata.get('published') or self.cached_metadata.get('modified')
         if not citation_date:
             err_msg = f"No published or modified date found in cached_metadata for resource {self.short_id}"
             logger.error(f"{CITATION_ERROR} {err_msg}")
@@ -3151,10 +3152,10 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
             citation_date_obj = parser.parse(citation_date)
             citation_year = citation_date_obj.year
         except (ValueError, TypeError):
-            logger.error(f"{CITATION_ERROR} Invalid date found in cached_metadata for resource {self.short_id}")
+            logger.error(f"{CITATION_ERROR} Invalid date in cached_metadata for resource {self.short_id}")
             return CITATION_ERROR
 
-        citation_str_lst.append(" ({year}). ".format(year=citation_year))
+        # Get title
         title = self.cached_metadata.get('title', {})
         if not title:
             logger.error(f"{CITATION_ERROR} No title found in cached_metadata for resource {self.short_id}")
@@ -3163,33 +3164,35 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
         if not title_value:
             logger.error(f"{CITATION_ERROR} No title value found in cached_metadata for resource {self.short_id}")
             return CITATION_ERROR
-        citation_str_lst.append(title_value)
 
         # Check for DOI identifier
         isPendingActivation = False
         identifiers = self.cached_metadata.get('identifiers', [])
-        doi = [idn for idn in identifiers if idn.get('name') == "doi"]
+        doi_list = [idn for idn in identifiers if idn.get('name') == "doi"]
 
-        if doi and not forceHydroshareURI:
-            hs_identifier = doi[0]
+        if doi_list and not forceHydroshareURI:
+            identifier = doi_list[0]
             if (self.doi.find(DataciteSubmissionStatus.PENDING.value) >= 0
                     or self.doi.find(DataciteSubmissionStatus.FAILURE.value) >= 0):
                 isPendingActivation = True
         else:
-            hs_identifier = [idn for idn in identifiers if idn.get('name') == "hydroShareIdentifier"]
-            if hs_identifier:
-                hs_identifier = hs_identifier[0]
-            else:
-                err_msg = f"No hydroShareIdentifier found in cached_metadata for resource {self.short_id}"
-                logger.error(f"{CITATION_ERROR} {err_msg}")
+            hs_id_list = [idn for idn in identifiers if idn.get('name') == 'hydroShareIdentifier']
+            if not hs_id_list:
+                logger.error(f"{CITATION_ERROR} No hydroShareIdentifier found for resource {self.short_id}")
                 return CITATION_ERROR
+            identifier = hs_id_list[0]
 
-        citation_str_lst.append(", HydroShare, {url}".format(url=hs_identifier.get('url', '')))
+        url = identifier.get('url', '')
+        pending_suffix = ", DOI for this published resource is pending activation." \
+            if isPendingActivation and not forceHydroshareURI else ""
 
-        if isPendingActivation and not forceHydroshareURI:
-            citation_str_lst.append(", DOI for this published resource is pending activation.")
-
-        return ''.join(citation_str_lst)
+        return CITATION_TEMPLATE.format(
+            authors=authors,
+            year=citation_year,
+            title=title_value,
+            url=url,
+            pending_suffix=pending_suffix,
+        )
 
     @classmethod
     def get_supported_upload_file_types(cls):
@@ -4912,8 +4915,9 @@ class BaseResource(Page, AbstractResource):
             replace_relation_meta = resource.metadata.relations.all().filter(type=RelationTypes.isReplacedBy).first()
             if replace_relation_meta is not None:
                 version_citation = replace_relation_meta.value
-                if '/resource/' in version_citation:
-                    version_res_id = version_citation.split('/resource/')[-1]
+                match = RESOURCE_ID_RE.search(version_citation)
+                if match:
+                    version_res_id = match.group(1)
                     try:
                         new_version_res = get_resource_by_shortkey(version_res_id, or_404=False)
                         replaced_by_resources.append(new_version_res)
@@ -5004,10 +5008,25 @@ class BaseResource(Page, AbstractResource):
             relation_updated = False
             if relation_meta_obj.value and '/resource/' in relation_meta_obj.value:
                 version_citation = relation_meta_obj.value
-                version_res_id = version_citation.split('/resource/')[-1]
+                match = RESOURCE_ID_RE.search(version_citation)
+                if not match:
+                    logger = logging.getLogger(__name__)
+                    logger.warning(
+                        f"update_relation_meta: skipping {relation_meta_obj.type} relation "
+                        f"(id={relation_meta_obj.id}) on resource {self.short_id} — "
+                        f"could not extract resource ID from stored value: {relation_meta_obj.value[:200]!r}"
+                    )
+                    return relation_updated
+                version_res_id = match.group(1)
                 try:
                     version_res = get_resource_by_shortkey(version_res_id, or_404=False)
                 except BaseResource.DoesNotExist:
+                    logger = logging.getLogger(__name__)
+                    logger.warning(
+                        f"update_relation_meta: deleting {relation_meta_obj.type} relation "
+                        f"(id={relation_meta_obj.id}) on resource {self.short_id} — "
+                        f"linked resource id '{version_res_id}' does not exist."
+                    )
                     relation_meta_obj.delete()
                     relation_updated = True
                     return relation_updated
