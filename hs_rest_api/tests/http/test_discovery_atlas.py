@@ -314,6 +314,16 @@ class TestSearchQuery(ParametrizedTestCase):
 
         self.assertEqual(stages[0]["$search"]["sort"], expected_sort)
 
+    def test_stages_relevance_leaves_sort_unset(self):
+        search_query = SearchQuery(
+            sortBy="relevance",
+            paginationToken=None,
+        )
+
+        stages = search_query.stages
+
+        self.assertNotIn("sort", stages[0]["$search"])
+
     def test_stages_multiple_content_types(self):
         content_types = ["CSVLogicalFile", "CollectionResource"]
 
