@@ -2,6 +2,7 @@ import json
 import logging
 from datetime import datetime, timezone
 
+from dateutil import parser as date_parser
 from django.db import transaction
 from hsmodels.schemas import ResourceMetadata, load_rdf, rdf_graph
 from pydantic import ConfigDict
@@ -13,6 +14,20 @@ from hs_file_types.utils import ingest_logical_file_metadata
 from hs_rest_api2.serializers import ResourceMetadataInForbidExtra
 
 logger = logging.getLogger(__name__)
+
+
+def _normalize_period_coverage_dates(incoming_metadata):
+    """Rewrite period_coverage start/end to ISO format in place."""
+    period_coverage = incoming_metadata.get("period_coverage")
+    if not isinstance(period_coverage, dict):
+        return
+    for key in ("start", "end"):
+        value = period_coverage.get(key)
+        if isinstance(value, str):
+            try:
+                period_coverage[key] = date_parser.parse(value).isoformat()
+            except (ValueError, OverflowError):
+                pass
 
 
 def _get_in_schema(out_schema):
@@ -84,6 +99,7 @@ def ingest_resource_metadata(resource, incoming_metadata):
     :raises: ValidationError when incoming_metadata does not pass validation
     """
     r_md = resource_metadata(resource).model_dump()
+    _normalize_period_coverage_dates(incoming_metadata)
     try:
         incoming_r_md = ResourceMetadataInForbidExtra(**incoming_metadata)
     except PydanticValidationError as e:
@@ -138,6 +154,7 @@ def ingest_aggregation_metadata(resource, incoming_metadata, file_path):
     in_schema = _get_in_schema(out_schema)
 
     # validate incoming metadata against the schema
+    _normalize_period_coverage_dates(incoming_metadata)
     try:
         incoming_md = in_schema(**incoming_metadata)
     except PydanticValidationError as e:
