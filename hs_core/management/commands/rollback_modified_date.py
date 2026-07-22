@@ -93,6 +93,17 @@ class Command(BaseCommand):
                 if debug:
                     raise
 
+            if not dry_run:
+                try:
+                    resource = BaseResource.objects.get(short_id=short_id)
+                    resource.write_django_metadata_json_files()
+                except BaseResource.DoesNotExist:
+                    pass
+                except Exception as e:
+                    self.stdout.write(f"  WARNING {short_id}: write_django_metadata_json_files failed: {e}")
+                    if debug:
+                        raise
+
         self.stdout.write(
             f"\nDone. updated={updated}, skipped={skipped}, errors={errored}"
         )
@@ -127,9 +138,3 @@ class Command(BaseCommand):
             cached = dict(resource.cached_metadata)
             cached["modified"] = updated_modified_str
             BaseResource.objects.filter(short_id=short_id).update(cached_metadata=cached)
-
-            # Refresh the resource object after the update
-            resource.refresh_from_db()
-
-            # 3. Sync file store and MongoDB Atlas Discovery collection
-            resource.write_django_metadata_json_files()
