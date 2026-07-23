@@ -19,17 +19,6 @@ def update_resource_coverage(request, resource_id, coverage_type, **kwargs):
     return _process_resource_coverage_action(request, resource_id, coverage_type, action='update')
 
 
-@login_required
-def delete_resource_coverage(request, resource_id, coverage_type, **kwargs):
-    """Deletes resource coverage
-    :param  request: an instance of HttpRequest
-    :param  resource_id: id of resource for which coverage needs to be deleted
-    :param  coverage_type: a value of either temporal or spatial
-    :return an instance of JsonResponse type
-    """
-    return _process_resource_coverage_action(request, resource_id, coverage_type, action='delete')
-
-
 def check_aggregation_files_to_sync(request, resource_id, **kwargs):
     """
     Checks if there are files in netcdf or timeseries aggregations that need to be updated due to metadata changes by

@@ -51,12 +51,14 @@
     }
 })(jQuery);
 
-// Formats dates from "yyyy-mm-dd" to "mm/dd/yyyy"
+// Formats dates to "mm/dd/yyyy"
 (function ($) {
     $.fn.formatDate = function () {
         var item = $(this);
-        var dateString = item.attr("data-date").trim().substr(0, 10).split("-");    // original format: yyyy-mm-dd (10 characters)
-        var formattedDate = dateString[1] + "/" + dateString[2] + "/" + dateString[0];
+        var dateParts = item.attr("data-date").trim().substr(0, 10).split(/[-/]/);
+        var formattedDate = dateParts[0].length === 4 ?
+            dateParts[1] + "/" + dateParts[2] + "/" + dateParts[0] :  // yyyy-mm-dd or yyyy/mm/dd
+            dateParts[0] + "/" + dateParts[1] + "/" + dateParts[2];   // mm-dd-yyyy or mm/dd/yyyy
         item.text(formattedDate);
 
         return item;
