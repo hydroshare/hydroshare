@@ -195,7 +195,7 @@ function metadata_update_ajax_submit(form_id){
                 // file type 'coverage' element gets updated for composite resource
                 if ((json_response.element_name.toLowerCase() === 'site' && resourceType === 'Time Series') ||
                     ((json_response.element_name.toLowerCase() === 'coverage' ||
-                    json_response.element_name.toLowerCase() === 'site') && resourceType === 'Resource')){
+                    json_response.element_name.toLowerCase() === 'site') && (resourceType === 'Resource' || resourceType === 'Collection'))){
                     const element_type = json_response.element_type?.toLowerCase() || '';
                     if (element_type === 'period' && json_response.hasOwnProperty('temporal_coverage')){
                         var temporalCoverage = json_response.temporal_coverage;
@@ -220,7 +220,7 @@ function metadata_update_ajax_submit(form_id){
                         else {
                            $("#btn-update-resource-spatial-coverage").hide();
                         }
-                        if(resourceType === 'Resource') {
+                        if(resourceType === 'Resource' || resourceType === 'Collection') {
                             // show/hide spatial coverage delete option for resource
                             setResourceSpatialCoverageDeleteOption();
                         }
@@ -374,7 +374,7 @@ function showCompletedMessage(json_response) {
                         }
                     }
                     $("#missing-metadata-or-file:not(.persistent)").fadeOut();
-                    $("#missing-metadata-file-type:not(.persistent)").fadeOut();
+                    $("#missing-metadata-file-type-container .alert:not(.persistent)").fadeOut();
                 } else if (!sufficient) {
                     // Only call onMetadataInsufficient if metadata is actually insufficient
                     // Don't call it just because user can't change resource flags

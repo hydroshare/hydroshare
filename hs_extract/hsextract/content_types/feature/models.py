@@ -62,6 +62,6 @@ class FeatureMetadataObject(FileMetadataObject):
         return self._content_type_associated_media
 
     def extract_metadata(self):
-        metadata = encode_vector_metadata(self.file_object_path, self.zone)
+        metadata = encode_vector_metadata(self.file_object_path)
         metadata = metadata.model_dump(exclude_none=True)
         return metadata

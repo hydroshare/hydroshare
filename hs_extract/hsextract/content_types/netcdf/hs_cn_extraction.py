@@ -1,5 +1,6 @@
 import os
 import tempfile
+
 import xarray
 import numpy as np
 from pyproj import CRS
@@ -11,6 +12,7 @@ from hs_cloudnative_schemas.schema import datavariable
 from hsextract.utils.s3 import get_s3_client
 
 
+# TODO: Looks like a debug helper function - delete?
 def inspect_dimensions(ds: xarray.Dataset) -> None:
     # get dimension information
     print(f"{25 * '-'}\nDimension Information\n{25 * '-'}\n")
@@ -18,6 +20,7 @@ def inspect_dimensions(ds: xarray.Dataset) -> None:
         print(f'* {dimname} --> Size: {size}\n')
 
 
+# TODO: Looks like a debug helper function - delete?
 def inspect_coordinates(ds: xarray.Dataset) -> None:
     # get coordinate information
     print(f"{25 * '-'}\nCoordinate Information\n{25 * '-'}\n")
@@ -30,6 +33,7 @@ def inspect_coordinates(ds: xarray.Dataset) -> None:
         print(f"\tShape: {ds.coords[coordname].shape}")
 
 
+# TODO: Looks like a debug helper function - delete?
 def inspect_variables(ds: xarray.Dataset) -> None:
     # get variable information
     # get coordinate information
@@ -256,7 +260,6 @@ def encode_multidimensional_metadata(ds: xarray.Dataset,
     crs = get_crs_from_dataset_metadata(ds)
     bounds = get_spatial_bounds(ds)
     box_str = f"{bounds['lat_min']} {bounds['lon_min']} {bounds['lat_max']} {bounds['lon_max']}"
-
     # Bbox validation expects geographic lat/lon degrees. For projected CRS values
     # (e.g., meters), strict validation will fail even when metadata is valid.
     should_validate_bbox = validate_bbox and (crs is None or crs.is_geographic)

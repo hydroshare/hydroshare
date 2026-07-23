@@ -21,4 +21,4 @@ def file_metadata(path: str, zone: str):
                        name=name,
                        sha256=str(checksum),
                        contentSize=size,
-                       encodingFormat=mime_type), None
+                       encodingFormat=mime_type)

@@ -1,8 +1,7 @@
-import os
-import tempfile
+
 import geopandas
+import pyogrio
 import mimetypes
-from glob import glob
 
 from pydantic import ValidationError
 
@@ -10,7 +9,7 @@ from hs_cloudnative_schemas.schema import base
 from hs_cloudnative_schemas.schema import dataset
 from hs_cloudnative_schemas.schema import datavariable
 from hsextract.utils.file import file_metadata
-from hsextract.utils.s3 import get_s3_client
+from hsextract.utils.s3 import find, resolve_zone, zone_s3_config
 
 
 mimetypes.add_type("image/tiff", ".tif")
@@ -26,18 +25,34 @@ def replace_extension(filepath, new_ext):
 def encode_vector_metadata(filepath, zone: str, validate_bbox=True):
 
     # get all file names that match the pattern of the input filepath
-    search_path = f"{'.'.join(filepath.split('.')[:-1])}.*"
-    associated_files = glob(search_path)
+    search_path = f"{'.'.join(filepath.split('.')[:-1])}."
+    parent_dir = filepath.rsplit("/", 1)[0]
+    associated_files = [fpath for fpath in find(parent_dir, zone) if fpath.startswith(search_path)]
 
-    # Copy shapefile and .shx file to a temporary location
-    temp_dir = tempfile.gettempdir()
-    local_copy = os.path.join(temp_dir, os.path.basename(filepath))
-    bucket, key = filepath.split("/", 1)
-    s3 = get_s3_client(zone)
-    s3.download_file(bucket, key, local_copy)
-    s3.download_file(bucket, replace_extension(key, ".shx"), replace_extension(local_copy, ".shx"))
-    # Read the Shapefile
-    gdf = geopandas.read_file(local_copy)
+    resolved_zone = resolve_zone(zone)
+    config = zone_s3_config.get(resolved_zone)
+    if config is None:
+        raise KeyError(f"No S3 zone config found for zone '{zone}'")
+
+    endpoint_url = config["endpoint_url"]
+    endpoint = endpoint_url.split("//")[-1]
+    use_https = "YES" if endpoint_url.startswith("https://") else "NO"
+    pyogrio.set_gdal_config_options({
+        'AWS_S3_ENDPOINT': endpoint,
+        'AWS_ACCESS_KEY_ID': config["aws_access_key_id"],
+        'AWS_SECRET_ACCESS_KEY': config["aws_secret_access_key"],
+        'AWS_VIRTUAL_HOSTING': 'FALSE',
+        'AWS_HTTPS': use_https,
+    })
+
+    try:
+        gdf = geopandas.read_file(f"/vsis3/{filepath}", engine="pyogrio")
+    finally:
+        # Clear credentials from GDAL state after use
+        pyogrio.set_gdal_config_options({
+            'AWS_ACCESS_KEY_ID': None,
+            'AWS_SECRET_ACCESS_KEY': None,
+        })
 
     feature_count = len(gdf)
 

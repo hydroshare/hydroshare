@@ -6,8 +6,15 @@ from django.conf import settings
 from django.http import JsonResponse
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-from pydantic import BaseModel, ValidationInfo, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    ValidationInfo,
+    field_validator,
+    model_validator,
+    ValidationError as PydanticValidationError,
+)
 from rest_framework.decorators import api_view
+from rest_framework import status as http_status
 
 from hs_core.hydroshare_atlas_discovery_collection import MongoDBClient
 
@@ -134,12 +141,74 @@ class SearchQuery(BaseModel):
     @property
     def _should(self):
         search_paths = ['name', 'description', 'keywords']
-        should = [{'autocomplete': {'query': self.term, 'path': key, 'fuzzy': {'maxEdits': 1}}} for key in search_paths]
+        should = [{'autocomplete': self._autocomplete_query(self.term, key)} for key in search_paths]
         return should
+
+    def _search_term_char_count(self):
+        return len(self.term.strip()) if self.term else 0
+
+    def _search_term_fuzzy_min_chars(self):
+        return getattr(settings, 'SEARCH_FUZZY_MIN_TERM_LENGTH', 10)
+
+    def _use_fuzzy_for_search_term(self):
+        return self._search_term_char_count() >= self._search_term_fuzzy_min_chars()
+
+    def _autocomplete_query(self, query, path, score=None):
+        autocomplete = {'query': query, 'path': path}
+
+        if query and query == self.term and self._use_fuzzy_for_search_term():
+            autocomplete['fuzzy'] = {'maxEdits': 1}
+
+        if score is not None:
+            autocomplete['score'] = {'boost': {'value': score}}
+
+        return autocomplete
 
     @property
     def _must(self):
         must = []
+
+        # The term is searched for in name, description, keywords and creator name
+        # TODO: should the term be searched for in all fields?
+        if self.term:
+            must.append({
+                'compound': {
+                    'should': [
+                        # https://www.mongodb.com/docs/atlas/atlas-search/score/modify-score/#std-label-scoring-boost
+                        {'autocomplete': self._autocomplete_query(
+                            self.term,
+                            'name',
+                            settings.SEARCH_BOOST_NAME
+                        )},
+                        {'autocomplete': self._autocomplete_query(
+                            self.term,
+                            'description',
+                            settings.SEARCH_BOOST_DESCRIPTION
+                        )},
+                        {'autocomplete': self._autocomplete_query(
+                            self.term,
+                            'keywords',
+                            settings.SEARCH_BOOST_KEYWORDS
+                        )},
+                        {'autocomplete': self._autocomplete_query(
+                            self.term,
+                            'creator.name',
+                            settings.SEARCH_BOOST_CREATOR_NAME
+                        )},
+                        {'autocomplete': self._autocomplete_query(
+                            self.term,
+                            'first_creator.name',
+                            settings.SEARCH_BOOST_FIRST_CREATOR_NAME
+                        )},
+                        {'autocomplete': self._autocomplete_query(
+                            self.term,
+                            'contributor.name',
+                            settings.SEARCH_BOOST_CONTRIBUTOR_NAME
+                        )},
+                    ]
+                }
+            })
+
         if self.contentType and len(self.contentType) > 0:
             # Use exact term matching for each content type to ensure precise filtering
             # Check both 'additionalType' (single value) and 'content_types' (array) fields.
@@ -211,27 +280,33 @@ class SearchQuery(BaseModel):
         stages = []
         compound = {'filter': self._filters, 'must': self._must, 'should': []}
 
-        # The term is searched for in name, description, keywords and creator name
-        # TODO: should the term be searched for in all fields?
-        if self.term:
-            compound['should'] = [
-                # https://www.mongodb.com/docs/atlas/atlas-search/score/modify-score/#std-label-scoring-boost
-                {'autocomplete': {'query': self.term, 'path': 'name', 'fuzzy': {'maxEdits': 1},
-                                  'score': {"boost": {"value": settings.SEARCH_BOOST_NAME}}}},
-                {'autocomplete': {'query': self.term, 'path': 'description', 'fuzzy': {'maxEdits': 1},
-                                  'score': {"boost": {"value": settings.SEARCH_BOOST_DESCRIPTION}}}},
-                {'autocomplete': {'query': self.term, 'path': 'keywords', 'fuzzy': {'maxEdits': 1},
-                                  'score': {"boost": {"value": settings.SEARCH_BOOST_KEYWORDS}}}},
-                {'autocomplete': {'query': self.term, 'path': 'creator.name', 'fuzzy': {'maxEdits': 1},
-                                  'score': {"boost": {"value": settings.SEARCH_BOOST_CREATOR_NAME}}}},
-                {'autocomplete': {'query': self.term, 'path': 'first_creator.name', 'fuzzy': {'maxEdits': 1},
-                                  'score': {"boost": {"value": settings.SEARCH_BOOST_FIRST_CREATOR_NAME}}}},
-                {'autocomplete': {'query': self.term, 'path': 'contributor.name', 'fuzzy': {'maxEdits': 1},
-                                  'score': {"boost": {"value": settings.SEARCH_BOOST_CONTRIBUTOR_NAME}}}},
-            ]
+        # Boost the score for documents with exact phrase matches on the term in name, description, and keywords
+        if self.term and len(self.term.split()) > 1:
+            compound['should'].extend([
+                {
+                    'phrase': {
+                        'query': self.term,
+                        'path': 'name',
+                        'score': {'boost': {'value': settings.SEARCH_BOOST_PHRASE_NAME}}
+                    }
+                },
+                {
+                    'phrase': {
+                        'query': self.term,
+                        'path': 'description',
+                        'score': {'boost': {'value': settings.SEARCH_BOOST_PHRASE_DESCRIPTION}}
+                    }
+                },
+                {
+                    'phrase': {
+                        'query': self.term,
+                        'path': 'keywords',
+                        'score': {'boost': {'value': settings.SEARCH_BOOST_PHRASE_KEYWORDS}}
+                    }
+                },
+            ])
 
         # Dedicated input filters boost the score further if matched.
-
         if self.creatorName:
             # Matching `creator.name` has a slightly higher score than matching `contributor.name`
             compound['should'].append({'autocomplete':
@@ -283,10 +358,8 @@ class SearchQuery(BaseModel):
         order = 1 if self.order == "asc" else -1
 
         # These sorts can occur inside the $search stage
-        if not self.term and not self.has_filters:
-            # override search to most recently modified if no search criteria is provided
-            search_stage["$search"]['sort'] = {"dateModified": -1}
-        elif self.sortBy == "name":
+
+        if self.sortBy == "name":
             search_stage["$search"]['sort'] = {"name": order}
         elif self.sortBy == "dateCreated":
             search_stage["$search"]['sort'] = {"dateCreated": order}
@@ -296,6 +369,9 @@ class SearchQuery(BaseModel):
             search_stage["$search"]['sort'] = {"first_creator.name": order}
         elif self.sortBy == "viewCount":
             search_stage["$search"]['sort'] = {"viewCount": order}
+        # If no sort is provided, default to sort by dateModified descending
+        else:
+            search_stage["$search"]['sort'] = {"dateModified": -1}
 
         stages.append(search_stage)
 
@@ -401,32 +477,35 @@ def convert_objectid(obj):
 )
 @api_view(["GET"])
 def search(request):
-    search_query = SearchQuery(
-        term=request.GET.get('term', None),
-        sortBy=request.GET.get('sortBy', None),
-        order=request.GET.get('order', None),
-        contentType=request.GET.getlist('contentType'),
-        providerName=request.GET.get('providerName', None),
-        creatorName=request.GET.get('creatorName', None),
-        keyword=request.GET.get('keyword', None),
-        dataCoverageStart=request.GET.get('dataCoverageStart', None),
-        dataCoverageEnd=request.GET.get('dataCoverageEnd', None),
-        publishedStart=request.GET.get('publishedStart', None),
-        publishedEnd=request.GET.get('publishedEnd', None),
-        dateCreatedStart=request.GET.get('dateCreatedStart', None),
-        dateCreatedEnd=request.GET.get('dateCreatedEnd', None),
-        dateModifiedStart=request.GET.get('dateModifiedStart', None),
-        dateModifiedEnd=request.GET.get('dateModifiedEnd', None),
-        hasPartName=request.GET.get('hasPartName', None),
-        isPartOfName=request.GET.get('isPartOfName', None),
-        associatedMediaName=request.GET.get('associatedMediaName', None),
-        fundingGrantName=request.GET.get('fundingGrantName', None),
-        fundingFunderName=request.GET.get('fundingFunderName', None),
-        creativeWorkStatus=request.GET.getlist('creativeWorkStatus'),
-        pageNumber=int(request.GET.get('pageNumber', 1)),
-        pageSize=int(request.GET.get('pageSize', 20)),
-        paginationToken=request.GET.get('paginationToken', None)
-    )
+    try:
+        search_query = SearchQuery(
+            term=request.GET.get('term', None),
+            sortBy=request.GET.get('sortBy', None),
+            order=request.GET.get('order', None),
+            contentType=request.GET.getlist('contentType'),
+            providerName=request.GET.get('providerName', None),
+            creatorName=request.GET.get('creatorName', None),
+            keyword=request.GET.get('keyword', None),
+            dataCoverageStart=request.GET.get('dataCoverageStart', None),
+            dataCoverageEnd=request.GET.get('dataCoverageEnd', None),
+            publishedStart=request.GET.get('publishedStart', None),
+            publishedEnd=request.GET.get('publishedEnd', None),
+            dateCreatedStart=request.GET.get('dateCreatedStart', None),
+            dateCreatedEnd=request.GET.get('dateCreatedEnd', None),
+            dateModifiedStart=request.GET.get('dateModifiedStart', None),
+            dateModifiedEnd=request.GET.get('dateModifiedEnd', None),
+            hasPartName=request.GET.get('hasPartName', None),
+            isPartOfName=request.GET.get('isPartOfName', None),
+            associatedMediaName=request.GET.get('associatedMediaName', None),
+            fundingGrantName=request.GET.get('fundingGrantName', None),
+            fundingFunderName=request.GET.get('fundingFunderName', None),
+            creativeWorkStatus=request.GET.getlist('creativeWorkStatus'),
+            pageNumber=int(request.GET.get('pageNumber', 1)),
+            pageSize=int(request.GET.get('pageSize', 20)),
+            paginationToken=request.GET.get('paginationToken', None)
+        )
+    except (PydanticValidationError, ValueError) as ex:
+        return JsonResponse({'detail': str(ex)}, status=http_status.HTTP_400_BAD_REQUEST)
     stages = search_query.stages
     if not search_query.paginationToken:
         stages.append({"$skip": (search_query.pageNumber - 1) * search_query.pageSize})
