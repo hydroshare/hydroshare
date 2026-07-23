@@ -482,6 +482,9 @@ class AbstractMetaDataElement(models.Model, RDF_Term_MixIn):
         """Define meta properties for AbstractMetaDataElement class."""
 
         abstract = True
+        indexes = [
+            models.Index(fields=['content_type', 'object_id']),
+        ]
 
 
 class HSAdaptorEditInline(object):
@@ -539,6 +542,9 @@ class Party(AbstractMetaDataElement):
         """Define meta properties for Party class."""
 
         abstract = True
+        indexes = [
+            models.Index(fields=['content_type', 'object_id']),
+        ]
 
     def rdf_triples(self, subject, graph):
         party_type = self.get_class_term()
@@ -804,6 +810,9 @@ class Creator(Party):
         """Define meta properties for Creator class."""
 
         ordering = ['order']
+        indexes = [
+            models.Index(fields=['content_type', 'object_id']),
+        ]
 
 
 def validate_abstract(value):
@@ -845,6 +854,9 @@ class Description(AbstractMetaDataElement):
         """Define meta properties for Description model."""
 
         unique_together = ("content_type", "object_id")
+        indexes = [
+            models.Index(fields=['content_type', 'object_id']),
+        ]
 
     @classmethod
     def create(cls, **kwargs):
@@ -879,6 +891,9 @@ class Citation(AbstractMetaDataElement):
         """Define meta properties for Citation class."""
 
         unique_together = ("content_type", "object_id")
+        indexes = [
+            models.Index(fields=['content_type', 'object_id']),
+        ]
 
     @classmethod
     def update(cls, element_id, **kwargs):
@@ -916,6 +931,9 @@ class Title(AbstractMetaDataElement):
         """Define meta properties for Title class."""
 
         unique_together = ("content_type", "object_id")
+        indexes = [
+            models.Index(fields=['content_type', 'object_id']),
+        ]
 
     @classmethod
     def remove(cls, element_id):
@@ -947,6 +965,9 @@ class Type(AbstractMetaDataElement):
         """Define meta properties for Type class."""
 
         unique_together = ("content_type", "object_id")
+        indexes = [
+            models.Index(fields=['content_type', 'object_id']),
+        ]
 
     @classmethod
     def remove(cls, element_id):
@@ -995,6 +1016,9 @@ class Date(AbstractMetaDataElement):
         """Define meta properties for Date class."""
 
         unique_together = ("type", "content_type", "object_id")
+        indexes = [
+            models.Index(fields=['content_type', 'object_id']),
+        ]
 
     def rdf_triples(self, subject, graph):
         date_node = BNode()
@@ -1178,6 +1202,9 @@ class AbstractRelation(AbstractMetaDataElement):
 
     class Meta:
         abstract = True
+        indexes = [
+            models.Index(fields=['content_type', 'object_id']),
+        ]
 
 
 @rdf_terms(DC.relation)
@@ -1424,6 +1451,9 @@ class Publisher(AbstractMetaDataElement):
         """Define meta properties for Publisher model."""
 
         unique_together = ("content_type", "object_id")
+        indexes = [
+            models.Index(fields=['content_type', 'object_id']),
+        ]
 
     @classmethod
     def create(cls, **kwargs):
@@ -1487,6 +1517,9 @@ class Language(AbstractMetaDataElement):
         """Define meta properties for Language model."""
 
         unique_together = ("content_type", "object_id")
+        indexes = [
+            models.Index(fields=['content_type', 'object_id']),
+        ]
 
     def __unicode__(self):
         """Return code field for unicode representation."""
@@ -1547,6 +1580,9 @@ class Coverage(AbstractMetaDataElement):
         """Define meta properties for Coverage model."""
 
         unique_together = ("type", "content_type", "object_id")
+        indexes = [
+            models.Index(fields=['content_type', 'object_id']),
+        ]
     """
     _value field stores a json string. The content of the json
      string depends on the type of coverage as shown below. All keys shown in
@@ -1967,6 +2003,9 @@ class Format(AbstractMetaDataElement):
         """Define meta properties for Format model."""
 
         unique_together = ("value", "content_type", "object_id")
+        indexes = [
+            models.Index(fields=['content_type', 'object_id']),
+        ]
 
     def __unicode__(self):
         """Return value field for unicode representation."""
@@ -2018,6 +2057,9 @@ class Subject(AbstractMetaDataElement):
         """Define meta properties for Subject model."""
 
         unique_together = ("value", "content_type", "object_id")
+        indexes = [
+            models.Index(fields=['content_type', 'object_id']),
+        ]
 
     def __unicode__(self):
         """Return value field for unicode representation."""
@@ -2074,6 +2116,9 @@ class Rights(AbstractMetaDataElement):
         """Define meta properties for Rights model."""
 
         unique_together = ("content_type", "object_id")
+        indexes = [
+            models.Index(fields=['content_type', 'object_id']),
+        ]
 
     @classmethod
     def remove(cls, element_id):
@@ -3483,8 +3528,11 @@ class ResourceFile(ResourceFileS3Mixin):
     Represent a file in a resource.
     """
     class Meta:
-        index_together = [['object_id', 'resource_file'],
-                          ]
+        indexes = [
+            models.Index(fields=['object_id', 'resource_file']),
+            models.Index(fields=['content_type', 'object_id']),
+            models.Index(fields=['logical_file_content_type', 'logical_file_object_id']),
+        ]
     # A ResourceFile is a sub-object of a resource, which can have several types.
     object_id = models.PositiveIntegerField()
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
@@ -3492,7 +3540,7 @@ class ResourceFile(ResourceFileS3Mixin):
 
     # This is used to direct uploads to a subfolder of the root folder for the resource.
     # See get_path and get_resource_file_path above.
-    file_folder = models.CharField(max_length=4096, null=False, default="")
+    file_folder = models.CharField(max_length=4096, null=False, default="", db_index=True)
 
     # This pair of FileFields deals with the fact that there are two kinds of storage
     resource_file = models.FileField(upload_to=get_path, max_length=4096, unique=True,
