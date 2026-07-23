@@ -26,7 +26,7 @@ def allocated_value_size_and_unit(user_quota):
 
 
 class Command(BaseCommand):
-    help = "Assign bucket names to users missing them"
+    help = "Migrates the quota from MinIO to UserQuota fields."
 
     def add_arguments(self, parser):
         # a list of usernames, or none to check all users
@@ -37,7 +37,7 @@ class Command(BaseCommand):
         if usernames:
             user_quotas = UserQuota.objects.filter(user__username__in=usernames)
         else:
-            user_quotas = UserQuota.objects.filter(user__is_active=True)
+            user_quotas = UserQuota.objects.filter()
         for user_quota in user_quotas:
             size, unit = allocated_value_size_and_unit(user_quota)
             print(f"Settings quota for {user_quota.user.username} to {size} {unit}")
