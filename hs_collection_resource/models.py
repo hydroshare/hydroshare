@@ -69,6 +69,16 @@ class CollectionResource(BaseResource):
         self.extra_data['update_text_file'] = flag
         self.save()
 
+    def delete_coverage(self, coverage_type: str):
+        """Deletes coverage data for the resource
+        :param coverage_type: A value of either 'spatial' or 'temporal'
+        :return:
+        """
+        if coverage_type.lower() == "spatial" and self.metadata.spatial_coverage:
+            self.metadata.spatial_coverage.delete()
+        elif coverage_type.lower() == "temporal" and self.metadata.temporal_coverage:
+            self.metadata.temporal_coverage.delete()
+
 
 processor_for(CollectionResource)(resource_processor)
 

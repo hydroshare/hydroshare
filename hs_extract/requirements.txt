@@ -26,3 +26,5 @@ setuptools
 h5netcdf==1.6.4
 netCDF4==1.7.2
 h5py
+s3fs
+smart_open

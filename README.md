@@ -130,6 +130,20 @@ For all intents and purposes, Hydroshare is a large Python/Django application wi
 - Minio for a S3 file system
 - PostgreSQL for the database backend
 
+## Makefile Commands
+
+The repository includes a small set of convenience targets in the Makefile.
+Run them from the repository root with `make <target>`.
+
+- `generate-resource-edit-schema-json`: Regenerates resource edit schema used in resource landing page for resource metadata editing
+    `hs_cloudnative_schemas/schema/json_schemas/resource_edit_schema.json`
+    by running
+    `hs_cloudnative_schemas/schema/scripts/generate_resource_edit_schema_json.py`
+    inside the `hydroshare` container.
+- `up-discover`: Starts the Discover frontend development server with PM2.
+- `down-discover`: Stops the Discover frontend PM2 process.
+- `logs-discover`: Streams logs for the Discover frontend PM2 process.
+
 ## Testing and Debugging
 
 ### Testing
