@@ -125,11 +125,6 @@
     },
     {% endwith %}
     {% endif %}
-    {% with contact_point=cm.cached_metadata.creators|schemaorg_contact_point_json %}
-    {% if contact_point %}
-    "contactPoint": {{ contact_point|safe }},
-    {% endif %}
-    {% endwith %}
     "provider": {
         "@id": "https://www.hydroshare.org",
         "@type": "Organization",
@@ -172,39 +167,9 @@
     "isBasedOn": {{ rel_is_based_on|safe }},
     {% endif %}
     {% endwith %}
-    {% with rel_source_entity=cm.cached_metadata.relations|first_relation_value_for_types:'source,isVersionOf' %}
-    {% if rel_source_entity %}
-    "sourceEntity": {{ rel_source_entity|json_dumps|safe }},
-    {% endif %}
-    {% endwith %}
-    {% with rel_is_version_of=cm.cached_metadata.relations|relation_values_json:'isVersionOf' %}
-    {% if rel_is_version_of %}
-    "isVersionOf": {{ rel_is_version_of|safe }},
-    {% endif %}
-    {% endwith %}
-    {% with provenance_trace=cm.cached_metadata.relations|provenance_trace_json %}
-    {% if provenance_trace %}
-    "provenanceTrace": {{ provenance_trace|safe }},
-    {% endif %}
-    {% endwith %}
     {% with rel_is_replaced_by=cm.cached_metadata.relations|relation_values_json:'isReplacedBy' %}
     {% if rel_is_replaced_by %}
     "isReplacedBy": {{ rel_is_replaced_by|safe }},
-    {% endif %}
-    {% endwith %}
-    {% with rel_is_described_by=cm.cached_metadata.relations|relation_values_json:'isDescribedBy' %}
-    {% if rel_is_described_by %}
-    "isDescribedBy": {{ rel_is_described_by|safe }},
-    {% endif %}
-    {% endwith %}
-    {% with rel_is_referenced_by=cm.cached_metadata.relations|relation_values_json:'isReferencedBy' %}
-    {% if rel_is_referenced_by %}
-    "isReferencedBy": {{ rel_is_referenced_by|safe }},
-    {% endif %}
-    {% endwith %}
-    {% with rel_references=cm.cached_metadata.relations|relation_values_json:'references' %}
-    {% if rel_references %}
-    "references": {{ rel_references|safe }},
     {% endif %}
     {% endwith %}
     "citation": [
@@ -241,16 +206,6 @@
         "{{ format_obj.value | escapejs }}"{%if not forloop.last%},{%endif%}
     {% endfor %}
     ],
-    {% endif %}
-    {% with entities=cm|resource_files_json_ld %}
-    {% if entities %}
-    "entity": {{ entities|safe }},
-    {% endif %}
-    {% endwith %}
-    {% if cm.bag_url %}
-    "contentUrl": {{ cm.bag_url|json_dumps|safe }},
-    {% else %}
-    "contentUrl": "https://www.hydroshare.org/hsapi/resource/{{ cm.short_id }}/",
     {% endif %}
     "subjectOf": {
         "@type": "DataDownload",

@@ -1,0 +1,55 @@
+{% extends "base.html" %} {% block meta_title %}Discover{% endblock %}
+{% block all_content %}
+
+<div class="main-container" style="padding-bottom: 0">
+  <iframe
+    id="discovery-app-frame"
+    src="{{ iframeSrc }}"
+    scrolling="no"
+    style="width: 100%; border: 0; overflow: auto"
+  ></iframe>
+</div>
+<script type="text/javascript">
+  const iframe = document.getElementById("discovery-app-frame");
+  const targetOrigin = "{{ targetOrigin }}"; // For security
+
+  // Send the route params to the iframe when the HydroShare page loads
+  iframe.addEventListener("load", () => {
+    iframe.contentWindow.postMessage(
+      { parentSearch: window.location.search },
+      targetOrigin,
+    );
+
+    window.addEventListener("message", receiveMessage, false);
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      iframe.height = entries[0].contentRect.height + "px";
+    });
+
+    resizeObserver.observe(iframe.contentWindow.document.body);
+  });
+
+  function receiveMessage(event) {
+    if (event.origin !== targetOrigin) {
+      return;
+    }
+
+    // When the iframe updates the route params, update the HydroShare params
+    const url = new URL(window.location.href);
+    url.search = "";
+    Object.entries(event.data.childParams).forEach(([key, value], index) => {
+      if (value != undefined) {
+        if (typeof value === "object" && value.length) {
+          value.forEach((val) => {
+            url.searchParams.append(key, val);
+          });
+        } else {
+          url.searchParams.set(key, value);
+        }
+      }
+    });
+
+    window.history.replaceState({}, "", url);
+  }
+</script>
+{% endblock %}

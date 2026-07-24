@@ -4,6 +4,17 @@ This note compares the DataONE `metadig-checks` FAIR suite with the schema.org J
 
 The key point is that MetaDIG checks are written against EML-style metadata completeness, while HydroShare exposes a schema.org landing page. That means some checks map cleanly, some map partially, and some are outside schema.org entirely.
 
+## Recommended Test Adaptation Plan
+
+For an implementation-focused plan that maps each candidate MetaDIG check to schema.org-aligned expectations and HydroShare metadata sources, see:
+
+- [MetaDIG Test Adaptation for Schema.org-Valid HydroShare Metadata](metadig-schemaorg-test-adaptation.md)
+
+That companion note defines a two-stage validation strategy:
+
+1. schema.org syntax/structure gate first
+2. FAIR semantic checks only after schema-valid metadata is confirmed
+
 | MetaDIG FAIR check | HydroShare / schema.org coverage | Notes |
 | --- | --- | --- |
 | `metadata.identifier.present` / `metadata.identifier.resolvable` | `identifier`, landing page URL, `contentUrl` | Strong overlap for discoverability and resolvable identifiers |
