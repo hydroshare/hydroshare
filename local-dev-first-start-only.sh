@@ -249,6 +249,15 @@ echo "  - docker exec hydroshare pip install -r requirements-test.txt"
 echo
 docker exec hydroshare pip install -r requirements-test.txt
 
+echo "docker exec hydroshare mc mb hydroshare/resource"
+docker exec hydroshare mc mb hydroshare/resource
+
+echo "docker exec hydroshare mc mb hydroshare/published"
+docker exec hydroshare mc mb hydroshare/published
+
+echo "docker exec hydroshare mc mb hydroshare/ciroh"
+docker exec hydroshare mc mb hydroshare/ciroh
+
 echo
 echo '########################################################################################################################'
 echo " Setting up Atlas search index"
