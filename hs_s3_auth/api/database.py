@@ -93,25 +93,27 @@ def resource_discoverability(resource_id: str):
 
 
 def user_has_view_access(user_id: int, resource_id: str):
-    query = """SELECT DISTINCT hs_core_genericresource.short_id
-    FROM hs_core_genericresource
-    LEFT OUTER JOIN hs_access_control_userresourceprivilege
-    ON (hs_core_genericresource.page_ptr_id = hs_access_control_userresourceprivilege.resource_id)
-    LEFT OUTER JOIN hs_access_control_groupresourceprivilege
-    ON (hs_core_genericresource.page_ptr_id = hs_access_control_groupresourceprivilege.resource_id)
-    LEFT OUTER JOIN auth_group
-    ON (hs_access_control_groupresourceprivilege.group_id = auth_group.id)
-    LEFT OUTER JOIN hs_access_control_usergroupprivilege
-    ON (auth_group.id = hs_access_control_usergroupprivilege.group_id)
-    LEFT OUTER JOIN hs_access_control_groupaccess
-    ON (auth_group.id = hs_access_control_groupaccess.group_id)
-    INNER JOIN pages_page
-    ON (hs_core_genericresource.page_ptr_id = pages_page.id)
-    WHERE (hs_access_control_userresourceprivilege.user_id = :user_id
-    OR (hs_access_control_usergroupprivilege.user_id = :user_id
-    AND hs_access_control_groupaccess.active))
-    AND hs_core_genericresource.short_id = :resource_id"""
-
+    query = """SELECT 1
+    FROM hs_core_genericresource RES
+    WHERE RES.short_id = :resource_id
+     AND (
+         -- Direct view privilege
+         EXISTS (
+             SELECT 1 FROM hs_access_control_userresourceprivilege URP
+             WHERE URP.resource_id = RES.page_ptr_id AND URP.user_id = :user_id
+         )
+         -- Group-based view privilege
+         OR EXISTS (
+             SELECT 1
+             FROM hs_access_control_groupresourceprivilege GRP
+             JOIN auth_group AG ON AG.id = GRP.group_id
+             JOIN hs_access_control_usergroupprivilege UGP ON UGP.group_id = AG.id
+             JOIN hs_access_control_groupaccess GA ON GA.group_id = AG.id
+             WHERE GRP.resource_id = RES.page_ptr_id
+               AND UGP.user_id = :user_id
+               AND GA.active
+         )
+     )"""
     with engine.connect() as con:
         rs = con.execute(
             statement=text(query),
@@ -124,32 +126,42 @@ def user_has_view_access(user_id: int, resource_id: str):
 
 
 def user_has_edit_access(user_id: int, resource_id: str):
-    query = """SELECT DISTINCT hs_core_genericresource.short_id
-    FROM hs_core_genericresource
-    LEFT OUTER JOIN hs_access_control_userresourceprivilege
-    ON (hs_core_genericresource.page_ptr_id = hs_access_control_userresourceprivilege.resource_id)
-    LEFT OUTER JOIN hs_access_control_resourceaccess
-    ON (hs_core_genericresource.page_ptr_id = hs_access_control_resourceaccess.resource_id)
-    LEFT OUTER JOIN hs_access_control_groupresourceprivilege
-    ON (hs_core_genericresource.page_ptr_id = hs_access_control_groupresourceprivilege.resource_id)
-    LEFT OUTER JOIN auth_group
-    ON (hs_access_control_groupresourceprivilege.group_id = auth_group.id)
-    LEFT OUTER JOIN hs_access_control_usergroupprivilege
-    ON (auth_group.id = hs_access_control_usergroupprivilege.group_id)
-    LEFT OUTER JOIN hs_access_control_groupaccess
-    ON (auth_group.id = hs_access_control_groupaccess.group_id)
-    INNER JOIN pages_page
-    ON (hs_core_genericresource.page_ptr_id = pages_page.id)
-    WHERE ((hs_access_control_userresourceprivilege.privilege = 1
-    AND hs_access_control_userresourceprivilege.user_id = :user_id)
-    OR (hs_access_control_userresourceprivilege.privilege <= 2
-    AND hs_access_control_userresourceprivilege.user_id = :user_id
-    AND NOT hs_access_control_resourceaccess.immutable)
-    OR (hs_access_control_usergroupprivilege.user_id = :user_id
-    AND hs_access_control_groupaccess.active
-    AND hs_access_control_groupresourceprivilege.privilege = 2
-    AND NOT hs_access_control_resourceaccess.immutable))
-    AND hs_core_genericresource.short_id = :resource_id"""
+    query = """SELECT 1
+    FROM hs_core_genericresource RES
+    WHERE RES.short_id = :resource_id
+     AND (
+         -- Direct edit privilege as owner (privilege = 1)
+         EXISTS (
+             SELECT 1 FROM hs_access_control_userresourceprivilege URP
+             JOIN hs_access_control_resourceaccess RA ON RA.resource_id = RES.page_ptr_id
+             WHERE URP.resource_id = RES.page_ptr_id
+               AND URP.user_id = :user_id
+               AND URP.privilege = 1
+         )
+         -- Or privilege <= 2 and not immutable
+         OR EXISTS (
+             SELECT 1 FROM hs_access_control_userresourceprivilege URP
+             JOIN hs_access_control_resourceaccess RA ON RA.resource_id = RES.page_ptr_id
+             WHERE URP.resource_id = RES.page_ptr_id
+               AND URP.user_id = :user_id
+               AND URP.privilege <= 2
+               AND NOT RA.immutable
+         )
+         -- Group-based edit
+         OR EXISTS (
+             SELECT 1
+             FROM hs_access_control_groupresourceprivilege GRP
+             JOIN hs_access_control_resourceaccess RA ON RA.resource_id = RES.page_ptr_id
+             JOIN auth_group AG ON AG.id = GRP.group_id
+             JOIN hs_access_control_usergroupprivilege UGP ON UGP.group_id = AG.id
+             JOIN hs_access_control_groupaccess GA ON GA.group_id = AG.id
+             WHERE GRP.resource_id = RES.page_ptr_id
+               AND UGP.user_id = :user_id
+               AND GA.active
+               AND GRP.privilege = 2
+               AND NOT RA.immutable
+         )
+     )"""
     with engine.connect() as con:
         rs = con.execute(
             statement=text(query),

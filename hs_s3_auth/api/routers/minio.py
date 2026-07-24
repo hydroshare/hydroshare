@@ -370,17 +370,20 @@ def _check_user_authorization(user_id, resource_id, action, is_contents_path):
             backfill_resource_discoverability(
                 resource_id, public, allow_private_sharing, discoverable)
 
+        # view and discoverable actions
+        if action in ["s3:ListObjects", "s3:ListObjectsV2", "s3:ListBucket"]:
+            if public or allow_private_sharing or discoverable:
+                return True
+        else:
+            if public or allow_private_sharing:
+                return True
         try:
             view_access = user_has_view_access(user_id, resource_id)
         except Exception:
             view_access = user_has_view_access(user_id, resource_id)
             backfill_view_access(user_id, resource_id, view_access)
 
-        # view and discoverable actions
-        if action in ["s3:ListObjects", "s3:ListObjectsV2", "s3:ListBucket"]:
-            return public or allow_private_sharing or discoverable or view_access
-
-        return public or allow_private_sharing or view_access
+        return view_access
 
     # Check if edit actions are enabled via environment variable
     enable_edit_actions = os.environ.get(
