@@ -19,6 +19,22 @@ export default defineConfig(({ mode }) => {
       alias: {
         "@/": `${path.resolve(__dirname, "src")}/`,
       },
+      // Dedupe deps shared with cznet-vue-core so a single copy is used — two
+      // Vue / Vuetify runtimes side by side would break reactivity.
+      dedupe: [
+        "vue",
+        "vuetify",
+        "@jsonforms/core",
+        "@jsonforms/vue",
+        "vue-facing-decorator",
+        // ajv keeps generated `Name` objects in module-level state; two copies
+        // exchange Names and the receiver serializes them as `{"str":"..."}`,
+        // producing invalid generated code. Keep a single ajv copy.
+        "ajv",
+        "ajv-formats",
+        "ajv-keywords",
+        "ajv-errors",
+      ],
     },
 
     define: {
@@ -27,7 +43,27 @@ export default defineConfig(({ mode }) => {
 
     // https://vitejs.dev/config/dep-optimization-options#optimizedeps-include
     optimizeDeps: {
-      include: ["@fortawesome/fontawesome-free", "vuetify"],
+      include: [
+        "@fortawesome/fontawesome-free",
+        "vuetify",
+        // Because cznet-vue-core is excluded (below), Vite's scanner doesn't
+        // walk into it to discover its transitive deps. These are the
+        // CJS-shaped packages it reaches that need interop shimming — list
+        // them explicitly so Vite pre-bundles them with a synthetic default
+        // export. Symptom of a missing entry here: "does not provide an
+        // export named 'default'" at runtime.
+        "@jsonforms/core",
+        "@jsonforms/vue",
+        "ajv",
+        "ajv-errors",
+        "ajv-keywords",
+        "markdown-it",
+        "dayjs",
+        "lodash-es",
+        "sprintf-js",
+        "v-mask",
+        "buefy",
+      ],
     },
 
     plugins: [

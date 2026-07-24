@@ -3,6 +3,10 @@ import App from "./App.vue";
 import type { UserModule } from "./types";
 
 import "./assets/css/global.scss";
+// Imported here (not via SCSS @use) so Vite tracks dist/index.css of the
+// linked cznet-vue-core through HMR. Library rebuilds propagate without
+// re-running the SCSS compile step.
+import "@cznethub/cznet-vue-core/styles";
 import { routes } from "./routes";
 import { APP_BASE } from "./constants";
 

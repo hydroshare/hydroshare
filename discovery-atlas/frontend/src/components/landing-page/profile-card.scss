@@ -1,0 +1,82 @@
+// Shared visual chrome for author/owner profile dropdowns. Imported from
+// the relevant component's scoped <style>, so each component gets a fresh
+// scoped copy of these rules — no global leakage.
+
+.profile-card {
+  overflow: hidden;
+  border-radius: 12px !important;
+}
+
+.profile-banner {
+  height: 56px;
+  background: linear-gradient(135deg, #4bb5c1 0%, #2a7c87 100%);
+}
+
+.profile-header {
+  position: relative;
+  padding: 0 20px 16px;
+  margin-top: -36px;
+}
+
+.profile-avatar {
+  border: 3px solid #fff;
+  background-color: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+
+.profile-identity {
+  margin-top: 8px;
+}
+
+.profile-name {
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.25;
+  color: rgba(0, 0, 0, 0.87);
+}
+
+.profile-title {
+  font-size: 0.8125rem;
+  margin-top: 2px;
+}
+
+.profile-meta {
+  padding-top: 4px !important;
+  font-size: 0.8125rem;
+}
+
+.profile-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 3px 0;
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.profile-row-icon {
+  margin-top: 2px;
+  color: rgba(0, 0, 0, 0.45);
+  flex-shrink: 0;
+}
+
+.profile-section-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.55);
+  margin-bottom: 6px;
+}
+
+.profile-actions {
+  background-color: #fafafa;
+}
+
+.orcid-btn :deep(.v-btn__content) {
+  display: inline-flex;
+  align-items: center;
+}
+
+.orcid-btn .fa-orcid {
+  color: #a6ce39;
+}

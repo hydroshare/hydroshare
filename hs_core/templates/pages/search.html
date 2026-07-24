@@ -16,6 +16,13 @@
   // Register immediately so messages sent during iframe boot are not missed
   window.addEventListener("message", receiveMessage, false);
 
+  // Expose owners/creator-profile data on the parent window so the same-origin
+  // Vue app inside the iframe can read it synchronously (avoids a race between
+  // iframe-load postMessage and the Vue component's listener registration).
+  window.HS_RESOURCE_OWNERS = {{ owners_json|default:"null"|safe }};
+  window.HS_RESOURCE_CREATOR_PROFILES = {{ creator_profiles_json|default:"null"|safe }};
+  window.HS_RESOURCE_ALERTS = {{ alerts_json|default:"null"|safe }};
+
   iframe.addEventListener("load", () => {
     const resizeObserver = new ResizeObserver((entries) => {
       iframe.height = entries[0].contentRect.height + "px";

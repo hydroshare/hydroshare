@@ -174,10 +174,10 @@
               </template>
               <template #item.name="{ item }">
                 <a
-                  v-if="item.identifier"
+                  v-if="resourceUrl(item)"
                   class="text-decoration-none text-body-1"
-                  :href="item.identifier"
-                  target="_blank"
+                  :href="resourceUrl(item)"
+                  target="_top"
                   v-html="highlight(item, 'name')"
                 ></a>
                 <p v-else v-html="highlight(item, 'name')"></p>
@@ -846,6 +846,22 @@ class CdSearchResults extends Vue {
     filter.isEnabled = true;
 
     this.pushSearchRoute();
+  }
+
+  /**
+   * Returns the new resource landing page URL (/resource-v2/<shortkey>/) for a
+   * search result. Extracts the shortkey from the existing identifier/url
+   * (which can be a full https://hydroshare.org/resource/<id>/ URL or just a
+   * relative path) and rebuilds it against the current origin so the link
+   * resolves through the local Django server.
+   */
+  public resourceUrl(item: IResult): string {
+    const source = item.identifier || item.url || "";
+    const match = source.match(/\/resource\/([A-Za-z0-9\-_]+)/);
+    if (match) {
+      return `/resource-v2/${match[1]}/`;
+    }
+    return source;
   }
 
   public highlightCreators(result: IResult) {

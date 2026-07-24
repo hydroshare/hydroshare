@@ -18,6 +18,16 @@ export interface IUserState {
   next: string;
   hasUnsavedChanges: boolean;
   showZenodoWarning: boolean;
+  toc: { to: string; text: string; level?: number }[];
+  isTocReady: boolean;
+  CSRFToken: string;
+}
+
+export enum PrivilegeCodes {
+  OWNER = 1,
+  CHANGE = 2,
+  VIEW = 3,
+  NONE = 4,
 }
 
 export default class User extends Model {
@@ -48,7 +58,94 @@ export default class User extends Model {
       next: "",
       hasUnsavedChanges: false,
       showZenodoWarning: true,
+      toc: [],
+      isTocReady: false,
+      CSRFToken: "",
     };
+  }
+
+  static async checkLoginStatus() {
+    try {
+      const response = await fetch(`/hsapi/userInfo/`, {
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        await User.commit((state) => {
+          state.isLoggedIn = true;
+          state.orcid = data.orcid || data.username || "";
+        });
+        return true;
+      }
+    } catch (e) {
+      // network error
+    }
+
+    User.commit((state) => {
+      state.isLoggedIn = false;
+    });
+    return false;
+  }
+
+  static async getResourceS3prefix(
+    res_id: string,
+  ): Promise<{ bucket: string; prefix: string } | null> {
+    try {
+      const response = await fetch(`/hsapi/resource/s3/${res_id}/`, {
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return { bucket: data.bucket, prefix: data.prefix };
+      }
+    } catch (e: any) {
+      const message = `Failed to get S3 prefix for resource ${res_id}: ${e.message}`;
+      Notifications.toast({ message, type: "error" });
+      throw new Error(message);
+    }
+    return null;
+  }
+
+  static async getCSRFToken(forceRefresh = false): Promise<string | null> {
+    if (!forceRefresh && this.$state.CSRFToken) {
+      return this.$state.CSRFToken;
+    }
+
+    try {
+      await fetch(`/csrf-cookie/`, { credentials: "include" });
+      const token = this._readCSRFCookie();
+      if (token) {
+        await User.commit((state) => {
+          state.CSRFToken = token;
+        });
+        return token;
+      }
+    } catch (e) {
+      // ignore
+    }
+
+    const token = this._readCSRFCookie();
+    if (token) {
+      await User.commit((state) => {
+        state.CSRFToken = token;
+      });
+      return token;
+    }
+
+    await User.commit((state) => {
+      state.CSRFToken = "";
+    });
+    return User.$state.CSRFToken;
+  }
+
+  private static _readCSRFCookie(): string | null {
+    for (const cookie of document.cookie.split(";")) {
+      const [name, value] = cookie.trim().split("=");
+      if (name === "csrftoken") return decodeURIComponent(value);
+    }
+    return null;
   }
 
   static openLogInDialog(redirectTo?: RouteLocationRaw) {
