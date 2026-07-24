@@ -162,7 +162,14 @@ class Relation(BaseModel):
             url = ""
         url_str = url.strip()
         relation.description = description.strip()
-        relation.url = HttpUrl(url_str) if url_str else None
+        parsed_url = None
+        if url_str:
+            try:
+                parsed_url = HttpUrl(url_str)
+            except Exception:
+                # url_str is not a valid URL — treat as part of the description
+                relation.description = f"{relation.description}, {url_str}".strip(", ")
+        relation.url = parsed_url
         return relation
 
 
