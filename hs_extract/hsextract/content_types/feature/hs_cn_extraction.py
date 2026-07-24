@@ -9,7 +9,7 @@ from hs_cloudnative_schemas.schema import base
 from hs_cloudnative_schemas.schema import dataset
 from hs_cloudnative_schemas.schema import datavariable
 from hsextract.utils.file import file_metadata
-from hsextract.utils.s3 import s3_config, s3fsInstance
+from hsextract.utils.s3 import find, resolve_zone, zone_s3_config
 
 
 mimetypes.add_type("image/tiff", ".tif")
@@ -22,19 +22,25 @@ def replace_extension(filepath, new_ext):
     return '.'.join(filepath.split('.')[:-1]) + new_ext
 
 
-def encode_vector_metadata(filepath, validate_bbox=True):
+def encode_vector_metadata(filepath, zone: str, validate_bbox=True):
 
     # get all file names that match the pattern of the input filepath
-    search_path = f"{'.'.join(filepath.split('.')[:-1])}.*"
-    associated_files = s3fsInstance.glob(search_path)
+    search_path = f"{'.'.join(filepath.split('.')[:-1])}."
+    parent_dir = filepath.rsplit("/", 1)[0]
+    associated_files = [fpath for fpath in find(parent_dir, zone) if fpath.startswith(search_path)]
 
-    endpoint_url = s3_config["endpoint_url"]
+    resolved_zone = resolve_zone(zone)
+    config = zone_s3_config.get(resolved_zone)
+    if config is None:
+        raise KeyError(f"No S3 zone config found for zone '{zone}'")
+
+    endpoint_url = config["endpoint_url"]
     endpoint = endpoint_url.split("//")[-1]
     use_https = "YES" if endpoint_url.startswith("https://") else "NO"
     pyogrio.set_gdal_config_options({
         'AWS_S3_ENDPOINT': endpoint,
-        'AWS_ACCESS_KEY_ID': s3_config["aws_access_key_id"],
-        'AWS_SECRET_ACCESS_KEY': s3_config["aws_secret_access_key"],
+        'AWS_ACCESS_KEY_ID': config["aws_access_key_id"],
+        'AWS_SECRET_ACCESS_KEY': config["aws_secret_access_key"],
         'AWS_VIRTUAL_HOSTING': 'FALSE',
         'AWS_HTTPS': use_https,
     })
@@ -123,7 +129,7 @@ def encode_vector_metadata(filepath, validate_bbox=True):
 
     files = []
     for fpath in associated_files:
-        file_md = file_metadata(fpath)
+        file_md, _ = file_metadata(fpath, zone)
         files.append(file_md)
 
     return dataset.ScientificDataset(

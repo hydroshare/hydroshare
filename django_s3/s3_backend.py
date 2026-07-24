@@ -98,17 +98,57 @@ class S3Storage(s3.S3Storage):
                 config=self.client_config,
                 verify=self.verify,
             )
-            self._register_mutation_hooks(resource, zone_config.aws_s3_endpoint_url)
+            self._register_mutation_hooks(resource, zone)
             connection[zone] = resource
         self._connections.connection = connection
         return connection[zone]
 
-    def _register_mutation_hooks(self, resource, endpoint_url):
+    def _register_mutation_hooks(self, resource, zone):
         events = resource.meta.client.meta.events
         if getattr(events, "_hs_mutation_hooks_registered", False):
             return
 
         events._hs_mutation_hooks_registered = True
+
+        def _put_object_file_size(params):
+            content_length = params.get("ContentLength")
+            if content_length is not None:
+                try:
+                    return int(content_length)
+                except (TypeError, ValueError):
+                    return 0
+
+            body = params.get("Body")
+            if body is None:
+                return 0
+
+            if isinstance(body, (bytes, bytearray, memoryview)):
+                return len(body)
+
+            if hasattr(body, "seek") and hasattr(body, "tell"):
+                try:
+                    current_position = body.tell()
+                    body.seek(0, os.SEEK_END)
+                    size = body.tell()
+                    body.seek(current_position, os.SEEK_SET)
+                    return int(size)
+                except Exception:
+                    return 0
+
+            return 0
+
+        def _complete_multipart_file_size(bucket, object_path):
+            try:
+                head_response = resource.meta.client.head_object(Bucket=bucket, Key=object_path)
+                return int(head_response.get("ContentLength", 0) or 0)
+            except Exception:
+                logger.warning(
+                    "Unable to determine file_size for CompleteMultipartUpload on %s/%s",
+                    bucket,
+                    object_path,
+                    exc_info=True,
+                )
+                return 0
 
         def before_parameter_build(params, model, context, **kwargs):
             operation = getattr(model, "name", "")
@@ -116,27 +156,40 @@ class S3Storage(s3.S3Storage):
                 return
             context["_hs_bucket"] = params.get("Bucket")
             context["_hs_key"] = params.get("Key")
+            context["_hs_zone"] = zone
             context["_hs_action"] = {
                 "PutObject": "s3:PutObject",
                 "DeleteObject": "s3:DeleteObjects",
                 "CompleteMultipartUpload": "s3:CompleteMultipartUpload",
             }.get(operation)
+            if operation == "DeleteObject":
+                context["_hs_file_size"] = 0
+            elif operation == "PutObject":
+                context["_hs_file_size"] = _put_object_file_size(params)
 
         def after_call(http_response, parsed, model, context, **kwargs):
             action = context.get("_hs_action")
             bucket = context.get("_hs_bucket")
             object_path = context.get("_hs_key")
+            zone = context.get("_hs_zone")
+            file_size = int(context.get("_hs_file_size", 0) or 0)
             status_code = getattr(http_response, "status_code", None)
 
-            if not action or not bucket or not object_path:
+            if not action or not bucket or not object_path or not zone:
                 return
             if status_code not in (200, 204):
                 return
+            if action == "s3:CompleteMultipartUpload":
+                file_size = _complete_multipart_file_size(bucket, object_path)
+            elif action == "s3:DeleteObjects":
+                file_size = 0
+
             self._dispatch_s3_mutation_hook(
                 action=action,
                 bucket=bucket,
                 object_path=object_path,
-                status_code=status_code,
+                zone=zone,
+                file_size=file_size,
             )
 
         events.register("before-parameter-build.s3.PutObject", before_parameter_build)
@@ -146,17 +199,17 @@ class S3Storage(s3.S3Storage):
         events.register("after-call.s3.DeleteObject", after_call)
         events.register("after-call.s3.CompleteMultipartUpload", after_call)
 
-    def _dispatch_s3_mutation_hook(self, action, bucket, object_path, status_code):
+    def _dispatch_s3_mutation_hook(self, action, bucket, object_path, zone, file_size=0):
         username = setting("S3_AUTH_EVENT_USERNAME", "cuahsi")
 
         payload = {
             "action": action,
             "bucket": bucket,
             "object_path": object_path,
+            "zone": zone,
             "username": username,
             "user_id": None,
-            "file_size": 0,
-            "status_code": status_code,
+            "file_size": int(file_size or 0),
         }
 
         try:
@@ -184,10 +237,11 @@ class S3Storage(s3.S3Storage):
                 )
         except Exception:
             logger.exception(
-                "Failed to enqueue S3 event task for action=%s bucket=%s object=%s",
+                "Failed to enqueue S3 event task for action=%s bucket=%s object=%s zone=%s",
                 action,
                 bucket,
                 object_path,
+                zone,
             )
 
     def bucket(self, name, zone):

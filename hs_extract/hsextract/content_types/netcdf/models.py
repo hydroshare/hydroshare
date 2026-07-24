@@ -12,16 +12,11 @@ class NetCDFMetadataObject(FileMetadataObject):
         return [".nc"]
 
     def extract_metadata(self):
-        try:
-            metadata = encode_netcdf(self.file_object_path)
-        except Exception as e:
-            err_msg = f"Failed to extract metadata from NetCDF file {self.file_object_path}: {str(e)}"
-            print(err_msg)
-            return None
+        metadata = encode_netcdf(self.file_object_path, self.zone)
         metadata = metadata.model_dump(exclude_none=True)
         return metadata
 
     @classmethod
-    def is_content_type(cls, file_object_path: str) -> bool:
+    def is_content_type(cls, file_object_path: str, zone: str) -> bool:
         _, extension = os.path.splitext(file_object_path.lower())
         return extension in cls._extensions()

@@ -1,3 +1,5 @@
+import ast
+import json
 import logging
 import os
 
@@ -25,6 +27,48 @@ def close_event_service_client() -> None:
     EVENT_SERVICE_CLIENT.close()
 
 
+def _build_bucket_zone_map() -> dict[str, str]:
+    raw = os.environ.get("S3_ZONE_CONFIG", "")
+    if not raw:
+        return {}
+    try:
+        parsed = json.loads(raw)
+    except json.JSONDecodeError:
+        try:
+            parsed = ast.literal_eval(raw)
+        except Exception:
+            return {}
+    mapping: dict[str, str] = {}
+    for zone, config in parsed.items():
+        if not isinstance(config, dict):
+            continue
+        bucket_name = config.get("bucket_name")
+        for b in ([bucket_name] if isinstance(bucket_name, str) else (config.get("buckets") or [])):
+            if b:
+                mapping[b] = zone
+    return mapping
+
+
+_BUCKET_ZONE_MAP: dict[str, str] = _build_bucket_zone_map()
+
+
+def zone_for_bucket(bucket: str) -> str:
+    zone = (_BUCKET_ZONE_MAP.get(bucket) or "").strip()
+    if zone:
+        return zone
+
+    # Re-read configuration in case S3_ZONE_CONFIG was injected after import.
+    refreshed_map = _build_bucket_zone_map()
+    if refreshed_map != _BUCKET_ZONE_MAP:
+        _BUCKET_ZONE_MAP.clear()
+        _BUCKET_ZONE_MAP.update(refreshed_map)
+
+    zone = (_BUCKET_ZONE_MAP.get(bucket) or "").strip()
+    if zone:
+        return zone
+    return ""
+
+
 def post_s3_event(
     action: str,
     bucket: str,
@@ -48,8 +92,15 @@ def post_s3_event(
         "username": username,
         "user_id": user_id,
         "file_size": file_size,
-        "zone": zone,
+        "zone": (zone or "").strip() or zone_for_bucket(bucket),
     }
+
+    if not payload["zone"]:
+        logger.warning(
+            "Unable to resolve zone for bucket=%s object=%s; sending event with empty zone",
+            bucket,
+            object_path,
+        )
 
     try:
         response = EVENT_SERVICE_CLIENT.post(url, json=payload)

@@ -226,7 +226,7 @@ async def proxy_s3_request(request: Request, full_path: str):
             username=username, user_id=user_id, file_size=file_size,
             zone=s3_proxy.zone_for_bucket(authz_bucket),
         )
-    if action in ["s3:DeleteObjects"] and response.status_code in [200, 204]:
+    if action in ["s3:DeleteObject", "s3:DeleteObjects"] and response.status_code in [200, 204]:
         event_paths = authz_prefixes if authz_prefixes else [authz_prefix]
         for event_path in event_paths:
             post_s3_event(

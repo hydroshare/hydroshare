@@ -11,7 +11,7 @@ import boto3
 from hs_cloudnative_schemas.schema.base import GeoShape, SpatialReference, Place
 from hs_cloudnative_schemas.schema.dataset import ScientificDataset, AdditionalType
 from hs_cloudnative_schemas.schema.datavariable import DataVariable, Dimension
-from hsextract.utils.s3 import find, s3_client as s3, s3_config
+from hsextract.utils.s3 import find, get_s3_client, resolve_zone, zone_s3_config
 
 
 mimetypes.add_type("application/x-esri-shapefile", ".shp")
@@ -24,12 +24,13 @@ mimetypes.add_type("application/geo+json", ".geojson")
 mimetypes.add_type("application/gml+xml", ".gml")
 
 
-def list_tif_files_s3(raster_file):
+def list_tif_files_s3(raster_file, zone: str):
+    s3 = get_s3_client(zone)
     temp_dir = tempfile.gettempdir()
     vrt_file = raster_file if raster_file.endswith('.vrt') else None
     if not vrt_file:
         parent_dir = os.path.dirname(raster_file)
-        vrt_files = [file for file in find(parent_dir) if file.endswith('.vrt')]
+        vrt_files = [file for file in find(parent_dir, zone) if file.endswith('.vrt')]
         for file in vrt_files:
             local_copy = os.path.join(temp_dir, os.path.basename(file))
             bucket, key = file.split("/", 1)
@@ -58,15 +59,19 @@ def list_tif_files(vrt_file):
     return file_names_in_vrt
 
 
-def encode_raster_metadata(filepath, multiband=False, validate_bbox=True):
-    # Strip protocol from endpoint URL — GDAL expects hostname only
-    endpoint_url = s3_config["endpoint_url"]
+def encode_raster_metadata(filepath, zone: str, multiband=False, validate_bbox=True):
+    resolved_zone = resolve_zone(zone)
+    config = zone_s3_config.get(resolved_zone)
+    if config is None:
+        raise KeyError(f"No S3 zone config found for zone '{zone}'")
+
+    endpoint_url = config["endpoint_url"]
     endpoint = endpoint_url.split("//")[-1]
     use_https = "YES" if endpoint_url.startswith("https://") else "NO"
     aws_session = AWSSession(
         boto3.Session(
-            aws_access_key_id=s3_config["aws_access_key_id"],
-            aws_secret_access_key=s3_config["aws_secret_access_key"],
+            aws_access_key_id=config["aws_access_key_id"],
+            aws_secret_access_key=config["aws_secret_access_key"],
         ),
         aws_unsigned=False,
     )

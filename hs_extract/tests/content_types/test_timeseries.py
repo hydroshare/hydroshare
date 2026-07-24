@@ -1,4 +1,3 @@
-import os
 import sys
 import types
 import uuid
@@ -10,7 +9,8 @@ from hsextract.content_types.models import BaseMetadataObject, FileMetadataObjec
 from hsextract.content_types.timeseries.models import TimeSeriesMetadataObject
 from hsextract.content_types import determine_metadata_object_from_user_metadata
 from hsextract.main import write_content_type_jsonld_metadata, write_resource_jsonld_metadata
-from tests import assert_has_part_reference, assert_manifest_reference, read_s3_json, s3_client, write_s3_json
+from tests import assert_has_part_reference, assert_manifest_reference, read_s3_json, s3_client, write_s3_json, \
+    TEST_ZONE
 
 # Stub heavy deps so test collection doesn’t require rasterio/xarray/geopandas.
 sys.modules.setdefault("rasterio", types.SimpleNamespace(open=lambda *_, **__: None))
@@ -22,12 +22,25 @@ CSV_FIXTURE = TEST_FILES_DIR / "ODM2_Multi_Site_One_Variable_Test.csv"
 SQLITE_FIXTURE = TEST_FILES_DIR / "ODM2_Multi_Site_One_Variable.sqlite"
 
 
+def read_s3_json_retry(path: str, attempts: int = 20, delay: float = 0.5):
+    last_exception = None
+    for _ in range(attempts):
+        try:
+            return read_s3_json(path)
+        except Exception as exc:
+            last_exception = exc
+            sleep(delay)
+    if last_exception is not None:
+        raise last_exception
+    return read_s3_json(path)
+
+
 def test_resource_haspart_merges_user_and_extracted():
     resource_id = str(uuid.uuid4())
-    endpoint = os.environ.get("AWS_S3_ENDPOINT_URL", "http://minio:9000")
+    endpoint = "http://localhost:9000"
 
     # Simulate an extracted content-type JSON-LD file
-    extracted_metadata_path = f"test-bucket/{resource_id}/.hsjsonld/sample_part.json"
+    extracted_metadata_path = f"resource/{resource_id}/.hsjsonld/sample_part.json"
     write_s3_json(extracted_metadata_path, {"name": "extracted"})
     extracted_part_url = f"{endpoint}/{extracted_metadata_path}"
 
@@ -37,23 +50,23 @@ def test_resource_haspart_merges_user_and_extracted():
         {"name": "external reference 2", "url": "https://example.com/user-haspart-2"},
     ]
     write_s3_json(
-        f"test-bucket/{resource_id}/.hsmetadata/user_metadata.json",
+        f"resource/{resource_id}/.hsmetadata/user_metadata.json",
         {"hasPart": user_parts},
     )
 
     md = BaseMetadataObject(
-        f"test-bucket/{resource_id}/.hsmetadata/user_metadata.json", True
+        f"resource/{resource_id}/.hsmetadata/user_metadata.json", True, TEST_ZONE
     )
     write_resource_jsonld_metadata(md)
-    sleep(0.5)
+    sleep(1)
 
-    result_resource_metadata = read_s3_json(
-        f"test-bucket/{resource_id}/.hsjsonld/dataset_metadata.json"
+    result_resource_metadata = read_s3_json_retry(
+        f"resource/{resource_id}/.hsjsonld/dataset_metadata.json"
     )
-    assert_manifest_reference(result_resource_metadata, resource_id, "test-bucket", expected_media_obj_count=0)
-    assert_has_part_reference(result_resource_metadata, resource_id, "test-bucket", expected_has_part_count=4)
-    result_has_parts = read_s3_json(
-        f"test-bucket/{resource_id}/.hsjsonld/has_parts.json"
+    assert_manifest_reference(result_resource_metadata, resource_id, "resource", expected_media_obj_count=0)
+    assert_has_part_reference(result_resource_metadata, resource_id, "resource", expected_has_part_count=4)
+    result_has_parts = read_s3_json_retry(
+        f"resource/{resource_id}/.hsjsonld/has_parts.json"
     )
     has_part_urls = [part["url"] for part in result_has_parts]
 
@@ -67,8 +80,8 @@ def test_resource_haspart_merges_user_and_extracted():
 def test_content_type_haspart_merges_user_and_extracted():
     resource_id = str(uuid.uuid4())
     file_name = "ODM2_Multi_Site_One_Variable_Test.csv"
-    object_path = f"test-bucket/{resource_id}/data/contents/{file_name}"
-    md = FileMetadataObject(object_path, file_updated=True)
+    object_path = f"resource/{resource_id}/data/contents/{file_name}"
+    md = FileMetadataObject(object_path, file_updated=True, zone=TEST_ZONE)
 
     content_part_url = "https://example.com/content-type-part"
     user_part_url = "https://example.com/user-part"
@@ -86,7 +99,7 @@ def test_content_type_haspart_merges_user_and_extracted():
 
     write_content_type_jsonld_metadata(md)
 
-    result_metadata = read_s3_json(md.content_type_md_jsonld_path)
+    result_metadata = read_s3_json_retry(md.content_type_md_jsonld_path)
     has_part_urls = [part.get("url") or part.get("identifier") for part in result_metadata["hasPart"]]
 
     # content hasPart + user duplicate via identifier + user new = 3 entries (joined)
@@ -102,26 +115,26 @@ def test_resource_haspart_user_only_when_no_extracted_parts():
         {"url": "https://example.com/user-only-part-2"},
     ]
     write_s3_json(
-        f"test-bucket/{resource_id}/.hsmetadata/user_metadata.json",
+        f"resource/{resource_id}/.hsmetadata/user_metadata.json",
         {"hasPart": user_parts},
     )
 
     md = BaseMetadataObject(
-        f"test-bucket/{resource_id}/.hsmetadata/user_metadata.json", True
+        f"resource/{resource_id}/.hsmetadata/user_metadata.json", True, TEST_ZONE
     )
     write_resource_jsonld_metadata(md)
 
     result_resource_metadata = {}
     for _ in range(5):
-        result_resource_metadata = read_s3_json(
-            f"test-bucket/{resource_id}/.hsjsonld/dataset_metadata.json"
+        result_resource_metadata = read_s3_json_retry(
+            f"resource/{resource_id}/.hsjsonld/dataset_metadata.json"
         )
         if result_resource_metadata.get("hasPart"):
             break
         sleep(0.2)
-    assert_has_part_reference(result_resource_metadata, resource_id, "test-bucket", expected_has_part_count=2)
-    result_has_parts = read_s3_json(
-        f"test-bucket/{resource_id}/.hsjsonld/has_parts.json"
+    assert_has_part_reference(result_resource_metadata, resource_id, "resource", expected_has_part_count=2)
+    result_has_parts = read_s3_json_retry(
+        f"resource/{resource_id}/.hsjsonld/has_parts.json"
     )
     has_part_urls = {part["url"] for part in result_has_parts}
 
@@ -138,24 +151,24 @@ def test_metadataobject(use_folder, use_sqlite):
     user_meta_file_name = f"{file_name}.user_metadata.json"
 
     md = TimeSeriesMetadataObject(
-        f"test-bucket/resourceid/data/contents/{folder_prefix}{file_name}", True
+        f"resource/resourceid/data/contents/{folder_prefix}{file_name}", True, TEST_ZONE
     )
-    assert md.file_object_path == f"test-bucket/resourceid/data/contents/{folder_prefix}{file_name}"
+    assert md.file_object_path == f"resource/resourceid/data/contents/{folder_prefix}{file_name}"
     assert md.file_updated is True
-    assert md.resource_contents_path == "test-bucket/resourceid/data/contents"
-    assert md.resource_md_path == "test-bucket/resourceid/.hsmetadata"
-    assert md.resource_md_jsonld_path == "test-bucket/resourceid/.hsjsonld"
+    assert md.resource_contents_path == "resource/resourceid/data/contents"
+    assert md.resource_md_path == "resource/resourceid/.hsmetadata"
+    assert md.resource_md_jsonld_path == "resource/resourceid/.hsjsonld"
     assert md.content_type == ContentType.TIMESERIES
-    assert md.system_metadata_path == "test-bucket/resourceid/.hsmetadata/system_metadata.json"
-    assert md.user_metadata_path == "test-bucket/resourceid/.hsmetadata/user_metadata.json"
-    assert md.resource_metadata_jsonld_path == "test-bucket/resourceid/.hsjsonld/dataset_metadata.json"
-    assert md.resource_associated_media_jsonld_path == "test-bucket/resourceid/.hsjsonld/file_manifest.json"
-    assert md.resource_has_parts_jsonld_path == "test-bucket/resourceid/.hsjsonld/has_parts.json"
-    assert md.content_type_md_jsonld_path == f"test-bucket/resourceid/.hsjsonld/{folder_prefix}{file_name}.json"
-    assert md.content_type_md_path == f"test-bucket/resourceid/.hsmetadata/{folder_prefix}{file_name}.json"
-    assert md.content_type_contents_path == f"test-bucket/resourceid/data/contents/{folder_prefix.rstrip('/')}"
-    assert md.content_type_main_file_path == f"test-bucket/resourceid/data/contents/{folder_prefix}{file_name}"
-    assert md.content_type_md_user_path == f"test-bucket/resourceid/.hsmetadata/{folder_prefix}{user_meta_file_name}"
+    assert md.system_metadata_path == "resource/resourceid/.hsmetadata/system_metadata.json"
+    assert md.user_metadata_path == "resource/resourceid/.hsmetadata/user_metadata.json"
+    assert md.resource_metadata_jsonld_path == "resource/resourceid/.hsjsonld/dataset_metadata.json"
+    assert md.resource_associated_media_jsonld_path == "resource/resourceid/.hsjsonld/file_manifest.json"
+    assert md.resource_has_parts_jsonld_path == "resource/resourceid/.hsjsonld/has_parts.json"
+    assert md.content_type_md_jsonld_path == f"resource/resourceid/.hsjsonld/{folder_prefix}{file_name}.json"
+    assert md.content_type_md_path == f"resource/resourceid/.hsmetadata/{folder_prefix}{file_name}.json"
+    assert md.content_type_contents_path == f"resource/resourceid/data/contents/{folder_prefix.rstrip('/')}"
+    assert md.content_type_main_file_path == f"resource/resourceid/data/contents/{folder_prefix}{file_name}"
+    assert md.content_type_md_user_path == f"resource/resourceid/.hsmetadata/{folder_prefix}{user_meta_file_name}"
     assert md._content_type_associated_media is None
 
 
@@ -166,36 +179,36 @@ def test_metadataobject_from_user_metadata(use_folder, use_sqlite):
     folder_prefix = "test-folder/" if use_folder else ""
     file_name = "ODM2_Multi_Site_One_Variable.sqlite" if use_sqlite else "ODM2_Multi_Site_One_Variable_Test.csv"
     user_meta_file_name = f"{file_name}.user_metadata.json"
-    user_metadata_path = f"test-bucket/{resource_id}/.hsmetadata/{folder_prefix}{user_meta_file_name}"
+    user_metadata_path = f"resource/{resource_id}/.hsmetadata/{folder_prefix}{user_meta_file_name}"
 
     if use_sqlite:
         with open(SQLITE_FIXTURE, "rb") as f:
             s3_client.upload_fileobj(
-                f, "test-bucket", f"{resource_id}/data/contents/{folder_prefix}{file_name}")
+                f, "resource", f"{resource_id}/data/contents/{folder_prefix}{file_name}")
     else:
         with open(CSV_FIXTURE, "rb") as f:
             s3_client.upload_fileobj(
-                f, "test-bucket", f"{resource_id}/data/contents/{folder_prefix}{file_name}")
+                f, "resource", f"{resource_id}/data/contents/{folder_prefix}{file_name}")
     sleep(1)
 
-    md = determine_metadata_object_from_user_metadata(user_metadata_path, file_updated=True)
+    md = determine_metadata_object_from_user_metadata(user_metadata_path, file_updated=True, zone=TEST_ZONE)
     assert isinstance(md, TimeSeriesMetadataObject)
-    assert md.file_object_path == f"test-bucket/{resource_id}/data/contents/{folder_prefix}{file_name}"
+    assert md.file_object_path == f"resource/{resource_id}/data/contents/{folder_prefix}{file_name}"
     assert md.file_updated is True
-    assert md.resource_contents_path == f"test-bucket/{resource_id}/data/contents"
-    assert md.resource_md_path == f"test-bucket/{resource_id}/.hsmetadata"
-    assert md.resource_md_jsonld_path == f"test-bucket/{resource_id}/.hsjsonld"
+    assert md.resource_contents_path == f"resource/{resource_id}/data/contents"
+    assert md.resource_md_path == f"resource/{resource_id}/.hsmetadata"
+    assert md.resource_md_jsonld_path == f"resource/{resource_id}/.hsjsonld"
     assert md.content_type == ContentType.TIMESERIES
-    assert md.system_metadata_path == f"test-bucket/{resource_id}/.hsmetadata/system_metadata.json"
-    assert md.user_metadata_path == f"test-bucket/{resource_id}/.hsmetadata/user_metadata.json"
-    assert md.resource_metadata_jsonld_path == f"test-bucket/{resource_id}/.hsjsonld/dataset_metadata.json"
-    assert md.resource_associated_media_jsonld_path == f"test-bucket/{resource_id}/.hsjsonld/file_manifest.json"
-    assert md.resource_has_parts_jsonld_path == f"test-bucket/{resource_id}/.hsjsonld/has_parts.json"
-    assert md.content_type_md_jsonld_path == f"test-bucket/{resource_id}/.hsjsonld/{folder_prefix}{file_name}.json"
-    assert md.content_type_md_path == f"test-bucket/{resource_id}/.hsmetadata/{folder_prefix}{file_name}.json"
-    assert md.content_type_contents_path == f"test-bucket/{resource_id}/data/contents/{folder_prefix.rstrip('/')}"
-    assert md.content_type_main_file_path == f"test-bucket/{resource_id}/data/contents/{folder_prefix}{file_name}"
-    assert md.content_type_md_user_path == f"test-bucket/{resource_id}/.hsmetadata/{folder_prefix}{user_meta_file_name}"
+    assert md.system_metadata_path == f"resource/{resource_id}/.hsmetadata/system_metadata.json"
+    assert md.user_metadata_path == f"resource/{resource_id}/.hsmetadata/user_metadata.json"
+    assert md.resource_metadata_jsonld_path == f"resource/{resource_id}/.hsjsonld/dataset_metadata.json"
+    assert md.resource_associated_media_jsonld_path == f"resource/{resource_id}/.hsjsonld/file_manifest.json"
+    assert md.resource_has_parts_jsonld_path == f"resource/{resource_id}/.hsjsonld/has_parts.json"
+    assert md.content_type_md_jsonld_path == f"resource/{resource_id}/.hsjsonld/{folder_prefix}{file_name}.json"
+    assert md.content_type_md_path == f"resource/{resource_id}/.hsmetadata/{folder_prefix}{file_name}.json"
+    assert md.content_type_contents_path == f"resource/{resource_id}/data/contents/{folder_prefix.rstrip('/')}"
+    assert md.content_type_main_file_path == f"resource/{resource_id}/data/contents/{folder_prefix}{file_name}"
+    assert md.content_type_md_user_path == f"resource/{resource_id}/.hsmetadata/{folder_prefix}{user_meta_file_name}"
     assert md._content_type_associated_media is None
 
 
@@ -206,21 +219,21 @@ def test_metadataobject_from_user_metadata_missing_content(use_folder):
     file_name = "ODM2_Multi_Site_One_Variable.sqlite"
     user_meta_file_name = f"{file_name}.user_metadata.json"
     md = determine_metadata_object_from_user_metadata(
-        f"test-bucket/{resource_id}/.hsmetadata/{folder_prefix}{user_meta_file_name}", True
+        f"resource/{resource_id}/.hsmetadata/{folder_prefix}{user_meta_file_name}", True, TEST_ZONE
     )
     assert isinstance(md, BaseMetadataObject)
     assert not isinstance(md, TimeSeriesMetadataObject)
-    assert md.file_object_path == f"test-bucket/{resource_id}/data/contents/{folder_prefix}{file_name}"
+    assert md.file_object_path == f"resource/{resource_id}/data/contents/{folder_prefix}{file_name}"
     assert md.file_updated is True
-    assert md.resource_contents_path == f"test-bucket/{resource_id}/data/contents"
-    assert md.resource_md_path == f"test-bucket/{resource_id}/.hsmetadata"
-    assert md.resource_md_jsonld_path == f"test-bucket/{resource_id}/.hsjsonld"
+    assert md.resource_contents_path == f"resource/{resource_id}/data/contents"
+    assert md.resource_md_path == f"resource/{resource_id}/.hsmetadata"
+    assert md.resource_md_jsonld_path == f"resource/{resource_id}/.hsjsonld"
     assert md.content_type == ContentType.UNKNOWN
-    assert md.system_metadata_path == f"test-bucket/{resource_id}/.hsmetadata/system_metadata.json"
-    assert md.user_metadata_path == f"test-bucket/{resource_id}/.hsmetadata/user_metadata.json"
-    assert md.resource_metadata_jsonld_path == f"test-bucket/{resource_id}/.hsjsonld/dataset_metadata.json"
-    assert md.resource_associated_media_jsonld_path == f"test-bucket/{resource_id}/.hsjsonld/file_manifest.json"
-    assert md.resource_has_parts_jsonld_path == f"test-bucket/{resource_id}/.hsjsonld/has_parts.json"
+    assert md.system_metadata_path == f"resource/{resource_id}/.hsmetadata/system_metadata.json"
+    assert md.user_metadata_path == f"resource/{resource_id}/.hsmetadata/user_metadata.json"
+    assert md.resource_metadata_jsonld_path == f"resource/{resource_id}/.hsjsonld/dataset_metadata.json"
+    assert md.resource_associated_media_jsonld_path == f"resource/{resource_id}/.hsjsonld/file_manifest.json"
+    assert md.resource_has_parts_jsonld_path == f"resource/{resource_id}/.hsjsonld/has_parts.json"
     assert md.content_type_md_jsonld_path is None
     assert md.content_type_md_path is None
     assert md.content_type_contents_path is None
@@ -235,8 +248,8 @@ def test_timeseries_is_content_type(use_folder, use_sqlite):
     resource_id = str(uuid.uuid4())
     folder_prefix = "timeseries_aggregation/" if use_folder else ""
     base_file_name = "ODM2_Multi_Site_One_Variable.sqlite" if use_sqlite else "ODM2_Multi_Site_One_Variable_Test.csv"
-    content_path = f"test-bucket/{resource_id}/data/contents/{folder_prefix}{base_file_name}"
-    assert TimeSeriesMetadataObject.is_content_type(content_path) is True
+    content_path = f"resource/{resource_id}/data/contents/{folder_prefix}{base_file_name}"
+    assert TimeSeriesMetadataObject.is_content_type(content_path, TEST_ZONE) is True
 
 
 @pytest.mark.parametrize("use_folder", [True, False])
@@ -247,28 +260,28 @@ def test_resource_timeseries_csv_extraction(use_folder):
     folder_prefix = "timeseries_aggregation/" if use_folder else ""
     print(resource_id)
     user_meta_file_name = "ODM2_Multi_Site_One_Variable_Test.csv.user_metadata.json"
-    write_s3_json(f"test-bucket/{resource_id}/.hsmetadata/{folder_prefix}{user_meta_file_name}", {
+    write_s3_json(f"resource/{resource_id}/.hsmetadata/{folder_prefix}{user_meta_file_name}", {
                   "user_metadata": "this is timeseries user metadata"})
     sleep(1)
     with open(CSV_FIXTURE, "rb") as f:
         s3_client.upload_fileobj(
-            f, "test-bucket", f"{resource_id}/data/contents/{folder_prefix}ODM2_Multi_Site_One_Variable_Test.csv")
+            f, "resource", f"{resource_id}/data/contents/{folder_prefix}ODM2_Multi_Site_One_Variable_Test.csv")
 
     # Wait for metadata to be consistent
     sleep(1)
     # read in the resulting resource metadata file
-    result_resource_metadata = read_s3_json(
-        f"test-bucket/{resource_id}/.hsjsonld/dataset_metadata.json")
+    result_resource_metadata = read_s3_json_retry(
+        f"resource/{resource_id}/.hsjsonld/dataset_metadata.json")
 
-    assert_manifest_reference(result_resource_metadata, resource_id, "test-bucket", expected_media_obj_count=1)
-    assert_has_part_reference(result_resource_metadata, resource_id, "test-bucket", expected_has_part_count=1)
-    result_has_parts = read_s3_json(
-        f"test-bucket/{resource_id}/.hsjsonld/has_parts.json")
+    assert_manifest_reference(result_resource_metadata, resource_id, "resource", expected_media_obj_count=1)
+    assert_has_part_reference(result_resource_metadata, resource_id, "resource", expected_has_part_count=1)
+    result_has_parts = read_s3_json_retry(
+        f"resource/{resource_id}/.hsjsonld/has_parts.json")
     assert len(result_has_parts) == 1
     assert result_has_parts[0]["url"].endswith(f"{folder_prefix}ODM2_Multi_Site_One_Variable_Test.csv.json")
 
-    result_timeseries_metadata = read_s3_json(
-        f"test-bucket/{resource_id}/.hsjsonld/{folder_prefix}ODM2_Multi_Site_One_Variable_Test.csv.json")
+    result_timeseries_metadata = read_s3_json_retry(
+        f"resource/{resource_id}/.hsjsonld/{folder_prefix}ODM2_Multi_Site_One_Variable_Test.csv.json")
     assert len(result_timeseries_metadata["associatedMedia"]) == 1
     assert result_timeseries_metadata["associatedMedia"][
         0]["name"] == "ODM2_Multi_Site_One_Variable_Test.csv"
@@ -285,19 +298,19 @@ def test_resource_timeseries_csv_usermetadata(use_folder):
     csv_file_name = "ODM2_Multi_Site_One_Variable_Test.csv"
     folder_prefix = "timeseries_aggregation/" if use_folder else ""
     with open(f"tests/test_files/timeseries/{csv_file_name}", "rb") as f:
-        s3_client.upload_fileobj(f, "test-bucket", f"{resource_id}/data/contents/{folder_prefix}{csv_file_name}")
+        s3_client.upload_fileobj(f, "resource", f"{resource_id}/data/contents/{folder_prefix}{csv_file_name}")
 
     sleep(1)
-    result_metadata_path = f"test-bucket/{resource_id}/.hsjsonld/{folder_prefix}{csv_file_name}.json"
-    result_timeseries_metadata = read_s3_json(result_metadata_path)
+    result_metadata_path = f"resource/{resource_id}/.hsjsonld/{folder_prefix}{csv_file_name}.json"
+    result_timeseries_metadata = read_s3_json_retry(result_metadata_path)
     assert "user_metadata" not in result_timeseries_metadata
     sleep(1)
 
-    write_s3_json(f"test-bucket/{resource_id}/.hsmetadata/{folder_prefix}{csv_file_name}.user_metadata.json", {
+    write_s3_json(f"resource/{resource_id}/.hsmetadata/{folder_prefix}{csv_file_name}.user_metadata.json", {
                   "user_metadata": "this is timeseries user metadata"})
     sleep(1)
-    result_metadata_path = f"test-bucket/{resource_id}/.hsjsonld/{folder_prefix}{csv_file_name}.json"
-    result_timeseries_metadata = read_s3_json(result_metadata_path)
+    result_metadata_path = f"resource/{resource_id}/.hsjsonld/{folder_prefix}{csv_file_name}.json"
+    result_timeseries_metadata = read_s3_json_retry(result_metadata_path)
     assert result_timeseries_metadata["user_metadata"] == "this is timeseries user metadata"
 
 
@@ -308,28 +321,28 @@ def test_resource_timeseries_sqlite_extraction(use_folder):
     resource_id = str(uuid.uuid4())  # Generate a random hex resource ID
     folder_prefix = "timeseries_aggregation/" if use_folder else ""
     sqlite_file_name = "ODM2_Multi_Site_One_Variable.sqlite"
-    write_s3_json(f"test-bucket/{resource_id}/.hsmetadata/{folder_prefix}{sqlite_file_name}.user_metadata.json", {
+    write_s3_json(f"resource/{resource_id}/.hsmetadata/{folder_prefix}{sqlite_file_name}.user_metadata.json", {
                   "user_metadata": "this is timeseries user metadata"})
     sleep(1)
     with open(SQLITE_FIXTURE, "rb") as f:
         s3_client.upload_fileobj(
-            f, "test-bucket", f"{resource_id}/data/contents/{folder_prefix}{sqlite_file_name}")
+            f, "resource", f"{resource_id}/data/contents/{folder_prefix}{sqlite_file_name}")
 
     # Wait for metadata to be consistent
     sleep(1)
     # read in the resulting resource metadata file
-    result_resource_metadata = read_s3_json(
-        f"test-bucket/{resource_id}/.hsjsonld/dataset_metadata.json")
+    result_resource_metadata = read_s3_json_retry(
+        f"resource/{resource_id}/.hsjsonld/dataset_metadata.json")
 
-    assert_manifest_reference(result_resource_metadata, resource_id, "test-bucket", expected_media_obj_count=1)
-    assert_has_part_reference(result_resource_metadata, resource_id, "test-bucket", expected_has_part_count=1)
-    result_has_parts = read_s3_json(
-        f"test-bucket/{resource_id}/.hsjsonld/has_parts.json")
+    assert_manifest_reference(result_resource_metadata, resource_id, "resource", expected_media_obj_count=1)
+    assert_has_part_reference(result_resource_metadata, resource_id, "resource", expected_has_part_count=1)
+    result_has_parts = read_s3_json_retry(
+        f"resource/{resource_id}/.hsjsonld/has_parts.json")
     assert len(result_has_parts) == 1
     assert result_has_parts[0]["url"].endswith(f"{folder_prefix}{sqlite_file_name}.json")
 
-    result_timeseries_metadata = read_s3_json(
-        f"test-bucket/{resource_id}/.hsjsonld/{folder_prefix}{sqlite_file_name}.json")
+    result_timeseries_metadata = read_s3_json_retry(
+        f"resource/{resource_id}/.hsjsonld/{folder_prefix}{sqlite_file_name}.json")
     assert len(result_timeseries_metadata["associatedMedia"]) == 1
     assert result_timeseries_metadata["associatedMedia"][
         0]["name"] == sqlite_file_name
@@ -346,16 +359,16 @@ def test_resource_timeseries_sqlite_usermetadata(use_folder):
     sqlite_file_name = "ODM2_Multi_Site_One_Variable.sqlite"
     with open(f"tests/test_files/timeseries/{sqlite_file_name}", "rb") as f:
         s3_client.upload_fileobj(
-            f, "test-bucket", f"{resource_id}/data/contents/{folder_prefix}{sqlite_file_name}")
+            f, "resource", f"{resource_id}/data/contents/{folder_prefix}{sqlite_file_name}")
     sleep(1)
 
-    result_timeseries_metadata = read_s3_json(
-        f"test-bucket/{resource_id}/.hsjsonld/{folder_prefix}{sqlite_file_name}.json")
+    result_timeseries_metadata = read_s3_json_retry(
+        f"resource/{resource_id}/.hsjsonld/{folder_prefix}{sqlite_file_name}.json")
     assert "user_metadata" not in result_timeseries_metadata
 
-    write_s3_json(f"test-bucket/{resource_id}/.hsmetadata/{folder_prefix}{sqlite_file_name}.user_metadata.json", {
+    write_s3_json(f"resource/{resource_id}/.hsmetadata/{folder_prefix}{sqlite_file_name}.user_metadata.json", {
                   "user_metadata": "this is timeseries user metadata"})
     sleep(1)
-    result_timeseries_metadata = read_s3_json(
-        f"test-bucket/{resource_id}/.hsjsonld/{folder_prefix}{sqlite_file_name}.json")
+    result_timeseries_metadata = read_s3_json_retry(
+        f"resource/{resource_id}/.hsjsonld/{folder_prefix}{sqlite_file_name}.json")
     assert result_timeseries_metadata["user_metadata"] == "this is timeseries user metadata"

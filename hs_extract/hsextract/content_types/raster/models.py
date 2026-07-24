@@ -7,8 +7,8 @@ from hsextract.content_types.raster.hs_cn_extraction import list_tif_files_s3, e
 class RasterMetadataObject(FileMetadataObject):
     content_type = ContentType.RASTER
 
-    def __init__(self, file_object_path: str, file_updated: bool):
-        super().__init__(file_object_path, file_updated)
+    def __init__(self, file_object_path: str, file_updated: bool, zone: str):
+        super().__init__(file_object_path, file_updated, zone)
         self._content_type_associated_media = None
         vrt_path = self._determine_vrt_path()
         if vrt_path:
@@ -37,7 +37,7 @@ class RasterMetadataObject(FileMetadataObject):
                 if os.path.dirname(vrt_path) == directory and vrt_path.endswith(".vrt"):
                     vrt_paths.append(vrt_path)
             for vrt_path in vrt_paths:
-                tif_files = list_tif_files_s3(vrt_path)
+                tif_files = list_tif_files_s3(vrt_path, self.zone)
                 if os.path.basename(self.file_object_path) in tif_files:
                     return vrt_path
         return None
@@ -51,7 +51,7 @@ class RasterMetadataObject(FileMetadataObject):
         folder_path = self.get_folder_path()
         content_type_files = {file_path}
         if file_path.endswith(".vrt"):
-            tif_files = list_tif_files_s3(file_path)
+            tif_files = list_tif_files_s3(file_path, self.zone)
             for f in tif_files:
                 content_type_files.add(file_path.replace(os.path.basename(file_path), f))
         for media_object in self.iter_resource_associated_media(folder_path=folder_path):
@@ -70,11 +70,7 @@ class RasterMetadataObject(FileMetadataObject):
         if vrt_file:
             file_to_extract = self.media_object_path(vrt_file[0])
 
-        try:
-            metadata = encode_raster_metadata(file_to_extract)
-        except Exception as e:
-            print(f"Failed to extract raster metadata from {file_to_extract}: {str(e)}")
-            return None
+        metadata = encode_raster_metadata(file_to_extract, self.zone)
         metadata = metadata.model_dump(exclude_none=True)
         return metadata
 
@@ -95,6 +91,6 @@ class RasterMetadataObject(FileMetadataObject):
         return cleanup_files
 
     @classmethod
-    def is_content_type(cls, file_object_path: str) -> bool:
+    def is_content_type(cls, file_object_path: str, zone: str) -> bool:
         _, extension = os.path.splitext(file_object_path.lower())
         return extension in cls._extensions()
