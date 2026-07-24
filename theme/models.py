@@ -359,12 +359,8 @@ class UserQuota(models.Model):
         allocated = self.allocated_value
         unit = self.unit
         used = self.used_value
-        if allocated > 0:
-            dzp = used * 100.0 / allocated
-            percent = used * 100.0 / allocated
-        else:
-            dzp = 100.0 if used > 0 else 0.0
-            percent = 100.0 if used > 0 else 0.0
+        dzp = used * 100.0 / allocated
+        percent = used * 100.0 / allocated
         remaining = allocated - used
 
         status = QuotaStatus.INFO
@@ -400,10 +396,7 @@ class UserQuota(models.Model):
         allocated = quota_data["allocated"]
         used = quota_data["used"]
         quota_status = quota_data["status"]
-        if allocated > 0:
-            percent = used * 100.0 / allocated
-        else:
-            percent = 100.0 if used > 0 else 0.0
+        percent = used * 100.0 / allocated
         rounded_percent = round(percent, 2)
         rounded_used_val = round(used, 4)
 
