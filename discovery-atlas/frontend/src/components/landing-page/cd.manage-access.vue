@@ -753,7 +753,7 @@ class CdManageAccess extends Vue {
       this.loadData();
     }
     // The discovery app runs inside an iframe with scrolling="no" sized to
-    // its full content (see hs_discover/templates/hs_discover/atlas.html),
+    // its full content (see hs_discover/templates/hs_discover/search.html),
     // so Vuetify's position:fixed dialog lands at iframe-center — typically
     // far below the parent viewport. Wait for the dialog to mount and the
     // parent's ResizeObserver to grow the iframe (otherwise iframe.offsetHeight

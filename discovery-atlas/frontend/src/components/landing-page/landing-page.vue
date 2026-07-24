@@ -885,7 +885,7 @@ class LandingPage extends Vue {
   } = {};
   dismissedAlerts: Record<string, boolean> = {};
   private onParentMessage = (event: MessageEvent) => {
-    // atlas.html in the parent posts `{ parentSearch, owners }` after the
+    // search.html in the parent posts `{ parentSearch, owners }` after the
     // iframe loads. Owners are injected from the Django view because they
     // aren't part of the S3 dataset_metadata.json payload.
     if (event.origin !== window.location.origin) return;
