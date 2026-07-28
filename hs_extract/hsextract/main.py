@@ -42,6 +42,7 @@ def _iter_resource_has_parts(md: BaseMetadataObject, user_json: dict):
             name=content_type_metadata.get("name", None),
             description=content_type_metadata.get("description", None),
             url=build_public_url(file, md.zone),
+            associatedMedia=content_type_metadata.get("associatedMedia", None),
         )
         yield has_part.model_dump(exclude_none=True)
 
