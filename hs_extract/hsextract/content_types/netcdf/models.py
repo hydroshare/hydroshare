@@ -13,7 +13,7 @@ class NetCDFMetadataObject(FileMetadataObject):
 
     def extract_metadata(self):
         metadata = encode_netcdf(self.file_object_path, self.zone)
-        metadata = metadata.model_dump(exclude_none=True)
+        metadata = metadata.model_dump(exclude_none=True, by_alias=True)
         return metadata
 
     @classmethod
