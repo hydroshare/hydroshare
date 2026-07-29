@@ -40,7 +40,7 @@ def test_resource_haspart_merges_user_and_extracted():
     resource_id = str(uuid.uuid4())
     endpoint = "http://localhost:9000"
     extracted_associated_media = [{
-        "type": "MediaObject",
+        "@type": "MediaObject",
         "name": "part-data.csv",
         "contentUrl": "https://example.com/part-data.csv",
         "contentSize": "1MB",

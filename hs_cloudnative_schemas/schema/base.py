@@ -159,13 +159,13 @@ class CreativeWork(SchemaBaseModel):
         default=None,
         json_schema_extra=remove_none_default,
     )
-    associatedMedia: Optional[
-        Union["MediaObject", "DataDownload", "VideoObject", List[Union["MediaObject", "DataDownload", "VideoObject"]]]
-    ] = Field(
-        title="Resource content",
-        description="A media object that encodes this CreativeWork. This property is a synonym for encoding.",
-        default=None,
-        json_schema_extra=remove_none_default,
+    associatedMedia: Optional[List[Union["LinkedData", "MediaObject", "DataDownload", "VideoObject"]]
+                              ] = Field(
+                                  title="Resource content",
+                                  description="A media object that encodes this CreativeWork. "
+                                  "This property is a synonym for encoding.",
+                                  default=None,
+                                  json_schema_extra=remove_none_default,
     )
 
 
@@ -344,6 +344,17 @@ class HasPart(CreativeWork):
         description="Information about a related resource that is part of this resource.",
         default=None,
         json_schema_extra=remove_none_default,
+    )
+
+
+class LinkedData(SchemaBaseModel):
+    model_config = ConfigDict(
+        **SchemaBaseModel.model_config,
+        populate_by_name=True,
+    )
+    id: Union[str, AnyUrl] = Field(
+        alias="@id",
+        description="The unique identifier for the linked data object.",
     )
 
 

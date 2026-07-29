@@ -44,7 +44,7 @@ def _iter_resource_has_parts(md: BaseMetadataObject, user_json: dict):
             url=build_public_url(file, md.zone),
             associatedMedia=content_type_metadata.get("associatedMedia", None),
         )
-        yield has_part.model_dump(exclude_none=True)
+        yield has_part.model_dump(exclude_none=True, by_alias=True)
 
     for has_part in _normalize_list(user_json.get("hasPart")):
         yield has_part
@@ -106,7 +106,7 @@ def write_content_type_jsonld_metadata(md: BaseMetadataObject) -> bool:
     for jsonld_file_url in combined_metadata.get("isPartOf", []):
         is_part_of_models.append(IsPartOf(
             url=jsonld_file_url
-        ).model_dump(exclude_none=True))
+        ).model_dump(exclude_none=True, by_alias=True))
     combined_metadata["isPartOf"] = is_part_of_models
     # TODO make associated media determination consistent with all content types
     if md.content_type != ContentType.FILE_SET:

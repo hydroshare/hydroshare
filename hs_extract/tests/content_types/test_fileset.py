@@ -120,7 +120,9 @@ def test_fileset(use_nested_folder):
     result_fileset_metadata = read_s3_json(
         f"resource/{resource_id}/.hsjsonld/{folder_path}/dataset_metadata.json")
     assert len(result_fileset_metadata["associatedMedia"]) == 1
-    assert result_fileset_metadata["associatedMedia"][0]["name"] == "file_manifest.json"
+    assert result_fileset_metadata["associatedMedia"][0]["@id"].endswith(
+        f"resource/{resource_id}/.hsjsonld/{folder_path}/file_manifest.json"
+    )
     assert_manifest_reference_fileset(result_fileset_metadata, resource_id, folder_path,
                                       "resource", expected_media_obj_count=1)
     assert len(result_fileset_metadata["isPartOf"]) == 1
