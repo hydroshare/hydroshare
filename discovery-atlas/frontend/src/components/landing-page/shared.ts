@@ -1,6 +1,67 @@
 import { _Object, CommonPrefix, GetObjectCommand, ListObjectsV2Command, S3Client } from "@aws-sdk/client-s3";
 import { Notifications } from "@cznethub/cznet-vue-core";
 import { IFile, IFolder } from "@cznethub/cznet-vue-core/dist/types";
+import { h } from "vue";
+
+function startBrowserDownload(url: string, downloadName?: string) {
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  if (downloadName) {
+    anchor.download = downloadName;
+  }
+  document.body.appendChild(anchor);
+  anchor.click();
+  document.body.removeChild(anchor);
+}
+
+function delay(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function downloadBag(
+  downloadUrl: string,
+  setArchiveDownloading: (value: boolean) => void,
+) {
+  setArchiveDownloading(false);
+  Notifications.toast({
+    title: "Success",
+    message: h('span', [
+      'Your download will start in a few seconds. If it does not, use ',
+      h('a', { href: downloadUrl, rel: 'noopener noreferrer' }, 'this link'),
+      ' to download directly.'
+    ]),
+    type: "success",
+  });
+  startBrowserDownload(downloadUrl);
+}
+
+async function pollArchiveTask(taskId: string, maxAttempts = 30): Promise<string> {
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+    const response = await fetch(`/hsapi/_internal/get_task/${encodeURIComponent(taskId)}`, {
+      method: "GET",
+      headers: {
+        "X-Requested-With": "XMLHttpRequest",
+        Accept: "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to check archive task status (${response.status}).`);
+    }
+
+    const task = await response.json();
+    if (task?.status === "completed" && task?.payload) {
+      return task.payload;
+    }
+    if (task?.status !== "progress") {
+      throw new Error("Archive task did not complete successfully.");
+    }
+
+    await delay(1000);
+  }
+
+  throw new Error("Archive task polling timed out.");
+}
 
 export const onFileDownload = async (items: (IFile | IFolder)[], resourceId: string, s3Client: S3Client, bucket: string) => {
   try {
@@ -13,12 +74,7 @@ export const onFileDownload = async (items: (IFile | IFolder)[], resourceId: str
       const blob = await result.Body?.transformToByteArray();
       if (blob) {
         const url = window.URL.createObjectURL(new Blob([blob]));
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = key.split("/").pop() || "download";
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+        startBrowserDownload(url, key.split("/").pop() || "download");
         window.URL.revokeObjectURL(url);
       }
     }
@@ -35,6 +91,52 @@ export const onFileDownload = async (items: (IFile | IFolder)[], resourceId: str
       type: "error",
     });
   }
+}
+
+export const onDownloadArchive = async (
+  bagUrl: string,
+  setArchiveDownloading: (value: boolean) => void,
+) => {
+  try {
+    const response = await fetch(bagUrl, {
+      method: "GET",
+      headers: {
+        "X-Requested-With": "XMLHttpRequest",
+        Accept: "application/json",
+      },
+    });
+
+    const contentType = response.headers.get("content-type") || "";
+
+    if (contentType.includes("application/json")) {
+      const resp = await response.json();
+
+      if (resp?.status === "completed" && resp?.payload) {
+        await downloadBag(resp.payload, setArchiveDownloading);
+        return;
+      }
+
+      if (resp?.status === "progress" && resp?.id) {
+        const payload = await pollArchiveTask(resp.id);
+        await downloadBag(payload, setArchiveDownloading);
+      }
+      return;
+    }
+
+  } catch (error: any) {
+    setArchiveDownloading(false);
+    console.error("Error fetching archive download endpoint:", error);
+    Notifications.toast({
+      title: "Error",
+      message: `Failed to fetch archive download endpoint: ${error.message}`,
+      type: "error",
+    });
+  }
+}
+
+export const onDownloadZipped = async (items: (IFile | IFolder)[]) => {
+  console.log("Download zipped button clicked");
+  items.forEach(item => console.log(item.path));
 }
 
 export const readRootFolder = async (path: string, S3Client: S3Client, bucket: string): Promise<Partial<IFile | IFolder>[]> => {

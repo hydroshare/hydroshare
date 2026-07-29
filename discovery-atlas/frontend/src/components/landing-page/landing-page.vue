@@ -409,10 +409,15 @@
                 :is-read-only="true"
                 :has-file-metadata="() => true"
                 :canDownloadItem="() => true"
+                :archiveDownloading="archiveDownloading"
                 :load-file-preview="(item) => loadFilePreview(item)"
+                :showDownloadZippedButton="true"
+                :showDownloadArchiveButton="true"
                 @download="
                   onFileDownload($event, resourceId, s3Client, s3Info.bucket)
                 "
+                @downloadArchive="handleDownloadArchive"
+                @downloadZipped="onDownloadZipped($event)"
               >
                 <template #prepend>
                   <span />
@@ -784,7 +789,7 @@ import {
 import type { IFolder } from "@cznethub/cznet-vue-core/dist/types";
 import { GetObjectCommand, S3Client, _Object } from "@aws-sdk/client-s3";
 import { stringify } from "@/utils";
-import { fetchResource, onFileDownload } from "./shared";
+import { fetchResource, onFileDownload, onDownloadArchive, onDownloadZipped } from "./shared";
 import { loadReadme } from "./readme-s3";
 import { createCookieS3Client } from "./cookie-s3-client";
 import User from "@/models/user.model";
@@ -837,10 +842,32 @@ class LandingPage extends Vue {
   readMeFileName = "";
   hasTxtReadme = false;
   isLoadingMD = false;
+  archiveDownloading = false;
 
   schema!: any;
   uischema!: any;
   onFileDownload = onFileDownload;
+  onDownloadArchive = onDownloadArchive;
+  onDownloadZipped = onDownloadZipped;
+
+  async handleDownloadArchive() {
+    if (this.archiveDownloading) return;
+    this.archiveDownloading = true;
+
+    try {
+      // Fall back to hardcoded URL if bagUrl wasn't passed in from parent
+      const bagUrl = this.bagUrl || `/django_irods/download/bags/${this.resourceId}.zip`;
+      await onDownloadArchive(
+        bagUrl,
+        // Pass in setter for `archiveDownloading` so the button can show a spinner while download is in progress
+        (value) => {
+          this.archiveDownloading = value;
+        }
+      );
+    } finally {
+      this.archiveDownloading = false;
+    }
+  }
 
   /**
    * Fetches a Blob for cz-file-explorer's preview dialog. The dialog passes
@@ -870,6 +897,7 @@ class LandingPage extends Vue {
     relative_uri?: string | null;
     identifiers?: Record<string, string> | null;
   }> = [];
+  bagUrl: string | null = null;
   alerts: {
     justCreated?: boolean;
     justCopied?: boolean;
@@ -1214,6 +1242,7 @@ class LandingPage extends Vue {
         if (parentWin.HS_RESOURCE_ALERTS && typeof parentWin.HS_RESOURCE_ALERTS === "object") {
           this.alerts = parentWin.HS_RESOURCE_ALERTS;
         }
+        this.bagUrl = parentWin.HS_BAG_URL || null;
       }
     } catch {
       // cross-origin access blocked — postMessage listener will handle it
