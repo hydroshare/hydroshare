@@ -175,6 +175,7 @@ def test_feature(use_folder):
     result_metadata = read_s3_json(
         f"resource/{resource_id}/.hsjsonld/{folder_prefix}watersheds.shp.json")
     assert len(result_metadata["associatedMedia"]) == 8
+    assert len({media["contentUrl"] for media in result_metadata["associatedMedia"]}) == 8
     assert len(result_metadata["isPartOf"]) == 1
     assert result_metadata["isPartOf"][0]["url"].endswith("dataset_metadata.json")
     assert result_metadata[
