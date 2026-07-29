@@ -8,8 +8,7 @@ from pydantic import ValidationError
 from hs_cloudnative_schemas.schema import base
 from hs_cloudnative_schemas.schema import dataset
 from hs_cloudnative_schemas.schema import datavariable
-from hsextract.utils.file import file_metadata
-from hsextract.utils.s3 import find, resolve_zone, zone_s3_config
+from hsextract.utils.s3 import zone_s3_config
 
 
 mimetypes.add_type("image/tiff", ".tif")
@@ -23,14 +22,7 @@ def replace_extension(filepath, new_ext):
 
 
 def encode_vector_metadata(filepath, zone: str, validate_bbox=True):
-
-    # get all file names that match the pattern of the input filepath
-    search_path = f"{'.'.join(filepath.split('.')[:-1])}."
-    parent_dir = filepath.rsplit("/", 1)[0]
-    associated_files = [fpath for fpath in find(parent_dir, zone) if fpath.startswith(search_path)]
-
-    resolved_zone = resolve_zone(zone)
-    config = zone_s3_config.get(resolved_zone)
+    config = zone_s3_config.get(zone)
     if config is None:
         raise KeyError(f"No S3 zone config found for zone '{zone}'")
 
@@ -127,15 +119,9 @@ def encode_vector_metadata(filepath, zone: str, validate_bbox=True):
         )
         variables.append(variable)
 
-    files = []
-    for fpath in associated_files:
-        file_md, _ = file_metadata(fpath, zone)
-        files.append(file_md)
-
     return dataset.ScientificDataset(
         variableMeasured=variables,
         dimensions=dimensions,
-        associatedMedia=files,
         spatialCoverage=place,
         additionalType=dataset.AdditionalType.GEOGRAPHIC_FEATURE,
     )

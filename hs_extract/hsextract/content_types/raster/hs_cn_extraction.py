@@ -11,7 +11,7 @@ import boto3
 from hs_cloudnative_schemas.schema.base import GeoShape, SpatialReference, Place
 from hs_cloudnative_schemas.schema.dataset import ScientificDataset, AdditionalType
 from hs_cloudnative_schemas.schema.datavariable import DataVariable, Dimension
-from hsextract.utils.s3 import find, get_s3_client, resolve_zone, zone_s3_config
+from hsextract.utils.s3 import find, get_s3_client, zone_s3_config
 
 
 mimetypes.add_type("application/x-esri-shapefile", ".shp")
@@ -60,8 +60,7 @@ def list_tif_files(vrt_file):
 
 
 def encode_raster_metadata(filepath, zone: str, multiband=False, validate_bbox=True):
-    resolved_zone = resolve_zone(zone)
-    config = zone_s3_config.get(resolved_zone)
+    config = zone_s3_config.get(zone)
     if config is None:
         raise KeyError(f"No S3 zone config found for zone '{zone}'")
 

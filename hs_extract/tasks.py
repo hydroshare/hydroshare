@@ -1,7 +1,6 @@
 import logging
 
 from hs_extract.celery_app import celery_app
-from hsextract.utils.s3 import get_configured_zones, resolve_zone
 
 logger = logging.getLogger("hs_extract")
 
@@ -21,26 +20,16 @@ def extract_metadata(self, action: str, bucket: str, object_path: str, file_size
     key = f"{bucket}/{object_path}"
     file_updated = not action.startswith("s3:ObjectRemoved") and not action.startswith("s3:DeleteObject")
 
-    resolved_zone = resolve_zone(zone)
-    if not resolved_zone:
-        logger.error(
-            "extract_metadata skipping key=%s due to empty/unknown zone '%s'. Available zones: %s",
-            key,
-            zone,
-            ", ".join(get_configured_zones()),
-        )
-        return
-
     logger.info(
         "extract_metadata: key=%s, file_updated=%s, file_size=%s, zone=%s",
         key,
         file_updated,
         file_size,
-        resolved_zone,
+        zone,
     )
 
     try:
-        _handle_extract_event(key, file_size, file_updated, resolved_zone)
+        _handle_extract_event(key, file_size, file_updated, zone)
     except Exception as exc:
         logger.error(f"extract_metadata failed for key={key}: {exc}", exc_info=True)
         raise self.retry(exc=exc, countdown=2 ** self.request.retries)
