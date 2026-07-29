@@ -28,6 +28,7 @@ def remove_none_default(schema: dict[str, Any]) -> None:
     if schema.get("default") is None:
         schema.pop("default", None)
 
+
 def end_date_schema_extra(schema: dict[str, Any]) -> None:
     schema.update(
         {
@@ -39,9 +40,11 @@ def end_date_schema_extra(schema: dict[str, Any]) -> None:
     )
     remove_none_default(schema)
 
+
 def read_only_schema_extra(schema: dict[str, Any]) -> None:
     schema.update({"readOnly": True})
     remove_none_default(schema)
+
 
 def identifier_schema_extra(schema: dict[str, Any]) -> None:
     schema.update(
@@ -52,6 +55,7 @@ def identifier_schema_extra(schema: dict[str, Any]) -> None:
         }
     )
     remove_none_default(schema)
+
 
 def modify_json_schema(schema: dict[str, Any]) -> None:
     if schema.get("format") == "uri":
@@ -155,12 +159,20 @@ class CreativeWork(SchemaBaseModel):
         default=None,
         json_schema_extra=remove_none_default,
     )
+    associatedMedia: Optional[
+        Union["MediaObject", "DataDownload", "VideoObject", List[Union["MediaObject", "DataDownload", "VideoObject"]]]
+    ] = Field(
+        title="Resource content",
+        description="A media object that encodes this CreativeWork. This property is a synonym for encoding.",
+        default=None,
+        json_schema_extra=remove_none_default,
+    )
 
 
 class Person(SchemaBaseModel):
     model_config = ConfigDict(
         **SchemaBaseModel.model_config,
-        populate_by_name=True, # Ensures aliases work during model initialization
+        populate_by_name=True,  # Ensures aliases work during model initialization
     )
     type: Literal["Person"] = Field(
         alias="@type", description="A person.", default="Person"  # type: ignore
@@ -182,7 +194,7 @@ class Person(SchemaBaseModel):
 class Organization(SchemaBaseModel):
     model_config = ConfigDict(
         **SchemaBaseModel.model_config,
-        populate_by_name=True, # Ensures aliases work during model initialization
+        populate_by_name=True,  # Ensures aliases work during model initialization
     )
     type: Literal["Organization"] = Field(
         alias="@type",  # type: ignore
@@ -624,7 +636,7 @@ class GeoShape(SchemaBaseModel):
 class PropertyValue(SchemaBaseModel):
     model_config = ConfigDict(
         **SchemaBaseModel.model_config,
-        populate_by_name=True, # Ensures aliases work during model initialization
+        populate_by_name=True,  # Ensures aliases work during model initialization
         title="PropertyValue",
     )
 
@@ -798,13 +810,20 @@ class DataDownload(MediaObject):
     )
     measurementMethod: Optional[Union[DefinedTerm, HttpUrl, str]] = Field(
         title="Measurement method",
-        description="A subproperty of measurementTechnique that can be used for specifying specific methods, in particular via MeasurementMethodEnum.",
+        description="A subproperty of measurementTechnique that can be used for specifying specific methods, in "
+                    "particular via MeasurementMethodEnum.",
         default=None,
         json_schema_extra=remove_none_default,
     )
     measurementTechnique: Optional[Union[DefinedTerm, HttpUrl, str]] = Field(
         title="Measurement technique",
-        description="A technique, method or technology used in an Observation, StatisticalVariable or Dataset (or DataDownload, DataCatalog), corresponding to the method used for measuring the corresponding variable(s) (for datasets, described using variableMeasured; for Observation, a StatisticalVariable). Often but not necessarily each variableMeasured will have an explicit representation as (or mapping to) an property such as those defined in Schema.org, or other RDF vocabularies and 'knowledge graphs'. In that case the subproperty of variableMeasured called measuredProperty is applicable.",
+        description="A technique, method or technology used in an Observation, StatisticalVariable or Dataset "
+                    "(or DataDownload, DataCatalog), corresponding to the method used for measuring the corresponding "
+                    "variable(s) (for datasets, described using variableMeasured; for Observation, a "
+                    "StatisticalVariable). Often but not necessarily each variableMeasured will have an explicit "
+                    "representation as (or mapping to) an property such as those defined in Schema.org, or other RDF "
+                    "vocabularies and 'knowledge graphs'. In that case the subproperty of variableMeasured called "
+                    "measuredProperty is applicable.",
         default=None,
         json_schema_extra=remove_none_default,
     )

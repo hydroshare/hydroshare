@@ -1,6 +1,7 @@
 import sys
 import types
 import uuid
+import json
 from pathlib import Path
 from time import sleep
 import pytest
@@ -38,10 +39,23 @@ def read_s3_json_retry(path: str, attempts: int = 20, delay: float = 0.5):
 def test_resource_haspart_merges_user_and_extracted():
     resource_id = str(uuid.uuid4())
     endpoint = "http://localhost:9000"
+    extracted_associated_media = [{
+        "type": "MediaObject",
+        "name": "part-data.csv",
+        "contentUrl": "https://example.com/part-data.csv",
+        "contentSize": "1MB",
+        "encodingFormat": "text/csv",
+    }]
 
     # Simulate an extracted content-type JSON-LD file
     extracted_metadata_path = f"resource/{resource_id}/.hsjsonld/sample_part.json"
-    write_s3_json(extracted_metadata_path, {"name": "extracted"})
+    write_s3_json(
+        extracted_metadata_path,
+        {
+            "name": "extracted",
+            "associatedMedia": extracted_associated_media,
+        },
+    )
     extracted_part_url = f"{endpoint}/{extracted_metadata_path}"
 
     user_parts = [
@@ -75,6 +89,19 @@ def test_resource_haspart_merges_user_and_extracted():
     assert has_part_urls.count(extracted_part_url) == 2
     assert "https://example.com/user-haspart-1" in has_part_urls
     assert "https://example.com/user-haspart-2" in has_part_urls
+    extracted_parts = [part for part in result_has_parts if part.get("url") == extracted_part_url]
+    assert len(extracted_parts) == 2
+
+    extracted_part_with_media = next(
+        (part for part in extracted_parts if part.get("associatedMedia") is not None),
+        None,
+    )
+    assert extracted_part_with_media is not None
+
+    assert json.dumps(extracted_part_with_media.get("associatedMedia"), sort_keys=True) == json.dumps(
+        extracted_associated_media,
+        sort_keys=True,
+    )
 
 
 def test_content_type_haspart_merges_user_and_extracted():

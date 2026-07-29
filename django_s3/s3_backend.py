@@ -5,7 +5,7 @@ import boto3
 from celery import current_app as celery_app
 from datetime import datetime
 from datetime import timedelta
-from urllib.parse import urlencode
+from urllib.parse import unquote, urlencode
 
 from hs_core.exceptions import QuotaException
 from .utils import bucket_and_zone
@@ -90,12 +90,22 @@ class S3Storage(s3.S3Storage):
         if zone not in connection:
             session = self._create_session(zone)
             zone_config = get_zone_config(zone)
+            # Keep upload/download request signing consistent across providers (GCS, MinIO, AWS).
+            # Path-style + SigV4 avoids host/header mismatches that can break multipart UploadPart signing.
+            client_config = BotocoreConfig(
+                signature_version="s3v4",
+                s3={"addressing_style": "path"},
+                request_checksum_calculation="when_required",
+                response_checksum_validation="when_required",
+            )
+            if self.client_config:
+                client_config = self.client_config.merge(client_config)
             resource = session.resource(
                 "s3",
-                region_name=self.region_name,
+                region_name=self.region_name or "auto",
                 use_ssl=self.use_ssl,
                 endpoint_url=zone_config.aws_s3_endpoint_url,
-                config=self.client_config,
+                config=client_config,
                 verify=self.verify,
             )
             self._register_mutation_hooks(resource, zone)
@@ -378,11 +388,11 @@ class S3Storage(s3.S3Storage):
         pages = paginator.paginate(Bucket=bucket, Delimiter="/", Prefix=path)
         for page in pages:
             directories += [
-                posixpath.relpath(entry["Prefix"], path)
+                posixpath.relpath(unquote(entry["Prefix"]), path)
                 for entry in page.get("CommonPrefixes", ())
             ]
             for entry in page.get("Contents", ()):
-                key = entry["Key"]
+                key = unquote(entry["Key"])
                 if key != path:
                     files.append(posixpath.relpath(key, path))
                     file_sizes.append(entry["Size"])
