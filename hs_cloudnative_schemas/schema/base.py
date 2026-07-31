@@ -558,8 +558,7 @@ class Grant(SchemaBaseModel):
 class TemporalCoverage(SchemaBaseModel):
     startDate: datetime = Field(
         title="Start date",
-        description="A date/time object containing the instant corresponding to the commencement of the time "
-        "interval (ISO8601 formatted date - YYYY-MM-DDTHH:MM).",
+        description="The start of the time period the resource covers.",
         json_schema_extra={
             "formatMaximum": {"$data": "1/endDate"},
             "errorMessage": {
@@ -569,9 +568,7 @@ class TemporalCoverage(SchemaBaseModel):
     )
     endDate: Optional[datetime] = Field(
         title="End date",
-        description="A date/time object containing the instant corresponding to the termination of the time "
-        "interval (ISO8601 formatted date - YYYY-MM-DDTHH:MM). If the ending date is left off, "
-        "that means the temporal coverage is ongoing.",
+        description="The end of the time period the resource covers. Leave blank if it is ongoing.",
         default=None,
         json_schema_extra=end_date_schema_extra,
     )
