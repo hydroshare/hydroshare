@@ -791,6 +791,7 @@
           <v-menu
             :disabled="!errors.length"
             open-on-hover
+            :close-on-content-click="false"
             bottom
             left
             offset-y
