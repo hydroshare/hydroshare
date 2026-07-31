@@ -707,7 +707,7 @@
                 </cz-field-modal>
               </div>
 
-              <div class="mb-6">
+              <div class="mb-6 temporal-coverage">
                 <div
                   class="text-subtitle-2 font-weight-bold text-uppercase mb-2"
                   style="letter-spacing: 0.05em; color: #546e7a;"
@@ -716,11 +716,38 @@
                     requiredMark("#/properties/temporalCoverage")
                   }}</span>
                 </div>
-                <cz-field
-                  scope="#/properties/temporalCoverage"
-                  :options="temporalCoverageOptions"
-                  hide-label
-                />
+                <v-card variant="outlined" border="grey thin">
+                  <v-card-text>
+                    <v-timeline align-top density="compact" line-color="info">
+                      <v-timeline-item
+                        dot-color="primary"
+                        icon="mdi-calendar"
+                        fill-dot
+                      >
+                        <div class="text-body-2 font-weight-bold mb-1">
+                          Start Date
+                        </div>
+                        <cz-field
+                          scope="#/properties/temporalCoverage/properties/startDate"
+                          hide-label
+                        />
+                      </v-timeline-item>
+                      <v-timeline-item
+                        dot-color="orange-darken-2"
+                        icon="mdi-calendar"
+                        fill-dot
+                      >
+                        <div class="text-body-2 font-weight-bold mb-1">
+                          End Date
+                        </div>
+                        <cz-field
+                          scope="#/properties/temporalCoverage/properties/endDate"
+                          hide-label
+                        />
+                      </v-timeline-item>
+                    </v-timeline>
+                  </v-card-text>
+                </v-card>
               </div>
 
               <!-- Citation was hidden as an input in the old uischema —
@@ -976,21 +1003,6 @@ class App extends Vue {
               ],
             },
           },
-        },
-      ],
-    },
-  };
-
-  readonly temporalCoverageOptions = {
-    detail: {
-      type: "Object",
-      elements: [
-        {
-          type: "HorizontalLayout",
-          elements: [
-            { type: "Control", scope: "#/properties/startDate" },
-            { type: "Control", scope: "#/properties/endDate" },
-          ],
         },
       ],
     },
