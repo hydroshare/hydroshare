@@ -122,7 +122,7 @@ class CdSpatialCoverageMap extends Vue {
           try {
             this.coverageMap.fitBounds(this.leafletMarkers.getBounds(), {
               maxZoom:
-                this.feature["type"] === "GeoCoordinates"
+                this.feature?.["@type"] === "GeoCoordinates"
                   ? coverageMapPointMaxZoom
                   : coverageMapBoxMaxZoom,
             });
@@ -153,10 +153,10 @@ class CdSpatialCoverageMap extends Vue {
   drawInitialShape() {
     // Center the map
     this.leafletMarkers.clearLayers();
-    if (this.feature["type"] === "GeoCoordinates") {
+    if (this.feature?.["@type"] === "GeoCoordinates") {
       const point = new L.LatLng(this.feature.latitude, this.feature.longitude);
       this.drawMarker(L.latLng(point));
-    } else if (this.feature["type"] === "GeoShape") {
+    } else if (this.feature?.["@type"] === "GeoShape") {
       const extents = this.feature.box
         .trim()
         .split(" ")

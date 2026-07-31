@@ -628,7 +628,7 @@
                       Extent
                     </v-expansion-panel-title>
                     <v-expansion-panel-text>
-                      <v-card-text v-if="data.spatialCoverage.geo['type'] == 'GeoShape'">
+                      <v-card-text v-if="spatialGeoType == 'GeoShape'">
                         <v-row class="align-start">
                           <v-col cols="12" class="dataset-info pa-0">
                             <div v-bind="infoLabelAttr">North Latitude:</div>
@@ -642,7 +642,7 @@
                           </v-col>
                         </v-row>
                       </v-card-text>
-                      <v-card-text v-if="data.spatialCoverage.geo['type'] == 'GeoCoordinates'">
+                      <v-card-text v-if="spatialGeoType == 'GeoCoordinates'">
                         <v-row class="align-start">
                           <v-col cols="12" class="dataset-info">
                             <div v-bind="infoLabelAttr">Latitude:</div>
@@ -1114,11 +1114,19 @@ class LandingPage extends Vue {
     );
   }
 
+  // Prefer @type; fall back to legacy `type` for not-yet-migrated data.
+  get spatialGeoType(): string | undefined {
+    const geo = this.data.spatialCoverage?.geo;
+    return geo?.["@type"] ?? geo?.["type"];
+  }
+
   get hasSpatialFeatures(): boolean {
     // `spatialCoverage` is schema.org Place; the actual geometry lives on
     // `.geo` and carries the GeoShape / GeoCoordinates type.
-    const geoType = this.data.spatialCoverage?.geo?.["type"];
-    return geoType === "GeoShape" || geoType === "GeoCoordinates";
+    return (
+      this.spatialGeoType === "GeoShape" ||
+      this.spatialGeoType === "GeoCoordinates"
+    );
   }
 
   get isPublished(): boolean {
