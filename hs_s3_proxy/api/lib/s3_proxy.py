@@ -166,7 +166,7 @@ class S3ProxyClient:
         encoded_path = '/'.join(encoded_parts)
         url = f"{zone_backend.endpoint}{encoded_path}"
         if query_params:
-            url = f"{url}?{urlencode(query_params)}"
+            url = f"{url}?{urlencode(query_params, quote_via=quote)}"
 
         outbound_headers = self._filter_headers(headers)
         outbound_body = body or b""
