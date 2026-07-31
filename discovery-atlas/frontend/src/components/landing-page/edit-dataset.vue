@@ -1243,6 +1243,21 @@ class App extends Vue {
     }
   }
 
+  private allowLocalhostUrls(node: any): void {
+    if (Array.isArray(node)) {
+      node.forEach((child) => this.allowLocalhostUrls(child));
+    } else if (node && typeof node === "object") {
+      if (
+        node.errorMessage?.pattern === 'must match format "url"' &&
+        typeof node.pattern === "string"
+      ) {
+        const host = "[a-z0-9]+([\\-\\.]{1}[a-z0-9]+)*\\.[a-z]{2,5}";
+        node.pattern = node.pattern.replace(host, `(localhost|${host})`);
+      }
+      Object.values(node).forEach((child) => this.allowLocalhostUrls(child));
+    }
+  }
+
   // Mirror of landing-page.vue's tocItems / scrollToSection / buildToc.
   // The desktop TOC drawer (rendered via the `toc` named route view) and
   // the inline mobile <v-select> both read from User.$state.toc, so
@@ -1410,9 +1425,18 @@ class App extends Vue {
     // Load the edit schema. Fields marked `readOnly: true` render disabled;
     // the layout itself is composed directly in the template (no uischema).
     /* @ts-ignore */
-    this.schema = await import(
+    const schemaModule = await import(
       `@hs-schemas/resource_edit_schema.json`
     );
+    if (import.meta.env.DEV) {
+      // Dev serves from localhost; accept it in url validation (prod stays strict).
+      const devSchema = structuredClone(schemaModule.default ?? schemaModule);
+      this.allowLocalhostUrls(devSchema);
+      this.schema = devSchema;
+    } else {
+      /* @ts-ignore */
+      this.schema = schemaModule;
+    }
 
     this.loadResource();
   }
