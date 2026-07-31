@@ -1398,7 +1398,7 @@ class App extends Vue {
     // the layout itself is composed directly in the template (no uischema).
     /* @ts-ignore */
     this.schema = await import(
-      `@/schemas/hydroshare/resource_edit_schema.json`
+      `@hs-schemas/resource_edit_schema.json`
     );
 
     this.loadResource();
@@ -1417,7 +1417,7 @@ class App extends Vue {
     );
 
     if (resource) {
-      this.data = this.normalizeFormData(resource.data);
+      this.data = resource.data;
       // @ts-expect-error The key property is generated when the component is initialized
       this.rootDirectory.children = resource.initialStructure;
       this.buildToc();
@@ -1554,46 +1554,6 @@ class App extends Vue {
       current = next;
     }
     return current;
-  }
-
-  // cz-form's array control calls .map() on the bound value, so any array
-  // field the UI schema renders must exist as an array in the data — the
-  // schema's `default: []` only seeds AJV validation, not the v-model.
-  private normalizeFormData(data: Record<string, any>): Record<string, any> {
-    const arrayFields = [
-      "keywords",
-      "creator",
-      "contributor",
-      "funding",
-      "relation",
-      "subjectOf",
-      "additionalProperty",
-      "citation",
-      "identifier",
-    ];
-    const objectFields = ["spatialCoverage", "temporalCoverage"];
-    const normalized = { ...data };
-    for (const field of arrayFields) {
-      if (!Array.isArray(normalized[field])) {
-        normalized[field] = [];
-      }
-    }
-    for (const field of objectFields) {
-      if (normalized[field] == null || typeof normalized[field] !== "object") {
-        normalized[field] = {};
-      }
-    }
-    // license is now an object schema; coerce legacy URL-string licenses
-    // into the {@type, url} shape so the form renders without breaking.
-    if (typeof normalized.license === "string") {
-      normalized.license = {
-        "@type": "CreativeWork",
-        url: normalized.license,
-      };
-    } else if (normalized.license == null) {
-      normalized.license = {};
-    }
-    return normalized;
   }
 
   async submit() {

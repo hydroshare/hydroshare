@@ -18,12 +18,18 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         "@/": `${path.resolve(__dirname, "src")}/`,
+        // Canonical generated schemas; consume directly instead of copying into src/schemas
+        "@hs-schemas/": `${path.resolve(
+          __dirname,
+          "../../hs_cloudnative_schemas/schema/json_schemas",
+        )}/`,
       },
       // Dedupe deps shared with cznet-vue-core so a single copy is used — two
       // Vue / Vuetify runtimes side by side would break reactivity.
       dedupe: [
         "vue",
         "vuetify",
+        "leaflet",
         "@jsonforms/core",
         "@jsonforms/vue",
         "vue-facing-decorator",
