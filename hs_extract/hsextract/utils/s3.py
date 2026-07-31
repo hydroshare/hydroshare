@@ -9,7 +9,7 @@ from typing import Iterator, Protocol, TYPE_CHECKING
 
 import boto3
 import requests
-from hs_cloudnative_schemas.schema.base import HasPart, MediaObject
+from hs_cloudnative_schemas.schema.base import LinkedData, MediaObject
 if TYPE_CHECKING:
     from hsextract.content_types.models import ContentType
 
@@ -101,26 +101,15 @@ def refresh_s3_clients_from_env() -> None:
         _register_mutation_hooks(_client, zone)
 
 
-def resolve_zone(zone: str | None) -> str:
-    """Resolve an S3 zone, returning empty string if zone is empty or unknown."""
-    normalized_zone = (zone or "").strip()
-    if not normalized_zone:
-        return ""
-    if normalized_zone not in zone_s3_config:
-        return ""
-    return normalized_zone
-
-
 def get_configured_zones() -> list[str]:
     return list(zone_s3_config.keys())
 
 
 def _get_s3_client(zone: str):
-    resolved_zone = resolve_zone(zone)
-    client = s3_clients.get(resolved_zone)
+    client = s3_clients.get(zone)
     if client is None:
         raise KeyError(
-            f"No S3 client configured for zone '{resolved_zone}'. "
+            f"No S3 client configured for zone '{zone}'. "
             f"Set {S3_ZONE_CONFIG_ENV_VAR} with this zone."
             f" Available zones: {', '.join(s3_clients.keys())}"
         )
@@ -132,11 +121,10 @@ def get_s3_client(zone: str):
 
 
 def get_public_endpoint_url(zone: str) -> str:
-    resolved_zone = resolve_zone(zone)
-    zone_config = zone_s3_config.get(resolved_zone)
+    zone_config = zone_s3_config.get(zone)
     if zone_config is None:
         raise KeyError(
-            f"No zone config found for zone '{resolved_zone}'. "
+            f"No zone config found for zone '{zone}'. "
             f"Set {S3_ZONE_CONFIG_ENV_VAR} with this zone."
             f" Available zones: {', '.join(zone_s3_config.keys())}"
         )
@@ -259,68 +247,28 @@ def _build_media_object(bucket: str, key: str, size_bytes: int, checksum: str, z
         contentSize=f"{size_bytes / 1000.00} KB",
         encodingFormat=mime_type if mime_type else extension
     )
-    return media_object.model_dump(exclude_none=True)
-
-
-def _get_object_size_and_checksum(bucket: str, key: str, zone: str) -> tuple[int, str]:
-    """Return object size and checksum with fallbacks for incomplete HEAD responses."""
-    client = _get_s3_client(zone)
-    response = client.head_object(Bucket=bucket, Key=key)
-
-    size_bytes = response.get('ContentLength')
-    if size_bytes is None:
-        list_response = client.list_objects_v2(Bucket=bucket, Prefix=key, MaxKeys=1)
-        for obj in list_response.get('Contents', []):
-            if obj.get('Key') == key:
-                size_bytes = obj.get('Size')
-                break
-
-    checksum = response.get('ETag')
-    if checksum is None:
-        list_response = locals().get('list_response')
-        if list_response is None:
-            list_response = client.list_objects_v2(Bucket=bucket, Prefix=key, MaxKeys=1)
-        for obj in list_response.get('Contents', []):
-            if obj.get('Key') == key:
-                checksum = obj.get('ETag')
-                break
-
-    normalized_checksum = str(checksum or 'N/A').strip('"')
-    return int(size_bytes), normalized_checksum
+    return media_object.model_dump(exclude_none=True, by_alias=True)
 
 
 def _build_manifest_reference(
     manifest_path: str,
-    size_bytes: int,
-    from_manifest_file: bool = False,
     zone: str = "",
 ) -> dict:
-    """Build a MediaObject payload that points to the manifest file itself."""
-    bucket, key = _split_s3_path(manifest_path)
-    public_endpoint_url = get_public_endpoint_url(zone)
-    if not from_manifest_file:
-        manifest_object = MediaObject(
-            contentUrl=f"{public_endpoint_url}/{bucket}/{key}",
-            name=os.path.basename(key),
-            contentSize=f"{size_bytes / 1000.00} KB",
-            encodingFormat="application/json"
-        )
-        return manifest_object.model_dump(exclude_none=True)
-    else:
-        # Use the existing manifest file to build the reference media object
-        size_bytes, checksum = _get_object_size_and_checksum(bucket, key, zone)
-        manifest_object = _build_media_object(bucket, key, size_bytes, checksum, zone)
-        return manifest_object
+    """Build a LinkedData payload that points to the manifest file itself."""
+    manifest_object = LinkedData(
+        id=f"{get_public_endpoint_url(zone)}/{manifest_path}",
+    )
+    return manifest_object.model_dump(exclude_none=True, by_alias=True)
 
 
 def _build_has_part_reference(parts_path: str, zone: str) -> dict:
-    """Build a HasPart payload that points to the has_parts.json file."""
+    """Build a LinkedData payload that points to the has_parts.json file."""
     bucket, key = _split_s3_path(parts_path)
     public_endpoint_url = get_public_endpoint_url(zone)
-    has_part = HasPart(
-        url=f"{public_endpoint_url}/{bucket}/{key}",
+    has_part = LinkedData(
+        id=f"{public_endpoint_url}/{bucket}/{key}",
     )
-    return has_part.model_dump(exclude_none=True)
+    return has_part.model_dump(exclude_none=True, by_alias=True)
 
 
 def _get_json_spool_max_size() -> int:
@@ -389,8 +337,7 @@ def write_file_manifest(
     enabled: bool = False,
     fileset_manifest: bool = False
 ) -> dict | None:
-    """Write file_manifest.json to S3 and return a MediaObject pointing to that manifest."""
-    manifest_size_bytes = 0
+    """Write file_manifest.json to S3 and return a LinkedData reference to that manifest."""
     if not fileset_manifest:
         # generating manifest for resource level associated media
         manifest_path = md.resource_associated_media_jsonld_path
@@ -401,18 +348,18 @@ def write_file_manifest(
         data_path_prefix = md.content_type_contents_path
     if md.is_content_file or not exists(manifest_path, md.zone):
         try:
-            manifest_size_bytes = _write_json_array(
+            _write_json_array(
                 manifest_path,
                 iter_file_manifest(data_path_prefix, enabled=enabled, zone=md.zone),
                 md.zone
             )
-            return _build_manifest_reference(manifest_path, manifest_size_bytes, zone=md.zone)
+            return _build_manifest_reference(manifest_path, zone=md.zone)
         except Exception as e:
             print(f"Error writing file manifest to {manifest_path}: {str(e)}")
             raise
     else:
         try:
-            return _build_manifest_reference(manifest_path, manifest_size_bytes, from_manifest_file=True, zone=md.zone)
+            return _build_manifest_reference(manifest_path, zone=md.zone)
         except Exception as e:
             print(f"Error building manifest reference for {manifest_path}: {str(e)}")
             raise

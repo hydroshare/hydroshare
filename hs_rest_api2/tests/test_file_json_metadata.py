@@ -8,6 +8,7 @@ from hsmodels.schemas.aggregations import GeographicFeatureMetadataIn, Geographi
     MultidimensionalMetadataIn, SingleFileMetadataIn, FileSetMetadataIn, TimeSeriesMetadataIn, \
     ReferencedTimeSeriesMetadataIn, ModelProgramMetadataIn, ModelInstanceMetadataIn, CSVFileMetadataIn
 from rest_framework import status
+from unittest_parametrize import ParametrizedTestCase, parametrize, param
 
 from hs_core.hydroshare import resource, current_site_url
 from hs_core.tests.api.rest.base import HSRESTTestCase
@@ -34,7 +35,7 @@ def prepare_resource(self, folder):
     prepare_resource_util(folder, self.res, self.user, self.extracted_directory, self.test_bag_path)
 
 
-class TestFileBasedJSON(HSRESTTestCase):
+class TestFileBasedJSON(HSRESTTestCase, ParametrizedTestCase):
 
     base_dir = 'hs_rest_api2/tests/data/json/'
 
@@ -62,7 +63,8 @@ class TestFileBasedJSON(HSRESTTestCase):
 
     def tearDown(self):
         super(TestFileBasedJSON, self).tearDown()
-        os.remove(self.test_bag_path)
+        if os.path.exists(self.test_bag_path):
+            os.remove(self.test_bag_path)
         self.res.delete()
 
     def _test_metadata_update_retrieve(self, endpoint, schema_in, json_put_file, aggregation_path=None):
@@ -243,3 +245,33 @@ class TestFileBasedJSON(HSRESTTestCase):
         response = self.client.put(reverse("hsapi2:referenced_time_series_metadata_json",
                                            kwargs=kwargs), data=in_json, content_type='application/json')
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    @parametrize(
+        "start,end",
+        [
+            param("2026-06-14T00:00:00", "2026-06-16T00:00:00", id="iso_datetime"),
+            param("2026-06-14", "2026-06-16", id="dashes_date_only"),
+            param("2026/06/14", "2026/06/16", id="slashes_year_first"),
+            param("06/14/2026", "06/16/2026", id="slashes_month_first"),
+        ],
+    )
+    def test_period_coverage_date_format(self, start, end):
+        kwargs = {"pk": self.res.short_id}
+        in_json = {
+            "title": "abc",
+            "period_coverage": {
+                "start": start,
+                "end": end
+            }
+        }
+        response = self.client.put(
+            reverse("hsapi2:resource_metadata_json", kwargs=kwargs),
+            data=json.dumps(in_json),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        temporal = self.res.metadata.temporal_coverage
+        self.assertIsNotNone(temporal)
+        self.assertEqual(temporal.value['start'], '2026-06-14')
+        self.assertEqual(temporal.value['end'], '2026-06-16')

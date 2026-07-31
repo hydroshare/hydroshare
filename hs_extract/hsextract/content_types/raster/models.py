@@ -1,4 +1,5 @@
 import os
+
 from hsextract.content_types.models import ContentType, FileMetadataObject
 from hsextract.content_types.raster.hs_cn_extraction import list_tif_files_s3, encode_raster_metadata
 
@@ -70,7 +71,7 @@ class RasterMetadataObject(FileMetadataObject):
             file_to_extract = self.media_object_path(vrt_file[0])
 
         metadata = encode_raster_metadata(file_to_extract, self.zone)
-        metadata = metadata.model_dump(exclude_none=True)
+        metadata = metadata.model_dump(exclude_none=True, by_alias=True)
         return metadata
 
     def clean_up_extracted_metadata(self) -> list[str]:

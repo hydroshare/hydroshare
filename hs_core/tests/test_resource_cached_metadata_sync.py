@@ -952,6 +952,7 @@ class TestDenormalizedMetadataSync(TestCase):
         self.assertEqual(relations[0]['value'], 'https://www.hydroshare.org/resource/12345')
         modified_date2 = self.resource.cached_metadata['modified']
         modified_date2 = datetime.fromisoformat(modified_date2)
+        # Modified date should change for isDescribedBy relation since it is user-editable
         self.assertGreater(modified_date2, modified_date1)
 
         # Update the relation
@@ -973,7 +974,8 @@ class TestDenormalizedMetadataSync(TestCase):
         self.assertEqual(relations[0]['value'], 'https://www.hydroshare.org/resource/67890')
         modified_date3 = self.resource.cached_metadata['modified']
         modified_date3 = datetime.fromisoformat(modified_date3)
-        self.assertGreater(modified_date3, modified_date2)
+        # Modified date should not change for isPartOf relation since it is not user-editable
+        self.assertEqual(modified_date3, modified_date2)
 
     def test_relation_post_delete_updates_cached_metadata(self):
         """Test that deleting a Relation element triggers cached metadata update."""
@@ -1008,6 +1010,34 @@ class TestDenormalizedMetadataSync(TestCase):
         self.assertEqual(relations[0]['type_description'], 'This resource includes')
         self.assertFalse(relations[0]['is_user_editable'])
         self.assertEqual(relations[0]['value'], 'https://www.hydroshare.org/resource/67890')
+        modified_date2 = self.resource.cached_metadata['modified']
+        modified_date2 = datetime.fromisoformat(modified_date2)
+        # Modified date should not change for isPartOf relation since it is not user-editable
+        self.assertEqual(modified_date2, modified_date1)
+
+    def test_delete_user_managed_relation_updates_cached_metadata(self):
+        """Test that deleting a user-managed Relation element triggers cached metadata update."""
+        # Create relation first
+        relation = self.resource.metadata.create_element(
+            'relation',
+            type='references',
+            value='https://www.hydroshare.org/resource/12345'
+        )
+
+        # Verify relations are in cached metadata
+        self.resource.refresh_from_db()
+        relations = self.resource.cached_metadata.get('relations', [])
+        self.assertEqual(len(relations), 1)
+        modified_date1 = self.resource.cached_metadata['modified']
+        modified_date1 = datetime.fromisoformat(modified_date1)
+
+        # Delete relation
+        relation.delete()
+
+        # Verify cached metadata was updated
+        self.resource.refresh_from_db()
+        relations = self.resource.cached_metadata.get('relations', [])
+        self.assertEqual(len(relations), 0)
         modified_date2 = self.resource.cached_metadata['modified']
         modified_date2 = datetime.fromisoformat(modified_date2)
         self.assertGreater(modified_date2, modified_date1)

@@ -101,6 +101,10 @@ $(document).ready(function() {
 
     if (edit_mode.toLowerCase() === "true") {
         $("#coverage-header").append($('<div><input id="btn-calc-coverage" value="Calculate Coverages" class="btn btn-info" type="button"/></div>'));
+        bindResourceSpatialDeleteOption($("#collection-res-id").val());
+        bindResourceTemporalDeleteOption($("#collection-res-id").val());
+        setResourceSpatialCoverageDeleteOption();
+        setResourceTemporalCoverageDeleteOption();
         // load collectable resources asynchronously
         getCollectableResources();
     }

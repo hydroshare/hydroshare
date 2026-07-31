@@ -80,7 +80,7 @@ class AtlasLandingView(TemplateView):
 
         # Build the owners payload the same shape the legacy left-header
         # template feeds to its Vue widget (USERS_JSON). The iframe-hosted
-        # landing page picks this up via postMessage in atlas.html.
+        # landing page picks this up via postMessage in search.html.
         owners = []
         for owner in resource.raccess.owners.all():
             owner.can_undo = False
@@ -113,4 +113,4 @@ class AtlasLandingView(TemplateView):
             "creator_profiles_json": json.dumps(creator_profiles),
             "alerts_json": json.dumps(alerts),
         }
-        return render(request, 'hs_discover/atlas.html', context)
+        return render(request, 'pages/search.html', context)

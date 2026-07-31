@@ -59,7 +59,7 @@ p {
   max-width: 70rem;
 }
 
-// This app is loaded inside an iframe (atlas.html) whose height is driven by
+// This app is loaded inside an iframe (search.html) whose height is driven by
 // `iframe.contentWindow.document.body`'s ResizeObserver. Vuetify's default
 // `.v-application__wrap { min-height: 100vh; }` creates a feedback loop with
 // that observer: growing content makes the iframe taller, which makes `100vh`
