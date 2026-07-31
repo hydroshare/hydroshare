@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List, Optional, Union
+from typing import Annotated, List, Optional, Union
 
 
 from pydantic import (
@@ -101,7 +101,7 @@ class CoreMetadata(SchemaBaseModel):
         min_length=1,
         description="Keywords or tags used to describe the dataset, delimited by commas.",
     )
-    license: Union[CreativeWork, HttpUrl] = Field(
+    license: Union[CreativeWork, Annotated[HttpUrl, Field(title="Custom License")]] = Field(
         description="A license document that applies to the resource."
     )
     provider: Union[Organization, Provider] = Field(
