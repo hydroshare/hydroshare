@@ -35,6 +35,23 @@ async function downloadBag(
   startBrowserDownload(downloadUrl);
 }
 
+async function downloadZippedFile(
+  downloadUrl: string,
+  setZippedDownloading: (value: boolean) => void,
+) {
+  setZippedDownloading(false);
+  Notifications.toast({
+    title: "Success",
+    message: h('span', [
+      'Your zipped download will start in a few seconds. If it does not, use ',
+      h('a', { href: downloadUrl, rel: 'noopener noreferrer' }, 'this link'),
+      ' to download directly.'
+    ]),
+    type: "success",
+  });
+  startBrowserDownload(downloadUrl);
+}
+
 async function pollArchiveTask(taskId: string, maxAttempts = 30): Promise<string> {
   for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
     const response = await fetch(`/hsapi/_internal/get_task/${encodeURIComponent(taskId)}`, {
@@ -134,9 +151,54 @@ export const onDownloadArchive = async (
   }
 }
 
-export const onDownloadZipped = async (items: (IFile | IFolder)[]) => {
-  console.log("Download zipped button clicked");
-  items.forEach(item => console.log(item.path));
+export const onDownloadZipped = async (
+  item: IFile | IFolder,
+  resourceId: string,
+  setZippedDownloading: (value: boolean) => void,
+) => {
+  try {
+    setZippedDownloading(true);
+
+    const path = item.path;
+    if (!path) {
+      throw new Error("Missing item path for zipped download.");
+    }
+    const response = await fetch(
+      `/resource/${resourceId}/data/contents/${path}/?zipped=true`,
+      {
+        method: "GET",
+        headers: {
+          "X-Requested-With": "XMLHttpRequest",
+          Accept: "application/json",
+        },
+      },
+    );
+
+    const contentType = response.headers.get("content-type") || "";
+
+    if (contentType.includes("application/json")) {
+      const resp = await response.json();
+
+      if (resp?.status === "completed" && resp?.payload) {
+        await downloadZippedFile(resp.payload, setZippedDownloading);
+        return;
+      }
+
+      if (resp?.status === "progress" && resp?.id) {
+        const payload = await pollArchiveTask(resp.id);
+        await downloadZippedFile(payload, setZippedDownloading);
+      }
+      return;
+    }
+  } catch (error: any) {
+    setZippedDownloading(false);
+    console.error("Error fetching zipped download endpoint:", error);
+    Notifications.toast({
+      title: "Error",
+      message: `Failed to fetch zipped download endpoint: ${error.message}`,
+      type: "error",
+    });
+  }
 }
 
 export const readRootFolder = async (path: string, S3Client: S3Client, bucket: string): Promise<Partial<IFile | IFolder>[]> => {

@@ -410,14 +410,16 @@
                 :has-file-metadata="() => true"
                 :canDownloadItem="() => true"
                 :archiveDownloading="archiveDownloading"
-                :load-file-preview="(item) => loadFilePreview(item)"
+                downloadArchiveHelpText="Download all content as Zipped BagIt Archive"
+                :zippedDownloading="zippedDownloading"
+                :load-file-preview="loadFilePreview"
                 :showDownloadZippedButton="true"
                 :showDownloadArchiveButton="true"
                 @download="
                   onFileDownload($event, resourceId, s3Client, s3Info.bucket)
                 "
                 @downloadArchive="handleDownloadArchive"
-                @downloadZipped="onDownloadZipped($event)"
+                @downloadZipped="handleDownloadZipped($event)"
               >
                 <template #prepend>
                   <span />
@@ -786,7 +788,7 @@ import {
   CzFileExplorer,
   Notifications,
 } from "@cznethub/cznet-vue-core";
-import type { IFolder } from "@cznethub/cznet-vue-core/dist/types";
+import type { IFile, IFolder } from "@cznethub/cznet-vue-core/dist/types";
 import { GetObjectCommand, S3Client, _Object } from "@aws-sdk/client-s3";
 import { stringify } from "@/utils";
 import { fetchResource, onFileDownload, onDownloadArchive, onDownloadZipped } from "./shared";
@@ -843,12 +845,11 @@ class LandingPage extends Vue {
   hasTxtReadme = false;
   isLoadingMD = false;
   archiveDownloading = false;
+  zippedDownloading = false;
 
   schema!: any;
   uischema!: any;
   onFileDownload = onFileDownload;
-  onDownloadArchive = onDownloadArchive;
-  onDownloadZipped = onDownloadZipped;
 
   async handleDownloadArchive() {
     if (this.archiveDownloading) return;
@@ -866,6 +867,18 @@ class LandingPage extends Vue {
       );
     } finally {
       this.archiveDownloading = false;
+    }
+  }
+
+  async handleDownloadZipped(event: IFile | IFolder) {
+    if (this.zippedDownloading) return;
+
+    try {
+      await onDownloadZipped(event, this.resourceId, (value) => {
+        this.zippedDownloading = value;
+      });
+    } finally {
+      this.zippedDownloading = false;
     }
   }
 
