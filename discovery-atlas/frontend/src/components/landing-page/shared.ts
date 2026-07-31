@@ -1,6 +1,7 @@
 import { _Object, CommonPrefix, GetObjectCommand, ListObjectsV2Command, S3Client } from "@aws-sdk/client-s3";
 import { Notifications } from "@cznethub/cznet-vue-core";
 import { IFile, IFolder } from "@cznethub/cznet-vue-core/dist/types";
+import { S3_PROXY_URL } from "@/constants";
 
 export const onFileDownload = async (items: (IFile | IFolder)[], resourceId: string, s3Client: S3Client, bucket: string) => {
   try {
@@ -131,10 +132,15 @@ export const fetchResource = async (resourceId: string, s3Client: S3Client, buck
 
   try {
     console.log(`Fetching metadata from S3: ${bucket}/${key}`);
-    const result = await s3Client.send(
-      new GetObjectCommand({ Bucket: bucket, Key: key }),
-    );
-    const bodyContents = await result.Body?.transformToString();
+    // Cache-busting read (mirrors loadReadme) so the form reflects a just-saved resource
+    const res = await fetch(`${S3_PROXY_URL}/${bucket}/${key}?_=${Date.now()}`, {
+      credentials: "include",
+      cache: "no-store",
+    });
+    if (!res.ok) {
+      throw new Error(`Failed to fetch metadata (HTTP ${res.status})`);
+    }
+    const bodyContents = await res.text();
 
     try {
       data = JSON.parse(bodyContents || "");
