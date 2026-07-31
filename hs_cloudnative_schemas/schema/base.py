@@ -67,6 +67,19 @@ def modify_json_schema(schema: dict[str, Any]) -> None:
         )
         schema["errorMessage"] = {"pattern": 'must match format "url"'}
 
+    # Hoist a lone $ref out of a single-item allOf/anyOf/oneOf wrapper.
+    for key in ("allOf", "anyOf", "oneOf"):
+        subs = schema.get(key)
+        if (
+            isinstance(subs, list)
+            and len(subs) == 1
+            and isinstance(subs[0], dict)
+            and list(subs[0].keys()) == ["$ref"]
+        ):
+            schema["$ref"] = subs[0]["$ref"]
+            del schema[key]
+            break
+
     for prop in schema.get("properties", {}).values():
         if isinstance(prop, dict):
             modify_json_schema(prop)
