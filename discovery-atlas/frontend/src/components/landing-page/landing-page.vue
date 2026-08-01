@@ -773,23 +773,20 @@
   </v-container>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import "github-markdown-css/github-markdown-light.css";
-import { Component, Vue, toNative, Ref } from "vue-facing-decorator";
 import {
-  CzForm,
   CzFileExplorer,
   Notifications,
 } from "@cznethub/cznet-vue-core";
 import type { IFolder } from "@cznethub/cznet-vue-core/dist/types";
 import { GetObjectCommand, S3Client, _Object } from "@aws-sdk/client-s3";
-import { stringify } from "@/utils";
 import { fetchResource, onFileDownload } from "./shared";
 import { loadReadme } from "./readme-s3";
 import { createCookieS3Client } from "./cookie-s3-client";
 import User from "@/models/user.model";
 import prettyBytes from "pretty-bytes";
-import { useGoTo } from "vuetify";
+import { useRoute } from "vue-router";
 import { EnumCreativeWorkStatus } from "@/types";
 import { contentTypeLabels, contentTypeLogos, S3_PROXY_URL } from "@/constants";
 import markdownit from "markdown-it";
@@ -816,582 +813,539 @@ const md = markdownit({
   },
 });
 
-@Component({
-  components: { CzForm, CzFileExplorer, CdSpatialCoverageMap, CdAuthorProfile, CdOwnerProfile, CdManageAccess },
-  name: "App",
-})
-class LandingPage extends Vue {
-  resourceId!: string;
+const route = useRoute();
 
-  @Ref("form") form!: InstanceType<typeof CzForm>;
-  @Ref("fileExplorer") fileExplorer!: InstanceType<typeof CzFileExplorer>;
+const resourceId = ref<string>("");
 
-  protected get isLoggedIn(): boolean {
-    return User.$state.isLoggedIn;
+const isLoggedIn = computed<boolean>(() => User.$state.isLoggedIn);
+
+const showDescription = ref(false);
+const isDescriptionClamped = ref(false);
+const showManageAccess = ref(false);
+const readmeMd = ref("");
+const readMeFileName = ref("");
+const hasTxtReadme = ref(false);
+const isLoadingMD = ref(false);
+
+const schema = ref<any>();
+const uischema = ref<any>();
+
+/**
+ * Fetches a Blob for cz-file-explorer's preview dialog. The dialog passes
+ * the explorer-annotated `item` (with `path` already set by `onPreview` →
+ * `getPathString`).
+ */
+async function loadFilePreview(item: any): Promise<Blob> {
+  const key = `${resourceId.value}/data/contents/${item.path || item.name}`;
+  const result = await s3Client.value.send(
+    new GetObjectCommand({ Bucket: s3Info.value.bucket, Key: key }),
+  );
+  const bytes = await result.Body?.transformToByteArray();
+  if (!bytes) throw new Error("Empty response from S3");
+  return new Blob([bytes], {
+    type: result.ContentType || "application/octet-stream",
+  });
+}
+
+const data = ref<Record<string, any>>({});
+const owners = ref<any[]>([]);
+const creatorProfiles = ref<Array<{
+  name: string;
+  hs_user_id?: number | null;
+  is_active_user?: boolean;
+  relative_uri?: string | null;
+  identifiers?: Record<string, string> | null;
+}>>([]);
+const alerts = ref<{
+  justCreated?: boolean;
+  justCopied?: boolean;
+  missingMetadata?: string[];
+  recommendedMissing?: string[];
+  hasRequiredContentFiles?: boolean;
+  isUntitled?: boolean;
+  isReplacedBy?: string | null;
+  isVersionOf?: string | null;
+  reviewPending?: boolean;
+  isPublished?: boolean;
+  displayName?: string;
+}>({});
+const dismissedAlerts = ref<Record<string, boolean>>({});
+const onParentMessage = (event: MessageEvent) => {
+  // search.html in the parent posts `{ parentSearch, owners }` after the
+  // iframe loads. Owners are injected from the Django view because they
+  // aren't part of the S3 dataset_metadata.json payload.
+  if (event.origin !== window.location.origin) return;
+  const payload = event.data;
+  if (payload && Array.isArray(payload.owners)) {
+    owners.value = payload.owners;
   }
+};
 
-  showDescription = false;
-  isDescriptionClamped = false;
-  showManageAccess = false;
-  readmeMd = "";
-  readMeFileName = "";
-  hasTxtReadme = false;
-  isLoadingMD = false;
+const isLoadingFiles = ref(true);
+const isFetchingMetadata = ref(true);
+const wasLoaded = ref(true);
 
-  schema!: any;
-  uischema!: any;
-  onFileDownload = onFileDownload;
+const s3Client = shallowRef<S3Client>(undefined as unknown as S3Client);
+const s3Host = S3_PROXY_URL;
 
-  /**
-   * Fetches a Blob for cz-file-explorer's preview dialog. The dialog passes
-   * the explorer-annotated `item` (with `path` already set by `onPreview` →
-   * `getPathString`). Must be a real method (not an arrow class field) so
-   * vue-facing-decorator's reactive-proxy wrapping doesn't shadow s3Client —
-   * the prop site in the template wraps it in an inline arrow to bind `this`.
-   */
-  async loadFilePreview(item: any): Promise<Blob> {
-    const key = `${this.resourceId}/data/contents/${item.path || item.name}`;
-    const result = await this.s3Client.send(
-      new GetObjectCommand({ Bucket: this.s3Info.bucket, Key: key }),
-    );
-    const bytes = await result.Body?.transformToByteArray();
-    if (!bytes) throw new Error("Empty response from S3");
-    return new Blob([bytes], {
-      type: result.ContentType || "application/octet-stream",
-    });
-  }
+const s3Info = ref({
+  bucket: "",
+  prefix: "",
+});
 
-  data: Record<string, any> = {};
-  owners: any[] = [];
-  creatorProfiles: Array<{
-    name: string;
-    hs_user_id?: number | null;
-    is_active_user?: boolean;
-    relative_uri?: string | null;
-    identifiers?: Record<string, string> | null;
-  }> = [];
-  alerts: {
-    justCreated?: boolean;
-    justCopied?: boolean;
-    missingMetadata?: string[];
-    recommendedMissing?: string[];
-    hasRequiredContentFiles?: boolean;
-    isUntitled?: boolean;
-    isReplacedBy?: string | null;
-    isVersionOf?: string | null;
-    reviewPending?: boolean;
-    isPublished?: boolean;
-    displayName?: string;
-  } = {};
-  dismissedAlerts: Record<string, boolean> = {};
-  private onParentMessage = (event: MessageEvent) => {
-    // search.html in the parent posts `{ parentSearch, owners }` after the
-    // iframe loads. Owners are injected from the Django view because they
-    // aren't part of the S3 dataset_metadata.json payload.
-    if (event.origin !== window.location.origin) return;
-    const payload = event.data;
-    if (payload && Array.isArray(payload.owners)) {
-      this.owners = payload.owners;
-    }
-  };
-  stringify = stringify;
+const rootDirectory = ref<Partial<IFolder>>({
+  name: "root",
+  children: [],
+});
+const fileExplorerConfig = {
+  isReadOnly: true, // Unused for now
+  hasFolders: true,
+};
 
-  isLoadingFiles: boolean = true;
-  currentPath: string = "";
-  isFetchingMetadata = true;
-  wasLoaded = true;
+function startS3Client() {
+  s3Client.value = createCookieS3Client(s3Host);
+}
+// Labels read as supporting context (small, uppercase, muted) so values
+// — the actual data — stand out as the primary content.
+const infoLabelAttr = {
+  class:
+    "text-caption text-uppercase text-medium-emphasis font-weight-medium dataset-info__label",
+};
+const selectedMetadata = ref<any>(false);
+const showMetadata = ref(false);
 
-  s3Client!: S3Client;
-  s3Host: string = S3_PROXY_URL;
+// mb-2 used to live here; it doubled-up with the grid's row-gap and made
+// spacing between rows inconsistent (text rows had a margin but card-based
+// rows like author profiles did not). The grid handles spacing now.
+const infoValueAttr = {
+  class: "text-body-2 dataset-info__value",
+};
+const headingAttr = {
+  class:
+    "section-heading text-subtitle-1 font-weight-bold text-uppercase mb-3",
+};
 
-  s3Info = {
-    bucket: "",
-    prefix: "",
-  };
+function onShowMetadata(item: any) {
+  selectedMetadata.value = item;
+  showMetadata.value = true;
+}
 
-  config = {
-    restrict: true,
-    trim: true,
-    showUnfocusedDescription: false,
-    hideRequiredAsterisk: false,
-    collapseNewItems: false,
-    breakHorizontal: false,
-    initCollapsed: false,
-    hideAvatar: false,
-    hideArraySummaryValidation: false,
-    vuetify: {
-      commonAttrs: {
-        density: "compact",
-        variant: "outlined",
-        "persistent-hint": true,
-        "hide-details": false,
-      },
-    },
-    isViewMode: true,
-    isReadOnly: false,
-    isDisabled: false,
-  };
+function onCopy(text: string) {
+  navigator.clipboard.writeText(text);
+  Notifications.toast({ message: "Copied to clipboard", type: "info" });
+}
 
-  rootDirectory: Partial<IFolder> = {
-    name: "root",
-    children: [],
-  };
-  fileExplorerConfig = {
-    isReadOnly: true, // Unused for now
-    hasFolders: true,
-  };
+const tocItems = computed(() => User.$state.toc);
 
-  startS3Client() {
-    this.s3Client = createCookieS3Client(this.s3Host);
-  }
-  // Labels read as supporting context (small, uppercase, muted) so values
-  // — the actual data — stand out as the primary content.
-  infoLabelAttr = {
-    class:
-      "text-caption text-uppercase text-medium-emphasis font-weight-medium dataset-info__label",
-  };
-  selectedMetadata: any = false;
-  showMetadata = false;
+function scrollToSection(hash: string | null) {
+  if (!hash) return;
+  const el = document.querySelector(hash) as HTMLElement | null;
+  if (!el) return;
 
-  // mb-2 used to live here; it doubled-up with the grid's row-gap and made
-  // spacing between rows inconsistent (text rows had a margin but card-based
-  // rows like author profiles did not). The grid handles spacing now.
-  infoValueAttr = {
-    class: "text-body-2 dataset-info__value",
-  };
-  headingAttr = {
-    class:
-      "section-heading text-subtitle-1 font-weight-bold text-uppercase mb-3",
-  };
-  scrollOptions = {
-    offset: -80,
-    easing: "easeInOutCubic",
-  };
-  goTo = useGoTo();
-
-  onShowMetadata(item: any) {
-    this.selectedMetadata = item;
-    this.showMetadata = true;
-  }
-
-  onCopy(text: string) {
-    navigator.clipboard.writeText(text);
-    Notifications.toast({ message: "Copied to clipboard", type: "info" });
-  }
-
-  get tocItems() {
-    return User.$state.toc;
-  }
-
-  scrollToSection(hash: string | null) {
-    if (!hash) return;
-    const el = document.querySelector(hash) as HTMLElement | null;
-    if (!el) return;
-
-    // Mirror toc.vue: the iframe has scrolling="no" and is auto-sized to
-    // content, so window.scrollTo inside the iframe is a no-op. Reach across
-    // to the same-origin parent and scroll there.
-    if (window.parent && window.parent !== window) {
-      const frame = window.frameElement as HTMLIFrameElement | null;
-      if (frame) {
-        try {
-          const parentWin = window.parent as Window;
-          const iframeTop =
-            frame.getBoundingClientRect().top +
-            (parentWin.scrollY || parentWin.pageYOffset || 0);
-          const elTop = el.getBoundingClientRect().top;
-          parentWin.scrollTo({ top: iframeTop + elTop - 16, behavior: "smooth" });
-          return;
-        } catch {
-          // Cross-origin — fall through to in-iframe scroll.
-        }
-      }
-    }
-
-    const top = el.getBoundingClientRect().top + window.scrollY - 16;
-    window.scrollTo({ top, behavior: "smooth" });
-  }
-
-  setDescriptionBannerRef(el: any) {
-    // Mirrors cd.search-results' setBannerRef: only show the "Show more"
-    // button when the three-line clamp actually truncates the text.
-    if (!el || this.showDescription) return;
-    this.$nextTick(() => {
-      const bannerEl = el.$el || el;
-      const textEl = bannerEl.querySelector?.(".v-banner-text");
-      if (textEl) {
-        this.isDescriptionClamped = textEl.scrollHeight > textEl.clientHeight;
-      }
-    });
-  }
-
-  async loadReadmeFile() {
-    // S3 keys are case-sensitive, so probe the root listing for any
-    // file whose name matches readme.md / readme.txt case-insensitively.
-    const rootFiles = (this.rootDirectory.children || []).filter(
-      (c: any) => !Object.prototype.hasOwnProperty.call(c, "children"),
-    );
-    const mdFile = rootFiles.find(
-      (f: any) => typeof f.name === "string" && f.name.toLowerCase() === "readme.md",
-    );
-    const txtFile = rootFiles.find(
-      (f: any) => typeof f.name === "string" && f.name.toLowerCase() === "readme.txt",
-    );
-    const target = mdFile || txtFile;
-    if (!target) return;
-    this.hasTxtReadme = !mdFile;
-    this.readMeFileName = target.name;
-
-    // Cache-busting read (see loadReadme) so edits show without a cache clear.
-    let rawMd: string;
-    try {
-      this.isLoadingMD = true;
-      rawMd = await loadReadme(this.s3Info.bucket, this.resourceId, target.name);
-    } catch (e) {
-      // Failed to load — skip rendering and the TOC entry.
-      this.isLoadingMD = false;
-      return;
-    }
-
-    try {
-      this.readmeMd = this.hasTxtReadme ? rawMd : md.render(rawMd);
-    } catch (e) {
-      console.log(e);
-    } finally {
-      this.isLoadingMD = false;
-    }
-
-    // Patch the TOC after the readme is successfully loaded. buildToc() in
-    // loadResource() replaces User.$state.toc with a fresh array, so this
-    // must happen after that runs — i.e., after at least one await above.
-    const toc = User.$state.toc;
-    if (toc && !toc.some((t) => t.to === "#readme")) {
-      const filesIdx = toc.findIndex((t) => t.to === "#fileExplorer");
-      const entry = { text: "README", to: "#readme", level: 4 };
-      if (filesIdx >= 0) {
-        toc.splice(filesIdx + 1, 0, entry);
-      } else {
-        toc.push(entry);
+  // Mirror toc.vue: the iframe has scrolling="no" and is auto-sized to
+  // content, so window.scrollTo inside the iframe is a no-op. Reach across
+  // to the same-origin parent and scroll there.
+  if (window.parent && window.parent !== window) {
+    const frame = window.frameElement as HTMLIFrameElement | null;
+    if (frame) {
+      try {
+        const parentWin = window.parent as Window;
+        const iframeTop =
+          frame.getBoundingClientRect().top +
+          (parentWin.scrollY || parentWin.pageYOffset || 0);
+        const elTop = el.getBoundingClientRect().top;
+        parentWin.scrollTo({ top: iframeTop + elTop - 16, behavior: "smooth" });
+        return;
+      } catch {
+        // Cross-origin — fall through to in-iframe scroll.
       }
     }
   }
 
-  get showNewVersionAlert(): boolean {
-    return Boolean(
-      !this.dismissedAlerts.newVersion &&
-        this.alerts.justCreated &&
-        this.alerts.isVersionOf,
-    );
+  const top = el.getBoundingClientRect().top + window.scrollY - 16;
+  window.scrollTo({ top, behavior: "smooth" });
+}
+
+function setDescriptionBannerRef(el: any) {
+  // Mirrors cd.search-results' setBannerRef: only show the "Show more"
+  // button when the three-line clamp actually truncates the text.
+  if (!el || showDescription.value) return;
+  nextTick(() => {
+    const bannerEl = el.$el || el;
+    const textEl = bannerEl.querySelector?.(".v-banner-text");
+    if (textEl) {
+      isDescriptionClamped.value = textEl.scrollHeight > textEl.clientHeight;
+    }
+  });
+}
+
+async function loadReadmeFile() {
+  // S3 keys are case-sensitive, so probe the root listing for any
+  // file whose name matches readme.md / readme.txt case-insensitively.
+  const rootFiles = (rootDirectory.value.children || []).filter(
+    (c: any) => !Object.prototype.hasOwnProperty.call(c, "children"),
+  );
+  const mdFile = rootFiles.find(
+    (f: any) => typeof f.name === "string" && f.name.toLowerCase() === "readme.md",
+  );
+  const txtFile = rootFiles.find(
+    (f: any) => typeof f.name === "string" && f.name.toLowerCase() === "readme.txt",
+  );
+  const target = mdFile || txtFile;
+  if (!target) return;
+  hasTxtReadme.value = !mdFile;
+  readMeFileName.value = target.name;
+
+  // Cache-busting read (see loadReadme) so edits show without a cache clear.
+  let rawMd: string;
+  try {
+    isLoadingMD.value = true;
+    rawMd = await loadReadme(s3Info.value.bucket, resourceId.value, target.name);
+  } catch (e) {
+    // Failed to load — skip rendering and the TOC entry.
+    isLoadingMD.value = false;
+    return;
   }
 
-  get showCopyAlert(): boolean {
-    return Boolean(
-      !this.dismissedAlerts.copy &&
-        this.alerts.justCreated &&
-        this.alerts.justCopied,
-    );
+  try {
+    readmeMd.value = hasTxtReadme.value ? rawMd : md.render(rawMd);
+  } catch (e) {
+    console.log(e);
+  } finally {
+    isLoadingMD.value = false;
   }
 
-  get showMissingMetadataAlert(): boolean {
-    if (this.dismissedAlerts.missing) return false;
-    const hasMissing = (this.alerts.missingMetadata || []).length > 0;
-    const noFiles = this.alerts.hasRequiredContentFiles === false;
-    return Boolean(hasMissing || this.alerts.isUntitled || noFiles);
+  // Patch the TOC after the readme is successfully loaded. buildToc() in
+  // loadResource() replaces User.$state.toc with a fresh array, so this
+  // must happen after that runs — i.e., after at least one await above.
+  const toc = User.$state.toc;
+  if (toc && !toc.some((t) => t.to === "#readme")) {
+    const filesIdx = toc.findIndex((t) => t.to === "#fileExplorer");
+    const entry = { text: "README", to: "#readme", level: 4 };
+    if (filesIdx >= 0) {
+      toc.splice(filesIdx + 1, 0, entry);
+    } else {
+      toc.push(entry);
+    }
   }
+}
 
-  get showReplacedByAlert(): boolean {
-    return Boolean(!this.dismissedAlerts.replacedBy && this.alerts.isReplacedBy);
-  }
+const showNewVersionAlert = computed<boolean>(() =>
+  Boolean(
+    !dismissedAlerts.value.newVersion &&
+      alerts.value.justCreated &&
+      alerts.value.isVersionOf,
+  ),
+);
 
-  get showVersionOfAlert(): boolean {
-    // Only show the "older version exists" pointer when we're NOT also showing
-    // the just-created-new-version banner (which already explains the
-    // relationship and would otherwise duplicate the message).
-    return Boolean(
-      !this.dismissedAlerts.versionOf &&
-        this.alerts.isVersionOf &&
-        !this.alerts.justCreated,
-    );
-  }
+const showCopyAlert = computed<boolean>(() =>
+  Boolean(
+    !dismissedAlerts.value.copy &&
+      alerts.value.justCreated &&
+      alerts.value.justCopied,
+  ),
+);
 
-  // Prefer @type; fall back to legacy `type` for not-yet-migrated data.
-  get spatialGeoType(): string | undefined {
-    const geo = this.data.spatialCoverage?.geo;
-    return geo?.["@type"] ?? geo?.["type"];
-  }
+const showMissingMetadataAlert = computed<boolean>(() => {
+  if (dismissedAlerts.value.missing) return false;
+  const hasMissing = (alerts.value.missingMetadata || []).length > 0;
+  const noFiles = alerts.value.hasRequiredContentFiles === false;
+  return Boolean(hasMissing || alerts.value.isUntitled || noFiles);
+});
 
-  get hasSpatialFeatures(): boolean {
+const showReplacedByAlert = computed<boolean>(() =>
+  Boolean(!dismissedAlerts.value.replacedBy && alerts.value.isReplacedBy),
+);
+
+const showVersionOfAlert = computed<boolean>(() =>
+  // Only show the "older version exists" pointer when we're NOT also showing
+  // the just-created-new-version banner (which already explains the
+  // relationship and would otherwise duplicate the message).
+  Boolean(
+    !dismissedAlerts.value.versionOf &&
+      alerts.value.isVersionOf &&
+      !alerts.value.justCreated,
+  ),
+);
+
+// Prefer @type; fall back to legacy `type` for not-yet-migrated data.
+const spatialGeoType = computed<string | undefined>(() => {
+  const geo = data.value.spatialCoverage?.geo;
+  return geo?.["@type"] ?? geo?.["type"];
+});
+
+const hasSpatialFeatures = computed<boolean>(
+  () =>
     // `spatialCoverage` is schema.org Place; the actual geometry lives on
     // `.geo` and carries the GeoShape / GeoCoordinates type.
-    return (
-      this.spatialGeoType === "GeoShape" ||
-      this.spatialGeoType === "GeoCoordinates"
-    );
-  }
+    spatialGeoType.value === "GeoShape" ||
+    spatialGeoType.value === "GeoCoordinates",
+);
 
-  get isPublished(): boolean {
-    return this.data?.creativeWorkStatus?.name === "Published";
-  }
+const isPublished = computed<boolean>(
+  () => data.value?.creativeWorkStatus?.name === "Published",
+);
 
-  get potentialDoiUrl(): string {
-    return `https://doi.org/10.4211/hs.${this.resourceId}`;
-  }
+const potentialDoiUrl = computed<string>(
+  () => `https://doi.org/10.4211/hs.${resourceId.value}`,
+);
 
-  get citations(): string[] {
-    // hydroshare_schemaorg_adapter sets dataset.citation = [self.citation] —
-    // so the live JSON has data.citation as an array of strings. The legacy
-    // landing-page template referenced data.document[0].citation, which never
-    // exists in this payload.
-    const raw = this.data?.citation;
-    if (Array.isArray(raw)) return raw.filter((c: any) => typeof c === "string" && c.trim());
-    if (typeof raw === "string" && raw.trim()) return [raw];
-    return [];
-  }
+const citations = computed<string[]>(() => {
+  // hydroshare_schemaorg_adapter sets dataset.citation = [self.citation] —
+  // so the live JSON has data.citation as an array of strings. The legacy
+  // landing-page template referenced data.document[0].citation, which never
+  // exists in this payload.
+  const raw = data.value?.citation;
+  if (Array.isArray(raw)) return raw.filter((c: any) => typeof c === "string" && c.trim());
+  if (typeof raw === "string" && raw.trim()) return [raw];
+  return [];
+});
 
-  get licenseBadgeUrl(): string | undefined {
-    // The license `name` is the rights statement; map the canonical CC variants
-    // to the badge images served by Django from theme/static/img/cc-badges/.
-    const statement: string = this.data?.license?.name || "";
-    const badges: { [key: string]: string } = {
-      "This resource is shared under the Creative Commons Attribution CC BY.": "CC-BY.png",
-      "This resource is shared under the Creative Commons Attribution-ShareAlike CC BY-SA.": "CC-BY-SA.png",
-      "This resource is shared under the Creative Commons Attribution-NoDerivs CC BY-ND.": "CC-BY-ND.png",
-      "This resource is shared under the Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA.": "CC-BY-NC-SA.png",
-      "This resource is shared under the Creative Commons Attribution-NoCommercial CC BY-NC.": "CC-BY-NC.png",
-      "This resource is shared under the Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND.": "CC-BY-NC-ND.png",
-    };
-    const file = badges[statement];
-    return file ? `/static/static/img/cc-badges/${file}` : undefined;
-  }
+const licenseBadgeUrl = computed<string | undefined>(() => {
+  // The license `name` is the rights statement; map the canonical CC variants
+  // to the badge images served by Django from theme/static/img/cc-badges/.
+  const statement: string = data.value?.license?.name || "";
+  const badges: { [key: string]: string } = {
+    "This resource is shared under the Creative Commons Attribution CC BY.": "CC-BY.png",
+    "This resource is shared under the Creative Commons Attribution-ShareAlike CC BY-SA.": "CC-BY-SA.png",
+    "This resource is shared under the Creative Commons Attribution-NoDerivs CC BY-ND.": "CC-BY-ND.png",
+    "This resource is shared under the Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA.": "CC-BY-NC-SA.png",
+    "This resource is shared under the Creative Commons Attribution-NoCommercial CC BY-NC.": "CC-BY-NC.png",
+    "This resource is shared under the Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND.": "CC-BY-NC-ND.png",
+  };
+  const file = badges[statement];
+  return file ? `/static/static/img/cc-badges/${file}` : undefined;
+});
 
-  get resourceTypeKey(): string {
+const resourceTypeKey = computed<string>(
+  () =>
     // dataset_metadata.json's additionalType holds the HydroShare resource type
     // (e.g. "CompositeResource"). data["@type"] is the schema.org class ("Dataset").
-    return this.data?.additionalType || this.data?.["@type"] || "";
+    data.value?.additionalType || data.value?.["@type"] || "",
+);
+
+const resourceTypeLabel = computed<string>(() => {
+  const key = resourceTypeKey.value;
+  return contentTypeLabels[key] || key;
+});
+
+const resourceTypeIcon = computed<string | undefined>(
+  () => contentTypeLogos[resourceTypeKey.value],
+);
+
+const contentSize = computed(() => {
+  const sumTree = (nodes: any[]): number =>
+    nodes.reduce((acc, n) => {
+      if (Array.isArray(n?.children)) {
+        return acc + sumTree(n.children);
+      }
+      return acc + (typeof n?.uploadedSize === "number" ? n.uploadedSize : 0);
+    }, 0);
+
+  const fromFiles = sumTree(rootDirectory.value.children || []);
+  if (fromFiles > 0) return prettyBytes(fromFiles);
+});
+
+const boxCoordinates = computed(() => {
+  const extents = data.value.spatialCoverage.geo.box
+    .trim()
+    .split(" ")
+    .map((n: string) => +n);
+  return {
+    north: extents[0],
+    east: extents[1],
+    south: extents[2],
+    west: extents[3],
+  };
+});
+
+// created()
+async function init() {
+  // Owners are injected by AtlasLandingView via the parent window
+  // (same-origin) — read them synchronously to avoid a race with the
+  // iframe-load postMessage. Fall back to the postMessage path if the
+  // global isn't there (e.g. component loaded directly outside the iframe).
+  try {
+    const parentWin = window.parent as any;
+    if (parentWin && parentWin !== window) {
+      if (Array.isArray(parentWin.HS_RESOURCE_OWNERS)) {
+        owners.value = parentWin.HS_RESOURCE_OWNERS;
+      }
+      if (Array.isArray(parentWin.HS_RESOURCE_CREATOR_PROFILES)) {
+        creatorProfiles.value = parentWin.HS_RESOURCE_CREATOR_PROFILES;
+      }
+      if (parentWin.HS_RESOURCE_ALERTS && typeof parentWin.HS_RESOURCE_ALERTS === "object") {
+        alerts.value = parentWin.HS_RESOURCE_ALERTS;
+      }
+    }
+  } catch {
+    // cross-origin access blocked — postMessage listener will handle it
+  }
+  window.addEventListener("message", onParentMessage);
+
+  if (!resourceId.value && route?.params?.resourceId) {
+    resourceId.value = route.params.resourceId as string;
   }
 
-  get resourceTypeLabel(): string {
-    const key = this.resourceTypeKey;
-    return contentTypeLabels[key] || key;
+  if (!resourceId.value) {
+    isFetchingMetadata.value = false;
+    wasLoaded.value = false;
+    return;
   }
 
-  get resourceTypeIcon(): string | undefined {
-    return contentTypeLogos[this.resourceTypeKey];
+  if (!isLoggedIn.value) {
+    // Refresh login state (e.g. just returned from a HydroShare login
+    // redirect). S3 access now rides on the session cookies themselves,
+    // so there are no credentials to mint.
+    await User.checkLoginStatus();
   }
 
-  get contentSize() {
-    const sumTree = (nodes: any[]): number =>
-      nodes.reduce((acc, n) => {
-        if (Array.isArray(n?.children)) {
-          return acc + sumTree(n.children);
-        }
-        return acc + (typeof n?.uploadedSize === "number" ? n.uploadedSize : 0);
-      }, 0);
-
-    const fromFiles = sumTree(this.rootDirectory.children || []);
-    if (fromFiles > 0) return prettyBytes(fromFiles);
-  }
-
-  get boxCoordinates() {
-    const extents = this.data.spatialCoverage.geo.box
-      .trim()
-      .split(" ")
-      .map((n: string) => +n);
-    return {
-      north: extents[0],
-      east: extents[1],
-      south: extents[2],
-      west: extents[3],
-    };
-  }
-
-  async created() {
-    // Owners are injected by AtlasLandingView via the parent window
-    // (same-origin) — read them synchronously to avoid a race with the
-    // iframe-load postMessage. Fall back to the postMessage path if the
-    // global isn't there (e.g. component loaded directly outside the iframe).
+  if (!s3Info.value.bucket || !s3Info.value.prefix) {
     try {
-      const parentWin = window.parent as any;
-      if (parentWin && parentWin !== window) {
-        if (Array.isArray(parentWin.HS_RESOURCE_OWNERS)) {
-          this.owners = parentWin.HS_RESOURCE_OWNERS;
-        }
-        if (Array.isArray(parentWin.HS_RESOURCE_CREATOR_PROFILES)) {
-          this.creatorProfiles = parentWin.HS_RESOURCE_CREATOR_PROFILES;
-        }
-        if (parentWin.HS_RESOURCE_ALERTS && typeof parentWin.HS_RESOURCE_ALERTS === "object") {
-          this.alerts = parentWin.HS_RESOURCE_ALERTS;
-        }
+      const s3info = await User.getResourceS3prefix(resourceId.value);
+      if (s3info) {
+        s3Info.value = s3info;
+        s3Info.value.prefix = `${resourceId.value}/.hsjsonld/`; // TODO: overriding wrong api response value
       }
-    } catch {
-      // cross-origin access blocked — postMessage listener will handle it
-    }
-    window.addEventListener("message", this.onParentMessage);
-
-    if (!this.resourceId && this.$route?.params?.resourceId) {
-      this.resourceId = this.$route.params.resourceId as string;
-    }
-
-    if (!this.resourceId) {
-      this.isFetchingMetadata = false;
-      this.wasLoaded = false;
-      return;
-    }
-
-    if (!this.isLoggedIn) {
-      // Refresh login state (e.g. just returned from a HydroShare login
-      // redirect). S3 access now rides on the session cookies themselves,
-      // so there are no credentials to mint.
-      await User.checkLoginStatus();
-    }
-
-    if (!this.s3Info.bucket || !this.s3Info.prefix) {
-      try {
-        const s3info = await User.getResourceS3prefix(this.resourceId);
-        if (s3info) {
-          this.s3Info = s3info;
-          this.s3Info.prefix = `${this.resourceId}/.hsjsonld/`; // TODO: overriding wrong api response value
-        }
-      } catch (e) {
-        this.isLoadingFiles = false;
-        this.isFetchingMetadata = false;
-      }
-    }
-
-    this.startS3Client();
-
-    /* @ts-ignore */
-    this.schema = await import(
-      `@/schemas/hydroshare/scientific_dataset_json_schema.json`
-    );
-
-    /* @ts-ignore */
-    this.uischema = await import(`@/schemas/hydroshare/view-uischema.json`);
-
-    await this.loadResource();
-  }
-
-  parseDate(date: string): string {
-    const parsed = new Date(Date.parse(date));
-    return parsed.toLocaleString("default", {
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-    });
-  }
-
-  getStatusColor(status: EnumCreativeWorkStatus) {
-    switch (status) {
-      case EnumCreativeWorkStatus.Private:
-        return "#d9534f";
-      case EnumCreativeWorkStatus.Discoverable:
-        return "#f0ad4e";
-      case EnumCreativeWorkStatus.Public:
-        return "#5cb85c";
-      case EnumCreativeWorkStatus.Published:
-        return "#4BB5C1";
-      default:
-        return "primary";
+    } catch (e) {
+      isLoadingFiles.value = false;
+      isFetchingMetadata.value = false;
     }
   }
 
-  buildToc() {
-    const d = this.data;
-    const toc: { text: string; to: string; level?: number }[] = [
-      { text: "Overview", to: "#overview" },
-      { text: "Details", to: "#details" },
-    ];
+  startS3Client();
 
-    if (d.description) {
-      toc.push({ text: "Abstract", to: "#description" });
-    }
+  /* @ts-ignore */
+  schema.value = await import(
+    `@/schemas/hydroshare/scientific_dataset_json_schema.json`
+  );
 
-    toc.push({ text: "Content", to: "#content" });
-    toc.push({ text: "Files", to: "#fileExplorer", level: 4 });
+  /* @ts-ignore */
+  uischema.value = await import(`@/schemas/hydroshare/view-uischema.json`);
 
-    if (d.funding?.length) {
-      toc.push({ text: "Funding", to: "#funding" });
-    }
-
-    const hasRelated =
-      d.hasPart?.length || d.isPartOf?.length || d.subjectOf?.length;
-    if (hasRelated) {
-      toc.push({ text: "Related Resources", to: "#related" });
-    }
-
-    User.$state.toc = toc;
-    User.$state.isTocReady = true;
-  }
-
-  beforeUnmount() {
-    User.$state.toc = [];
-    User.$state.isTocReady = false;
-    window.removeEventListener("message", this.onParentMessage);
-  }
-
-  private findCreatorProfile(creator: any) {
-    if (!creator?.name) return undefined;
-    return this.creatorProfiles.find(
-      (p) => p && p.name && p.name === creator.name,
-    );
-  }
-
-  creatorProfileLink(creator: any): string | null {
-    // The schema.org dataset_metadata.json carries no HydroShare-user linkage,
-    // so we match by name against the side-channel `creatorProfiles` payload
-    // (populated by AtlasLandingView from resource.cached_metadata.creators).
-    const profile = this.findCreatorProfile(creator);
-    if (!profile || !profile.is_active_user || !profile.relative_uri) return null;
-    return profile.relative_uri;
-  }
-
-  creatorIdentifiers(creator: any): Record<string, string> {
-    // Same side-channel rationale as creatorProfileLink — the schema.org
-    // adapter only emits ORCID, so we sourcemap the full dict from
-    // cached_metadata.creators.
-    const profile = this.findCreatorProfile(creator);
-    return profile?.identifiers || {};
-  }
-
-  async loadResource() {
-    this.isFetchingMetadata = true;
-    this.isLoadingFiles = true;
-    this.wasLoaded = true;
-    User.$state.toc = [];
-    User.$state.isTocReady = false;
-
-    const resource = await fetchResource(
-      this.resourceId,
-      this.s3Client,
-      this.s3Info.bucket,
-      `${this.s3Info.prefix}dataset_metadata.json`,
-    );
-
-    if (resource) {
-      this.data = resource.data;
-      // Live counters are passed by the Django AtlasLandingView via query params
-      // because dataset_metadata.json in S3 is a snapshot and lags the DB counters.
-      const liveViewCount = Number(this.$route.query.viewCount);
-      if (Number.isFinite(liveViewCount)) {
-        this.data.viewCount = liveViewCount;
-      }
-      const liveDownloadCount = Number(this.$route.query.downloadCount);
-      if (Number.isFinite(liveDownloadCount)) {
-        this.data.downloadCount = liveDownloadCount;
-      }
-      // @ts-expect-error The key property is generated when the component is initialized
-      this.rootDirectory.children = resource.initialStructure || [];
-      this.loadReadmeFile();
-      this.buildToc();
-    } else {
-      this.wasLoaded = false;
-    }
-    this.isFetchingMetadata = false;
-    this.isLoadingFiles = false;
-  }
-
+  await loadResource();
 }
-export default toNative(LandingPage);
+
+function parseDate(date: string): string {
+  const parsed = new Date(Date.parse(date));
+  return parsed.toLocaleString("default", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function getStatusColor(status: EnumCreativeWorkStatus) {
+  switch (status) {
+    case EnumCreativeWorkStatus.Private:
+      return "#d9534f";
+    case EnumCreativeWorkStatus.Discoverable:
+      return "#f0ad4e";
+    case EnumCreativeWorkStatus.Public:
+      return "#5cb85c";
+    case EnumCreativeWorkStatus.Published:
+      return "#4BB5C1";
+    default:
+      return "primary";
+  }
+}
+
+function buildToc() {
+  const d = data.value;
+  const toc: { text: string; to: string; level?: number }[] = [
+    { text: "Overview", to: "#overview" },
+    { text: "Details", to: "#details" },
+  ];
+
+  if (d.description) {
+    toc.push({ text: "Abstract", to: "#description" });
+  }
+
+  toc.push({ text: "Content", to: "#content" });
+  toc.push({ text: "Files", to: "#fileExplorer", level: 4 });
+
+  if (d.funding?.length) {
+    toc.push({ text: "Funding", to: "#funding" });
+  }
+
+  const hasRelated =
+    d.hasPart?.length || d.isPartOf?.length || d.subjectOf?.length;
+  if (hasRelated) {
+    toc.push({ text: "Related Resources", to: "#related" });
+  }
+
+  User.$state.toc = toc;
+  User.$state.isTocReady = true;
+}
+
+onBeforeUnmount(() => {
+  User.$state.toc = [];
+  User.$state.isTocReady = false;
+  window.removeEventListener("message", onParentMessage);
+});
+
+function findCreatorProfile(creator: any) {
+  if (!creator?.name) return undefined;
+  return creatorProfiles.value.find(
+    (p) => p && p.name && p.name === creator.name,
+  );
+}
+
+function creatorProfileLink(creator: any): string | null {
+  // The schema.org dataset_metadata.json carries no HydroShare-user linkage,
+  // so we match by name against the side-channel `creatorProfiles` payload
+  // (populated by AtlasLandingView from resource.cached_metadata.creators).
+  const profile = findCreatorProfile(creator);
+  if (!profile || !profile.is_active_user || !profile.relative_uri) return null;
+  return profile.relative_uri;
+}
+
+function creatorIdentifiers(creator: any): Record<string, string> {
+  // Same side-channel rationale as creatorProfileLink — the schema.org
+  // adapter only emits ORCID, so we sourcemap the full dict from
+  // cached_metadata.creators.
+  const profile = findCreatorProfile(creator);
+  return profile?.identifiers || {};
+}
+
+async function loadResource() {
+  isFetchingMetadata.value = true;
+  isLoadingFiles.value = true;
+  wasLoaded.value = true;
+  User.$state.toc = [];
+  User.$state.isTocReady = false;
+
+  const resource = await fetchResource(
+    resourceId.value,
+    s3Client.value,
+    s3Info.value.bucket,
+    `${s3Info.value.prefix}dataset_metadata.json`,
+  );
+
+  if (resource) {
+    data.value = resource.data;
+    // Live counters are passed by the Django AtlasLandingView via query params
+    // because dataset_metadata.json in S3 is a snapshot and lags the DB counters.
+    const liveViewCount = Number(route.query.viewCount);
+    if (Number.isFinite(liveViewCount)) {
+      data.value.viewCount = liveViewCount;
+    }
+    const liveDownloadCount = Number(route.query.downloadCount);
+    if (Number.isFinite(liveDownloadCount)) {
+      data.value.downloadCount = liveDownloadCount;
+    }
+    // @ts-expect-error The key property is generated when the component is initialized
+    rootDirectory.value.children = resource.initialStructure || [];
+    loadReadmeFile();
+    buildToc();
+  } else {
+    wasLoaded.value = false;
+  }
+  isFetchingMetadata.value = false;
+  isLoadingFiles.value = false;
+}
+
+init();
 </script>
 
 <style lang="scss" scoped>

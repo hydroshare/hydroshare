@@ -30,29 +30,18 @@
   </aside>
 </template>
 
-<script lang="ts">
-import { Component, Vue, toNative } from "vue-facing-decorator";
+<script setup lang="ts">
 import User from "@/models/user.model";
 
-@Component({
-  name: "toc",
-  components: {},
-})
-class Toc extends Vue {
-  activeItem = "";
+const activeItem = ref("");
 
-  get toc() {
-    return User.$state.toc;
-  }
+const toc = computed(() => User.$state.toc);
+const isTocReady = computed(() => User.$state.isTocReady);
 
-  get isTocReady() {
-    return User.$state.isTocReady;
-  }
-
-  onClick(hash: string): void {
-    const el = document.querySelector(hash) as HTMLElement | null;
-    if (!el) return;
-    this.activeItem = hash;
+function onClick(hash: string): void {
+  const el = document.querySelector(hash) as HTMLElement | null;
+  if (!el) return;
+  activeItem.value = hash;
 
     // The iframe has scrolling="no" and is sized to fit content, so
     // `window.scrollTo` inside the iframe is a no-op — the parent owns the
@@ -78,9 +67,6 @@ class Toc extends Vue {
     const top = el.getBoundingClientRect().top + window.scrollY - 16;
     window.scrollTo({ top, behavior: "smooth" });
   }
-}
-
-export default toNative(Toc);
 </script>
 
 <style lang="scss" scoped>

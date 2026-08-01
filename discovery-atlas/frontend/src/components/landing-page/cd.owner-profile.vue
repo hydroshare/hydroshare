@@ -139,39 +139,32 @@
   </v-menu>
 </template>
 
-<script lang="ts">
-import { Component, Vue, toNative, Prop } from "vue-facing-decorator";
+<script setup lang="ts">
 import { listIdentifiers, IdentifierItem } from "./identifier-attrs";
 
-@Component({
-  name: "cd-owner-profile",
-  components: {},
-})
-class CdOwnerProfile extends Vue {
-  @Prop({ type: Object, required: true }) owner!: any;
+const props = defineProps<{
+  owner: any;
+}>();
 
-  get organizations(): string[] {
-    // HydroShare stores `organization` as a single string with multiple values
-    // separated by ";" (see theme/static/js/profile.js splitAndWrapWithClass).
-    const raw = this.owner?.organization;
-    if (typeof raw !== "string") return [];
-    return raw
-      .split(";")
-      .map((s) => s.trim())
-      .filter(Boolean);
-  }
+const organizations = computed<string[]>(() => {
+  // HydroShare stores `organization` as a single string with multiple values
+  // separated by ";" (see theme/static/js/profile.js splitAndWrapWithClass).
+  const raw = props.owner?.organization;
+  if (typeof raw !== "string") return [];
+  return raw
+    .split(";")
+    .map((s) => s.trim())
+    .filter(Boolean);
+});
 
-  get location(): string {
-    const parts = [this.owner?.state, this.owner?.country].filter(Boolean);
-    return parts.join(", ");
-  }
+const location = computed<string>(() => {
+  const parts = [props.owner?.state, props.owner?.country].filter(Boolean);
+  return parts.join(", ");
+});
 
-  get identifierList(): IdentifierItem[] {
-    return listIdentifiers(this.owner?.identifiers);
-  }
-}
-
-export default toNative(CdOwnerProfile);
+const identifierList = computed<IdentifierItem[]>(() =>
+  listIdentifiers(props.owner?.identifiers),
+);
 </script>
 
 <style lang="scss" scoped>

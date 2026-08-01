@@ -100,8 +100,7 @@
   </div>
 </template>
 
-<script lang="ts">
-import { Component, Vue, toNative, Prop, Watch } from "vue-facing-decorator";
+<script setup lang="ts">
 import { S3Client } from "@aws-sdk/client-s3";
 import { Notifications } from "@cznethub/cznet-vue-core";
 import { renderMarkdown, isMarkdownFileName } from "./markdown";
@@ -110,191 +109,184 @@ import "github-markdown-css/github-markdown-light.css";
 
 // GitHub-style README editor. Loads/saves/converts its file in S3 directly,
 // independent of the metadata form.
-@Component({
-  name: "cd-readme-editor",
-  emits: ["change"],
-})
-class CdReadmeEditor extends Vue {
-  @Prop({ type: String, required: true }) resourceId!: string;
-  @Prop({ required: true }) s3Client!: S3Client;
-  @Prop({ type: String, required: true }) bucket!: string;
-  // README name from the parent's file tree, or null if none exists.
-  @Prop({ default: null }) fileName!: string | null;
+const props = withDefaults(
+  defineProps<{
+    resourceId: string;
+    s3Client: S3Client;
+    bucket: string;
+    // README name from the parent's file tree, or null if none exists.
+    fileName?: string | null;
+  }>(),
+  { fileName: null },
+);
 
-  tab: "write" | "preview" = "write";
-  raw = "";
-  savedRaw = "";
-  // Local filename; seeded from `fileName`, updated directly on conversion.
-  activeName: string | null = null;
-  isCreating = false;
-  isLoading = false;
-  isSaving = false;
-  isConverting = false;
+const emit = defineEmits(["change"]);
 
-  created() {
-    this.activeName = this.fileName;
-    if (this.activeName) {
-      this.load();
-    }
-  }
+const tab = ref<"write" | "preview">("write");
+const raw = ref("");
+const savedRaw = ref("");
+// Local filename; seeded from `fileName`, updated directly on conversion.
+const activeName = ref<string | null>(null);
+const isCreating = ref(false);
+const isLoading = ref(false);
+const isSaving = ref(false);
+const isConverting = ref(false);
 
-  // React to the parent renaming/removing the README, ignoring echoes of a
-  // name we set ourselves.
-  @Watch("fileName")
-  onFileNameChange(value: string | null) {
-    if (value === this.activeName) return;
-    this.activeName = value;
-    this.isCreating = false;
-    this.tab = "write";
+activeName.value = props.fileName;
+if (activeName.value) {
+  load();
+}
+
+// React to the parent renaming/removing the README, ignoring echoes of a
+// name we set ourselves.
+watch(
+  () => props.fileName,
+  (value) => {
+    if (value === activeName.value) return;
+    activeName.value = value;
+    isCreating.value = false;
+    tab.value = "write";
     if (value) {
-      this.load();
+      load();
     } else {
-      this.raw = "";
-      this.savedRaw = "";
+      raw.value = "";
+      savedRaw.value = "";
     }
-  }
+  },
+);
 
-  get showEditor(): boolean {
-    return this.activeName !== null || this.isCreating;
-  }
+const showEditor = computed<boolean>(
+  () => activeName.value !== null || isCreating.value,
+);
 
-  // The real file name, or the name a new README will be saved under.
-  get currentName(): string {
-    return this.activeName ?? (this.isCreating ? "readme.md" : "");
-  }
+// The real file name, or the name a new README will be saved under.
+const currentName = computed<string>(
+  () => activeName.value ?? (isCreating.value ? "readme.md" : ""),
+);
 
-  get isMarkdown(): boolean {
-    return isMarkdownFileName(this.currentName);
-  }
+const isMarkdown = computed<boolean>(() => isMarkdownFileName(currentName.value));
 
-  // Convert is only meaningful for an existing .txt file.
-  get canConvert(): boolean {
-    return this.activeName !== null && !this.isMarkdown;
-  }
+// Convert is only meaningful for an existing .txt file.
+const canConvert = computed<boolean>(
+  () => activeName.value !== null && !isMarkdown.value,
+);
 
-  get isDirty(): boolean {
-    return this.raw !== this.savedRaw;
-  }
+const isDirty = computed<boolean>(() => raw.value !== savedRaw.value);
 
-  get previewHtml(): string {
-    return renderMarkdown(this.raw);
-  }
+const previewHtml = computed<string>(() => renderMarkdown(raw.value));
 
-  get placeholder(): string {
-    return this.isMarkdown
-      ? "Write a README for your dataset in Markdown…"
-      : "Write a README for your dataset…";
-  }
+const placeholder = computed<string>(() =>
+  isMarkdown.value
+    ? "Write a README for your dataset in Markdown…"
+    : "Write a README for your dataset…",
+);
 
-  startCreate() {
-    this.isCreating = true;
-    this.raw = "";
-    this.savedRaw = "";
-    this.tab = "write";
-  }
+function startCreate() {
+  isCreating.value = true;
+  raw.value = "";
+  savedRaw.value = "";
+  tab.value = "write";
+}
 
-  // Revert to the last saved version.
-  discard() {
-    this.raw = this.savedRaw;
-  }
+// Revert to the last saved version.
+function discard() {
+  raw.value = savedRaw.value;
+}
 
-  async load() {
-    const name = this.activeName;
-    if (!name) return;
-    this.isLoading = true;
-    try {
-      const text = await loadReadme(this.bucket, this.resourceId, name);
-      this.raw = text;
-      this.savedRaw = text;
-    } catch (e: any) {
-      console.error("Failed to load README:", e);
-      Notifications.toast({
-        title: "Error",
-        message: "Failed to load the README file.",
-        type: "error",
-      });
-    } finally {
-      this.isLoading = false;
-    }
-  }
-
-  async save() {
-    const name = this.currentName;
-    if (!name || this.isSaving) return;
-    const wasNew = this.activeName === null;
-    // Snapshot so edits typed during the save aren't marked saved.
-    const body = this.raw;
-    this.isSaving = true;
-    try {
-      const size = await saveReadme(
-        this.s3Client,
-        this.bucket,
-        this.resourceId,
-        name,
-        body,
-      );
-      this.savedRaw = body;
-      if (wasNew) {
-        this.activeName = name;
-        this.isCreating = false;
-        this.$emit("change", { action: "created", name, size });
-      } else {
-        this.$emit("change", { action: "saved", name, size });
-      }
-      Notifications.toast({ message: "README saved.", type: "success" });
-    } catch (e: any) {
-      console.error("Failed to save README:", e);
-      Notifications.toast({
-        title: "Error",
-        message: `Failed to save the README. ${e?.message ?? ""}`.trim(),
-        type: "error",
-      });
-    } finally {
-      this.isSaving = false;
-    }
-  }
-
-  async convert() {
-    const from = this.activeName;
-    if (!from || this.isMarkdown || this.isConverting) return;
-    // Snapshot so mid-convert edits carry over.
-    const body = this.raw;
-    this.isConverting = true;
-    try {
-      const { name: to, size } = await convertReadmeToMarkdown(
-        this.s3Client,
-        this.bucket,
-        this.resourceId,
-        from,
-        body,
-      );
-      this.activeName = to;
-      this.savedRaw = body;
-      this.tab = "write";
-      this.$emit("change", {
-        action: "converted",
-        name: to,
-        previousName: from,
-        size,
-      });
-      Notifications.toast({
-        message: "README converted to Markdown.",
-        type: "success",
-      });
-    } catch (e: any) {
-      console.error("Failed to convert README:", e);
-      Notifications.toast({
-        title: "Error",
-        message: `Failed to convert the README. ${e?.message ?? ""}`.trim(),
-        type: "error",
-      });
-    } finally {
-      this.isConverting = false;
-    }
+async function load() {
+  const name = activeName.value;
+  if (!name) return;
+  isLoading.value = true;
+  try {
+    const text = await loadReadme(props.bucket, props.resourceId, name);
+    raw.value = text;
+    savedRaw.value = text;
+  } catch (e: any) {
+    console.error("Failed to load README:", e);
+    Notifications.toast({
+      title: "Error",
+      message: "Failed to load the README file.",
+      type: "error",
+    });
+  } finally {
+    isLoading.value = false;
   }
 }
 
-export default toNative(CdReadmeEditor);
+async function save() {
+  const name = currentName.value;
+  if (!name || isSaving.value) return;
+  const wasNew = activeName.value === null;
+  // Snapshot so edits typed during the save aren't marked saved.
+  const body = raw.value;
+  isSaving.value = true;
+  try {
+    const size = await saveReadme(
+      props.s3Client,
+      props.bucket,
+      props.resourceId,
+      name,
+      body,
+    );
+    savedRaw.value = body;
+    if (wasNew) {
+      activeName.value = name;
+      isCreating.value = false;
+      emit("change", { action: "created", name, size });
+    } else {
+      emit("change", { action: "saved", name, size });
+    }
+    Notifications.toast({ message: "README saved.", type: "success" });
+  } catch (e: any) {
+    console.error("Failed to save README:", e);
+    Notifications.toast({
+      title: "Error",
+      message: `Failed to save the README. ${e?.message ?? ""}`.trim(),
+      type: "error",
+    });
+  } finally {
+    isSaving.value = false;
+  }
+}
+
+async function convert() {
+  const from = activeName.value;
+  if (!from || isMarkdown.value || isConverting.value) return;
+  // Snapshot so mid-convert edits carry over.
+  const body = raw.value;
+  isConverting.value = true;
+  try {
+    const { name: to, size } = await convertReadmeToMarkdown(
+      props.s3Client,
+      props.bucket,
+      props.resourceId,
+      from,
+      body,
+    );
+    activeName.value = to;
+    savedRaw.value = body;
+    tab.value = "write";
+    emit("change", {
+      action: "converted",
+      name: to,
+      previousName: from,
+      size,
+    });
+    Notifications.toast({
+      message: "README converted to Markdown.",
+      type: "success",
+    });
+  } catch (e: any) {
+    console.error("Failed to convert README:", e);
+    Notifications.toast({
+      title: "Error",
+      message: `Failed to convert the README. ${e?.message ?? ""}`.trim(),
+      type: "error",
+    });
+  } finally {
+    isConverting.value = false;
+  }
+}
 </script>
 
 <style lang="scss" scoped>

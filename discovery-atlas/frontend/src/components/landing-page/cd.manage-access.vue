@@ -605,8 +605,7 @@
   </v-dialog>
 </template>
 
-<script lang="ts">
-import { Component, Prop, Vue, toNative, Watch } from "vue-facing-decorator";
+<script setup lang="ts">
 import { Notifications } from "@cznethub/cznet-vue-core";
 import User from "@/models/user.model";
 
@@ -629,128 +628,135 @@ interface ResAccess {
   isPrivateLinkSharing: boolean;
 }
 
-@Component({
-  name: "cd-manage-access",
-  emits: ["update:modelValue", "access-updated"],
-})
-class CdManageAccess extends Vue {
-  @Prop({ type: Boolean, default: false }) modelValue!: boolean;
-  @Prop({ type: String, required: true }) resourceId!: string;
+const props = withDefaults(
+  defineProps<{
+    modelValue?: boolean;
+    resourceId: string;
+  }>(),
+  { modelValue: false },
+);
 
-  isLoading = false;
-  dataLoaded = false;
-  loadError = "";
+const emit = defineEmits(["update:modelValue", "access-updated"]);
 
-  users: AccessUser[] = [];
-  currentUserId: number | null = null;
-  selfAccessLevel: string | null = null;
-  quotaHolderId: number | null = null;
-  canChangeResourceFlags = false;
-  canBePublicDiscoverable = false;
-  resAccess: ResAccess = {
-    isPublic: false,
-    isDiscoverable: false,
-    isShareable: false,
-    isPrivateLinkSharing: false,
-  };
+const isLoading = ref(false);
+const dataLoaded = ref(false);
+const loadError = ref("");
 
-  inviteTarget: "users" | "groups" = "users";
-  selectedAccess: "view" | "edit" | "owner" = "view";
-  grantTargetId: { id: number; text: string } | null = null;
-  autocompleteSearch = "";
-  autocompleteItems: { id: number; text: string }[] = [];
-  isSearchingAutocomplete = false;
-  private searchToken = 0;
-  private searchDebounce: number | null = null;
+const users = ref<AccessUser[]>([]);
+const currentUserId = ref<number | null>(null);
+const selfAccessLevel = ref<string | null>(null);
+const quotaHolderId = ref<number | null>(null);
+const canChangeResourceFlags = ref(false);
+const canBePublicDiscoverable = ref(false);
+const resAccess = ref<ResAccess>({
+  isPublic: false,
+  isDiscoverable: false,
+  isShareable: false,
+  isPrivateLinkSharing: false,
+});
 
-  isProcessing = false;
-  isProcessingAccess = false;
-  isProcessingShareable = false;
-  isProcessingPrivateLinkSharing = false;
-  isChangingQuotaHolder = false;
+const inviteTarget = ref<"users" | "groups">("users");
+const selectedAccess = ref<"view" | "edit" | "owner">("view");
+const grantTargetId = ref<{ id: number; text: string } | null>(null);
+const autocompleteSearch = ref("");
+const autocompleteItems = ref<{ id: number; text: string }[]>([]);
+const isSearchingAutocomplete = ref(false);
+let searchToken = 0;
+let searchDebounce: number | null = null;
 
-  grantError = "";
-  sharingError = "";
-  quotaError = "";
+const isProcessing = ref(false);
+const isProcessingAccess = ref(false);
+const isProcessingShareable = ref(false);
+const isProcessingPrivateLinkSharing = ref(false);
+const isChangingQuotaHolder = ref(false);
 
-  showUsageInfo = false;
-  showChangeQuotaHolder = false;
-  newQuotaHolderUsername: string | null = null;
+const grantError = ref("");
+const sharingError = ref("");
+const quotaError = ref("");
 
-  confirmDemote = {
-    open: false,
-    user: null as AccessUser | null,
-    index: -1,
-    accessToGrant: "view" as "view" | "edit" | "owner",
-  };
+const showUsageInfo = ref(false);
+const showChangeQuotaHolder = ref(false);
+const newQuotaHolderUsername = ref<string | null>(null);
 
-  confirmRemoveSelf = {
-    open: false,
-    user: null as AccessUser | null,
-    index: -1,
-  };
+const confirmDemote = ref({
+  open: false,
+  user: null as AccessUser | null,
+  index: -1,
+  accessToGrant: "view" as "view" | "edit" | "owner",
+});
 
-  accessDeniedTitle =
-    "You do not have permission to change the sharing status.";
-  accessLabel: Record<string, string> = {
-    view: "Can view",
-    edit: "Can edit",
-    owner: "Is owner",
-  };
+const confirmRemoveSelf = ref({
+  open: false,
+  user: null as AccessUser | null,
+  index: -1,
+});
 
-  get dialogOpen(): boolean {
-    return this.modelValue;
-  }
-  set dialogOpen(value: boolean) {
-    this.$emit("update:modelValue", value);
-  }
+const accessDeniedTitle =
+  "You do not have permission to change the sharing status.";
+const accessLabel: Record<string, string> = {
+  view: "Can view",
+  edit: "Can edit",
+  owner: "Is owner",
+};
 
-  get hasOnlyOneOwner(): boolean {
-    return this.users.filter((u) => u.access === "owner").length === 1;
-  }
+const dialogOpen = computed<boolean>({
+  get: () => props.modelValue,
+  set: (value: boolean) => {
+    emit("update:modelValue", value);
+  },
+});
 
-  get currentVisibility(): "public" | "discoverable" | "private" {
-    if (this.resAccess.isPublic) return "public";
-    if (this.resAccess.isDiscoverable) return "discoverable";
+const hasOnlyOneOwner = computed<boolean>(
+  () => users.value.filter((u) => u.access === "owner").length === 1,
+);
+
+const currentVisibility = computed<"public" | "discoverable" | "private">(
+  () => {
+    if (resAccess.value.isPublic) return "public";
+    if (resAccess.value.isDiscoverable) return "discoverable";
     return "private";
-  }
+  },
+);
 
-  get roleOptions() {
-    const opts: { title: string; value: "view" | "edit" | "owner" }[] = [
-      { title: "Can view", value: "view" },
-    ];
-    if (this.selfAccessLevel === "owner" || this.selfAccessLevel === "edit") {
-      opts.push({ title: "Can edit", value: "edit" });
-    }
-    if (this.inviteTarget === "users" && this.selfAccessLevel === "owner") {
-      opts.push({ title: "Is owner", value: "owner" });
-    }
-    return opts;
+const roleOptions = computed(() => {
+  const opts: { title: string; value: "view" | "edit" | "owner" }[] = [
+    { title: "Can view", value: "view" },
+  ];
+  if (selfAccessLevel.value === "owner" || selfAccessLevel.value === "edit") {
+    opts.push({ title: "Can edit", value: "edit" });
   }
-
-  get quotaHolder(): AccessUser | null {
-    if (this.quotaHolderId == null) return null;
-    return (
-      this.users.find(
-        (u) => u.user_type === "user" && u.id === this.quotaHolderId,
-      ) || null
-    );
+  if (inviteTarget.value === "users" && selfAccessLevel.value === "owner") {
+    opts.push({ title: "Is owner", value: "owner" });
   }
+  return opts;
+});
 
-  get quotaHolderCandidates(): AccessUser[] {
-    return this.users.filter(
-      (u) =>
-        u.user_type === "user" &&
-        u.access === "owner" &&
-        u.id !== this.quotaHolderId,
-    );
-  }
+const quotaHolder = computed<AccessUser | null>(() => {
+  if (quotaHolderId.value == null) return null;
+  return (
+    users.value.find(
+      (u) => u.user_type === "user" && u.id === quotaHolderId.value,
+    ) || null
+  );
+});
 
-  @Watch("modelValue")
-  onDialogToggle(open: boolean) {
+const quotaHolderCandidates = computed<AccessUser[]>(() =>
+  users.value.filter(
+    (u) =>
+      u.user_type === "user" &&
+      u.access === "owner" &&
+      u.id !== quotaHolderId.value,
+  ),
+);
+
+watch(() => props.modelValue, onDialogToggle);
+watch(() => inviteTarget.value, onInviteTargetChange);
+watch(() => autocompleteSearch.value, onAutocompleteSearch);
+
+function onDialogToggle(open: boolean) {
     if (!open) return;
-    if (!this.dataLoaded && !this.isLoading) {
-      this.loadData();
+    if (!dataLoaded.value && !isLoading.value) {
+      loadData();
     }
     // The discovery app runs inside an iframe with scrolling="no" sized to
     // its full content (see hs_discover/templates/hs_discover/search.html),
@@ -759,10 +765,10 @@ class CdManageAccess extends Vue {
     // parent's ResizeObserver to grow the iframe (otherwise iframe.offsetHeight
     // is stale), then scroll the parent so iframe-center aligns with the
     // parent's viewport center.
-    setTimeout(this.alignDialogToParentViewport, 80);
+    setTimeout(alignDialogToParentViewport, 80);
   }
 
-  private alignDialogToParentViewport() {
+function alignDialogToParentViewport() {
     try {
       const parentWin = window.parent;
       if (!parentWin || parentWin === window) return;
@@ -794,67 +800,65 @@ class CdManageAccess extends Vue {
     }
   }
 
-  @Watch("inviteTarget")
-  onInviteTargetChange() {
-    this.grantTargetId = null;
-    this.autocompleteSearch = "";
-    this.autocompleteItems = [];
+function onInviteTargetChange() {
+    grantTargetId.value = null;
+    autocompleteSearch.value = "";
+    autocompleteItems.value = [];
     if (
-      this.selectedAccess === "owner" &&
-      this.inviteTarget === "groups"
+      selectedAccess.value === "owner" &&
+      inviteTarget.value === "groups"
     ) {
-      this.selectedAccess = "view";
+      selectedAccess.value = "view";
     }
   }
 
-  @Watch("autocompleteSearch")
-  onAutocompleteSearch(q: string) {
-    if (this.searchDebounce) {
-      window.clearTimeout(this.searchDebounce);
+function onAutocompleteSearch(q: string) {
+    if (searchDebounce) {
+      window.clearTimeout(searchDebounce);
     }
     if (!q || q.length < 2) {
-      this.autocompleteItems = [];
+      autocompleteItems.value = [];
       return;
     }
-    this.searchDebounce = window.setTimeout(() => this.runAutocomplete(q), 300);
+    searchDebounce = window.setTimeout(() => runAutocomplete(q), 300);
   }
 
-  async runAutocomplete(q: string) {
-    const token = ++this.searchToken;
-    this.isSearchingAutocomplete = true;
+async function runAutocomplete(q: string) {
+    const token = ++searchToken;
+    isSearchingAutocomplete.value = true;
     try {
       const url =
-        this.inviteTarget === "users"
+        inviteTarget.value === "users"
           ? `/user-autocomplete/?q=${encodeURIComponent(q)}`
           : `/group-autocomplete/?q=${encodeURIComponent(q)}`;
       const resp = await fetch(url, { credentials: "include" });
       if (!resp.ok) return;
       const data = await resp.json();
-      if (token !== this.searchToken) return;
+      if (token !== searchToken) return;
       // django-autocomplete-light Select2 response: { results: [{id, text}], ... }
-      this.autocompleteItems = (data.results || []).map((r: any) => ({
+      autocompleteItems.value = (data.results || []).map((r: any) => ({
         id: Number(r.id),
         text: r.text,
       }));
     } catch (e) {
       // ignore
     } finally {
-      if (token === this.searchToken) {
-        this.isSearchingAutocomplete = false;
+      if (token === searchToken) {
+        isSearchingAutocomplete.value = false;
       }
     }
   }
 
-  async loadData() {
-    this.isLoading = true;
-    this.loadError = "";
+async function loadData() {
+    isLoading.value = true;
+    loadError.value = "";
     try {
       const resp = await fetch(
-        `/hsapi/_internal/${this.resourceId}/manage-access-data/`,
+        `/hsapi/_internal/${props.resourceId}/manage-access-data/`,
         { credentials: "include" },
       );
       if (!resp.ok) {
-        this.loadError =
+        loadError.value =
           resp.status === 403
             ? "You don't have permission to manage access for this resource."
             : `Failed to load access data (${resp.status}).`;
@@ -862,28 +866,28 @@ class CdManageAccess extends Vue {
       }
       const data = await resp.json();
       if (data.status !== "success") {
-        this.loadError = data.message || "Failed to load access data.";
+        loadError.value = data.message || "Failed to load access data.";
         return;
       }
-      this.users = (data.users_json || []).map((u: AccessUser) => ({
+      users.value = (data.users_json || []).map((u: AccessUser) => ({
         ...u,
         loading: false,
       }));
-      this.currentUserId = data.current_user_id;
-      this.selfAccessLevel = data.self_access_level;
-      this.canChangeResourceFlags = data.can_change_resource_flags;
-      this.canBePublicDiscoverable = data.can_be_public_or_discoverable;
-      this.quotaHolderId = data.quota_holder_pk;
-      this.resAccess = data.resource_access;
-      this.dataLoaded = true;
+      currentUserId.value = data.current_user_id;
+      selfAccessLevel.value = data.self_access_level;
+      canChangeResourceFlags.value = data.can_change_resource_flags;
+      canBePublicDiscoverable.value = data.can_be_public_or_discoverable;
+      quotaHolderId.value = data.quota_holder_pk;
+      resAccess.value = data.resource_access;
+      dataLoaded.value = true;
     } catch (e: any) {
-      this.loadError = `Failed to load access data: ${e.message}`;
+      loadError.value = `Failed to load access data: ${e.message}`;
     } finally {
-      this.isLoading = false;
+      isLoading.value = false;
     }
   }
 
-  private async postForm(url: string, body: Record<string, string> = {}) {
+async function postForm(url: string, body: Record<string, string> = {}) {
     const csrfToken = await User.getCSRFToken();
     const formBody = new URLSearchParams(body).toString();
     return fetch(url, {
@@ -897,22 +901,22 @@ class CdManageAccess extends Vue {
     });
   }
 
-  isRoleDisabled(user: AccessUser, role: "view" | "edit" | "owner"): boolean {
+function isRoleDisabled(user: AccessUser, role: "view" | "edit" | "owner"): boolean {
     if (user.access === role) return false; // current — always selectable (no-op)
 
     if (role === "view") {
       if (user.access === "none") return true;
     } else if (role === "edit") {
-      if (this.selfAccessLevel !== "owner" && this.selfAccessLevel !== "edit")
+      if (selfAccessLevel.value !== "owner" && selfAccessLevel.value !== "edit")
         return true;
     } else if (role === "owner") {
-      if (this.selfAccessLevel !== "owner") return true;
+      if (selfAccessLevel.value !== "owner") return true;
     }
 
     // Last-owner safety
     if (
       user.access === "owner" &&
-      this.hasOnlyOneOwner &&
+      hasOnlyOneOwner.value &&
       role !== "owner"
     ) {
       return true;
@@ -921,7 +925,7 @@ class CdManageAccess extends Vue {
     // Quota holder cannot lose owner privileges
     if (
       user.user_type === "user" &&
-      this.quotaHolderId === user.id &&
+      quotaHolderId.value === user.id &&
       role !== "owner"
     ) {
       return true;
@@ -930,16 +934,16 @@ class CdManageAccess extends Vue {
     return false;
   }
 
-  canRemoveRow(user: AccessUser): boolean {
-    if (user.access === "owner" && this.hasOnlyOneOwner) return false;
-    if (user.user_type === "user" && user.id === this.quotaHolderId)
+function canRemoveRow(user: AccessUser): boolean {
+    if (user.access === "owner" && hasOnlyOneOwner.value) return false;
+    if (user.user_type === "user" && user.id === quotaHolderId.value)
       return false;
     return (
-      this.selfAccessLevel === "owner" || user.id === this.currentUserId
+      selfAccessLevel.value === "owner" || user.id === currentUserId.value
     );
   }
 
-  onChangeAccess(
+function onChangeAccess(
     user: AccessUser,
     index: number,
     accessToGrant: "view" | "edit" | "owner",
@@ -947,121 +951,121 @@ class CdManageAccess extends Vue {
     if (user.access === accessToGrant) return;
     if (
       user.user_type === "user" &&
-      user.id === this.currentUserId &&
+      user.id === currentUserId.value &&
       user.access === "owner"
     ) {
-      this.confirmDemote = { open: true, user, index, accessToGrant };
+      confirmDemote.value = { open: true, user, index, accessToGrant };
     } else {
-      this.changeAccess(user, index, accessToGrant);
+      changeAccess(user, index, accessToGrant);
     }
   }
 
-  confirmDemoteAccept() {
-    const { user, index, accessToGrant } = this.confirmDemote;
-    this.confirmDemote.open = false;
-    if (user) this.changeAccess(user, index, accessToGrant);
+function confirmDemoteAccept() {
+    const { user, index, accessToGrant } = confirmDemote.value;
+    confirmDemote.value.open = false;
+    if (user) changeAccess(user, index, accessToGrant);
   }
 
-  async changeAccess(
+async function changeAccess(
     user: AccessUser,
     index: number,
     accessToGrant: "view" | "edit" | "owner",
   ) {
-    this.grantError = "";
+    grantError.value = "";
     user.loading = true;
-    this.users.splice(index, 1, user);
-    this.isProcessing = true;
+    users.value.splice(index, 1, user);
+    isProcessing.value = true;
     try {
-      const resp = await this.postForm(
-        `/hsapi/_internal/${this.resourceId}/share-resource-with-${user.user_type}/${accessToGrant}/${user.id}/`,
+      const resp = await postForm(
+        `/hsapi/_internal/${props.resourceId}/share-resource-with-${user.user_type}/${accessToGrant}/${user.id}/`,
       );
       const text = await resp.text();
       let payload: any;
       try {
         payload = JSON.parse(text);
       } catch {
-        this.grantError = "Unexpected response from server.";
+        grantError.value = "Unexpected response from server.";
         return;
       }
       if (payload.status === "success") {
         const updated = { ...payload.user, loading: false } as AccessUser;
-        this.users.splice(index, 1, updated);
-        if (this.currentUserId === updated.id) {
-          this.selfAccessLevel = updated.access;
+        users.value.splice(index, 1, updated);
+        if (currentUserId.value === updated.id) {
+          selfAccessLevel.value = updated.access;
         }
-        this.$emit("access-updated");
+        emit("access-updated");
       } else {
-        this.grantError = payload.error_msg || "Failed to change permission.";
+        grantError.value = payload.error_msg || "Failed to change permission.";
         user.loading = false;
-        this.users.splice(index, 1, user);
+        users.value.splice(index, 1, user);
       }
     } catch (e: any) {
-      this.grantError = e.message || "Network error.";
+      grantError.value = e.message || "Network error.";
       user.loading = false;
-      this.users.splice(index, 1, user);
+      users.value.splice(index, 1, user);
     } finally {
-      this.isProcessing = false;
+      isProcessing.value = false;
     }
   }
 
-  onRemoveAccess(user: AccessUser, index: number) {
-    if (user.id === this.currentUserId) {
-      this.confirmRemoveSelf = { open: true, user, index };
+function onRemoveAccess(user: AccessUser, index: number) {
+    if (user.id === currentUserId.value) {
+      confirmRemoveSelf.value = { open: true, user, index };
     } else {
-      this.removeAccess(user, index);
+      removeAccess(user, index);
     }
   }
 
-  confirmRemoveSelfAccept() {
-    const { user, index } = this.confirmRemoveSelf;
-    this.confirmRemoveSelf.open = false;
-    if (user) this.removeAccess(user, index);
+function confirmRemoveSelfAccept() {
+    const { user, index } = confirmRemoveSelf.value;
+    confirmRemoveSelf.value.open = false;
+    if (user) removeAccess(user, index);
   }
 
-  async removeAccess(user: AccessUser, index: number) {
-    this.grantError = "";
+async function removeAccess(user: AccessUser, index: number) {
+    grantError.value = "";
     user.loading = true;
-    this.users.splice(index, 1, user);
-    this.isProcessing = true;
+    users.value.splice(index, 1, user);
+    isProcessing.value = true;
     try {
-      const resp = await this.postForm(
-        `/hsapi/_internal/${this.resourceId}/unshare-resource-with-${user.user_type}/${user.id}/`,
+      const resp = await postForm(
+        `/hsapi/_internal/${props.resourceId}/unshare-resource-with-${user.user_type}/${user.id}/`,
       );
       const payload = await resp.json();
       if (payload.status === "success") {
-        this.users.splice(index, 1);
+        users.value.splice(index, 1);
         if (payload.redirect_to) {
           window.top!.location.href = payload.redirect_to;
         }
-        this.$emit("access-updated");
+        emit("access-updated");
       } else {
-        this.grantError = payload.message || "Failed to remove access.";
+        grantError.value = payload.message || "Failed to remove access.";
         user.loading = false;
-        this.users.splice(index, 1, user);
+        users.value.splice(index, 1, user);
       }
     } catch (e: any) {
-      this.grantError = e.message || "Network error.";
+      grantError.value = e.message || "Network error.";
       user.loading = false;
-      this.users.splice(index, 1, user);
+      users.value.splice(index, 1, user);
     } finally {
-      this.isProcessing = false;
+      isProcessing.value = false;
     }
   }
 
-  async undoAccess(user: AccessUser, index: number) {
-    this.grantError = "";
+async function undoAccess(user: AccessUser, index: number) {
+    grantError.value = "";
     user.loading = true;
-    this.users.splice(index, 1, user);
-    this.isProcessing = true;
+    users.value.splice(index, 1, user);
+    isProcessing.value = true;
     try {
-      const resp = await this.postForm(
-        `/hsapi/_internal/${this.resourceId}/undo-share-resource-with-${user.user_type}/${user.id}/`,
+      const resp = await postForm(
+        `/hsapi/_internal/${props.resourceId}/undo-share-resource-with-${user.user_type}/${user.id}/`,
       );
       const payload = await resp.json();
       if (payload.status === "success") {
         const newPrivilege = payload[`undo_${user.user_type}_privilege`];
         if (newPrivilege === "none") {
-          this.users.splice(index, 1);
+          users.value.splice(index, 1);
         } else {
           const updated: AccessUser = {
             ...user,
@@ -1069,216 +1073,213 @@ class CdManageAccess extends Vue {
             can_undo: false,
             loading: false,
           };
-          this.users.splice(index, 1, updated);
+          users.value.splice(index, 1, updated);
         }
-        this.$emit("access-updated");
+        emit("access-updated");
       } else {
-        this.grantError = payload.message || "Undo failed.";
+        grantError.value = payload.message || "Undo failed.";
         user.loading = false;
-        this.users.splice(index, 1, user);
+        users.value.splice(index, 1, user);
       }
     } catch (e: any) {
-      this.grantError = e.message || "Network error.";
+      grantError.value = e.message || "Network error.";
       user.loading = false;
-      this.users.splice(index, 1, user);
+      users.value.splice(index, 1, user);
     } finally {
-      this.isProcessing = false;
+      isProcessing.value = false;
     }
   }
 
-  async grantAccess() {
-    if (!this.grantTargetId) return;
-    const targetId = this.grantTargetId.id;
-    const isUser = this.inviteTarget === "users";
-    const existingIndex = this.users.findIndex(
+async function grantAccess() {
+    if (!grantTargetId.value) return;
+    const targetId = grantTargetId.value.id;
+    const isUser = inviteTarget.value === "users";
+    const existingIndex = users.value.findIndex(
       (u) => u.id === targetId && u.user_type === (isUser ? "user" : "group"),
     );
     if (
       existingIndex >= 0 &&
-      this.users[existingIndex].access === this.selectedAccess
+      users.value[existingIndex].access === selectedAccess.value
     ) {
       return;
     }
 
-    this.grantError = "";
-    this.isProcessing = true;
+    grantError.value = "";
+    isProcessing.value = true;
     if (existingIndex >= 0) {
-      const u = this.users[existingIndex];
+      const u = users.value[existingIndex];
       u.loading = true;
-      this.users.splice(existingIndex, 1, u);
+      users.value.splice(existingIndex, 1, u);
     }
 
     try {
-      const resp = await this.postForm(
-        `/hsapi/_internal/${this.resourceId}/share-resource-with-${
+      const resp = await postForm(
+        `/hsapi/_internal/${props.resourceId}/share-resource-with-${
           isUser ? "user" : "group"
-        }/${this.selectedAccess}/${targetId}/`,
+        }/${selectedAccess.value}/${targetId}/`,
       );
       const text = await resp.text();
       let payload: any;
       try {
         payload = JSON.parse(text);
       } catch {
-        this.grantError = "Failed to change permission.";
+        grantError.value = "Failed to change permission.";
         return;
       }
       if (payload.status === "success") {
         const updated = { ...payload.user, loading: false } as AccessUser;
         if (existingIndex >= 0) {
-          this.users.splice(existingIndex, 1, updated);
-          if (this.currentUserId === updated.id) {
-            this.selfAccessLevel = updated.access;
+          users.value.splice(existingIndex, 1, updated);
+          if (currentUserId.value === updated.id) {
+            selfAccessLevel.value = updated.access;
           }
         } else {
-          this.users.push(updated);
+          users.value.push(updated);
         }
-        this.grantTargetId = null;
-        this.autocompleteSearch = "";
-        this.autocompleteItems = [];
-        this.$emit("access-updated");
+        grantTargetId.value = null;
+        autocompleteSearch.value = "";
+        autocompleteItems.value = [];
+        emit("access-updated");
       } else {
-        this.grantError = payload.error_msg || "Failed to add access.";
+        grantError.value = payload.error_msg || "Failed to add access.";
         if (existingIndex >= 0) {
-          const u = this.users[existingIndex];
+          const u = users.value[existingIndex];
           u.loading = false;
-          this.users.splice(existingIndex, 1, u);
+          users.value.splice(existingIndex, 1, u);
         }
       }
     } catch (e: any) {
-      this.grantError = e.message || "Network error.";
+      grantError.value = e.message || "Network error.";
     } finally {
-      this.isProcessing = false;
+      isProcessing.value = false;
     }
   }
 
-  async onVisibilityChange(value: "public" | "discoverable" | "private") {
-    if (value === this.currentVisibility) return;
+async function onVisibilityChange(value: "public" | "discoverable" | "private") {
+    if (value === currentVisibility.value) return;
     const action =
       value === "public"
         ? "make_public"
         : value === "discoverable"
           ? "make_discoverable"
           : "make_private";
-    await this.setResourceAccess(action, value);
+    await setResourceAccess(action, value);
   }
 
-  async setResourceAccess(
+async function setResourceAccess(
     action: "make_public" | "make_discoverable" | "make_private",
     value: "public" | "discoverable" | "private",
   ) {
-    this.isProcessingAccess = true;
-    this.sharingError = "";
+    isProcessingAccess.value = true;
+    sharingError.value = "";
     try {
-      const resp = await this.postForm(
-        `/hsapi/_internal/${this.resourceId}/set-resource-flag/`,
+      const resp = await postForm(
+        `/hsapi/_internal/${props.resourceId}/set-resource-flag/`,
         { flag: action },
       );
       const payload = await resp.json();
       if (payload.status === "success") {
-        this.resAccess = {
-          ...this.resAccess,
+        resAccess.value = {
+          ...resAccess.value,
           isPublic: value === "public",
           isDiscoverable: value !== "private",
         };
-        this.$emit("access-updated");
+        emit("access-updated");
       } else {
-        this.sharingError = payload.message || "Failed to update sharing.";
+        sharingError.value = payload.message || "Failed to update sharing.";
       }
     } catch (e: any) {
-      this.sharingError = e.message || "Network error.";
+      sharingError.value = e.message || "Network error.";
     } finally {
-      this.isProcessingAccess = false;
+      isProcessingAccess.value = false;
     }
   }
 
-  async setShareable(action: "make_shareable" | "make_not_shareable") {
-    this.isProcessingShareable = true;
-    this.sharingError = "";
+async function setShareable(action: "make_shareable" | "make_not_shareable") {
+    isProcessingShareable.value = true;
+    sharingError.value = "";
     try {
-      const resp = await this.postForm(
-        `/hsapi/_internal/${this.resourceId}/set-resource-flag/`,
+      const resp = await postForm(
+        `/hsapi/_internal/${props.resourceId}/set-resource-flag/`,
         { flag: action },
       );
       const payload = await resp.json();
       if (payload.status !== "success") {
-        this.sharingError = payload.message || "Failed to update.";
+        sharingError.value = payload.message || "Failed to update.";
         // Roll back the optimistic toggle
-        this.resAccess.isShareable = action === "make_not_shareable";
+        resAccess.value.isShareable = action === "make_not_shareable";
       }
     } catch (e: any) {
-      this.sharingError = e.message || "Network error.";
-      this.resAccess.isShareable = action === "make_not_shareable";
+      sharingError.value = e.message || "Network error.";
+      resAccess.value.isShareable = action === "make_not_shareable";
     } finally {
-      this.isProcessingShareable = false;
+      isProcessingShareable.value = false;
     }
   }
 
-  async setPrivateLinkSharing(
+async function setPrivateLinkSharing(
     action: "enable_private_sharing_link" | "remove_private_sharing_link",
   ) {
-    this.isProcessingPrivateLinkSharing = true;
-    this.sharingError = "";
+    isProcessingPrivateLinkSharing.value = true;
+    sharingError.value = "";
     try {
-      const resp = await this.postForm(
-        `/hsapi/_internal/${this.resourceId}/set-resource-flag/`,
+      const resp = await postForm(
+        `/hsapi/_internal/${props.resourceId}/set-resource-flag/`,
         { flag: action },
       );
       const payload = await resp.json();
       if (payload.status !== "success") {
-        this.sharingError = payload.message || "Failed to update.";
-        this.resAccess.isPrivateLinkSharing =
+        sharingError.value = payload.message || "Failed to update.";
+        resAccess.value.isPrivateLinkSharing =
           action === "remove_private_sharing_link";
       } else {
-        this.resAccess.isPrivateLinkSharing =
+        resAccess.value.isPrivateLinkSharing =
           action === "enable_private_sharing_link";
       }
     } catch (e: any) {
-      this.sharingError = e.message || "Network error.";
-      this.resAccess.isPrivateLinkSharing =
+      sharingError.value = e.message || "Network error.";
+      resAccess.value.isPrivateLinkSharing =
         action === "remove_private_sharing_link";
     } finally {
-      this.isProcessingPrivateLinkSharing = false;
+      isProcessingPrivateLinkSharing.value = false;
     }
   }
 
-  async setQuotaHolder() {
-    if (!this.newQuotaHolderUsername) return;
-    this.isChangingQuotaHolder = true;
-    this.quotaError = "";
+async function setQuotaHolder() {
+    if (!newQuotaHolderUsername.value) return;
+    isChangingQuotaHolder.value = true;
+    quotaError.value = "";
     try {
-      const resp = await this.postForm(
-        `/hsapi/_internal/${this.resourceId}/change-quota-holder/`,
-        { new_holder_username: this.newQuotaHolderUsername },
+      const resp = await postForm(
+        `/hsapi/_internal/${props.resourceId}/change-quota-holder/`,
+        { new_holder_username: newQuotaHolderUsername.value },
       );
       const payload = await resp.json();
       if (payload.status === "success") {
-        const newHolder = this.users.find(
+        const newHolder = users.value.find(
           (u) =>
             u.user_type === "user" &&
-            u.user_name === this.newQuotaHolderUsername,
+            u.user_name === newQuotaHolderUsername.value,
         );
         if (newHolder) {
           newHolder.can_undo = false;
-          this.quotaHolderId = newHolder.id;
+          quotaHolderId.value = newHolder.id;
         }
-        this.showChangeQuotaHolder = false;
-        this.newQuotaHolderUsername = null;
+        showChangeQuotaHolder.value = false;
+        newQuotaHolderUsername.value = null;
         Notifications.toast({
           message: "Quota holder updated.",
           type: "success",
         });
       } else {
-        this.quotaError = payload.message || "Failed to update quota holder.";
+        quotaError.value = payload.message || "Failed to update quota holder.";
       }
     } catch (e: any) {
-      this.quotaError = e.message || "Network error.";
+      quotaError.value = e.message || "Network error.";
     } finally {
-      this.isChangingQuotaHolder = false;
+      isChangingQuotaHolder.value = false;
     }
   }
-}
-
-export default toNative(CdManageAccess);
 </script>
 
 <style lang="scss" scoped>

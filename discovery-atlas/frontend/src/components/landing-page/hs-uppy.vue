@@ -3,7 +3,6 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, toNative, Prop, Watch } from "vue-facing-decorator";
 import { CzFileExplorer } from "@cznethub/cznet-vue-core";
 import Uppy from "@uppy/core";
 import GoldenRetriever from "@uppy/golden-retriever";
@@ -97,106 +96,97 @@ function cookieUploadPartBytes({
     xhr.send(body);
   });
 }
+</script>
 
-@Component({
-  name: "hs-uppy",
-  components: {},
-  expose: ["getUppyInstance", "addFile", "upload"],
-  emits: ["file-uploaded"],
-})
-class HsUppy extends Vue {
-  @Prop({
-    required: false,
-    // default: () => ({
-    //   prefix: "1dbbbacc036044c5970440b135f185c2/data/contents/",
-    //   bucket: "asdf",
-    // }),
-  })
-  s3Info!: { prefix: string; bucket: string };
+<script setup lang="ts">
+const props = withDefaults(
+  defineProps<{
+    s3Info: { prefix: string; bucket: string };
+    s3Host?: string;
+    /**
+     * S3 key prefix that user-uploaded files should land under (e.g.
+     * `<resourceId>/data/contents/`). This is intentionally different from
+     * `s3Info.prefix`, which the edit page sets to the metadata directory
+     * (`<resourceId>/.hsjsonld/`) for reading dataset_metadata.json. Without
+     * this prop the upload `dynamic_key` would point at the metadata path and
+     * files wouldn't appear when readRootFolder walks `data/contents/`.
+     */
+    uploadPrefix?: string;
+    // `default: null` (not `false`) — the parent's `fileExplorer` ref is
+    // `undefined` until the explorer mounts, and HsUppy renders BEFORE that
+    // (it's now a slot child of cz-file-explorer). Falsy default + a non-Object
+    // value would trip Vue's prop validator with the boolean `false`. Allow
+    // both Object and null/undefined, since registerUploadedFile already
+    // guards against the falsy case at call time.
+    fileExplorer?: InstanceType<typeof CzFileExplorer> | null;
+  }>(),
+  {
+    s3Host: "http://localhost:9000",
+    uploadPrefix: "",
+    fileExplorer: null,
+  },
+);
 
-  @Prop({
-    type: String,
-    required: false,
-    default: "http://localhost:9000",
-  })
-  s3Host!: string;
+const emit = defineEmits(["file-uploaded"]);
 
-  /**
-   * S3 key prefix that user-uploaded files should land under (e.g.
-   * `<resourceId>/data/contents/`). This is intentionally different from
-   * `s3Info.prefix`, which the edit page sets to the metadata directory
-   * (`<resourceId>/.hsjsonld/`) for reading dataset_metadata.json. Without
-   * this prop the upload `dynamic_key` would point at the metadata path and
-   * files wouldn't appear when readRootFolder walks `data/contents/`.
-   */
-  @Prop({ type: String, required: false, default: "" })
-  uploadPrefix!: string;
+const selectedFolder = ref<string | null>(null);
 
-  // `default: null` (not `false`) — the parent `@Ref("fileExplorer")` is
-  // `undefined` until the explorer mounts, and HsUppy renders BEFORE that
-  // (it's now a slot child of cz-file-explorer). Falsy default + a non-Object
-  // value would trip Vue's prop validator with the boolean `false`. Allow
-  // both Object and null/undefined, since registerUploadedFile already
-  // guards against the falsy case at call time.
-  @Prop({ type: Object, required: false, default: null })
-  fileExplorer!: InstanceType<typeof CzFileExplorer> | null;
+watch(() => props.fileExplorer?.selected, onFileSelect);
 
-  @Watch("fileExplorer.selected")
-  onFileSelect() {
-    // if the selected is a folder, set selectedFolder
-    let selected = this.fileExplorer.selected;
-    // if selected is an array, take the first element
-    if (Array.isArray(selected)) {
-      if (selected.length > 0) {
-        selected = selected[0];
-      } else {
-        this.selectedFolder = null;
-        return;
-      }
-    }
-    // const isFolder = Object.prototype.hasOwnProperty.call(selected, "children");
-    const isFolder = this.fileExplorer.isFolder(selected);
-    if (isFolder) {
-      this.selectedFolder = this.fileExplorer.getPathString(selected);
+function onFileSelect() {
+  // if the selected is a folder, set selectedFolder
+  let selected = props.fileExplorer!.selected;
+  // if selected is an array, take the first element
+  if (Array.isArray(selected)) {
+    if (selected.length > 0) {
+      selected = selected[0];
     } else {
-      this.selectedFolder = null;
+      selectedFolder.value = null;
+      return;
     }
-    console.log("selectedFolder set to:", this.selectedFolder);
   }
-
-  private selectedFolder: string | null = null;
-
-  // Method to expose the Uppy instance
-  getUppyInstance(): Uppy | null {
-    return uppyInstance;
+  // const isFolder = Object.prototype.hasOwnProperty.call(selected, "children");
+  const isFolder = props.fileExplorer!.isFolder(selected);
+  if (isFolder) {
+    selectedFolder.value = props.fileExplorer!.getPathString(selected);
+  } else {
+    selectedFolder.value = null;
   }
+  console.log("selectedFolder set to:", selectedFolder.value);
+}
 
+// Method to expose the Uppy instance
+function getUppyInstance(): Uppy | null {
+  return uppyInstance;
+}
 
-  // Add files through the component
-  addFile(fileData: any): string | null {
-    if (uppyInstance) {
-      try {
-        return uppyInstance.addFile(fileData);
-      } catch (error) {
-        console.error("Error adding file to Uppy:", error);
-        return null;
-      }
+// Add files through the component
+function addFile(fileData: any): string | null {
+  if (uppyInstance) {
+    try {
+      return uppyInstance.addFile(fileData);
+    } catch (error) {
+      console.error("Error adding file to Uppy:", error);
+      return null;
     }
-    return null;
   }
+  return null;
+}
 
-  upload(): Promise<void> {
-    if (uppyInstance) {
-      return uppyInstance.upload();
-    }
-    return Promise.reject(new Error("Uppy instance not available"));
+function upload(): Promise<void> {
+  if (uppyInstance) {
+    return uppyInstance.upload();
   }
+  return Promise.reject(new Error("Uppy instance not available"));
+}
 
-  mounted() {
-    this.initializeUppy();
-  }
+defineExpose({ getUppyInstance, addFile, upload });
 
-  initializeUppy() {
+onMounted(() => {
+  initializeUppy();
+});
+
+function initializeUppy() {
     if (uppyInstance) {
       try {
         // Uppy v5 renamed `destroy()` to `close()`. Guard both for safety.
@@ -214,16 +204,14 @@ class HsUppy extends Vue {
         console.error("Error destroying current Uppy instance:", error);
       }
     }
-    const uppyComponent = this;
     // Companion imports (Google Drive picker) previously carried the user's
     // S3 keys in these headers. Cookie auth can't reach Companion — it
     // uploads server-side — so only the bucket hint remains; Drive imports
     // need a Companion-side follow-up.
     const headers = {
-      "s3-bucket": this.s3Info.bucket,
+      "s3-bucket": props.s3Info.bucket,
     };
     console.log("Initializing Uppy");
-    const that = this;
     uppyInstance = new Uppy({
       id: "uppy",
       autoProceed: true,
@@ -232,14 +220,14 @@ class HsUppy extends Vue {
         // any selected subfolder, and the filename. Falls back to s3Info.prefix
         // only when uploadPrefix wasn't passed — preserves the old contract.
         const basePrefix =
-          uppyComponent.uploadPrefix || uppyComponent.s3Info.prefix || "";
+          props.uploadPrefix || props.s3Info.prefix || "";
         Object.keys(files).forEach((fileId) => {
           const file = files[fileId];
           file.meta.bucket_name =
-            file?.meta?.bucket_name || uppyComponent.s3Info.bucket;
+            file?.meta?.bucket_name || props.s3Info.bucket;
           if (!file.meta.dynamic_key) {
             const folder =
-              file.meta.existing_path_in_resource || that.selectedFolder || "";
+              file.meta.existing_path_in_resource || selectedFolder.value || "";
             const folderPart = folder ? `${folder.replace(/^\/+|\/+$/g, "")}/` : "";
             file.meta.dynamic_key = `${basePrefix}${folderPart}${file.name}`;
           }
@@ -272,13 +260,13 @@ class HsUppy extends Vue {
         // so no signing or access keys are involved.
         shouldUseMultipart: false,
         getUploadParameters: async (file: any) => {
-          const bucket = file.meta.bucket_name || that.s3Info.bucket;
+          const bucket = file.meta.bucket_name || props.s3Info.bucket;
           const key = String(file.meta.dynamic_key || file.name);
           const objectPath = key.split("/").map(encodeURIComponent).join("/");
           const csrfToken = (await User.getCSRFToken()) || "";
           return {
             method: "PUT",
-            url: `${that.s3Host}/${bucket}/${objectPath}`,
+            url: `${props.s3Host}/${bucket}/${objectPath}`,
             fields: {},
             headers: {
               "Content-Type": file.type || "application/octet-stream",
@@ -291,19 +279,19 @@ class HsUppy extends Vue {
       .on("dashboard:modal-open", () => {
         // this is a hack to set the folder when the modal is opened
         // because the selectedFolder will change when the user clicks in the dashboard
-        if (that.selectedFolder) {
+        if (selectedFolder.value) {
           uppyInstance.setMeta({
-            existing_path_in_resource: that.selectedFolder,
+            existing_path_in_resource: selectedFolder.value,
           });
-          console.log("Set dashboard folder state to:", that.selectedFolder);
+          console.log("Set dashboard folder state to:", selectedFolder.value);
         }
       })
       .on("upload-success", (file: any) => {
         // Hand off to the parent (which owns the file-explorer ref directly).
         // The `fileExplorer` prop passed in here doesn't reliably propagate
-        // as a reactive value through vue-facing-decorator, so accessing it
-        // from inside this Uppy handler is unsafe; an event side-steps that.
-        that.$emit("file-uploaded", file);
+        // as a reactive value, so accessing it from inside this Uppy handler
+        // is unsafe; an event side-steps that.
+        emit("file-uploaded", file);
       })
       .on("error", (errorMessage) => {
         console.error("Uppy error:", errorMessage);
@@ -333,7 +321,5 @@ class HsUppy extends Vue {
         appId: GOOGLE_PICKER_APP_ID,
         companionHeaders: headers,
       });
-  }
 }
-export default toNative(HsUppy);
 </script>

@@ -32,7 +32,6 @@ export default defineConfig(({ mode }) => {
         "leaflet",
         "@jsonforms/core",
         "@jsonforms/vue",
-        "vue-facing-decorator",
         // ajv keeps generated `Name` objects in module-level state; two copies
         // exchange Names and the receiver serializes them as `{"str":"..."}`,
         // producing invalid generated code. Keep a single ajv copy.

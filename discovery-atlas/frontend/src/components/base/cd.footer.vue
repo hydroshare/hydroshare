@@ -54,22 +54,9 @@
   </v-container>
 </template>
 
-<script lang="ts">
-import { Component, Vue } from "vue-facing-decorator";
-
-@Component({
-  name: "cd-footer",
-  components: {},
-})
-export default class CdFooter extends Vue {
-  get version() {
-    return VITE_APP_VERSION;
-  }
-
-  protected get year() {
-    return new Date().getFullYear();
-  }
-}
+<script setup lang="ts">
+const version = computed(() => VITE_APP_VERSION);
+const year = computed(() => new Date().getFullYear());
 </script>
 
 <style lang="scss" scoped>

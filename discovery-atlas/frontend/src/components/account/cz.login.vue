@@ -31,29 +31,25 @@
   </v-card>
 </template>
 
-<script lang="ts">
-import { Component, Vue, toNative } from "vue-facing-decorator";
+<script setup lang="ts">
 import User from "@/models/user.model";
 
-@Component({
-  name: "cz-login",
-  components: {},
-})
-class CzLogin extends Vue {
-  protected async openLogInDialog() {
-    User.logIn(this.onLoggedIn);
-  }
+const emit = defineEmits<{
+  cancel: [];
+  "logged-in": [];
+}>();
 
-  protected onCancel() {
-    this.$emit("cancel");
-  }
-
-  protected onLoggedIn() {
-    this.$emit("logged-in");
-  }
+async function openLogInDialog() {
+  User.logIn(onLoggedIn);
 }
 
-export default toNative(CzLogin);
+function onCancel() {
+  emit("cancel");
+}
+
+function onLoggedIn() {
+  emit("logged-in");
+}
 </script>
 
 <style lang="scss" scoped>

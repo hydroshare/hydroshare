@@ -22,18 +22,8 @@
   </v-app>
 </template>
 
-<script lang="ts">
-import { Component, Vue, toNative } from "vue-facing-decorator";
+<script setup lang="ts">
 import { CzNotifications } from "@cznethub/cznet-vue-core";
-
-@Component({
-  name: "app",
-  components: { CzNotifications },
-})
-class App extends Vue {
-  created() {}
-}
-export default toNative(App);
 </script>
 
 <style lang="scss" scoped>

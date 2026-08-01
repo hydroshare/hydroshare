@@ -115,42 +115,39 @@
   </v-menu>
 </template>
 
-<script lang="ts">
-import { Component, Vue, toNative, Prop } from "vue-facing-decorator";
+<script setup lang="ts">
 import { listIdentifiers, IdentifierItem } from "./identifier-attrs";
 
-@Component({
-  name: "cd-author-profile",
-  components: {},
-})
-class CdAuthorProfile extends Vue {
-  @Prop({ type: Object, required: true }) creator!: any;
-  @Prop({ type: String, default: null }) profileLink!: string | null;
-  @Prop({ type: Object, default: () => ({}) }) identifiers!: Record<string, string>;
+const props = withDefaults(
+  defineProps<{
+    creator: any;
+    profileLink?: string | null;
+    identifiers?: Record<string, string>;
+  }>(),
+  {
+    profileLink: null,
+    identifiers: () => ({}),
+  },
+);
 
-  get isOrganization(): boolean {
-    return this.creator?.type === "Organization";
+const isOrganization = computed<boolean>(
+  () => props.creator?.type === "Organization",
+);
+
+const identifierList = computed<IdentifierItem[]>(() => {
+  // Side-channel identifiers (from cached_metadata.creators) are the primary
+  // source; fall back to the schema.org `identifier` field (ORCID URL only)
+  // when name-matching missed in the parent.
+  const list = listIdentifiers(props.identifiers);
+  if (list.length === 0 && typeof props.creator?.identifier === "string") {
+    return listIdentifiers({ ORCID: props.creator.identifier });
   }
+  return list;
+});
 
-  get identifierList(): IdentifierItem[] {
-    // Side-channel identifiers (from cached_metadata.creators) are the primary
-    // source; fall back to the schema.org `identifier` field (ORCID URL only)
-    // when name-matching missed in the parent.
-    const list = listIdentifiers(this.identifiers);
-    if (list.length === 0 && typeof this.creator?.identifier === "string") {
-      return listIdentifiers({ ORCID: this.creator.identifier });
-    }
-    return list;
-  }
-
-  get hasActions(): boolean {
-    return Boolean(
-      this.creator?.email || this.creator?.url || this.profileLink,
-    );
-  }
-}
-
-export default toNative(CdAuthorProfile);
+const hasActions = computed<boolean>(() =>
+  Boolean(props.creator?.email || props.creator?.url || props.profileLink),
+);
 </script>
 
 <style lang="scss" scoped>
