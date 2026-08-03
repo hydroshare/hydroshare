@@ -397,7 +397,8 @@
                   :is-read-only="false"
                   :has-file-metadata="() => false"
                   :folder-name-regex="folderNameRegex"
-                  :canDownloadItem="() => true"
+                  :canDownloadItem="(item: IFile | IFolder) => !isFolder(item)"
+                  :download-zipped="(item: IFile | IFolder) => onZippedDownload(item, resourceId)"
                   :upload="uploadFiles"
                   :delete-file-or-folder="deleteFileOrFolder"
                   :rename-file-or-folder="renameFileOrFolder"
@@ -860,7 +861,13 @@ import {
   DeleteObjectCommand,
   CopyObjectCommand,
 } from "@aws-sdk/client-s3";
-import { fetchResource, onFileDownload, readRootFolder } from "./shared";
+import {
+  fetchResource,
+  onFileDownload,
+  onZippedDownload,
+  readRootFolder,
+} from "./shared";
+import { isFolder } from "./zip-download";
 import { createCookieS3Client } from "./cookie-s3-client";
 import HsUppy from "./hs-uppy.vue";
 import CdSpatialCoverageMap from "@/components/search-results/cd.spatial-coverage-map.vue";
