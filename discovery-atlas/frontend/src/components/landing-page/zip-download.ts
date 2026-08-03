@@ -1,14 +1,5 @@
 import type { IFile, IFolder } from "@cznethub/cznet-vue-core/dist/types";
 
-const POLL_INTERVAL_MS = 3000;
-const POLL_TIMEOUT_MS = 10 * 60 * 1000;
-
-export interface WaitOptions {
-  intervalMs?: number;
-  timeoutMs?: number;
-  now?: () => number;
-}
-
 /** Task notification returned by the download endpoint. */
 export interface ZipTask {
   id: string;
@@ -78,71 +69,21 @@ export const requestZip = async (
   return task;
 };
 
-export const waitForZip = async (
-  taskId: string,
-  opts: WaitOptions = {},
-): Promise<string> => {
-  const {
-    intervalMs = POLL_INTERVAL_MS,
-    timeoutMs = POLL_TIMEOUT_MS,
-    now = () => Date.now(),
-  } = opts;
-  const deadline = now() + timeoutMs;
-
-  while (now() < deadline) {
-    const res = await fetch(`/django_s3/rest_check_task_status/${taskId}`, {
-      credentials: "include",
-    });
-    if (!res.ok) {
-      throw new ZipDownloadError("Failed to create the zip file.");
-    }
-
-    const body = await res.json();
-    if (body?.status === "true") {
-      return body.payload;
-    }
-    // Anything other than an explicit "still running" is terminal.
-    if (body?.status !== "false") {
-      throw new ZipDownloadError("Failed to create the zip file.");
-    }
-
-    await new Promise(resolve => setTimeout(resolve, intervalMs));
-  }
-
-  throw new ZipDownloadError(
-    "The zip is taking too long to prepare. Please try again later.",
-  );
-};
-
-export const triggerDownload = (url: string) => {
-  const a = document.createElement("a");
-  a.href = url;
-  a.style.display = "none";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-};
-
 /**
- * Kick off a zipped download. Preferred path hands the task to the navbar
- * notification app, which owns polling and delivery exactly as the legacy
- * landing page does — that keeps the bell in sync and preserves the server's
- * filename. Falls back to polling here when the bell is unreachable.
+ * Kick off a zipped download. The navbar notification app owns polling and
+ * delivery, exactly as the legacy landing page does — that keeps the bell in
+ * sync and preserves the server's filename.
  */
 export const downloadZipped = async (
   resourceId: string,
   item: IFile | IFolder,
-  opts: WaitOptions = {},
-): Promise<"notified" | "downloaded"> => {
-  const task = await requestZip(resourceId, item);
-
+): Promise<void> => {
   const notifications = getNotificationsApp();
-  if (notifications) {
-    notifications.registerTask(task);
-    notifications.show();
-    return "notified";
+  if (!notifications) {
+    throw new ZipDownloadError("Failed to start the zip download.");
   }
 
-  triggerDownload(await waitForZip(task.id, opts));
-  return "downloaded";
+  const task = await requestZip(resourceId, item);
+  notifications.registerTask(task);
+  notifications.show();
 };

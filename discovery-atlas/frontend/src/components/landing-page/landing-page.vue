@@ -934,14 +934,7 @@ function onShowMetadata(item: any) {
 
 async function onZippedDownload(item: IFile | IFolder) {
   try {
-    // "notified" means the navbar bell is tracking it and will deliver the file.
-    if ((await downloadZipped(resourceId.value, item)) === "downloaded") {
-      Notifications.toast({
-        title: "Success",
-        message: "Download started.",
-        type: "success",
-      });
-    }
+    await downloadZipped(resourceId.value, item);
   } catch (error: any) {
     const message =
       error instanceof ZipDownloadError

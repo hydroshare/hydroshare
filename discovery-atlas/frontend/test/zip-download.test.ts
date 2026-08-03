@@ -4,7 +4,6 @@ import {
   isFolder,
   zipRequestUrl,
   requestZip,
-  waitForZip,
   downloadZipped,
   getNotificationsApp,
 } from "@/components/landing-page/zip-download";
@@ -77,61 +76,6 @@ describe("requestZip", () => {
   });
 });
 
-describe("waitForZip", () => {
-  it("polls until the task reports ready and returns the payload", async () => {
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValueOnce(jsonRes({ status: "false" }))
-      .mockResolvedValueOnce(jsonRes({ status: "false" }))
-      .mockResolvedValueOnce(
-        jsonRes({ status: "true", payload: "/django_s3/rest_download/zips/x.zip" }),
-      );
-    vi.stubGlobal("fetch", fetchMock);
-
-    await expect(waitForZip("task-1", { intervalMs: 0 })).resolves.toBe(
-      "/django_s3/rest_download/zips/x.zip",
-    );
-    expect(fetchMock).toHaveBeenCalledTimes(3);
-    expect(fetchMock.mock.calls[0][0]).toBe(
-      "/django_s3/rest_check_task_status/task-1",
-    );
-
-    vi.unstubAllGlobals();
-  });
-
-  it("fails on a 500 from the status endpoint", async () => {
-    vi.stubGlobal("fetch", vi.fn(async () => jsonRes({ status: "false" }, false, 500)));
-    await expect(waitForZip("task-1", { intervalMs: 0 })).rejects.toThrow(
-      ZipDownloadError,
-    );
-    vi.unstubAllGlobals();
-  });
-
-  it("fails instead of polling forever when the notification is missing", async () => {
-    const fetchMock = vi.fn(async () => jsonRes({ status: null }));
-    vi.stubGlobal("fetch", fetchMock);
-
-    await expect(waitForZip("task-1", { intervalMs: 0 })).rejects.toThrow(
-      ZipDownloadError,
-    );
-    expect(fetchMock).toHaveBeenCalledTimes(1);
-
-    vi.unstubAllGlobals();
-  });
-
-  it("gives up once the deadline passes", async () => {
-    vi.stubGlobal("fetch", vi.fn(async () => jsonRes({ status: "false" })));
-    let t = 0;
-    const now = () => (t += 60_000);
-
-    await expect(
-      waitForZip("task-1", { intervalMs: 0, timeoutMs: 120_000, now }),
-    ).rejects.toThrow(/too long/i);
-
-    vi.unstubAllGlobals();
-  });
-});
-
 const startedTask = {
   id: "task-1",
   name: "zip download",
@@ -147,7 +91,7 @@ describe("downloadZipped", () => {
     const show = vi.fn();
     vi.stubGlobal("notificationsApp", { registerTask, show });
 
-    await expect(downloadZipped("abc", folder)).resolves.toBe("notified");
+    await expect(downloadZipped("abc", folder)).resolves.toBeUndefined();
 
     expect(registerTask).toHaveBeenCalledWith(
       expect.objectContaining({ id: "task-1", name: "zip download" }),
@@ -159,28 +103,13 @@ describe("downloadZipped", () => {
     vi.unstubAllGlobals();
   });
 
-  it("falls back to polling and delivering itself when the bell is unreachable", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi
-        .fn()
-        .mockResolvedValueOnce(jsonRes(startedTask))
-        .mockResolvedValueOnce(jsonRes({ status: "true", payload: "/zip/url" })),
-    );
-    const click = vi.fn();
-    const created = document.createElement("a");
-    created.click = click;
-    vi.spyOn(document, "createElement").mockReturnValueOnce(created as any);
+  it("fails without requesting a zip it could not deliver when the bell is missing", async () => {
+    const fetchMock = vi.fn(async () => jsonRes(startedTask));
+    vi.stubGlobal("fetch", fetchMock);
 
-    await expect(downloadZipped("abc", folder, { intervalMs: 0 })).resolves.toBe(
-      "downloaded",
-    );
+    await expect(downloadZipped("abc", folder)).rejects.toThrow(ZipDownloadError);
+    expect(fetchMock).not.toHaveBeenCalled();
 
-    expect(click).toHaveBeenCalledOnce();
-    expect(created.getAttribute("href")).toBe("/zip/url");
-    expect(document.body.contains(created)).toBe(false);
-
-    vi.restoreAllMocks();
     vi.unstubAllGlobals();
   });
 });
