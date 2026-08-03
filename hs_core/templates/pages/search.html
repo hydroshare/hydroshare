@@ -29,6 +29,12 @@
     });
 
     resizeObserver.observe(iframe.contentWindow.document.body);
+
+    // Clicks inside the iframe never reach this document, so Bootstrap's
+    // dropdown auto-close never fires. Forward them to close open menus.
+    iframe.contentWindow.document.addEventListener("click", () => {
+      $(document).trigger("click.bs.dropdown.data-api");
+    });
   });
 
   function receiveMessage(event) {
