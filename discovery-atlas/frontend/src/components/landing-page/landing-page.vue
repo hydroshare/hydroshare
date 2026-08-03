@@ -408,8 +408,9 @@
                 :has-folders="fileExplorerConfig.hasFolders"
                 :is-read-only="true"
                 :has-file-metadata="() => true"
-                :canDownloadItem="() => true"
+                :canDownloadItem="(item: IFile | IFolder) => !isFolder(item)"
                 :load-file-preview="(item) => loadFilePreview(item)"
+                :download-zipped="onZippedDownload"
                 @download="
                   onFileDownload($event, resourceId, s3Client, s3Info.bucket)
                 "
@@ -779,9 +780,10 @@ import {
   CzFileExplorer,
   Notifications,
 } from "@cznethub/cznet-vue-core";
-import type { IFolder } from "@cznethub/cznet-vue-core/dist/types";
+import type { IFile, IFolder } from "@cznethub/cznet-vue-core/dist/types";
 import { GetObjectCommand, S3Client, _Object } from "@aws-sdk/client-s3";
 import { fetchResource, onFileDownload } from "./shared";
+import { downloadZipped, isFolder, ZipDownloadError } from "./zip-download";
 import { loadReadme } from "./readme-s3";
 import { createCookieS3Client } from "./cookie-s3-client";
 import User from "@/models/user.model";
@@ -928,6 +930,26 @@ const headingAttr = {
 function onShowMetadata(item: any) {
   selectedMetadata.value = item;
   showMetadata.value = true;
+}
+
+async function onZippedDownload(item: IFile | IFolder) {
+  try {
+    // "notified" means the navbar bell is tracking it and will deliver the file.
+    if ((await downloadZipped(resourceId.value, item)) === "downloaded") {
+      Notifications.toast({
+        title: "Success",
+        message: "Download started.",
+        type: "success",
+      });
+    }
+  } catch (error: any) {
+    const message =
+      error instanceof ZipDownloadError
+        ? error.message
+        : "Failed to download the zip file.";
+    console.error("Zipped download failed:", error);
+    Notifications.toast({ title: "Error", message, type: "error" });
+  }
 }
 
 function onCopy(text: string) {
