@@ -411,9 +411,11 @@
                 :canDownloadItem="(item: IFile | IFolder) => !isFolder(item)"
                 :load-file-preview="(item) => loadFilePreview(item)"
                 :download-zipped="(item: IFile | IFolder) => onZippedDownload(item, resourceId)"
+                :download-archive="() => onDownloadBag(resourceId, bagUrl)"
                 @download="
                   onFileDownload($event, resourceId, s3Client, s3Info.bucket)
                 "
+                downloadArchiveHelpText="Download all content as Zipped BagIt Archive"
               >
                 <template #prepend>
                   <span />
@@ -781,6 +783,7 @@ import { GetObjectCommand, S3Client, _Object } from "@aws-sdk/client-s3";
 import {
   fetchResource,
   getStatusColor,
+  onDownloadBag,
   onFileDownload,
   onZippedDownload,
   parseDate,
@@ -852,6 +855,7 @@ const alerts = ref<{
   isPublished?: boolean;
   displayName?: string;
 }>({});
+const bagUrl = ref<string>("");
 const dismissedAlerts = ref<Record<string, boolean>>({});
 const onParentMessage = (event: MessageEvent) => {
   // search.html in the parent posts `{ parentSearch, owners }` after the
@@ -1168,6 +1172,9 @@ async function init() {
       }
       if (parentWin.HS_RESOURCE_ALERTS && typeof parentWin.HS_RESOURCE_ALERTS === "object") {
         alerts.value = parentWin.HS_RESOURCE_ALERTS;
+      }
+      if (parentWin.HS_BAG_URL && typeof parentWin.HS_BAG_URL === "string") {
+        bagUrl.value = parentWin.HS_BAG_URL;
       }
     }
   } catch {

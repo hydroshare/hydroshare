@@ -112,5 +112,6 @@ class AtlasLandingView(TemplateView):
             "owners_json": json.dumps(owners),
             "creator_profiles_json": json.dumps(creator_profiles),
             "alerts_json": json.dumps(alerts),
+            "bag_url": json.dumps(resource.bag_url),
         }
         return render(request, 'pages/search.html', context)
