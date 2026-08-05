@@ -250,7 +250,6 @@ rebuild_hs() {
     echo "  - docker exec hydroshare python manage.py prevent_web_crawling"
     docker exec hydroshare python manage.py prevent_web_crawling
     thumbnail_cleanup
-    fi
     restart_hs
     echo "END BUILD"
 }

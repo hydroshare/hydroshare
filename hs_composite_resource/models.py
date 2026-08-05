@@ -715,8 +715,8 @@ class CompositeResource(BaseResource):
         # logical file/aggregation
         metadata_missing_info = []
         for lfo in self.logical_files:
-            if not lfo.metadata.has_all_required_elements():
-                missing_elements = lfo.metadata.get_required_missing_elements()
+            missing_elements = lfo.metadata.get_required_missing_elements()
+            if missing_elements:
                 metadata_missing_info.append({'file_path': lfo.aggregation_name,
                                               'missing_elements': missing_elements})
         return metadata_missing_info

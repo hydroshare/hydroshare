@@ -1170,6 +1170,31 @@ class UserAccess(models.Model):
     # PUBLIC METHODS: resources
     ##########################################
 
+    def __resource_view_q(self):
+        return (
+            Q(r2urp__user=self.user)
+            | Q(r2grp__group__gaccess__active=True, r2grp__group__g2ugp__user=self.user)
+        )
+
+    def __resource_edit_q(self):
+        return (
+            # user owns resource invariant of immutable flag 4/9/2021
+            Q(r2urp__user=self.user, r2urp__privilege=PrivilegeCodes.OWNER)
+            # user has direct access and resource is not immutable
+            | Q(
+                raccess__immutable=False,
+                r2urp__user=self.user,
+                r2urp__privilege__lte=PrivilegeCodes.CHANGE,
+            )
+            # user has direct access through being a member of a group
+            | Q(
+                raccess__immutable=False,
+                r2grp__group__gaccess__active=True,
+                r2grp__group__g2ugp__user=self.user,
+                r2grp__privilege=PrivilegeCodes.CHANGE,
+            )
+        )
+
     @property
     def view_resources(self):
         """
@@ -1183,12 +1208,7 @@ class UserAccess(models.Model):
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
 
-        return BaseResource.objects.filter(
-            # direct access
-            Q(r2urp__user=self.user)
-            # access via a group share
-            | Q(r2grp__group__gaccess__active=True, r2grp__group__g2ugp__user=self.user)
-        ).distinct()
+        return BaseResource.objects.filter(self.__resource_view_q()).distinct()
 
     @property
     def owned_resources(self):
@@ -1228,23 +1248,7 @@ class UserAccess(models.Model):
         # 1. it's shared with the user and editable.
         # 2. it's shared with a group that has edit privilege and contains the user,
 
-        return BaseResource.objects.filter(
-            # user owns resource invariant of immutable flag 4/9/2021
-            Q(r2urp__user=self.user, r2urp__privilege=PrivilegeCodes.OWNER)
-            # user has direct access and resource is not immutable
-            | Q(
-                raccess__immutable=False,
-                r2urp__user=self.user,
-                r2urp__privilege__lte=PrivilegeCodes.CHANGE,
-            )
-            # user has direct access through being a member of a group
-            | Q(
-                raccess__immutable=False,
-                r2grp__group__gaccess__active=True,
-                r2grp__group__g2ugp__user=self.user,
-                r2grp__privilege=PrivilegeCodes.CHANGE,
-            )
-        ).distinct()
+        return BaseResource.objects.filter(self.__resource_edit_q()).distinct()
 
     def get_resources_with_explicit_access(self, this_privilege,
                                            via_user=True, via_group=False):
@@ -1473,10 +1477,11 @@ class UserAccess(models.Model):
         if access_resource.immutable:
             return False
 
-        if self.edit_resources.filter(id=this_resource.id).exists():
-            return True
+        can_change = BaseResource.objects.filter(
+            Q(id=this_resource.id) & self.__resource_edit_q()
+        ).exists()
 
-        return False
+        return can_change
 
     def can_change_resource_shareable_flag(self, this_resource):
         """
@@ -1562,10 +1567,11 @@ class UserAccess(models.Model):
         if self.user.is_superuser:
             return True
 
-        if self.view_resources.filter(id=this_resource.id).exists():
-            return True
+        can_view = BaseResource.objects.filter(
+            Q(id=this_resource.id) & self.__resource_view_q()
+        ).exists()
 
-        return False
+        return can_view
 
     def can_view_resources_owned_by(self, owner):
         """

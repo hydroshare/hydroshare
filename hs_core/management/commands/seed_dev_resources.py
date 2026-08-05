@@ -213,7 +213,7 @@ def _stagger_dates(resource, index):
 
     # 3. Sync cached_metadata JSON from the updated Date elements
     resource.refresh_from_db()
-    resource.update_cached_metadata_field(field_name='all')
+    resource.update_cached_metadata_field(field_name='all', update_modified_date=True)
 
 
 def _base_metadata(owner, index):

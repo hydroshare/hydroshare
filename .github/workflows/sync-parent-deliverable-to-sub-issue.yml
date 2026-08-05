@@ -1,0 +1,80 @@
+name: Sync Parent DELIVERABLE to Sub-Issues
+
+on:
+  issues:
+    types: [opened, edited]
+  workflow_dispatch:
+    inputs:
+      issue_node_id:
+        description: 'The node ID of the sub-issue to test'
+        required: true
+        type: string
+
+jobs:
+  sync-deliverable:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.issue.parent != null }} # {Link: GitHub Docs on automating projects https://docs.github.com/en/issues/planning-and-tracking-with-projects/automating-your-project/automating-projects-using-actions}
+    
+    steps:
+      - name: Generate token
+        id: generate-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.APP_CLIENT_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - name: Inherit Deliverable Select Field
+        env:
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+          PROJECT_ID: PVT_kwDOADSPDc4AiwwP
+          TARGET_FIELD_NAME: Deliverable
+          FIELD_ID: PVTSSF_lADOADSPDc4AiwwPzhX0UJo
+          SUB_ISSUE_NODE_ID: ${{ github.event_name == 'workflow_dispatch' && inputs.issue_node_id || github.event.issue.node_id }}
+        run: |
+          # 1. Fetch parent and child project items via GraphQL
+          gh api graphql -f query='
+            query($issueId: ID!, $fieldName: String!) {
+              node(id: $issueId) {
+                ... on Issue {
+                  parent {
+                    projectItems(first: 5) {
+                      nodes {
+                        project { id }
+                        fieldValueByName(name: $fieldName) {
+                          ... on ProjectV2ItemFieldSingleSelectValue { optionId }
+                          ... on ProjectV2ItemFieldTextValue { text }
+                          ... on ProjectV2ItemFieldNumberValue { number }
+                        }
+                      }
+                    }
+                  }
+                  projectItems(first: 5) {
+                    nodes { id, project { id } }
+                  }
+                }
+              }
+            }' -f issueId="$SUB_ISSUE_NODE_ID" -f fieldName="$TARGET_FIELD_NAME" > raw_payload.json
+
+          # 2. Extract IDs and Values
+          SUB_ITEM_ID=$(jq -r --arg projId "$PROJECT_ID" '.data.node.projectItems.nodes[] | select(.project.id == $projId) | .id // empty' raw_payload.json)
+
+          if [ -z "$SUB_ITEM_ID" ]; then
+            # The issue may not have inherited the project yet, so add it explicitly and use the returned item ID.
+            gh api graphql -f query='
+              mutation($projectId: ID!, $contentId: ID!) {
+                addProjectV2ItemById(input: { projectId: $projectId, contentId: $contentId }) {
+                  item { id }
+                }
+              }' -f projectId="$PROJECT_ID" -f contentId="$SUB_ISSUE_NODE_ID" > add_item.json
+
+            SUB_ITEM_ID=$(jq -r '.data.addProjectV2ItemById.item.id // empty' add_item.json)
+          fi
+          
+          # ... (jq parsing of values, similar to original) ...
+          OPTION_ID=$(jq -r '.data.node.parent.projectItems.nodes[0].fieldValueByName.optionId // empty' raw_payload.json)
+
+          # 3. Update the sub-issue's Deliverable field to match the parent.
+          if [ -n "$OPTION_ID" ]; then
+            VALUE_INPUT="{ singleSelectOptionId: \"$OPTION_ID\" }"
+            gh api graphql -f query="mutation { updateProjectV2ItemFieldValue(input: { projectId: \"$PROJECT_ID\", itemId: \"$SUB_ITEM_ID\", fieldId: \"$FIELD_ID\", value: $VALUE_INPUT }) { projectV2Item { id } } }"
+          fi

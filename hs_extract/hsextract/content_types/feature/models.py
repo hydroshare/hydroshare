@@ -2,6 +2,7 @@ import os
 
 from hsextract.content_types.models import ContentType, FileMetadataObject
 from hsextract.content_types.feature.hs_cn_extraction import encode_vector_metadata
+from hsextract.utils.s3 import exists
 
 
 class FeatureMetadataObject(FileMetadataObject):
@@ -62,6 +63,15 @@ class FeatureMetadataObject(FileMetadataObject):
         return self._content_type_associated_media
 
     def extract_metadata(self):
-        metadata = encode_vector_metadata(self.file_object_path)
+        # check if the shp file exists before attempting to extract metadata
+        if not exists(self.content_type_main_file_path):
+            print(f"Shapefile {self.content_type_main_file_path} does not exist. Cannot extract metadata.")
+            return None
+        try:
+            metadata = encode_vector_metadata(self.file_object_path)
+        except Exception as e:
+            print(f"Failed to extract feature metadata from {self.file_object_path}: {str(e)}")
+            return None
+
         metadata = metadata.model_dump(exclude_none=True)
         return metadata
