@@ -1,4 +1,11 @@
+import pytest
+from pydantic import ValidationError
+
+from hsmodels.schemas.enums import RelationType as HSRelationType
+
+from hs_cloudnative_schemas.schema.base import Relation
 from hs_cloudnative_schemas.schema.core import CoreMetadataEdit
+from hs_core.enums import NOT_USER_EDITABLE_RELATION_TYPES
 
 
 def _get_property(properties: dict, field_name: str) -> dict:
@@ -126,3 +133,17 @@ def test_core_metadata_edit_marks_only_non_editable_fields_as_read_only():
 
     for field_name in read_only_fields:
         assert _get_property(properties, field_name).get("readOnly") is True
+
+
+def test_relation_name_enum_contains_only_user_editable_types():
+    # All user-editable relation types should be accepted
+    for m in HSRelationType:
+        if m.name not in NOT_USER_EDITABLE_RELATION_TYPES:
+            relation = Relation.model_validate({"name": m.value})
+            assert relation.name is not None
+
+    # All non-user-editable relation types should be rejected
+    for m in HSRelationType:
+        if m.name in NOT_USER_EDITABLE_RELATION_TYPES:
+            with pytest.raises(ValidationError):
+                Relation.model_validate({"name": m.value})
