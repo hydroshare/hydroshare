@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Any, List, Optional, Union, Literal
 
 from pydantic import BaseModel, HttpUrl, ConfigDict, model_validator
+from hsmodels.schemas.enums import RelationType
 
 from hs_cloudnative_schemas.schema import base as schema
 from hs_cloudnative_schemas.schema.dataset import ScientificDataset, AdditionalType
@@ -139,18 +140,17 @@ class ContentFile(BaseModel):
 
 
 class Relation(BaseModel):
-    type: str
+    type: RelationType
     value: str
 
-    def to_dataset_part_relation(self, relation_type: str):
-        relation = None
-        if relation_type == "IsPartOf" and self.type.endswith("is part of"):
+    def to_dataset_relation(self):
+        if self.type == RelationType.isPartOf:
             relation = schema.IsPartOf.construct()
-        elif relation_type == "HasPart" and self.type.endswith("resource includes"):
+        elif self.type == RelationType.hasPart:
             relation = schema.HasPart.construct()
         else:
             relation = schema.Relation.construct()
-            relation.name = self.type
+            relation.name = self.type.value
 
         if ',' in self.value:
             description, url = self.value.rsplit(',', 1)
@@ -223,9 +223,9 @@ class _HydroshareResourceMetadata(BaseModel):
     def set_extra_columns(cls, data: Any):
         if isinstance(data, dict):
             extra_fields = data.keys() - cls.model_fields.keys()
+            if "extra_columns" not in data:
+                data["extra_columns"] = {}
             if extra_fields:
-                if "extra_columns" not in data:
-                    data["extra_columns"] = {}
                 data["extra_columns"].update(
                     {field_name: data[field_name] for field_name in extra_fields}
                 )
@@ -252,22 +252,17 @@ class _HydroshareResourceMetadata(BaseModel):
     def to_dataset_associated_media(self):
         return self.associatedMedia
 
-    def to_dataset_is_part_of(self):
-        return self._to_dataset_part_relations("IsPartOf")
-
-    def to_dataset_has_part(self):
-        return self._to_dataset_part_relations("HasPart")
-
-    def to_dataset_relations(self):
-        return self._to_dataset_part_relations("Other")
-
-    def _to_dataset_part_relations(self, relation_type: str):
-        part_relations = []
+    def _partition_relations_by_type(self):
+        is_part_of, has_part, other = [], [], []
         for relation in self.relations:
-            part_relation = relation.to_dataset_part_relation(relation_type)
-            if part_relation:
-                part_relations.append(part_relation)
-        return part_relations
+            result = relation.to_dataset_relation()
+            if relation.type == RelationType.isPartOf:
+                is_part_of.append(result)
+            elif relation.type == RelationType.hasPart:
+                has_part.append(result)
+            else:
+                other.append(result)
+        return is_part_of, has_part, other
 
     def to_dataset_spatial_coverage(self):
         if self.spatial_coverage:
@@ -320,6 +315,7 @@ class _HydroshareResourceMetadata(BaseModel):
 
     def to_catalog_dataset(self):
         dataset = ScientificDataset.model_construct(**self.extra_columns)
+        is_part_of, has_part, other_relations = self._partition_relations_by_type()
         dataset.additionalType = self.to_additional_type(self.type) if self.type else None
         dataset.provider = self.to_dataset_provider()
         dataset.name = self.title
@@ -337,10 +333,10 @@ class _HydroshareResourceMetadata(BaseModel):
         dataset.spatialCoverage = self.to_dataset_spatial_coverage()
         dataset.temporalCoverage = self.to_dataset_period_coverage()
         dataset.associatedMedia = self.to_dataset_associated_media()
-        dataset.isPartOf = self.to_dataset_is_part_of()
-        dataset.hasPart = self.to_dataset_has_part()
+        dataset.isPartOf = is_part_of
+        dataset.hasPart = has_part
+        dataset.relations = other_relations
         dataset.license = self.to_dataset_license()
         dataset.citation = [self.citation]
         dataset.creativeWorkStatus = self.to_dataset_creative_work_status()
-        dataset.relations = self.to_dataset_relations()
         return dataset
