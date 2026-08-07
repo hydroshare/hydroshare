@@ -3,6 +3,20 @@ import { Notifications } from "@cznethub/cznet-vue-core";
 import { IFile, IFolder } from "@cznethub/cznet-vue-core/dist/types";
 import { S3_PROXY_URL } from "@/constants";
 
+const hiddenFileSuffixes = [
+  "_meta.xml",
+  "_resmap.xml",
+  "hs_user_metadata.json",
+  ".hs_user_metadata.json",
+  "_schema.json",
+  "_schema_values.json",
+];
+
+function shouldHideFileName(name: string): boolean {
+  const lowerName = name.toLowerCase();
+  return hiddenFileSuffixes.some((suffix) => lowerName.endsWith(suffix));
+}
+
 export const onFileDownload = async (items: (IFile | IFolder)[], resourceId: string, s3Client: S3Client, bucket: string) => {
   try {
     for (let item of items) {
@@ -61,6 +75,10 @@ export const _readFolderRecursive = async (
     if (s3Response.Contents) {
       files = s3Response.Contents
         .filter(f => f.Key !== path)  // Filter out current directory file marker
+        .filter((f) => {
+          const fileName = f.Key?.replace(path, "") || "";
+          return fileName.length > 0 && !shouldHideFileName(fileName);
+        })
         .map((f: _Object, _index: number) => {
           return {
             name: f.Key?.replace(path, ""),
