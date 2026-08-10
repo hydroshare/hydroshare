@@ -2,15 +2,11 @@
  * Dialog placement for the HydroShare host page.
  *
  * HydroShare embeds this app in a same-origin iframe with `scrolling="no"`,
- * sized to its content by a ResizeObserver. The iframe viewport is therefore
- * the entire document, so a dialog centred against it lands at the midpoint of
- * the whole page rather than of what the user is looking at. HydroShare also
- * renders a `navbar-fixed-top` over the top of the parent viewport, so the
- * usable band is inset by it.
+ * sized to its content, so the iframe viewport is the entire document and a
+ * centred dialog lands at the midpoint of the whole page. The host's
+ * `navbar-fixed-top` insets the usable band further.
  *
- * Published as CSS custom properties on <html> and consumed by the rules in
- * assets/css/host-dialogs.scss, which target the dialog classes cznet-vue-core
- * puts on its overlay content. The library itself knows none of this.
+ * Published as CSS custom properties on <html> for assets/css/host-dialogs.scss.
  */
 
 export interface HostViewportBand {

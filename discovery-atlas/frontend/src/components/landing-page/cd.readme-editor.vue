@@ -79,8 +79,7 @@
             v-model="raw"
             class="readme-textarea"
             variant="outlined"
-            auto-grow
-            :rows="14"
+            no-resize
             hide-details
             spellcheck="false"
             :readonly="isSaving || isConverting"
@@ -326,9 +325,21 @@ async function convert() {
   padding-left: 0.5rem;
 }
 
-.readme-textarea :deep(textarea) {
-  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-  font-size: 0.85rem;
-  line-height: 1.5;
+.readme-textarea {
+  height: 100%;
+
+  :deep(.v-input__control),
+  :deep(.v-field),
+  :deep(.v-field__field) {
+    height: 100%;
+  }
+
+  :deep(textarea) {
+    height: 100%;
+    overflow-y: auto;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
 }
 </style>
