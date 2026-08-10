@@ -10,6 +10,86 @@
         v-model:errors="errors"
         :config="config"
       >
+        <!-- ===== ALERTS (same source as the landing page) ===== -->
+        <div v-if="showMissingMetadataAlert" class="mb-4">
+          <v-alert
+            type="warning"
+            variant="tonal"
+            density="comfortable"
+            closable
+            @click:close="dismissedAlerts.missing = true"
+          >
+            <div v-if="alerts.missingMetadata && alerts.missingMetadata.length">
+              We recommend completing these before making your
+              {{ alerts.displayName || "resource" }} public or discoverable:
+              <ul class="ml-4 mt-1">
+                <li v-for="el in alerts.missingMetadata" :key="el">{{ el }}</li>
+                <li v-if="alerts.isUntitled">Title: needs to be changed</li>
+                <li
+                  v-for="el in alerts.recommendedMissing || []"
+                  :key="`r-${el}`"
+                >
+                  {{ el }}
+                </li>
+              </ul>
+            </div>
+            <div v-if="alerts.hasRequiredContentFiles === false" class="mt-2">
+              You must
+              <template
+                v-if="alerts.missingMetadata && alerts.missingMetadata.length"
+                >also</template
+              >
+              add content files to your
+              {{ alerts.displayName || "resource" }} before it can be
+              published, public, or discoverable.
+            </div>
+          </v-alert>
+        </div>
+
+        <div v-if="showReplacedByAlert" class="mb-4">
+          <v-alert
+            type="info"
+            variant="tonal"
+            density="comfortable"
+            closable
+            @click:close="dismissedAlerts.replacedBy = true"
+          >
+            A newer version of this resource
+            <a
+              :href="alerts.isReplacedBy || undefined"
+              target="_blank"
+              rel="noopener"
+              >is available</a
+            >
+            that replaces this version.
+          </v-alert>
+        </div>
+
+        <div v-if="showVersionOfAlert" class="mb-4">
+          <v-alert
+            type="info"
+            variant="tonal"
+            density="comfortable"
+            closable
+            @click:close="dismissedAlerts.versionOf = true"
+          >
+            An older version of this resource
+            <a
+              :href="alerts.isVersionOf || undefined"
+              target="_blank"
+              rel="noopener"
+              >is available</a
+            >.
+          </v-alert>
+        </div>
+
+        <div v-if="showPublishedAlert" class="mb-4">
+          <v-alert type="info" variant="tonal" density="comfortable">
+            This resource is published. Metadata changes to a published
+            resource may require review.
+          </v-alert>
+        </div>
+
         <!-- ===== HEADER: title input + meta + save/cancel actions ===== -->
         <div id="overview" class="resource-header mb-6">
           <div class="d-flex align-start ga-3 mb-3">
@@ -22,7 +102,7 @@
               <cz-field scope="#/properties/name" hide-label />
             </div>
 
-            <!-- Mobile: collapse Cancel + Settings into a 3-dot menu -->
+            <!-- Mobile: collapse the header actions into a 3-dot menu -->
             <v-menu v-if="$vuetify.display.smAndDown">
               <template v-slot:activator="{ props }">
                 <v-btn
@@ -36,10 +116,8 @@
               </template>
               <v-list density="compact">
                 <v-list-item
-                  title="Cancel and view"
-                  @click="
-                    $router.push({ name: 'landing', params: { resourceId } })
-                  "
+                  title="Back to resource"
+                  @click="leaveToLanding"
                 >
                   <template #prepend>
                     <v-icon size="18">mdi-arrow-left</v-icon>
@@ -78,7 +156,10 @@
                 v-if="data.dateModified"
                 class="text-body-2 text-medium-emphasis"
               >
-                Last modified {{ parseDate(data.dateModified) }}
+                Updated {{ parseDate(data.dateModified) }}
+                <span class="font-weight-light"
+                  >(<timeago :datetime="data.dateModified" />)</span
+                >
               </span>
               <span
                 v-if="data.viewCount != null"
@@ -90,19 +171,31 @@
               </span>
             </div>
 
+            <!-- Save is mirrored here as well as at the foot of the form:
+                 the page can run to several thousand px inside an iframe the
+                 host sets to scrolling="no", so reaching the bottom bar means
+                 scrolling the PARENT window all the way down. -->
             <div
               v-if="!$vuetify.display.smAndDown"
-              class="d-flex flex-wrap align-center ga-1 ml-auto"
+              class="d-flex flex-wrap align-center ga-2 ml-auto"
             >
               <v-btn
                 size="small"
                 variant="outlined"
                 prepend-icon="mdi-arrow-left"
-                @click="
-                  $router.push({ name: 'landing', params: { resourceId } })
-                "
-                >Cancel</v-btn
+                @click="leaveToLanding"
+                >Back</v-btn
               >
+              <cd-save-button
+                :errors="errors"
+                :is-valid="isValid"
+                :is-submitting="isSubmitting"
+                label="Save"
+                busy-label="Saving..."
+                size="small"
+                variant="flat"
+                @click="submit"
+              />
             </div>
           </div>
         </div>
@@ -182,7 +275,12 @@
                           <div
                             class="modal-summary modal-summary--inline"
                             :class="{ 'has-errors': hasErrors }"
+                            role="button"
+                            tabindex="0"
+                            aria-label="Edit authors"
                             @click="openEdit"
+                            @keydown.enter.prevent="openEdit"
+                            @keydown.space.prevent="openEdit"
                           >
                             <span
                               v-if="!(value && value.length)"
@@ -214,7 +312,7 @@
                                   color="error"
                                   >mdi-alert-circle</v-icon
                                 >
-                                {{ person.name || `Author ${Number(i) + 1}` }}
+                                {{ person?.name || `Author ${Number(i) + 1}` }}
                               </v-chip>
                             </span>
                             <v-icon size="small" class="modal-summary__edit"
@@ -250,7 +348,12 @@
                           <div
                             class="modal-summary modal-summary--inline"
                             :class="{ 'has-errors': hasErrors }"
+                            role="button"
+                            tabindex="0"
+                            aria-label="Edit contributors"
                             @click="openEdit"
+                            @keydown.enter.prevent="openEdit"
+                            @keydown.space.prevent="openEdit"
                           >
                             <span
                               v-if="!(value && value.length)"
@@ -277,7 +380,7 @@
                                   color="error"
                                   >mdi-alert-circle</v-icon
                                 >
-                                {{ person.name || `Contributor ${Number(i) + 1}` }}
+                                {{ person?.name || `Contributor ${Number(i) + 1}` }}
                               </v-chip>
                             </span>
                             <v-icon size="small" class="modal-summary__edit"
@@ -384,6 +487,29 @@
               >
                 Content
               </div>
+
+              <!-- Legacy: baseresource.html shows this in edit mode when the
+                   resource accepts uploads and is neither published nor
+                   pending review (superusers excepted). -->
+              <v-alert
+                v-if="!(alerts.isPublished || alerts.reviewPending)"
+                type="info"
+                variant="tonal"
+                density="compact"
+                closable
+                class="mb-4 text-body-2"
+              >
+                Upload a <code>readme.md</code> or <code>readme.txt</code> at
+                the root of your resource and it will be rendered on the page
+                automatically. Markdown is supported in <code>readme.md</code>.
+                <a
+                  href="https://daringfireball.net/projects/markdown/basics"
+                  target="_blank"
+                  rel="noopener"
+                  >Learn more about Markdown</a
+                >.
+              </v-alert>
+
               <div
                 v-if="!isLoadingFiles"
                 id="fileExplorer"
@@ -434,6 +560,7 @@
 
               <!-- Editable README; see cd.readme-editor.vue. -->
               <cd-readme-editor
+                @update:dirty="readmeDirty = $event"
                 v-if="!isLoadingFiles"
                 id="readme"
                 class="mt-4"
@@ -454,52 +581,16 @@
                   requiredMark("#/properties/funding")
                 }}</span>
               </div>
-              <cz-field-modal
+              <!-- Edited in place: this column is ~650px, which comfortably
+                   fits the grant form, and Related Resources directly below
+                   is already inline. A modal here was chrome for its own
+                   sake. Modals are reserved for the cramped contexts — the
+                   Details card cells and the 22rem sidebar. -->
+              <cz-field
                 scope="#/properties/funding"
                 :options="fundingOptions"
-                :label="`Funding${requiredMark('#/properties/funding')}`"
-              >
-                <template
-                  #summary="{ value, errorsByIndex, hasErrors, openEdit }"
-                >
-                  <div
-                    class="modal-summary"
-                    :class="{ 'has-errors': hasErrors }"
-                    @click="openEdit"
-                  >
-                    <div
-                      v-if="!(value && value.length)"
-                      class="text-body-2 text-medium-emphasis font-italic"
-                    >
-                      Click to add funding sources
-                    </div>
-                    <ul v-else class="funding-list">
-                      <li
-                        v-for="(f, i) in value"
-                        :key="i"
-                        :class="{ 'has-errors': errorsByIndex[i] }"
-                      >
-                        <v-icon
-                          v-if="errorsByIndex[i]"
-                          size="14"
-                          color="error"
-                          class="mr-1"
-                          >mdi-alert-circle</v-icon
-                        >
-                        <strong>{{ f.name || `Funding ${Number(i) + 1}` }}</strong>
-                        <span
-                          v-if="f.identifier"
-                          class="text-caption text-medium-emphasis ml-2"
-                          >Award {{ f.identifier }}</span
-                        >
-                      </li>
-                    </ul>
-                    <v-icon size="small" class="modal-summary__edit"
-                      >mdi-pencil</v-icon
-                    >
-                  </div>
-                </template>
-              </cz-field-modal>
+                hide-label
+              />
             </div>
 
             <!-- Related Resources. hasPart/isPartOf were hidden in the old
@@ -566,93 +657,61 @@
                   requiredMark("#/properties/additionalProperty")
                 }}</span>
               </div>
-              <cz-field-modal
+              <!-- Inline, same reasoning as Funding above. -->
+              <cz-field
                 scope="#/properties/additionalProperty"
                 :options="additionalPropertyOptions"
-                :label="`Additional metadata${requiredMark(
-                  '#/properties/additionalProperty',
-                )}`"
-              >
-                <template
-                  #summary="{ value, errorsByIndex, hasErrors, openEdit }"
-                >
-                  <div
-                    class="modal-summary"
-                    :class="{ 'has-errors': hasErrors }"
-                    @click="openEdit"
-                  >
-                    <div
-                      v-if="!(value && value.length)"
-                      class="text-body-2 text-medium-emphasis font-italic"
-                    >
-                      Click to add metadata entries
-                    </div>
-                    <ul v-else class="additional-list">
-                      <li
-                        v-for="(p, i) in value"
-                        :key="i"
-                        :class="{ 'has-errors': errorsByIndex[i] }"
-                      >
-                        <v-icon
-                          v-if="errorsByIndex[i]"
-                          size="14"
-                          color="error"
-                          class="mr-1"
-                          >mdi-alert-circle</v-icon
-                        >
-                        <strong>{{ p.name || `Entry ${Number(i) + 1}` }}</strong>
-                        <span
-                          v-if="p.value"
-                          class="text-caption text-medium-emphasis ml-2"
-                          >{{ p.value }}</span
-                        >
-                      </li>
-                    </ul>
-                    <v-icon size="small" class="modal-summary__edit"
-                      >mdi-pencil</v-icon
-                    >
-                  </div>
-                </template>
-              </cz-field-modal>
+                hide-label
+              />
             </div>
           </v-container>
 
           <!-- Sidebar mirrors landing page sidebar positions -->
           <div class="sidebar break-word">
             <div>
-              <v-card variant="flat" class="mb-6">
-                <v-card-title
-                  class="pa-0 pb-2 text-subtitle-2 font-weight-bold text-uppercase"
-                  style="letter-spacing: 0.05em; color: #546e7a;"
-                >
+              <!-- Plain divs, not v-card: the cards were purely decorative
+                   (copied from the read-only landing page) but the library
+                   collapses control margins differently inside a .v-card, so
+                   these two sections silently lost the spacing the others
+                   had. -->
+              <div class="mb-6">
+                <div class="sidebar-heading">
                   Subject Keywords<span class="required-mark">{{
                     requiredMark("#/properties/keywords")
                   }}</span>
-                </v-card-title>
+                </div>
                 <cz-field scope="#/properties/keywords" hide-label />
-              </v-card>
 
-              <v-card variant="flat" class="mb-6">
-                <v-card-title
-                  class="pa-0 pb-2 text-subtitle-2 font-weight-bold text-uppercase"
-                  style="letter-spacing: 0.05em; color: #546e7a;"
+                <!-- Legacy: subject.html gates this on `not cm.raccess.published`
+                     and edit mode. A published resource can't be made private,
+                     so the warning doesn't apply there. -->
+                <v-alert
+                  v-if="!alerts.isPublished"
+                  type="info"
+                  variant="tonal"
+                  density="compact"
+                  class="mt-2 text-body-2"
                 >
+                  Deleting all keywords will set the resource sharing status to
+                  <strong>private</strong>.
+                </v-alert>
+              </div>
+
+              <div class="mb-6">
+                <div class="sidebar-heading">
                   License<span class="required-mark">{{
                     requiredMark("#/properties/license")
                   }}</span>
-                </v-card-title>
+                </div>
                 <cz-field
                   scope="#/properties/license"
                   :options="licenseOptions"
                   hide-label
                 />
-              </v-card>
+              </div>
 
               <div class="mb-6">
-                <div
-                  class="text-subtitle-2 font-weight-bold text-uppercase mb-2"
-                  style="letter-spacing: 0.05em; color: #546e7a;"
-                >
+                <div class="sidebar-heading">
                   Spatial Coverage<span class="required-mark">{{
                     requiredMark("#/properties/spatialCoverage")
                   }}</span>
@@ -667,12 +726,15 @@
                   <template
                     #summary="{ value, hasErrors, openEdit }"
                   >
+                    <!-- The click target is deliberately NOT the whole card:
+                         Leaflet doesn't stop click propagation, so panning
+                         the preview map ended every drag by opening the
+                         modal. Editing is an explicit button instead. -->
                     <v-card
                       variant="outlined"
                       border="grey thin"
                       class="modal-summary modal-summary--card"
                       :class="{ 'has-errors': hasErrors }"
-                      @click="openEdit"
                     >
                       <div
                         v-if="hasErrors"
@@ -684,7 +746,7 @@
                           class="mr-2"
                           >mdi-alert-circle</v-icon
                         >
-                        Coverage has validation issues — click to fix
+                        Coverage has validation issues
                       </div>
                       <cd-spatial-coverage-map
                         v-if="value?.geo"
@@ -692,61 +754,86 @@
                       />
                       <v-card-text
                         v-else
-                        class="text-body-2 text-medium-emphasis font-italic"
+                        class="text-body-2 text-medium-emphasis font-italic pb-0"
                       >
-                        Click to set spatial coverage
+                        No spatial coverage set
                       </v-card-text>
-                      <v-divider v-if="value?.name"></v-divider>
-                      <v-card-text
-                        v-if="value?.name"
-                        class="text-body-2 py-2"
-                      >
-                        {{ value.name }}
-                      </v-card-text>
+                      <v-divider></v-divider>
+                      <div class="d-flex align-center ga-2 px-3 py-2">
+                        <span
+                          v-if="value?.name"
+                          class="text-body-2 text-truncate flex-grow-1"
+                          >{{ value.name }}</span
+                        >
+                        <v-spacer v-else />
+                        <v-btn
+                          v-if="hasSpatialCoverage"
+                          size="small"
+                          variant="text"
+                          color="error"
+                          prepend-icon="mdi-close"
+                          @click="clearSpatialCoverage"
+                          >Clear</v-btn
+                        >
+                        <v-btn
+                          size="small"
+                          variant="text"
+                          prepend-icon="mdi-pencil"
+                          @click="openEdit"
+                          >Edit</v-btn
+                        >
+                      </div>
                     </v-card>
                   </template>
                 </cz-field-modal>
               </div>
 
               <div class="mb-6 temporal-coverage">
-                <div
-                  class="text-subtitle-2 font-weight-bold text-uppercase mb-2"
-                  style="letter-spacing: 0.05em; color: #546e7a;"
-                >
+                <div class="sidebar-heading">
                   Temporal Coverage<span class="required-mark">{{
                     requiredMark("#/properties/temporalCoverage")
                   }}</span>
                 </div>
+                <!-- The landing page uses a v-timeline here, but it reads as
+                     a motif around two lines of static text. Wrapping *inputs*
+                     in it spent ~62px of a 352px sidebar on the dot rail and
+                     truncated the date fields, so edit mode uses plain
+                     labelled fields with the same calendar cue. -->
                 <v-card variant="outlined" border="grey thin">
-                  <v-card-text>
-                    <v-timeline align-top density="compact" line-color="info">
-                      <v-timeline-item
-                        dot-color="primary"
-                        icon="mdi-calendar"
-                        fill-dot
+                  <v-card-text class="py-3">
+                    <div class="d-flex align-center ga-2 mb-1">
+                      <v-icon size="16" color="primary">mdi-calendar</v-icon>
+                      <span class="text-body-2 font-weight-bold"
+                        >Start date<span class="required-mark">*</span></span
                       >
-                        <div class="text-body-2 font-weight-bold mb-1">
-                          Start Date
-                        </div>
-                        <cz-field
-                          scope="#/properties/temporalCoverage/properties/startDate"
-                          hide-label
-                        />
-                      </v-timeline-item>
-                      <v-timeline-item
-                        dot-color="orange-darken-2"
-                        icon="mdi-calendar"
-                        fill-dot
+                    </div>
+                    <cz-field
+                      scope="#/properties/temporalCoverage/properties/startDate"
+                      hide-label
+                    />
+
+                    <div class="d-flex align-center ga-2 mb-1 mt-3">
+                      <v-icon size="16" color="orange-darken-2"
+                        >mdi-calendar</v-icon
                       >
-                        <div class="text-body-2 font-weight-bold mb-1">
-                          End Date
-                        </div>
-                        <cz-field
-                          scope="#/properties/temporalCoverage/properties/endDate"
-                          hide-label
-                        />
-                      </v-timeline-item>
-                    </v-timeline>
+                      <span class="text-body-2 font-weight-bold">End date</span>
+                    </div>
+                    <cz-field
+                      scope="#/properties/temporalCoverage/properties/endDate"
+                      hide-label
+                    />
+
+                    <div v-if="hasTemporalCoverage" class="d-flex mt-2">
+                      <v-spacer />
+                      <v-btn
+                        size="small"
+                        variant="text"
+                        color="error"
+                        prepend-icon="mdi-close"
+                        @click="clearTemporalCoverage"
+                        >Clear</v-btn
+                      >
+                    </div>
                   </v-card-text>
                 </v-card>
               </div>
@@ -754,10 +841,7 @@
               <!-- Citation was hidden as an input in the old uischema —
                    it's auto-generated. Display as read-only text. -->
               <div v-if="citations.length" id="citation" class="mb-6">
-                <div
-                  class="text-subtitle-2 font-weight-bold text-uppercase mb-2"
-                  style="letter-spacing: 0.05em; color: #546e7a;"
-                >
+                <div class="sidebar-heading">
                   How to cite
                 </div>
                 <div
@@ -775,61 +859,29 @@
 
         <!-- ===== SAVE / CANCEL bar at bottom (always visible) ===== -->
         <v-divider class="my-6"></v-divider>
+        <!-- Same order and treatment as the header pair, so the two action
+             groups read as one control the user can reach from either end of
+             the page rather than two different ones. -->
         <div class="d-flex flex-wrap align-center ga-2">
-          <v-btn
-            v-if="!$vuetify.display.smAndDown"
-            variant="text"
-            prepend-icon="mdi-arrow-left"
-            @click="
-              $router.push({ name: 'landing', params: { resourceId } })
-            "
-          >
-            Cancel
-          </v-btn>
-
           <v-spacer></v-spacer>
 
-          <v-menu
-            :disabled="!errors.length"
-            open-on-hover
-            :close-on-content-click="false"
-            bottom
-            left
-            offset-y
-            transition="fade"
+          <v-btn
+            v-if="!$vuetify.display.smAndDown"
+            variant="outlined"
+            prepend-icon="mdi-arrow-left"
+            @click="leaveToLanding"
           >
-            <template #activator="{ props }">
-              <div v-bind="props" class="d-flex">
-                <v-badge
-                  :model-value="!isValid"
-                  bordered
-                  color="error"
-                  icon="mdi-exclamation-thick"
-                  overlap
-                >
-                  <v-btn
-                    color="primary"
-                    variant="elevated"
-                    prepend-icon="mdi-content-save"
-                    @click="submit"
-                    :disabled="!isValid || isSubmitting"
-                  >
-                    {{ isSubmitting ? "Saving Changes..." : "Save Changes" }}
-                  </v-btn>
-                </v-badge>
-              </div>
-            </template>
+            Back
+          </v-btn>
 
-            <v-card>
-              <v-card-text>
-                <ul class="text-subtitle-1 ml-4">
-                  <li v-for="(error, index) of errors" :key="index">
-                    <b>{{ error.title }}</b> {{ error.message }}.
-                  </li>
-                </ul>
-              </v-card-text>
-            </v-card>
-          </v-menu>
+          <cd-save-button
+            :errors="errors"
+            :is-valid="isValid"
+            :is-submitting="isSubmitting"
+            label="Save"
+            busy-label="Saving..."
+            @click="submit"
+          />
         </div>
       </cz-form-composed>
     </template>
@@ -863,8 +915,10 @@ import {
 } from "@aws-sdk/client-s3";
 import {
   fetchResource,
+  getStatusColor,
   onFileDownload,
   onZippedDownload,
+  parseDate,
   readRootFolder,
 } from "./shared";
 import { isFolder } from "./zip-download";
@@ -872,8 +926,9 @@ import { createCookieS3Client } from "./cookie-s3-client";
 import HsUppy from "./hs-uppy.vue";
 import CdSpatialCoverageMap from "@/components/search-results/cd.spatial-coverage-map.vue";
 import CdReadmeEditor from "./cd.readme-editor.vue";
+import CdSaveButton from "./cd.save-button.vue";
 import User from "@/models/user.model";
-import { useRoute, useRouter } from "vue-router";
+import { onBeforeRouteLeave, useRoute, useRouter } from "vue-router";
 import { contentTypeLabels, contentTypeLogos, S3_PROXY_URL } from "@/constants";
 import prettyBytes from "pretty-bytes";
 
@@ -901,12 +956,6 @@ const data = ref<Record<string, any>>({});
 // Root README name (readme.md/readme.txt, original casing) or null; passed
 // to cd.readme-editor.vue.
 const readmeFileName = ref<string | null>(null);
-
-function parseDate(value: string | null | undefined): string {
-  if (!value) return "";
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString();
-}
 
 // Returns true when the given top-level scope is listed in the schema's
 // `required` array — used by the template to programmatically append a
@@ -947,8 +996,29 @@ const infoValueAttr = {
 // `MapLayout` blocks render the same as the uischema-driven path.
 // -----------------------------------------------------------------
 
-const descriptionOptions = { multi: true, trim: true };
+// Secondary free-text fields inside array rows. Vuetify's default 5 rows made
+// a one-line note ~150px tall; grow from 2 instead.
+const compactTextarea = {
+  multi: true,
+  vuetify: { "v-textarea": { rows: 2, "auto-grow": true } },
+};
 
+// HydroShare abstracts routinely run several hundred words; the default 5
+// rows meant editing inside a small scrolling box.
+const descriptionOptions = {
+  multi: true,
+  trim: true,
+  vuetify: {
+    "v-textarea": { "auto-grow": true, rows: 6, "max-rows": 24 },
+  },
+};
+
+// `geo` is anyOf[GeoCoordinates, GeoShape]. AnyOfRenderer indexes
+// `options.detail` by branch, so this must be an index-keyed map — a single
+// layout object gets applied to BOTH branches, which is why the point tab
+// used to render a stray "Box" field and the box tab rendered "No applicable
+// renderer found" where lat/long don't resolve. Keying per branch also lets
+// the box tab ask MapLayout for its rectangle draw control.
 const spatialCoverageOptions = {
   detail: {
     type: "Object",
@@ -959,43 +1029,45 @@ const spatialCoverageOptions = {
         scope: "#/properties/geo",
         options: {
           detail: {
-            type: "VerticalLayout",
-            elements: [
-              { type: "Control", scope: "#/properties/@type" },
-              {
-                type: "MapLayout",
-                options: {
-                  map: {
-                    type: "point",
-                    north: "latitude",
-                    east: "longitude",
+            0: {
+              type: "VerticalLayout",
+              options: { label: "Point" },
+              elements: [
+                {
+                  type: "MapLayout",
+                  options: {
+                    map: { type: "point", north: "latitude", east: "longitude" },
                   },
+                  elements: [
+                    {
+                      type: "HorizontalLayout",
+                      elements: [
+                        { type: "Control", scope: "#/properties/latitude" },
+                        { type: "Control", scope: "#/properties/longitude" },
+                      ],
+                    },
+                  ],
                 },
-                elements: [
-                  {
-                    type: "HorizontalLayout",
-                    elements: [
-                      {
-                        type: "Control",
-                        scope: "#/properties/latitude",
-                      },
-                      {
-                        type: "Control",
-                        scope: "#/properties/longitude",
-                      },
-                    ],
+              ],
+            },
+            1: {
+              type: "VerticalLayout",
+              options: { label: "Bounding box" },
+              elements: [
+                {
+                  type: "MapLayout",
+                  // `format: GeoShape` selects the single "n e s w" string
+                  // code path; without it MapLayout looks for northlimit/
+                  // eastlimit/... which this schema doesn't have.
+                  options: {
+                    map: { type: "box", format: "GeoShape", box: "box" },
                   },
-                ],
-              },
-              {
-                type: "Control",
-                scope: "#/properties/box",
-                options: {
-                  description:
-                    "Bounding box: north east south west (space separated decimal degrees)",
+                  elements: [
+                    { type: "Control", scope: "#/properties/box" },
+                  ],
                 },
-              },
-            ],
+              ],
+            },
           },
         },
       },
@@ -1003,10 +1075,14 @@ const spatialCoverageOptions = {
   },
 };
 
+// `@type` is a const discriminator, not user input — rendering it dispatches
+// to AnyOfRenderer (the item schema is anyOf Person/Organization), whose
+// VTabs throws and takes the whole dialog down. `url`/`address` don't exist
+// on Creator/Contributor either; they only resolved via the Organization
+// branch, so they showed organization copy under a person's name.
 const personDetailLayout = {
   type: "VerticalLayout",
   elements: [
-    { type: "Control", scope: "#/properties/@type" },
     {
       type: "HorizontalLayout",
       elements: [
@@ -1014,27 +1090,44 @@ const personDetailLayout = {
         { type: "Control", scope: "#/properties/email" },
       ],
     },
-    { type: "Control", scope: "#/properties/identifier" },
+    // `label` belongs on the element, not in `options` — computeLabel reads
+    // uischema.label; options.label is only consulted for combinator tabs.
     {
-      type: "HorizontalLayout",
-      elements: [
-        { type: "Control", scope: "#/properties/url" },
-        { type: "Control", scope: "#/properties/address" },
-      ],
+      type: "Control",
+      scope: "#/properties/identifier",
+      label: "ORCID iD",
     },
     {
       type: "Control",
       scope: "#/properties/affiliation",
       options: {
+        // Render the affiliation's fields directly instead of behind a
+        // bordered box with a +/- toggle stuck to the input.
+        flat: true,
         detail: {
           type: "Object",
           elements: [
-            { type: "Control", scope: "#/properties/name" },
+            // Explicit labels: rendered flat, the affiliation's own "Name"
+            // sits directly under the person's "Name" with nothing to tell
+            // the two apart.
+            {
+              type: "Control",
+              scope: "#/properties/name",
+              label: "Affiliation",
+            },
             {
               type: "HorizontalLayout",
               elements: [
-                { type: "Control", scope: "#/properties/url" },
-                { type: "Control", scope: "#/properties/address" },
+                {
+                  type: "Control",
+                  scope: "#/properties/url",
+                  label: "Affiliation website",
+                },
+                {
+                  type: "Control",
+                  scope: "#/properties/address",
+                  label: "Affiliation address",
+                },
               ],
             },
           ],
@@ -1046,20 +1139,29 @@ const personDetailLayout = {
 
 const creatorOptions = computed(() => ({
   elementLabelProp: ["name"],
+  childLabelProp: "name",
   showSortButtons: true,
+  collapsed: true,
   detail: personDetailLayout,
 }));
 
 const contributorOptions = computed(() => ({
   elementLabelProp: ["name"],
+  childLabelProp: "name",
   showSortButtons: true,
   collapsed: true,
   detail: personDetailLayout,
 }));
 
 const fundingOptions = {
+  itemNoun: "funding source",
+  description: "Grants or awards that funded this work.",
   elementLabelProp: ["name"],
+  // Without childLabelProp the delete prompt falls back to the first string
+  // property — `@type` — so every confirmation read "Delete Grant?".
+  childLabelProp: "name",
   showSortButtons: true,
+  collapsed: true,
   detail: {
     type: "VerticalLayout",
     elements: [
@@ -1077,21 +1179,36 @@ const fundingOptions = {
       {
         type: "Control",
         scope: "#/properties/description",
-        options: { multi: true },
+        options: compactTextarea,
       },
       {
         type: "Control",
         scope: "#/properties/funder",
         options: {
+          flat: true,
           detail: {
             type: "Object",
             elements: [
-              { type: "Control", scope: "#/properties/name" },
+              // Rendered flat, the funder's "Name" sits under the grant's own
+              // "Name or title" with nothing to distinguish them.
+              {
+                type: "Control",
+                scope: "#/properties/name",
+                label: "Funding organization",
+              },
               {
                 type: "HorizontalLayout",
                 elements: [
-                  { type: "Control", scope: "#/properties/url" },
-                  { type: "Control", scope: "#/properties/address" },
+                  {
+                    type: "Control",
+                    scope: "#/properties/url",
+                    label: "Organization website",
+                  },
+                  {
+                    type: "Control",
+                    scope: "#/properties/address",
+                    label: "Organization address",
+                  },
                 ],
               },
             ],
@@ -1115,29 +1232,45 @@ const nameUrlDescriptionLayout = {
     {
       type: "Control",
       scope: "#/properties/description",
-      options: { multi: true },
+      options: compactTextarea,
     },
   ],
 };
 
 const relationOptions = computed(() => ({
+  itemNoun: "related resource",
+  description: "Other resources related to this one.",
   showSortButtons: true,
   collapsed: true,
   elementLabelProp: ["name"],
+  childLabelProp: "name",
   detail: nameUrlDescriptionLayout,
 }));
 
 const subjectOfOptions = computed(() => ({
+  itemNoun: "document",
+  description: "Papers or documents that describe this resource.",
   elementLabelProp: ["name"],
+  childLabelProp: "name",
   showSortButtons: true,
   collapsed: true,
   detail: nameUrlDescriptionLayout,
 }));
 
+// Lead with the required name/value pair — that's what this section is for.
+// measurementTechnique / minValue / maxValue are dropped from the layout:
+// they're statistical-variable fields that made a two-string entry eight
+// inputs tall. Any existing values round-trip untouched (unrendered keys are
+// preserved on save), they're just not editable here.
 const additionalPropertyOptions = {
+  itemNoun: "entry",
+  // The schema says "Additional properties of the place." — copied from a
+  // schema.org Place definition and simply wrong here.
+  description: "Extra name-and-value details about this resource.",
   showSortButtons: true,
   collapsed: true,
   elementLabelProp: ["name"],
+  childLabelProp: "name",
   detail: {
     type: "VerticalLayout",
     elements: [
@@ -1145,45 +1278,51 @@ const additionalPropertyOptions = {
         type: "HorizontalLayout",
         elements: [
           { type: "Control", scope: "#/properties/name" },
-          { type: "Control", scope: "#/properties/propertyID" },
+          { type: "Control", scope: "#/properties/value" },
         ],
-      },
-      { type: "Control", scope: "#/properties/value" },
-      {
-        type: "Control",
-        scope: "#/properties/description",
-        options: { multi: true },
       },
       {
         type: "HorizontalLayout",
         elements: [
           { type: "Control", scope: "#/properties/unitCode" },
-          { type: "Control", scope: "#/properties/measurementTechnique" },
+          { type: "Control", scope: "#/properties/propertyID" },
         ],
       },
       {
-        type: "HorizontalLayout",
-        elements: [
-          { type: "Control", scope: "#/properties/minValue" },
-          { type: "Control", scope: "#/properties/maxValue" },
-        ],
+        type: "Control",
+        scope: "#/properties/description",
+        options: {
+          multi: true,
+          vuetify: { "v-textarea": { rows: 2, "auto-grow": true } },
+        },
       },
     ],
   },
 };
 
+// license is anyOf[CreativeWork, url-string]. Same per-branch indexing as
+// spatialCoverage: a single detail object was applied to BOTH branches, so
+// the "Custom License" tab rendered "No applicable renderer found" three
+// times (name/url/description don't resolve against a plain string) and
+// there was no way to enter a custom license URL.
+// `dropdown: true` swaps the tab strip for a select, which is what fits the
+// 22rem sidebar.
 const licenseOptions = {
+  dropdown: true,
   detail: {
-    type: "VerticalLayout",
-    elements: [
-      { type: "Control", scope: "#/properties/name" },
-      { type: "Control", scope: "#/properties/url" },
-      {
-        type: "Control",
-        scope: "#/properties/description",
-        options: { multi: true },
-      },
-    ],
+    0: {
+      type: "VerticalLayout",
+      options: { label: "Standard license" },
+      elements: [
+        { type: "Control", scope: "#/properties/name" },
+        { type: "Control", scope: "#/properties/url" },
+      ],
+    },
+    1: {
+      type: "Control",
+      scope: "#",
+      options: { label: "Custom license URL" },
+    },
   },
 };
 
@@ -1216,19 +1355,6 @@ const contentSize = computed<string | undefined>(() => {
 
 // Match landing-page.vue's chip colors so the read-only status chip in
 // the edit header looks identical to its landing-page counterpart.
-function getStatusColor(name: string): string {
-  switch ((name || "").toLowerCase()) {
-    case "draft":
-      return "#f0ad4e";
-    case "public":
-      return "#5cb85c";
-    case "published":
-      return "#4BB5C1";
-    default:
-      return "primary";
-  }
-}
-
 function allowLocalhostUrls(node: any): void {
   if (Array.isArray(node)) {
     node.forEach((child) => allowLocalhostUrls(child));
@@ -1342,14 +1468,21 @@ const config = {
   collapseNewItems: false,
   breakHorizontal: false,
   initCollapsed: false,
-  hideAvatar: false,
+  // Row order is already conveyed by position and the sort buttons; the
+  // filled primary index chip was the loudest thing in every array row.
+  hideAvatar: true,
   hideArraySummaryValidation: false,
   vuetify: {
     commonAttrs: {
       density: "compact",
       variant: "outlined",
-      "persistent-hint": true,
-      "hide-details": false,
+      // Descriptions surface on focus, not permanently. The schema's
+      // schema.org prose is long enough that pinning it under every input
+      // doubled the height of each field and buried the values the user
+      // actually typed. `showUnfocusedDescription: false` above was already
+      // asking for this; persistent-hint was quietly overriding it.
+      "persistent-hint": false,
+      "hide-details": "auto",
     },
   },
   isViewMode: false,
@@ -1373,6 +1506,8 @@ function startS3Client() {
 
 // created()
 async function init() {
+  loadAlerts();
+
   if (!resourceId.value && route?.params?.resourceId) {
     resourceId.value = route.params.resourceId as string;
   }
@@ -1384,17 +1519,13 @@ async function init() {
     await User.checkLoginStatus();
   }
 
-  if (!s3Info.value.bucket || !s3Info.value.prefix) {
+  if (!s3Info.value.bucket) {
     try {
-      const s3info = await User.getResourceS3prefix(resourceId.value);
-      if (s3info) {
-        s3Info.value = s3info;
-        // The edit page works on .hsmetadata/user_metadata.json — the
-        // user-editable metadata file. The s3 auth service only authorizes
-        // writes under data/contents/ and .hsmetadata/; the landing page's
-        // .hsjsonld/dataset_metadata.json is system-generated (hs_extract
-        // merges user_metadata.json back into it on save).
-        s3Info.value.prefix = `${resourceId.value}/.hsmetadata/`;
+      const bucket = await User.getResourceBucket(resourceId.value);
+      if (bucket) {
+        // This page writes the user-editable `.hsmetadata/user_metadata.json`.
+        // S3 auth only allows writes under `.hsmetadata/` and `data/contents/`.
+        s3Info.value = { bucket, prefix: `${resourceId.value}/.hsmetadata/` };
       }
     } catch {
       isLoadingFiles.value = false;
@@ -1495,6 +1626,100 @@ function removeReadmeToc() {
   }
 }
 
+// Both coverages are optional, but once the object exists its own `required`
+// rules kick in (spatial needs a geo, temporal needs a startDate) — so
+// without a way to clear them a half-filled coverage can block Save with no
+// way out. Deleting the key entirely is the only correct "no coverage" state.
+const hasSpatialCoverage = computed(() => !!data.value?.spatialCoverage);
+const hasTemporalCoverage = computed(() => !!data.value?.temporalCoverage);
+
+function clearSpatialCoverage() {
+  if (!data.value) return;
+  const { spatialCoverage: _drop, ...rest } = data.value as Record<string, any>;
+  data.value = rest;
+}
+
+function clearTemporalCoverage() {
+  if (!data.value) return;
+  const { temporalCoverage: _drop, ...rest } = data.value as Record<
+    string,
+    any
+  >;
+  data.value = rest;
+}
+
+// Resource-level alerts (missing metadata, version/replacement pointers,
+// publication state). Same source the landing page reads: the Django view
+// injects them onto the host window, so both views agree.
+const alerts = ref<{
+  justCreated?: boolean;
+  justCopied?: boolean;
+  missingMetadata?: string[];
+  recommendedMissing?: string[];
+  hasRequiredContentFiles?: boolean;
+  isUntitled?: boolean;
+  isReplacedBy?: string | null;
+  isVersionOf?: string | null;
+  reviewPending?: boolean;
+  isPublished?: boolean;
+  displayName?: string;
+}>({});
+const dismissedAlerts = ref<Record<string, boolean>>({});
+
+function loadAlerts() {
+  try {
+    const parentWin = window.parent as any;
+    if (
+      parentWin &&
+      parentWin !== window &&
+      parentWin.HS_RESOURCE_ALERTS &&
+      typeof parentWin.HS_RESOURCE_ALERTS === "object"
+    ) {
+      alerts.value = parentWin.HS_RESOURCE_ALERTS;
+    }
+  } catch {
+    // cross-origin — leave alerts empty
+  }
+}
+
+const showMissingMetadataAlert = computed<boolean>(() => {
+  if (dismissedAlerts.value.missing) return false;
+  const hasMissing = (alerts.value.missingMetadata || []).length > 0;
+  const noFiles = alerts.value.hasRequiredContentFiles === false;
+  return Boolean(hasMissing || alerts.value.isUntitled || noFiles);
+});
+
+const showReplacedByAlert = computed<boolean>(() =>
+  Boolean(!dismissedAlerts.value.replacedBy && alerts.value.isReplacedBy),
+);
+
+const showVersionOfAlert = computed<boolean>(() =>
+  Boolean(!dismissedAlerts.value.versionOf && alerts.value.isVersionOf),
+);
+
+const showPublishedAlert = computed<boolean>(() =>
+  Boolean(alerts.value.isPublished || alerts.value.reviewPending),
+);
+
+// The README editor persists to S3 on its own schedule, so its unsaved state
+// is invisible to the metadata form. Track it and confirm before any
+// navigation that would throw those edits away.
+const readmeDirty = ref(false);
+
+function confirmDiscardReadme(): boolean {
+  if (!readmeDirty.value) return true;
+  return window.confirm(
+    "Your README has unsaved changes that will be lost. Leave anyway?",
+  );
+}
+
+function leaveToLanding() {
+  if (!confirmDiscardReadme()) return;
+  router.push({ name: "landing", params: { resourceId: resourceId.value } });
+}
+
+onBeforeRouteLeave(() => confirmDiscardReadme());
+
 // On an editor write, keep the file tree and TOC in sync without a reload.
 function onReadmeChange(payload: {
   action: "created" | "saved" | "converted";
@@ -1578,6 +1803,20 @@ function findExplorerFolder(root: any, path: string | null): any | null {
 async function submit() {
   try {
     const key = `${s3Info.value.prefix}user_metadata.json`;
+
+    // Stamp the modification time ourselves. Django normally owns this field
+    // — write_user_metadata_json_file() regenerates the whole document and
+    // sets dateModified from `resource.modified` — but this page writes the
+    // object straight to S3, so Django never sees the change and nothing
+    // advances the timestamp. Without this, "Updated ..." kept reporting the
+    // last server-side write no matter how many times the user saved.
+    if (data.value) {
+      data.value = {
+        ...(data.value as Record<string, any>),
+        dateModified: new Date().toISOString(),
+      };
+    }
+
     const content = JSON.stringify(data.value, null, 2);
     const command = new PutObjectCommand({
       Bucket: s3Info.value.bucket,
@@ -1589,16 +1828,14 @@ async function submit() {
     await s3Client.value.send(command);
 
     Notifications.toast({
-      title: "Success",
-      message: "Metadata uploaded to S3 successfully!",
+      message: "Changes saved.",
       type: "success",
     });
 
-    // @ts-ignore
-    router.push({
-      name: "landing",
-      params: { resourceId: resourceId.value },
-    });
+    // Deliberately stay in edit mode. Saving is not "finishing" — users
+    // routinely save partway through a long metadata edit, and bouncing them
+    // to the read-only view meant re-entering edit and re-scrolling to
+    // continue. "Back" is the explicit way out.
   } catch (error: any) {
     console.error("Error uploading to S3:", error);
     Notifications.toast({
@@ -1702,7 +1939,10 @@ async function _uploadFiles(
           data: file.file,
           meta: {
             bucket_name: s3Info.value.bucket,
-            dynamic_key: `${s3Info.value.prefix}${path}`,
+            // NOT s3Info.prefix — that points at .hsmetadata/ so the metadata
+            // read/write can find user_metadata.json. Content files belong
+            // under data/contents/, same as the folder-creation path above.
+            dynamic_key: `${resourceId.value}/data/contents/${path}`,
           },
         });
 
@@ -2201,11 +2441,24 @@ init();
 // Mirror the landing page section styling so the edit view reads as the
 // same page with in-place inputs swapped for the read-only text.
 .section-heading {
-  color: #4bb5c1;
+  color: rgb(var(--v-theme-accent));
   letter-spacing: 0.05em;
   padding-bottom: 0.4rem;
   margin-bottom: 0.75rem;
-  border-bottom: 2px solid #e0e0e0;
+  border-bottom: 2px solid rgba(var(--v-border-color), var(--v-border-opacity));
+}
+
+// Sidebar section titles. Mirrors the landing page's sidebar treatment —
+// same teal and tracking as .section-heading, without the rule, since the
+// sidebar's narrower columns don't need the extra separation.
+.sidebar-heading {
+  color: rgb(var(--v-theme-accent));
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.375rem;
+  text-transform: uppercase;
 }
 
 .details-card {
@@ -2312,6 +2565,14 @@ init();
   &:hover {
     background-color: rgba(0, 0, 0, 0.03);
     border-color: rgba(0, 0, 0, 0.12);
+  }
+
+  // These are role="button" targets, so they must show focus. Without this
+  // the keyboard path exists but is invisible.
+  &:focus-visible {
+    outline: 2px solid #4bb5c1;
+    outline-offset: 2px;
+    background-color: rgba(0, 0, 0, 0.03);
   }
 
   &.has-errors {

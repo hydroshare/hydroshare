@@ -582,7 +582,7 @@
         <div class="sidebar break-word">
           <div>
             <v-card v-if="data.keywords?.length" id="subject" variant="flat" class="mb-6">
-              <v-card-title class="pa-0 pb-2 text-subtitle-2 font-weight-bold text-uppercase" style="letter-spacing: 0.05em; color: #4BB5C1;">
+              <v-card-title class="sidebar-heading pa-0">
                 Subject Keywords
               </v-card-title>
               <div>
@@ -599,7 +599,7 @@
             </v-card>
 
             <v-card v-if="data.license" variant="flat" class="mb-6">
-              <v-card-title class="pa-0 pb-2 text-subtitle-2 font-weight-bold text-uppercase" style="letter-spacing: 0.05em; color: #4BB5C1;">
+              <v-card-title class="sidebar-heading pa-0">
                 License
               </v-card-title>
               <div class="text-body-2 text-medium-emphasis">
@@ -615,7 +615,7 @@
             </v-card>
 
             <div v-if="hasSpatialFeatures" class="mb-6">
-              <div class="text-subtitle-2 font-weight-bold text-uppercase mb-2" style="letter-spacing: 0.05em; color: #4BB5C1;">
+              <div class="sidebar-heading">
                 Spatial Coverage
               </div>
               <v-card variant="outlined" border="grey thin">
@@ -677,7 +677,7 @@
             </div>
 
             <div v-if="data.temporalCoverage" class="mb-6">
-              <div class="text-subtitle-2 font-weight-bold text-uppercase mb-2" style="letter-spacing: 0.05em; color: #4BB5C1;">
+              <div class="sidebar-heading">
                 Temporal Coverage
               </div>
               <v-card variant="outlined" border="grey thin">
@@ -720,7 +720,7 @@
               variant="flat"
               id="citation"
             >
-              <v-card-title class="pa-0 pb-2 text-subtitle-2 font-weight-bold text-uppercase" style="letter-spacing: 0.05em; color: #4BB5C1;">
+              <v-card-title class="sidebar-heading pa-0">
                 How to cite
               </v-card-title>
               <v-card-text
@@ -782,38 +782,26 @@ import {
 } from "@cznethub/cznet-vue-core";
 import type { IFile, IFolder } from "@cznethub/cznet-vue-core/dist/types";
 import { GetObjectCommand, S3Client, _Object } from "@aws-sdk/client-s3";
-import { fetchResource, onFileDownload, onZippedDownload } from "./shared";
+import {
+  fetchResource,
+  getStatusColor,
+  onFileDownload,
+  onZippedDownload,
+  parseDate,
+} from "./shared";
 import { isFolder } from "./zip-download";
 import { loadReadme } from "./readme-s3";
 import { createCookieS3Client } from "./cookie-s3-client";
 import User from "@/models/user.model";
 import prettyBytes from "pretty-bytes";
 import { useRoute } from "vue-router";
-import { EnumCreativeWorkStatus } from "@/types";
 import { contentTypeLabels, contentTypeLogos, S3_PROXY_URL } from "@/constants";
-import markdownit from "markdown-it";
-import hljs from "highlight.js"; // https://highlightjs.org
+import { renderMarkdown } from "./markdown";
 
 import CdSpatialCoverageMap from "@/components/search-results/cd.spatial-coverage-map.vue";
 import CdAuthorProfile from "./cd.author-profile.vue";
 import CdOwnerProfile from "./cd.owner-profile.vue";
 import CdManageAccess from "./cd.manage-access.vue";
-
-const md = markdownit({
-  linkify: true,
-  typographer: true,
-  breaks: true,
-  html: true,
-  highlight: function (str, lang) {
-    if (lang && hljs.getLanguage(lang)) {
-      try {
-        return hljs.highlight(str, { language: lang }).value;
-      } catch (__) {}
-    }
-
-    return ""; // use external default escaping
-  },
-});
 
 const route = useRoute();
 
@@ -828,9 +816,6 @@ const readmeMd = ref("");
 const readMeFileName = ref("");
 const hasTxtReadme = ref(false);
 const isLoadingMD = ref(false);
-
-const schema = ref<any>();
-const uischema = ref<any>();
 
 /**
  * Fetches a Blob for cz-file-explorer's preview dialog. The dialog passes
@@ -1010,7 +995,7 @@ async function loadReadmeFile() {
   }
 
   try {
-    readmeMd.value = hasTxtReadme.value ? rawMd : md.render(rawMd);
+    readmeMd.value = hasTxtReadme.value ? rawMd : renderMarkdown(rawMd);
   } catch (e) {
     console.log(e);
   } finally {
@@ -1202,12 +1187,13 @@ async function init() {
     await User.checkLoginStatus();
   }
 
-  if (!s3Info.value.bucket || !s3Info.value.prefix) {
+  if (!s3Info.value.bucket) {
     try {
-      const s3info = await User.getResourceS3prefix(resourceId.value);
-      if (s3info) {
-        s3Info.value = s3info;
-        s3Info.value.prefix = `${resourceId.value}/.hsjsonld/`; // TODO: overriding wrong api response value
+      const bucket = await User.getResourceBucket(resourceId.value);
+      if (bucket) {
+        // This page reads system-generated metadata from `.hsjsonld/`, not the
+        // endpoint's `data/contents/` root.
+        s3Info.value = { bucket, prefix: `${resourceId.value}/.hsjsonld/` };
       }
     } catch (e) {
       isLoadingFiles.value = false;
@@ -1217,40 +1203,9 @@ async function init() {
 
   startS3Client();
 
-  /* @ts-ignore */
-  schema.value = await import(
-    `@/schemas/hydroshare/scientific_dataset_json_schema.json`
-  );
-
-  /* @ts-ignore */
-  uischema.value = await import(`@/schemas/hydroshare/view-uischema.json`);
-
   await loadResource();
 }
 
-function parseDate(date: string): string {
-  const parsed = new Date(Date.parse(date));
-  return parsed.toLocaleString("default", {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
-function getStatusColor(status: EnumCreativeWorkStatus) {
-  switch (status) {
-    case EnumCreativeWorkStatus.Private:
-      return "#d9534f";
-    case EnumCreativeWorkStatus.Discoverable:
-      return "#f0ad4e";
-    case EnumCreativeWorkStatus.Public:
-      return "#5cb85c";
-    case EnumCreativeWorkStatus.Published:
-      return "#4BB5C1";
-    default:
-      return "primary";
-  }
-}
 
 function buildToc() {
   const d = data.value;
@@ -1367,11 +1322,23 @@ init();
 }
 
 .section-heading {
-  color: #4BB5C1;
+  color: rgb(var(--v-theme-accent));
   letter-spacing: 0.05em;
   padding-bottom: 0.4rem;
   margin-bottom: 0.75rem;
-  border-bottom: 2px solid #e0e0e0;
+  border-bottom: 2px solid rgba(var(--v-border-color), var(--v-border-opacity));
+}
+
+// Sidebar section titles — identical treatment to the edit page's, so the
+// two views read as modes of each other rather than separate designs.
+.sidebar-heading {
+  color: rgb(var(--v-theme-accent));
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.375rem;
+  text-transform: uppercase;
 }
 
 .sidebar {

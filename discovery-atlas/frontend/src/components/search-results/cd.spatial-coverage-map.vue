@@ -49,11 +49,33 @@ async function initMap() {
     const bounds = L.latLngBounds(southWest, northEast);
 
     coverageMap = L.map(mapContainer.value!, {
-      scrollWheelZoom: true,
+      // This map is a preview embedded in a scrolling page, so it must not
+      // swallow the wheel — scrolling past it used to zoom the map instead of
+      // moving the page, trapping the user. Ctrl/⌘+wheel still zooms, and the
+      // zoom controls and fullscreen remain available.
+      scrollWheelZoom: false,
       zoomControl: false,
       maxBounds: bounds,
       maxBoundsViscosity: 1.0,
     });
+
+    // Opt back in for the deliberate gesture.
+    coverageMap.on("fullscreenchange", () => {
+      const full = (coverageMap as any).isFullscreen?.();
+      if (full) coverageMap!.scrollWheelZoom.enable();
+      else coverageMap!.scrollWheelZoom.disable();
+    });
+    mapContainer.value!.addEventListener(
+      "wheel",
+      (e: WheelEvent) => {
+        if (!(e.ctrlKey || e.metaKey)) return;
+        e.preventDefault();
+        coverageMap!.setZoom(
+          coverageMap!.getZoom() + (e.deltaY < 0 ? 1 : -1),
+        );
+      },
+      { passive: false },
+    );
 
     // leaflet.fullscreen@5 dropped the auto-register `fullscreenControl: true`
     // map option, so add the control manually.

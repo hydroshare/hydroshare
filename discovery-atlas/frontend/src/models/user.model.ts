@@ -88,9 +88,11 @@ export default class User extends Model {
     return false;
   }
 
-  static async getResourceS3prefix(
-    res_id: string,
-  ): Promise<{ bucket: string; prefix: string } | null> {
+  /**
+   * Resource's S3 bucket. Only the server can resolve it (quota holder's zone).
+   * Its prefix is always `<res_id>/data/contents/`, so callers build their own.
+   */
+  static async getResourceBucket(res_id: string): Promise<string | null> {
     try {
       const response = await fetch(`/hsapi/resource/s3/${res_id}/`, {
         credentials: "include",
@@ -98,10 +100,10 @@ export default class User extends Model {
 
       if (response.ok) {
         const data = await response.json();
-        return { bucket: data.bucket, prefix: data.prefix };
+        return data.bucket;
       }
     } catch (e: any) {
-      const message = `Failed to get S3 prefix for resource ${res_id}: ${e.message}`;
+      const message = `Failed to get S3 bucket for resource ${res_id}: ${e.message}`;
       Notifications.toast({ message, type: "error" });
       throw new Error(message);
     }

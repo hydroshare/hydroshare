@@ -120,7 +120,7 @@ const props = withDefaults(
   { fileName: null },
 );
 
-const emit = defineEmits(["change"]);
+const emit = defineEmits(["change", "update:dirty"]);
 
 const tab = ref<"write" | "preview">("write");
 const raw = ref("");
@@ -172,6 +172,11 @@ const canConvert = computed<boolean>(
 );
 
 const isDirty = computed<boolean>(() => raw.value !== savedRaw.value);
+
+// The editor writes to S3 on its own, independent of the metadata form, so
+// the parent otherwise has no way to know there are unsaved README edits —
+// "Save changes" or "Cancel" would navigate away and discard them silently.
+watch(isDirty, (dirty) => emit("update:dirty", dirty), { immediate: true });
 
 const previewHtml = computed<string>(() => renderMarkdown(raw.value));
 

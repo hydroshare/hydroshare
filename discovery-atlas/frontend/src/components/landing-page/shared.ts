@@ -200,3 +200,43 @@ export const fetchResource = async (resourceId: string, s3Client: S3Client, buck
     return false
   }
 }
+/**
+ * Sharing-status chip colour, shared by the landing page and the edit page.
+ *
+ * These lived as two separate functions that disagreed: the edit page's copy
+ * had no `Private` or `Discoverable` case (and a `draft` case the data never
+ * produces), so a Private resource rendered blue there and red on the landing
+ * page — the same resource changing colour when you clicked Edit.
+ */
+export function getStatusColor(status?: string | null): string {
+  switch ((status || "").toLowerCase()) {
+    case "private":
+      return "#d9534f";
+    case "discoverable":
+      return "#f0ad4e";
+    case "public":
+      return "#5cb85c";
+    case "published":
+      return "#4bb5c1";
+    default:
+      return "grey-darken-1";
+  }
+}
+
+/**
+ * Long-form date for display, e.g. "July 23, 2026".
+ *
+ * Returns "" for a missing value and echoes the raw string for an
+ * unparseable one. The landing page's previous copy did neither, so an
+ * absent `dateCreated` rendered the literal text "Invalid Date".
+ */
+export function parseDate(value?: string | null): string {
+  if (!value) return "";
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return parsed.toLocaleString("default", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+}
