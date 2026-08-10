@@ -1,0 +1,26 @@
+/**
+  Dialog placement inside the HydroShare iframe
+  ================================================================================
+  Applies only when util/host-viewport.ts has marked <html> as embedded. These
+  selectors target the classes cznet-vue-core puts on its dialog content, plus
+  our own; the library holds no knowledge of this.
+*/
+html.hs-embedded {
+  .v-overlay__content.cz-field-modal__content,
+  .v-overlay__content.cz-confirm,
+  .v-overlay__content.hs-host-dialog {
+    align-self: flex-start;
+    margin-top: var(--hs-dialog-top, 24px);
+    // A pixel cap, not Vuetify's percentage default, is what makes
+    // `scrollable` engage.
+    max-height: var(--hs-dialog-max-h, 640px);
+  }
+
+  // Vuetify's `block` scroll strategy locks the iframe's <html>, which is not
+  // the element that scrolls and whose height the host's ResizeObserver reads.
+  .v-overlay-scroll-blocked {
+    position: static;
+    overflow: visible !important;
+    padding-inline-end: 0 !important;
+  }
+}
