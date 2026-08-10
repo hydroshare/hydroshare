@@ -793,29 +793,12 @@ import User from "@/models/user.model";
 import prettyBytes from "pretty-bytes";
 import { useRoute } from "vue-router";
 import { contentTypeLabels, contentTypeLogos, S3_PROXY_URL } from "@/constants";
-import markdownit from "markdown-it";
-import hljs from "highlight.js"; // https://highlightjs.org
+import { renderMarkdown } from "./markdown";
 
 import CdSpatialCoverageMap from "@/components/search-results/cd.spatial-coverage-map.vue";
 import CdAuthorProfile from "./cd.author-profile.vue";
 import CdOwnerProfile from "./cd.owner-profile.vue";
 import CdManageAccess from "./cd.manage-access.vue";
-
-const md = markdownit({
-  linkify: true,
-  typographer: true,
-  breaks: true,
-  html: true,
-  highlight: function (str, lang) {
-    if (lang && hljs.getLanguage(lang)) {
-      try {
-        return hljs.highlight(str, { language: lang }).value;
-      } catch (__) {}
-    }
-
-    return ""; // use external default escaping
-  },
-});
 
 const route = useRoute();
 
@@ -1012,7 +995,7 @@ async function loadReadmeFile() {
   }
 
   try {
-    readmeMd.value = hasTxtReadme.value ? rawMd : md.render(rawMd);
+    readmeMd.value = hasTxtReadme.value ? rawMd : renderMarkdown(rawMd);
   } catch (e) {
     console.log(e);
   } finally {
