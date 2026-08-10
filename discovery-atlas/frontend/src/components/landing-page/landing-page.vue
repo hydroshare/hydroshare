@@ -814,9 +814,6 @@ const readMeFileName = ref("");
 const hasTxtReadme = ref(false);
 const isLoadingMD = ref(false);
 
-const schema = ref<any>();
-const uischema = ref<any>();
-
 /**
  * Fetches a Blob for cz-file-explorer's preview dialog. The dialog passes
  * the explorer-annotated `item` (with `path` already set by `onPreview` →
@@ -1201,14 +1198,6 @@ async function init() {
   }
 
   startS3Client();
-
-  /* @ts-ignore */
-  schema.value = await import(
-    `@/schemas/hydroshare/scientific_dataset_json_schema.json`
-  );
-
-  /* @ts-ignore */
-  uischema.value = await import(`@/schemas/hydroshare/view-uischema.json`);
 
   await loadResource();
 }
