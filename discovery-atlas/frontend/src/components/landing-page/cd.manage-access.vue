@@ -1,5 +1,18 @@
 <template>
-  <v-dialog v-model="dialogOpen" max-width="760" scrollable>
+  <!-- Pinned to the parent window's visible band. Without this the dialog
+       centres against the iframe viewport — which spans the whole document —
+       so its header sat under the host navbar and the title was unreachable. -->
+  <v-dialog
+    v-model="dialogOpen"
+    max-width="760"
+    scrollable
+    scroll-strategy="none"
+    content-class="cz-field-modal__content"
+    :style="{
+      '--cz-modal-top': `${viewportPin.top}px`,
+      '--cz-modal-max-h': `${viewportPin.maxHeight}px`,
+    }"
+  >
     <v-card class="manage-access-card" :class="{ 'is-processing': isProcessing }">
       <div class="dialog-banner"></div>
       <v-card-title class="dialog-header">
@@ -606,7 +619,10 @@
 </template>
 
 <script setup lang="ts">
-import { Notifications } from "@cznethub/cznet-vue-core";
+import {
+  Notifications,
+  getParentViewportPin,
+} from "@cznethub/cznet-vue-core";
 import User from "@/models/user.model";
 
 interface AccessUser {
@@ -704,6 +720,25 @@ const dialogOpen = computed<boolean>({
   set: (value: boolean) => {
     emit("update:modelValue", value);
   },
+});
+
+// Keep the dialog inside the band of the iframe the host window is showing,
+// clear of its fixed navbar. Re-pin on open and while the parent scrolls.
+const viewportPin = ref(getParentViewportPin());
+const repin = () => (viewportPin.value = getParentViewportPin());
+
+watch(dialogOpen, (open) => {
+  if (open) repin();
+  try {
+    const parentWin = window.parent;
+    if (parentWin && parentWin !== window) {
+      const fn = open ? "addEventListener" : "removeEventListener";
+      parentWin[fn]("scroll", repin, true);
+      parentWin[fn]("resize", repin, true);
+    }
+  } catch {
+    /* cross-origin */
+  }
 });
 
 const hasOnlyOneOwner = computed<boolean>(

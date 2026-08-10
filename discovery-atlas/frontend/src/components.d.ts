@@ -18,6 +18,7 @@ declare module 'vue' {
     'Cd.ownerProfile': typeof import('./components/landing-page/cd.owner-profile.vue')['default']
     'Cd.rangeInput': typeof import('./components/search-results/cd.range-input.vue')['default']
     'Cd.readmeEditor': typeof import('./components/landing-page/cd.readme-editor.vue')['default']
+    'Cd.saveButton': typeof import('./components/landing-page/cd.save-button.vue')['default']
     'Cd.search': typeof import('./components/search/cd.search.vue')['default']
     'Cd.searchMap': typeof import('./components/search-results/cd.search-map.vue')['default']
     'Cd.searchResults': typeof import('./components/search-results/cd.search-results.vue')['default']
