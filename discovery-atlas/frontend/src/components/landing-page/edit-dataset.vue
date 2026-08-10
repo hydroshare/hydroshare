@@ -1516,17 +1516,13 @@ async function init() {
     await User.checkLoginStatus();
   }
 
-  if (!s3Info.value.bucket || !s3Info.value.prefix) {
+  if (!s3Info.value.bucket) {
     try {
-      const s3info = await User.getResourceS3prefix(resourceId.value);
-      if (s3info) {
-        s3Info.value = s3info;
-        // The edit page works on .hsmetadata/user_metadata.json — the
-        // user-editable metadata file. The s3 auth service only authorizes
-        // writes under data/contents/ and .hsmetadata/; the landing page's
-        // .hsjsonld/dataset_metadata.json is system-generated (hs_extract
-        // merges user_metadata.json back into it on save).
-        s3Info.value.prefix = `${resourceId.value}/.hsmetadata/`;
+      const bucket = await User.getResourceBucket(resourceId.value);
+      if (bucket) {
+        // This page writes the user-editable `.hsmetadata/user_metadata.json`.
+        // S3 auth only allows writes under `.hsmetadata/` and `data/contents/`.
+        s3Info.value = { bucket, prefix: `${resourceId.value}/.hsmetadata/` };
       }
     } catch {
       isLoadingFiles.value = false;

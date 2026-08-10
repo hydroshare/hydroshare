@@ -1184,12 +1184,13 @@ async function init() {
     await User.checkLoginStatus();
   }
 
-  if (!s3Info.value.bucket || !s3Info.value.prefix) {
+  if (!s3Info.value.bucket) {
     try {
-      const s3info = await User.getResourceS3prefix(resourceId.value);
-      if (s3info) {
-        s3Info.value = s3info;
-        s3Info.value.prefix = `${resourceId.value}/.hsjsonld/`; // TODO: overriding wrong api response value
+      const bucket = await User.getResourceBucket(resourceId.value);
+      if (bucket) {
+        // This page reads system-generated metadata from `.hsjsonld/`, not the
+        // endpoint's `data/contents/` root.
+        s3Info.value = { bucket, prefix: `${resourceId.value}/.hsjsonld/` };
       }
     } catch (e) {
       isLoadingFiles.value = false;
