@@ -5,7 +5,6 @@ import {
   zipRequestUrl,
   requestZip,
   downloadZipped,
-  getNotificationsApp,
 } from "@/components/landing-page/zip-download";
 
 const folder = { name: "f", children: [], key: 1, path: "top/f" } as any;
@@ -110,18 +109,6 @@ describe("downloadZipped", () => {
     await expect(downloadZipped("abc", folder)).rejects.toThrow(ZipDownloadError);
     expect(fetchMock).not.toHaveBeenCalled();
 
-    vi.unstubAllGlobals();
-  });
-});
-
-describe("getNotificationsApp", () => {
-  it("returns null when no notification app is present", () => {
-    expect(getNotificationsApp()).toBeNull();
-  });
-
-  it("ignores a global that lacks registerTask", () => {
-    vi.stubGlobal("notificationsApp", { show: () => {} });
-    expect(getNotificationsApp()).toBeNull();
     vi.unstubAllGlobals();
   });
 });

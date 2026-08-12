@@ -1,36 +1,7 @@
 import type { IFile, IFolder } from "@cznethub/cznet-vue-core/dist/types";
-
-/** Task notification returned by the download endpoint. */
-export interface ZipTask {
-  id: string;
-  name: string;
-  status: string;
-  payload: string;
-}
-
-interface NotificationsApp {
-  registerTask: (_task: ZipTask) => void;
-  show: () => void;
-}
+import { getNotificationsApp, type NotificationTask } from "./notifications-app";
 
 export class ZipDownloadError extends Error { }
-
-/**
- * The navbar task-notification app, which lives on the parent window because
- * the landing page runs in a same-origin iframe.
- */
-export const getNotificationsApp = (): NotificationsApp | null => {
-  try {
-    for (const w of [window.parent, window] as any[]) {
-      if (typeof w?.notificationsApp?.registerTask === "function") {
-        return w.notificationsApp;
-      }
-    }
-  } catch {
-    // cross-origin parent
-  }
-  return null;
-};
 
 export const isFolder = (item: IFile | IFolder): boolean =>
   Object.prototype.hasOwnProperty.call(item, "children");
@@ -47,7 +18,7 @@ export const zipRequestUrl = (
 export const requestZip = async (
   resourceId: string,
   item: IFile | IFolder,
-): Promise<ZipTask> => {
+): Promise<NotificationTask> => {
   const res = await fetch(zipRequestUrl(resourceId, item), {
     credentials: "include",
   });
