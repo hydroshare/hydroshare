@@ -359,7 +359,11 @@ class SearchQuery(BaseModel):
 
         # These sorts can occur inside the $search stage
 
-        if self.sortBy == "name":
+        # MongoDB Atlas uses score order by default
+        # so don't set a sort on the query when specified sort is relevance
+        if self.sortBy == "relevance":
+            pass
+        elif self.sortBy == "name":
             search_stage["$search"]['sort'] = {"name": order}
         elif self.sortBy == "dateCreated":
             search_stage["$search"]['sort'] = {"dateCreated": order}
@@ -369,8 +373,8 @@ class SearchQuery(BaseModel):
             search_stage["$search"]['sort'] = {"first_creator.name": order}
         elif self.sortBy == "viewCount":
             search_stage["$search"]['sort'] = {"viewCount": order}
-        # If no sort is provided, default to sort by dateModified descending
-        else:
+        # If no sort is provided, default to sort by dateModified descending.
+        elif self.sortBy is None:
             search_stage["$search"]['sort'] = {"dateModified": -1}
 
         stages.append(search_stage)
