@@ -1,10 +1,10 @@
-import { getNotificationsApp, ZipTask } from "./shared";
+import { getNotificationsApp, type NotificationTask } from "./notifications-app";
 
 export class BagDownloadError extends Error { }
 
 export const requestBag = async (
   bagUrl: string,
-): Promise<ZipTask> => {
+): Promise<NotificationTask> => {
   const response = await fetch(bagUrl, {
     method: "GET",
     headers: {
