@@ -24,15 +24,22 @@ describe("isFolder", () => {
 });
 
 describe("zipRequestUrl", () => {
-  it("omits zipped=true for folders, which the server zips automatically", () => {
+  it("matches the path the legacy file browser uses, trailing slash included", () => {
     expect(zipRequestUrl("abc", folder)).toBe(
-      "/django_s3/download/abc/data/contents/top/f",
+      "/resource/abc/data/contents/top/f/?zipped=true",
     );
   });
 
-  it("adds zipped=true for single files", () => {
+  it("builds the same path for single files", () => {
     expect(zipRequestUrl("abc", file)).toBe(
-      "/django_s3/download/abc/data/contents/top/a.txt?zipped=true",
+      "/resource/abc/data/contents/top/a.txt/?zipped=true",
+    );
+  });
+
+  it("encodes each segment but keeps the separators", () => {
+    const spaced = { name: "New folder", children: [], key: 3, path: "top/New folder" } as any;
+    expect(zipRequestUrl("abc", spaced)).toBe(
+      "/resource/abc/data/contents/top/New%20folder/?zipped=true",
     );
   });
 });
@@ -50,7 +57,7 @@ describe("requestZip", () => {
     });
 
     const [url, opts] = fetchMock.mock.calls[0];
-    expect(url).toBe("/django_s3/download/abc/data/contents/top/f");
+    expect(url).toBe("/resource/abc/data/contents/top/f/?zipped=true");
     expect(opts).toMatchObject({ credentials: "include" });
 
     vi.unstubAllGlobals();

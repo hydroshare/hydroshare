@@ -10,9 +10,8 @@ export const zipRequestUrl = (
   resourceId: string,
   item: IFile | IFolder,
 ): string => {
-  const url = `/django_s3/download/${resourceId}/data/contents/${item.path}`;
-  // Folders are zipped server-side automatically; single files need the flag.
-  return isFolder(item) ? url : `${url}?zipped=true`;
+  const path = item.path?.split("/").map(encodeURIComponent).join("/");
+  return `/resource/${resourceId}/data/contents/${path}/?zipped=true`;
 };
 
 export const requestZip = async (
