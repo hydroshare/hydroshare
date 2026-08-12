@@ -335,5 +335,5 @@ class _HydroshareResourceMetadata(BaseModel):
         dataset.license = self.to_dataset_license()
         dataset.citation = [self.citation]
         dataset.creativeWorkStatus = self.to_dataset_creative_work_status()
-        dataset.relations = self.to_dataset_relations()
+        dataset.relation = self.to_dataset_relations()
         return dataset

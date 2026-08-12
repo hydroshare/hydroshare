@@ -5,9 +5,7 @@ import tempfile
 import os
 
 from dateutil import parser
-import smart_open
-
-from hsextract.utils.s3 import s3_client as s3
+from hsextract.utils.s3 import get_s3_client
 
 
 def validate_odm2_db_file(sqlite_file_path):
@@ -192,15 +190,17 @@ def create_cv_lookup_models(sql_cur):
     return term_names
 
 
-def extract_metadata(sqlite_file_name):
+def extract_metadata(sqlite_file_name, zone: str):
     """
     Extracts metadata from the sqlite file *sqlite_file_name
     :param sqlite_file_name: path of the sqlite file
+    :param zone: data zone where the sqlite file is located
     :return: extracted_metadata as dictionary
     """
     temp_dir = tempfile.gettempdir()
     local_copy = os.path.join(temp_dir, os.path.basename(sqlite_file_name))
     bucket, key = sqlite_file_name.split("/", 1)
+    s3 = get_s3_client(zone)
     s3.download_file(bucket, key, local_copy)
     with sqlite3.connect(local_copy) as con:
         # get the records in python dictionary format
@@ -616,15 +616,16 @@ def _extract_coverage_metadata(cur):
     return coverage
 
 
-def extract_metadata_csv(csv_file_name):
-    """Extracts CV metadata from a csv file without downloading from S3"""
-    transport_params = {
-        "client": s3  # reuse the existing configured boto3 client
-    }
+def extract_metadata_csv(csv_file_name, zone):
+    """Extracts CV metadata from a csv file"""
     metadata_dict = {}
-    with smart_open.open(f"s3://{csv_file_name}", "r", encoding="utf-8",
-                         transport_params=transport_params) as fl_obj:
-        csv_reader = csv.reader(fl_obj, delimiter=",")
+    temp_dir = tempfile.gettempdir()
+    local_copy = os.path.join(temp_dir, os.path.basename(csv_file_name))
+    bucket, key = csv_file_name.split("/", 1)
+    s3 = get_s3_client(zone)
+    s3.download_file(bucket, key, local_copy)
+    with open(local_copy, 'r') as fl_obj:
+        csv_reader = csv.reader(fl_obj, delimiter=',')
         # read the first row - header
         header = next(csv_reader)
         # read the 1st data row

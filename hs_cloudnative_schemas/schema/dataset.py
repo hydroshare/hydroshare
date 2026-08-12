@@ -15,6 +15,7 @@ from .base import (
     Creator,
     CreativeWork,
     Provider,
+    LinkedData,
     MediaType,
 )
 
@@ -26,6 +27,7 @@ class AdditionalType(str, Enum):
     GEOGRAPHIC_RASTER = 'GeographicRaster'
     MULTIDIMENSIONAL = 'MultiDimensional'
     TABULAR = 'Tabular'
+
 
 class ScientificDataset(CoreMetadata):
     """
@@ -46,7 +48,7 @@ class ScientificDataset(CoreMetadata):
         default="ScientificDataset",
         description="A body of structured information describing some topic(s) of interest.",
     )
-                    
+
     variableMeasured: List[Union[str, PropertyValue, DataVariable]] = Field(
         title="Variables measured", description="Measured variables."
     )
@@ -55,14 +57,14 @@ class ScientificDataset(CoreMetadata):
         title="Dimensions",
         description="Dimensions defined in the multi-dimensional dataset.",
     )
-    
+
     # redefine associatedMedia from "Core" as a required field
-    associatedMedia: Union[MediaType, List[MediaType]] = Field(
+    associatedMedia: Union[LinkedData, MediaType, List[Union[LinkedData, MediaType]]] = Field(
         title="Resource content",
         description="A media object that encodes this CreativeWork. This property is a synonym for encoding.",
         default=[]
     )
-    
+
     coordinates: Optional[List[DataVariable]] = Field(
         default=None,
         title="Coordinates",
@@ -90,9 +92,10 @@ class ScientificDataset(CoreMetadata):
     additionalType: Optional[AdditionalType] = Field(
         default=None,
         title="Additional Type",
-        description = "Additional descriptive types associated with the ScientificDataset. This is typically used by applications to provide specialized funcationality for categories for content."
+        description="Additional descriptive types associated with the ScientificDataset. This is typically used by "
+        "applications to provide specialized funcationality for categories for content."
     )
-    
+
     # ---------------------------------------------
     # make required CoreMetadata fields "Optional",
     # but preserve the metadata defined in the
