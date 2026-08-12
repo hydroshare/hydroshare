@@ -1,7 +1,6 @@
 import json
 import os
 import boto3
-import subprocess
 
 
 s3_config = {
@@ -10,15 +9,6 @@ s3_config = {
     "aws_secret_access_key": os.environ.get("AWS_SECRET_ACCESS_KEY", "devpassword")
 }
 s3_client = boto3.client('s3', **s3_config)
-
-try:
-    subprocess.run([
-        "mc", "event", "add", "hydroshare/test-bucket",
-        "arn:minio:sqs::RESOURCEFILE:kafka",
-        "--event", "put,delete"
-    ], check=True)
-except subprocess.CalledProcessError as e:
-    print(f"Failed to set up S3 event notifications: {e}")
 
 
 def read_s3_json(path: str):

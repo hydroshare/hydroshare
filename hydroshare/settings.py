@@ -431,6 +431,7 @@ INSTALLED_APPS = (
     "mezzanine.accounts",
     "rest_framework",
     'rest_framework.authtoken',
+    'knox',
     "robots",
     "sorl.thumbnail",
     "hs_core",
@@ -484,9 +485,22 @@ SWAGGER_SETTINGS = {
 }
 
 RESOURCE_S3_DEFAULT_ZONE = "hydroshare"
+S3_AUTH_EVENT_ENDPOINT = os.environ.get("HS_S3_AUTH_EVENT_ENDPOINT", "http://hs-s3-auth/s3/event/")
+S3_AUTH_EVENT_TIMEOUT = float(os.environ.get("HS_S3_AUTH_EVENT_TIMEOUT", "5"))
+S3_AUTH_EVENT_USERNAME = os.environ.get("HS_S3_AUTH_EVENT_USERNAME", "cuahsi")
+# Force boto/botocore presigned URLs to SigV4 so proxy-side signature
+# verification and authorization work consistently.
+AWS_S3_SIGNATURE_VERSION = "s3v4"
 RESOURCE_S3_ZONES_CONFIG = {
     "hydroshare": {
-        "bucket_name": "hydroshare",
+        "bucket_name": "resource",
+        "aws_s3_endpoint_url": "http://minio:9000",
+        "aws_access_key_id": "cuahsi",
+        "aws_secret_access_key": "devpassword",
+        "aws_s3_endpoint_url_public": "http://localhost:9000"
+    },
+    "published": {  # the publisher hydroshare user must be updated to use this zone, see PUBLISHER_USER_NAME
+        "bucket_name": "published",
         "aws_s3_endpoint_url": "http://minio:9000",
         "aws_access_key_id": "cuahsi",
         "aws_secret_access_key": "devpassword",
@@ -917,6 +931,15 @@ SECURE_HSTS_SECONDS = 31536000
 SESSION_COOKIE_SECURE = USE_SECURITY
 CSRF_COOKIE_SECURE = USE_SECURITY
 
+# When set, cookies are scoped to this domain and all subdomains, allowing
+# services at e.g. s3.beta.hydroshare.org to receive the same session/CSRF
+# cookies that Django issues at beta.hydroshare.org.
+# Leave unset (None) for local development so cookies remain host-only.
+_cookie_domain = os.environ.get("COOKIE_DOMAIN")  # e.g. "beta.hydroshare.org"
+if _cookie_domain:
+    SESSION_COOKIE_DOMAIN = _cookie_domain
+    CSRF_COOKIE_DOMAIN = _cookie_domain
+
 
 # Categorization in discovery of content types
 # according to file extension of otherwise unaggregated files.
@@ -958,7 +981,7 @@ PUBLISHER_USER_NAME = "published"
 DEFAULT_QUOTA_VALUE = 20
 DEFAULT_QUOTA_UNIT = "GB"
 
-BROKER_URL = 'rabbitmq://guest:guest@rabbitmq:5672//'
+BROKER_URL = 'redis://redis:6379/0'
 ATLAS_CONNECTION_URL = "mongodb://user:pass@mongodb:27017/"
 ATLAS_DB_NAME = "hydroshare"
 SEARCH_RELEVANCE_SCORE_THRESHOLD = 0.3

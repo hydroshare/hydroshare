@@ -2,6 +2,7 @@ import os
 import posixpath
 import logging
 import boto3
+from celery import current_app as celery_app
 from datetime import datetime
 from datetime import timedelta
 from urllib.parse import urlencode
@@ -22,9 +23,13 @@ from storages.utils import is_seekable
 from storages.utils import setting
 
 try:
+    from botocore.config import Config as BotocoreConfig
     from botocore.exceptions import ClientError
 except ImportError as e:
     raise ImproperlyConfigured("Could not load Boto3's S3 bindings. %s" % e)
+
+
+logger = logging.getLogger(__name__)
 
 
 @deconstructible
@@ -85,7 +90,7 @@ class S3Storage(s3.S3Storage):
         if zone not in connection:
             session = self._create_session(zone)
             zone_config = get_zone_config(zone)
-            connection[zone] = session.resource(
+            resource = session.resource(
                 "s3",
                 region_name=self.region_name,
                 use_ssl=self.use_ssl,
@@ -93,8 +98,97 @@ class S3Storage(s3.S3Storage):
                 config=self.client_config,
                 verify=self.verify,
             )
+            self._register_mutation_hooks(resource, zone_config.aws_s3_endpoint_url)
+            connection[zone] = resource
         self._connections.connection = connection
         return connection[zone]
+
+    def _register_mutation_hooks(self, resource, endpoint_url):
+        events = resource.meta.client.meta.events
+        if getattr(events, "_hs_mutation_hooks_registered", False):
+            return
+
+        events._hs_mutation_hooks_registered = True
+
+        def before_parameter_build(params, model, context, **kwargs):
+            operation = getattr(model, "name", "")
+            if operation not in ("PutObject", "DeleteObject", "CompleteMultipartUpload"):
+                return
+            context["_hs_bucket"] = params.get("Bucket")
+            context["_hs_key"] = params.get("Key")
+            context["_hs_action"] = {
+                "PutObject": "s3:PutObject",
+                "DeleteObject": "s3:DeleteObjects",
+                "CompleteMultipartUpload": "s3:CompleteMultipartUpload",
+            }.get(operation)
+
+        def after_call(http_response, parsed, model, context, **kwargs):
+            action = context.get("_hs_action")
+            bucket = context.get("_hs_bucket")
+            object_path = context.get("_hs_key")
+            status_code = getattr(http_response, "status_code", None)
+
+            if not action or not bucket or not object_path:
+                return
+            if status_code not in (200, 204):
+                return
+            self._dispatch_s3_mutation_hook(
+                action=action,
+                bucket=bucket,
+                object_path=object_path,
+                status_code=status_code,
+            )
+
+        events.register("before-parameter-build.s3.PutObject", before_parameter_build)
+        events.register("before-parameter-build.s3.DeleteObject", before_parameter_build)
+        events.register("before-parameter-build.s3.CompleteMultipartUpload", before_parameter_build)
+        events.register("after-call.s3.PutObject", after_call)
+        events.register("after-call.s3.DeleteObject", after_call)
+        events.register("after-call.s3.CompleteMultipartUpload", after_call)
+
+    def _dispatch_s3_mutation_hook(self, action, bucket, object_path, status_code):
+        username = setting("S3_AUTH_EVENT_USERNAME", "cuahsi")
+
+        payload = {
+            "action": action,
+            "bucket": bucket,
+            "object_path": object_path,
+            "username": username,
+            "user_id": None,
+            "file_size": 0,
+            "status_code": status_code,
+        }
+
+        try:
+            celery_app.send_task(
+                "hs_event_s3.tasks.process_s3_event",
+                kwargs=payload,
+                queue="s3_events",
+            )
+
+            # Dispatch discovery catalog sync when the jsonld metadata file changes
+            if object_path.endswith("/.hsjsonld/dataset_metadata.json"):
+                celery_app.send_task(
+                    "hs_event_s3.tasks.sync_discovery_collection",
+                    kwargs=payload,
+                    queue="s3_events",
+                )
+
+            # Dispatch metadata extraction for data file events
+            _path_lower = object_path.lower()
+            if not _path_lower.endswith(".hsjsonld/dataset_metadata.json"):
+                celery_app.send_task(
+                    "hs_extract.tasks.extract_metadata",
+                    kwargs=payload,
+                    queue="extract",
+                )
+        except Exception:
+            logger.exception(
+                "Failed to enqueue S3 event task for action=%s bucket=%s object=%s",
+                action,
+                bucket,
+                object_path,
+            )
 
     def bucket(self, name, zone):
         """
@@ -306,10 +400,30 @@ class S3Storage(s3.S3Storage):
         params["Bucket"] = bucket
         params["Key"] = name
 
-        connection = (
-            self.connection(zone) if self.querystring_auth else self.unsigned_connection
-        )
-        url = connection.meta.client.generate_presigned_url(
-            "get_object", Params=params, ExpiresIn=expire, HttpMethod=http_method
-        )
+        if self.querystring_auth:
+            session = self._create_session(zone)
+            zone_config = get_zone_config(zone)
+            presign_endpoint = zone_config.aws_s3_endpoint_url_public or zone_config.aws_s3_endpoint_url
+            # Force path-style addressing and s3v4 for GCS S3-compat presigned URLs.
+            # Virtual-hosted style changes the string-to-sign host component, causing
+            # SignatureDoesNotMatch on GCS even with otherwise correct credentials.
+            presign_config = BotocoreConfig(
+                signature_version="s3v4",
+                s3={"addressing_style": "path"},
+            )
+            presign_client = session.client(
+                "s3",
+                region_name=self.region_name or "auto",
+                use_ssl=self.use_ssl,
+                endpoint_url=presign_endpoint,
+                config=presign_config,
+                verify=self.verify,
+            )
+            url = presign_client.generate_presigned_url(
+                "get_object", Params=params, ExpiresIn=expire, HttpMethod=http_method
+            )
+        else:
+            url = self.unsigned_connection.meta.client.generate_presigned_url(
+                "get_object", Params=params, ExpiresIn=expire, HttpMethod=http_method
+            )
         return url
