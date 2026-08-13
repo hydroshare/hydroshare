@@ -5,7 +5,7 @@ import boto3
 from celery import current_app as celery_app
 from datetime import datetime
 from datetime import timedelta
-from urllib.parse import unquote, urlencode
+from urllib.parse import unquote_plus, urlencode
 
 from hs_core.exceptions import QuotaException
 from .utils import bucket_and_zone
@@ -202,12 +202,29 @@ class S3Storage(s3.S3Storage):
                 file_size=file_size,
             )
 
+        def decode_list_objects(parsed, context, **kwargs):
+            """Decode ListObjects (v1) keys that botocore leaves form-encoded."""
+            if not context.get("encoding_type_auto_set"):
+                return
+            if parsed.get("EncodingType") == "url":
+                return  # backend echoed it, so botocore already decoded
+            for entry in parsed.get("Contents", ()):
+                if "Key" in entry:
+                    entry["Key"] = unquote_plus(entry["Key"])
+            for entry in parsed.get("CommonPrefixes", ()):
+                if "Prefix" in entry:
+                    entry["Prefix"] = unquote_plus(entry["Prefix"])
+            for field in ("Prefix", "Delimiter", "Marker", "NextMarker"):
+                if parsed.get(field):
+                    parsed[field] = unquote_plus(parsed[field])
+
         events.register("before-parameter-build.s3.PutObject", before_parameter_build)
         events.register("before-parameter-build.s3.DeleteObject", before_parameter_build)
         events.register("before-parameter-build.s3.CompleteMultipartUpload", before_parameter_build)
         events.register("after-call.s3.PutObject", after_call)
         events.register("after-call.s3.DeleteObject", after_call)
         events.register("after-call.s3.CompleteMultipartUpload", after_call)
+        events.register("after-call.s3.ListObjects", decode_list_objects)
 
     def _dispatch_s3_mutation_hook(self, action, bucket, object_path, zone, file_size=0):
         username = setting("S3_AUTH_EVENT_USERNAME", "cuahsi")
@@ -388,11 +405,11 @@ class S3Storage(s3.S3Storage):
         pages = paginator.paginate(Bucket=bucket, Delimiter="/", Prefix=path)
         for page in pages:
             directories += [
-                posixpath.relpath(unquote(entry["Prefix"]), path)
+                posixpath.relpath(entry["Prefix"], path)
                 for entry in page.get("CommonPrefixes", ())
             ]
             for entry in page.get("Contents", ()):
-                key = unquote(entry["Key"])
+                key = entry["Key"]
                 if key != path:
                     files.append(posixpath.relpath(key, path))
                     file_sizes.append(entry["Size"])

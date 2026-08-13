@@ -13,10 +13,33 @@ from botocore.credentials import Credentials
 from fastapi import Response
 
 logger = logging.getLogger("hs_s3_proxy")
+
+# The client's own SigV4 params must not reach the backend: we re-sign with backend
+# credentials, and an X-Amz-Signature in the query makes S3/GCS ignore our header.
+_INBOUND_AUTH_PARAMS = frozenset({
+    'x-amz-algorithm', 'x-amz-credential', 'x-amz-date', 'x-amz-expires',
+    'x-amz-signedheaders', 'x-amz-signature', 'x-amz-security-token',
+    'x-amz-content-sha256',
+})
+
 S3_PROXY_POOL_MAX_CONNECTIONS = int(os.environ.get("S3_PROXY_POOL_MAX_CONNECTIONS", "50"))
 S3_PROXY_POOL_MAX_KEEPALIVE_CONNECTIONS = int(
     os.environ.get("S3_PROXY_POOL_MAX_KEEPALIVE_CONNECTIONS", "20")
 )
+
+
+def _latin1_safe(value: str) -> str:
+    """Make a backend response header value survive starlette's latin-1 header encoding.
+
+    GCS echoes response-content-disposition back verbatim, so a filename with non-latin-1
+    characters (e.g. the U+202F in macOS screenshot names) would otherwise raise
+    UnicodeEncodeError. Re-encoding puts the backend's original UTF-8 bytes on the wire.
+    """
+    try:
+        value.encode('latin-1')
+        return value
+    except UnicodeEncodeError:
+        return value.encode('utf-8').decode('latin-1')
 
 
 def _s3_error_xml(code: str, message: str) -> bytes:
@@ -165,8 +188,12 @@ class S3ProxyClient:
         encoded_parts = [quote(part, safe='') for part in path.split('/')]
         encoded_path = '/'.join(encoded_parts)
         url = f"{zone_backend.endpoint}{encoded_path}"
-        if query_params:
-            url = f"{url}?{urlencode(query_params)}"
+        backend_params = {k: v for k, v in query_params.items()
+                          if k.lower() not in _INBOUND_AUTH_PARAMS}
+        if backend_params:
+            # quote, not quote_plus: botocore signs '+' literally but GCS canonicalizes
+            # it as a space, so keys with spaces fail with SignatureDoesNotMatch.
+            url = f"{url}?{urlencode(backend_params, quote_via=quote)}"
 
         outbound_headers = self._filter_headers(headers)
         outbound_body = body or b""
@@ -184,6 +211,10 @@ class S3ProxyClient:
                 content=outbound_body if outbound_body else None, follow_redirects=False,
             )
             response_headers = self._filter_response_headers(dict(response.headers))
+            if method.upper() == "HEAD":
+                upstream_length = response.headers.get("content-length")
+                if upstream_length is not None:
+                    response_headers["content-length"] = upstream_length
             return Response(content=response.content, status_code=response.status_code,
                             headers=response_headers)
 
@@ -234,4 +265,4 @@ class S3ProxyClient:
             'te', 'trailer', 'transfer-encoding', 'upgrade',
             'content-encoding', 'content-length'
         }
-        return {k: v for k, v in headers.items() if k.lower() not in exclude}
+        return {k: _latin1_safe(v) for k, v in headers.items() if k.lower() not in exclude}
