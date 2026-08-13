@@ -31,6 +31,11 @@ urlpatterns = [
         name="delete_metadata_element",
     ),
     re_path(
+        r'^_internal/(?P<resource_id>[0-9a-f-]+)/(?P<coverage_type>[A-Za-z]+)/delete-coverage/$',
+        views.delete_resource_coverage,
+        name="delete_resource_coverage"
+    ),
+    re_path(
         r"^_internal/(?P<shortkey>[0-9a-f-]+)/delete-author/(?P<element_id>[A-z0-9]+)/$",
         views.delete_author,
         name="delete_author",
@@ -267,6 +272,11 @@ urlpatterns = [
         r"^_internal/(?P<shortkey>[0-9a-f-]+)/non-preferred-paths/$",
         views.get_non_preferred_paths,
         name="get_non_preferred_paths",
+    ),
+    re_path(
+        r"^_internal/(?P<shortkey>[0-9a-f-]+)/missing-file-type-metadata/$",
+        views.get_missing_file_type_metadata,
+        name="get_missing_file_type_metadata",
     ),
     re_path(
         r"^_internal/(?P<shortkey>[0-9a-f-]+)/manage-access-data/$",

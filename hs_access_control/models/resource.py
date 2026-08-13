@@ -469,6 +469,8 @@ class ResourceAccess(models.Model):
             raise PermissionDenied("Grantee user is not active")
 
         user_priv = self.get_effective_user_privilege(this_user, ignore_superuser=ignore_superuser)
+        if user_priv in (PC.OWNER, PC.CHANGE):
+            return user_priv  # user privilege is highest, no need to check group or community
         group_priv = self.get_effective_group_privilege(this_user)
         # community_priv = self.get_effective_community_privilege(this_user)
         return min(user_priv, group_priv)  # , community_priv)
