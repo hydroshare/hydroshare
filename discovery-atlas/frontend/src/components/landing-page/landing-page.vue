@@ -528,21 +528,17 @@
           </div>
 
           <div
-            v-if="
-              data.hasPart?.length ||
-              data.isPartOf?.length ||
-              data.subjectOf?.length
-            "
+            v-if="hasRelatedResources"
             class="mb-6 field"
             id="related"
           >
-            <div v-bind="headingAttr">Related Resources</div>
+          <div v-bind="headingAttr">Related Resources</div>
             <v-card variant="outlined" border="grey thin">
               <v-table class="related-resources-table">
                 <template v-slot:default>
                   <tbody>
                     <tr
-                      v-for="(part, index) in data.hasPart"
+                      v-for="(part, index) in data.hasPart?.filter(p => p.url)"
                       :key="`hp-${index}`"
                     >
                       <td class="relation-label">Has part</td>
@@ -552,7 +548,7 @@
                     </tr>
 
                     <tr
-                      v-for="(part, index) in data.isPartOf"
+                      v-for="(part, index) in data.isPartOf?.filter(p => p.url)"
                       :key="`ipo-${index}`"
                     >
                       <td class="relation-label">Is part of</td>
@@ -562,7 +558,7 @@
                     </tr>
 
                     <tr
-                      v-for="(part, index) in data.subjectOf"
+                      v-for="(part, index) in data.subjectOf?.filter(p => p.url)"
                       :key="`so-${index}`"
                     >
                       <td class="relation-label">Subject of</td>
@@ -1052,6 +1048,15 @@ const showVersionOfAlert = computed<boolean>(() =>
   ),
 );
 
+const hasRelatedResources = computed<boolean>(() => {
+  const d = data.value;
+  return (
+    d.hasPart?.some((p: any) => p.url) ||
+    d.isPartOf?.some((p: any) => p.url) ||
+    d.subjectOf?.some((p: any) => p.url)
+  );
+});
+
 // Prefer @type; fall back to legacy `type` for not-yet-migrated data.
 const spatialGeoType = computed<string | undefined>(() => {
   const geo = data.value.spatialCoverage?.geo;
@@ -1222,9 +1227,7 @@ function buildToc() {
     toc.push({ text: "Funding", to: "#funding" });
   }
 
-  const hasRelated =
-    d.hasPart?.length || d.isPartOf?.length || d.subjectOf?.length;
-  if (hasRelated) {
+  if (hasRelatedResources.value) {
     toc.push({ text: "Related Resources", to: "#related" });
   }
 
