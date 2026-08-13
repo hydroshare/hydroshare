@@ -25,9 +25,12 @@ def verify_signature_v4(
 
         canonical_uri = quote(path, safe='/~')
 
+        # X-Amz-Signature is excluded from the canonical query string of a presigned
+        # request — the signer could not have included its own signature.
         canonical_query_string = '&'.join(
             f"{quote(k, safe='~')}={quote(str(v), safe='~')}"
             for k, v in sorted(query_params.items())
+            if k.lower() != 'x-amz-signature'
         )
 
         signed_header_names = [h.strip() for h in signed_headers_str.split(';')]
@@ -60,7 +63,14 @@ def verify_signature_v4(
                 break
 
         if not amz_date:
-            logger.warning("Missing x-amz-date header")
+            # Presigned requests carry the timestamp as a query param, not a header.
+            for k, v in query_params.items():
+                if k.lower() == 'x-amz-date':
+                    amz_date = str(v)
+                    break
+
+        if not amz_date:
+            logger.warning("Missing x-amz-date in headers and query params")
             return False
 
         string_to_sign = '\n'.join([

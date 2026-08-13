@@ -109,9 +109,10 @@ class S3Storage(S3Storage):
         """
         def chunk_request(zip_archive_file, bucket, key, zone):
             chunk_size = getattr(settings, "S3_STREAM_ZIP_CHUNKING_SIZE", 1024 * 1024 * 256)  # 256MB
-            object_attrs = self.connection(zone).meta.client.get_object_attributes(Bucket=bucket, Key=key,
-                                                                                   ObjectAttributes=["ObjectSize"])
-            object_size = object_attrs.get("ObjectSize")
+            # head_object, not get_object_attributes: GCS's S3-compat API ignores
+            # ?attributes and returns the object body, which botocore can't parse.
+            object_head = self.connection(zone).meta.client.head_object(Bucket=bucket, Key=key)
+            object_size = object_head.get("ContentLength")
             if object_size is None:
                 # could not get object size, read the entire file
                 logger.warning(f"Could not get object size for {key}")
