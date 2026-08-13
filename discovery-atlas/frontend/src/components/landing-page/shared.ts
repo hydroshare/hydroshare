@@ -2,6 +2,30 @@ import { _Object, CommonPrefix, GetObjectCommand, ListObjectsV2Command, S3Client
 import { Notifications } from "@cznethub/cznet-vue-core";
 import { IFile, IFolder } from "@cznethub/cznet-vue-core/dist/types";
 import { S3_PROXY_URL } from "@/constants";
+import { downloadZipped, ZipDownloadError } from "./zip-download";
+
+export const onZippedDownload = async (item: IFile | IFolder, resourceId: string) => {
+  // Edit mode can hold staged items that are not in S3 yet.
+  if (item.isUploaded === false) {
+    Notifications.toast({
+      title: "Error",
+      message: "Upload this item before downloading it.",
+      type: "error",
+    });
+    return;
+  }
+
+  try {
+    await downloadZipped(resourceId, item);
+  } catch (error: any) {
+    const message =
+      error instanceof ZipDownloadError
+        ? error.message
+        : "Failed to download the zip file.";
+    console.error("Zipped download failed:", error);
+    Notifications.toast({ title: "Error", message, type: "error" });
+  }
+}
 
 const hiddenFileSuffixes = [
   "_meta.xml",

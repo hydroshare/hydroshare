@@ -408,8 +408,9 @@
                 :has-folders="fileExplorerConfig.hasFolders"
                 :is-read-only="true"
                 :has-file-metadata="() => true"
-                :canDownloadItem="() => true"
+                :canDownloadItem="(item: IFile | IFolder) => !isFolder(item)"
                 :load-file-preview="(item) => loadFilePreview(item)"
+                :download-zipped="(item: IFile | IFolder) => onZippedDownload(item, resourceId)"
                 @download="
                   onFileDownload($event, resourceId, s3Client, s3Info.bucket)
                 "
@@ -775,14 +776,16 @@ import {
   CzFileExplorer,
   Notifications,
 } from "@cznethub/cznet-vue-core";
-import type { IFolder } from "@cznethub/cznet-vue-core/dist/types";
+import type { IFile, IFolder } from "@cznethub/cznet-vue-core/dist/types";
 import { GetObjectCommand, S3Client, _Object } from "@aws-sdk/client-s3";
 import {
   fetchResource,
   getStatusColor,
   onFileDownload,
+  onZippedDownload,
   parseDate,
 } from "./shared";
+import { isFolder } from "./zip-download";
 import { loadReadme } from "./readme-s3";
 import { createCookieS3Client } from "./cookie-s3-client";
 import User from "@/models/user.model";
