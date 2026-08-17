@@ -101,30 +101,6 @@
               </div>
               <cz-field scope="#/properties/name" hide-label />
             </div>
-
-            <!-- Mobile: collapse the header actions into a 3-dot menu -->
-            <v-menu v-if="$vuetify.display.smAndDown">
-              <template v-slot:activator="{ props }">
-                <v-btn
-                  v-bind="props"
-                  icon="mdi-dots-vertical"
-                  size="small"
-                  variant="text"
-                  aria-label="More actions"
-                  class="flex-shrink-0"
-                />
-              </template>
-              <v-list density="compact">
-                <v-list-item
-                  title="Back to resource"
-                  @click="leaveToLanding"
-                >
-                  <template #prepend>
-                    <v-icon size="18">mdi-arrow-left</v-icon>
-                  </template>
-                </v-list-item>
-              </v-list>
-            </v-menu>
           </div>
 
           <!-- Meta + actions row mirrors the landing page header layout.
@@ -174,11 +150,9 @@
             <!-- Save is mirrored here as well as at the foot of the form:
                  the page can run to several thousand px inside an iframe the
                  host sets to scrolling="no", so reaching the bottom bar means
-                 scrolling the PARENT window all the way down. -->
-            <div
-              v-if="!$vuetify.display.smAndDown"
-              class="d-flex flex-wrap align-center ga-2 ml-auto"
-            >
+                 scrolling the PARENT window all the way down. On narrow
+                 screens the wrap drops this pair onto its own line. -->
+            <div class="d-flex flex-wrap align-center ga-2 ml-auto">
               <v-btn
                 size="small"
                 variant="outlined"
@@ -866,7 +840,6 @@
           <v-spacer></v-spacer>
 
           <v-btn
-            v-if="!$vuetify.display.smAndDown"
             variant="outlined"
             prepend-icon="mdi-arrow-left"
             @click="leaveToLanding"
