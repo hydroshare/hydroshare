@@ -1,12 +1,5 @@
 <template>
-  <!-- `hs-host-dialog` pins this to the parent window's visible band when
-       embedded; see assets/css/host-dialogs.scss. -->
-  <v-dialog
-    v-model="dialogOpen"
-    max-width="760"
-    scrollable
-    content-class="hs-host-dialog"
-  >
+  <v-dialog v-model="dialogOpen" max-width="760" scrollable>
     <v-card class="manage-access-card" :class="{ 'is-processing': isProcessing }">
       <div class="dialog-banner"></div>
       <v-card-title class="dialog-header">

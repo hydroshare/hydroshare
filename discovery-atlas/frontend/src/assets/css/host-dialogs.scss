@@ -1,17 +1,25 @@
 /**
-  Dialog placement inside the HydroShare iframe
+  Overlay placement inside the HydroShare iframe
   ================================================================================
-  Gated on the `hs-embedded` class set by util/host-viewport.ts. Selectors
-  target the dialog classes cznet-vue-core puts on its overlay content.
+  Gated on the `hs-embedded` class set by util/host-viewport.ts. Covers every
+  v-dialog and v-snackbar (menus keep their anchored positioning) so overlays
+  opened from any surface, including the file explorer's confirms, preview and
+  download toasts, land in the parent window's visible band.
 */
 html.hs-embedded {
-  .v-overlay__content.cz-field-modal__content,
-  .v-overlay__content.cz-confirm,
-  .v-overlay__content.hs-host-dialog {
+  .v-dialog:not(.v-dialog--fullscreen) > .v-overlay__content {
     align-self: flex-start;
     margin-top: var(--hs-dialog-top, 24px);
     // A pixel cap is what makes `scrollable` engage.
     max-height: var(--hs-dialog-max-h, 640px);
+  }
+
+  // Toasts align to an edge of the overlay box, so shrink the box to the band
+  // rather than offsetting the content.
+  .v-snackbar {
+    top: var(--hs-dialog-top, 24px);
+    bottom: auto;
+    height: var(--hs-dialog-max-h, 640px);
   }
 
   // The iframe's <html> is not the scrolling element, so Vuetify's `block`
