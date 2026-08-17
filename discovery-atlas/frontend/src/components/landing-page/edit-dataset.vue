@@ -808,10 +808,32 @@
                 <div
                   v-for="(citation, index) of citations"
                   :key="index"
-                  class="text-body-2 text-medium-emphasis"
-                  style="word-break: break-word;"
+                  class="citation-card"
                 >
-                  {{ citation }}
+                  <div class="citation-text">{{ citation }}</div>
+                  <div class="citation-actions">
+                    <v-btn
+                      class="citation-copy"
+                      size="small"
+                      variant="tonal"
+                      color="accent"
+                      :prepend-icon="copiedCitation === index ? 'mdi-check' : 'mdi-content-copy'"
+                      @click="onCopyCitation(citation, index)"
+                    >{{ copiedCitation === index ? "Copied" : "Copy citation" }}</v-btn>
+                  </div>
+                </div>
+
+                <div v-if="!isPublished" class="citation-note">
+                  <v-icon class="citation-note__icon" size="16">mdi-information-outline</v-icon>
+                  <div>
+                    When permanently published, this resource will have a formal Digital
+                    Object Identifier (DOI) and will be accessible at the following URL:
+                    <a :href="potentialDoiUrl" target="_blank" rel="noopener">{{ potentialDoiUrl }}</a>.
+                    When you are ready to permanently publish, click the Publish button at
+                    the top of the page to request your DOI. Reminder: Once you have published
+                    your resource, modifications to Title, Authors, or Content files will
+                    require a new version of the resource.
+                  </div>
                 </div>
               </div>
 
@@ -1316,7 +1338,33 @@ function allowLocalhostUrls(node: any): void {
 // building the same list shape lights up both at once.
 const tocItems = computed(() => User.$state.toc);
 
-const citations = computed<string[]>(() => data.value?.document?.[0]?.citation ?? []);
+// user_metadata.json holds the generated citation as a top-level string array.
+const citations = computed<string[]>(() => {
+  const raw = data.value?.citation;
+  if (Array.isArray(raw)) return raw.filter((c: any) => typeof c === "string" && c.trim());
+  if (typeof raw === "string" && raw.trim()) return [raw];
+  return [];
+});
+
+const isPublished = computed<boolean>(
+  () => data.value?.creativeWorkStatus?.name === "Published",
+);
+
+const potentialDoiUrl = computed<string>(
+  () => `https://doi.org/10.4211/hs.${resourceId.value}`,
+);
+
+const copiedCitation = ref<number | null>(null);
+let copiedTimeout: ReturnType<typeof setTimeout> | undefined;
+
+function onCopyCitation(citation: string, index: number) {
+  // Collapse line breaks and repeated whitespace so the citation pastes as one line.
+  navigator.clipboard.writeText(citation.replace(/\s+/g, " ").trim());
+  Notifications.toast({ message: "Copied to clipboard", type: "info" });
+  copiedCitation.value = index;
+  clearTimeout(copiedTimeout);
+  copiedTimeout = setTimeout(() => (copiedCitation.value = null), 2000);
+}
 
 function scrollToSection(hash: string | null) {
   if (!hash) return;
@@ -1381,6 +1429,7 @@ onBeforeUnmount(() => {
   // section list. Mirrors landing-page.vue's beforeUnmount.
   User.$state.toc = [];
   User.$state.isTocReady = false;
+  clearTimeout(copiedTimeout);
 });
 
 const isLoadingFiles = ref(true);
@@ -2399,6 +2448,61 @@ init();
 
 .details-card {
   border-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+.citation-card {
+  padding: 1rem 1rem 0.75rem;
+  border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  border-left: 3px solid rgb(var(--v-theme-accent));
+  border-radius: 4px;
+  background-color: rgba(var(--v-theme-accent), 0.04);
+
+  & + .citation-card {
+    margin-top: 0.75rem;
+  }
+}
+
+.citation-text {
+  min-width: 0;
+  word-break: break-word;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: rgba(var(--v-theme-on-surface), 0.87);
+}
+
+.citation-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.75rem;
+}
+
+// Fixed width so swapping the label to "Copied" doesn't resize the button.
+.citation-copy {
+  min-width: 9.5rem;
+  letter-spacing: 0.03em;
+  text-transform: none;
+}
+
+.citation-note {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  min-width: 0;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: rgba(var(--v-theme-on-surface), 0.6);
+
+  // The DOI URL has no break opportunities and would otherwise widen the section.
+  > div {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+}
+
+.citation-note__icon {
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+  opacity: 0.7;
 }
 
 .single-col-layout {
