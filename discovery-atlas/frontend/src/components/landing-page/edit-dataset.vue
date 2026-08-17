@@ -231,7 +231,7 @@
         </v-select>
 
         <!-- ===== MAIN GRID: content column + sidebar ===== -->
-        <div class="d-flex flex-column flex-lg-row ga-6 mt-6">
+        <div class="d-flex flex-column flex-lg-row mt-6 single-col-layout">
           <v-container
             class="page-content pa-0"
             :class="{ 'is-sm': $vuetify.display.mdAndDown }"
@@ -674,7 +674,7 @@
                    collapses control margins differently inside a .v-card, so
                    these two sections silently lost the spacing the others
                    had. -->
-              <div class="mb-6">
+              <div id="subject" class="mb-6">
                 <div class="sidebar-heading">
                   Subject Keywords<span class="required-mark">{{
                     requiredMark("#/properties/keywords")
@@ -697,20 +697,7 @@
                 </v-alert>
               </div>
 
-              <div class="mb-6">
-                <div class="sidebar-heading">
-                  License<span class="required-mark">{{
-                    requiredMark("#/properties/license")
-                  }}</span>
-                </div>
-                <cz-field
-                  scope="#/properties/license"
-                  :options="licenseOptions"
-                  hide-label
-                />
-              </div>
-
-              <div class="mb-6">
+              <div id="spatial" class="mb-6">
                 <div class="sidebar-heading">
                   Spatial Coverage<span class="required-mark">{{
                     requiredMark("#/properties/spatialCoverage")
@@ -788,7 +775,7 @@
                 </cz-field-modal>
               </div>
 
-              <div class="mb-6 temporal-coverage">
+              <div id="temporal" class="mb-6 temporal-coverage">
                 <div class="sidebar-heading">
                   Temporal Coverage<span class="required-mark">{{
                     requiredMark("#/properties/temporalCoverage")
@@ -852,6 +839,19 @@
                 >
                   {{ citation }}
                 </div>
+              </div>
+
+              <div id="license" class="mb-6">
+                <div class="sidebar-heading">
+                  License<span class="required-mark">{{
+                    requiredMark("#/properties/license")
+                  }}</span>
+                </div>
+                <cz-field
+                  scope="#/properties/license"
+                  :options="licenseOptions"
+                  hide-label
+                />
               </div>
             </div>
           </div>
@@ -1411,30 +1411,26 @@ function scrollToSection(hash: string | null) {
 }
 
 function buildToc() {
-  const d = data.value;
   const toc: { text: string; to: string; level?: number }[] = [
     { text: "Overview", to: "#overview" },
     { text: "Details", to: "#details" },
   ];
 
-  if (d?.description !== undefined) {
-    toc.push({ text: "Abstract", to: "#description" });
-  }
-
+  toc.push({ text: "Abstract", to: "#description" });
+  toc.push({ text: "Subject Keywords", to: "#subject" });
+  toc.push({ text: "Spatial Coverage", to: "#spatial" });
+  toc.push({ text: "Temporal Coverage", to: "#temporal" });
   toc.push({ text: "Content", to: "#content" });
   toc.push({ text: "Files", to: "#fileExplorer", level: 4 });
+  toc.push({ text: "Additional metadata", to: "#additional" });
+  toc.push({ text: "Related Resources", to: "#related" });
   toc.push({ text: "Funding", to: "#funding" });
 
-  const hasRelated =
-    d?.hasPart?.length ||
-    d?.isPartOf?.length ||
-    d?.subjectOf?.length ||
-    d?.relation?.length;
-  if (hasRelated) {
-    toc.push({ text: "Related Resources", to: "#related" });
+  if (citations.value.length) {
+    toc.push({ text: "How to cite", to: "#citation" });
   }
 
-  toc.push({ text: "Additional metadata", to: "#additional" });
+  toc.push({ text: "License", to: "#license" });
 
   User.$state.toc = toc;
   User.$state.isTocReady = true;
@@ -2463,6 +2459,32 @@ init();
 
 .details-card {
   border-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+.single-col-layout {
+  gap: 1.5rem;
+
+  @media (max-width: 1279px) {
+    gap: 0;
+
+    > .page-content,
+    > .sidebar,
+    > .sidebar > div {
+      display: contents;
+    }
+
+    #details { order: 1; }
+    #description { order: 2; }
+    #subject { order: 3; }
+    #spatial { order: 4; }
+    #temporal { order: 5; }
+    #content { order: 6; }
+    #additional { order: 7; }
+    #related { order: 8; }
+    #funding { order: 9; }
+    #citation { order: 10; }
+    #license { order: 11; }
+  }
 }
 
 .sidebar {

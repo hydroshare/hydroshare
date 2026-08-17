@@ -258,7 +258,7 @@
         </template>
       </v-select>
 
-      <div class="d-flex flex-column flex-lg-row ga-6 mt-6">
+      <div class="d-flex flex-column flex-lg-row mt-6 single-col-layout">
         <v-container
           class="page-content pa-0"
           :class="{ 'is-sm': $vuetify.display.mdAndDown }"
@@ -594,23 +594,7 @@
               </div>
             </v-card>
 
-            <v-card v-if="data.license" variant="flat" class="mb-6">
-              <v-card-title class="sidebar-heading pa-0">
-                License
-              </v-card-title>
-              <div class="text-body-2 text-medium-emphasis">
-                <a v-if="data.license.url" :href="data.license.url" target="_blank" rel="noopener">{{ data.license.name }}</a>
-                <template v-else>{{ data.license.name }}</template>
-              </div>
-              <img
-                v-if="licenseBadgeUrl"
-                :src="licenseBadgeUrl"
-                :alt="data.license.name"
-                class="cc-badge mt-2"
-              />
-            </v-card>
-
-            <div v-if="hasSpatialFeatures" class="mb-6">
+            <div v-if="hasSpatialFeatures" id="spatial" class="mb-6">
               <div class="sidebar-heading">
                 Spatial Coverage
               </div>
@@ -672,7 +656,7 @@
               </v-card>
             </div>
 
-            <div v-if="data.temporalCoverage" class="mb-6">
+            <div v-if="data.temporalCoverage" id="temporal" class="mb-6">
               <div class="sidebar-heading">
                 Temporal Coverage
               </div>
@@ -751,6 +735,22 @@
                 your resource, modifications to Title, Authors, or Content files will
                 require a new version of the resource.
               </v-card-text>
+            </v-card>
+
+            <v-card v-if="data.license" id="license" variant="flat" class="mb-6">
+              <v-card-title class="sidebar-heading pa-0">
+                License
+              </v-card-title>
+              <div class="text-body-2 text-medium-emphasis">
+                <a v-if="data.license.url" :href="data.license.url" target="_blank" rel="noopener">{{ data.license.name }}</a>
+                <template v-else>{{ data.license.name }}</template>
+              </div>
+              <img
+                v-if="licenseBadgeUrl"
+                :src="licenseBadgeUrl"
+                :alt="data.license.name"
+                class="cc-badge mt-2"
+              />
             </v-card>
           </div>
         </div>
@@ -1223,15 +1223,35 @@ function buildToc() {
     toc.push({ text: "Abstract", to: "#description" });
   }
 
+  if (d.keywords?.length) {
+    toc.push({ text: "Subject Keywords", to: "#subject" });
+  }
+
+  if (hasSpatialFeatures.value) {
+    toc.push({ text: "Spatial Coverage", to: "#spatial" });
+  }
+
+  if (d.temporalCoverage) {
+    toc.push({ text: "Temporal Coverage", to: "#temporal" });
+  }
+
   toc.push({ text: "Content", to: "#content" });
   toc.push({ text: "Files", to: "#fileExplorer", level: 4 });
+
+  if (hasRelatedResources.value) {
+    toc.push({ text: "Related Resources", to: "#related" });
+  }
 
   if (d.funding?.length) {
     toc.push({ text: "Funding", to: "#funding" });
   }
 
-  if (hasRelatedResources.value) {
-    toc.push({ text: "Related Resources", to: "#related" });
+  if (citations.value.length) {
+    toc.push({ text: "How to cite", to: "#citation" });
+  }
+
+  if (d.license) {
+    toc.push({ text: "License", to: "#license" });
   }
 
   User.$state.toc = toc;
@@ -1342,6 +1362,31 @@ init();
   font-weight: 700;
   line-height: 1.375rem;
   text-transform: uppercase;
+}
+
+.single-col-layout {
+  gap: 1.5rem;
+
+  @media (max-width: 1279px) {
+    gap: 0;
+
+    > .page-content,
+    > .sidebar,
+    > .sidebar > div {
+      display: contents;
+    }
+
+    #details { order: 1; }
+    #description { order: 2; }
+    #subject { order: 3; }
+    #spatial { order: 4; }
+    #temporal { order: 5; }
+    #content { order: 6; }
+    #related { order: 8; }
+    #funding { order: 9; }
+    #citation { order: 10; }
+    #license { order: 11; }
+  }
 }
 
 .sidebar {
