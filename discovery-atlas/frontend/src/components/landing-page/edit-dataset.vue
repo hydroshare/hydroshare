@@ -1074,33 +1074,15 @@ const personDetailLayout = {
       type: "Control",
       scope: "#/properties/affiliation",
       options: {
-        // Render the affiliation's fields directly instead of behind a
-        // bordered box with a +/- toggle stuck to the input.
-        flat: true,
         detail: {
           type: "Object",
           elements: [
-            // Explicit labels: rendered flat, the affiliation's own "Name"
-            // sits directly under the person's "Name" with nothing to tell
-            // the two apart.
-            {
-              type: "Control",
-              scope: "#/properties/name",
-              label: "Affiliation",
-            },
+            { type: "Control", scope: "#/properties/name" },
             {
               type: "HorizontalLayout",
               elements: [
-                {
-                  type: "Control",
-                  scope: "#/properties/url",
-                  label: "Affiliation website",
-                },
-                {
-                  type: "Control",
-                  scope: "#/properties/address",
-                  label: "Affiliation address",
-                },
+                { type: "Control", scope: "#/properties/url" },
+                { type: "Control", scope: "#/properties/address" },
               ],
             },
           ],
@@ -1158,30 +1140,15 @@ const fundingOptions = {
         type: "Control",
         scope: "#/properties/funder",
         options: {
-          flat: true,
           detail: {
             type: "Object",
             elements: [
-              // Rendered flat, the funder's "Name" sits under the grant's own
-              // "Name or title" with nothing to distinguish them.
-              {
-                type: "Control",
-                scope: "#/properties/name",
-                label: "Funding organization",
-              },
+              { type: "Control", scope: "#/properties/name" },
               {
                 type: "HorizontalLayout",
                 elements: [
-                  {
-                    type: "Control",
-                    scope: "#/properties/url",
-                    label: "Organization website",
-                  },
-                  {
-                    type: "Control",
-                    scope: "#/properties/address",
-                    label: "Organization address",
-                  },
+                  { type: "Control", scope: "#/properties/url" },
+                  { type: "Control", scope: "#/properties/address" },
                 ],
               },
             ],
