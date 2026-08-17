@@ -1874,7 +1874,6 @@ async function _uploadFiles(
   );
 
   let responses: boolean[] = [];
-  itemsToUpload.forEach((i) => (i.isDisabled = false));
 
   if (folderPaths.length) {
     responses = await _createFoldersByDepth(folderPaths, 1);
@@ -1942,16 +1941,17 @@ async function _uploadFiles(
         // Since Uppy has autoProceed: true, it will start uploading automatically
         // Wait for the upload to complete for this specific file
         return new Promise<boolean>((resolve) => {
-          const successHandler = (successFileId: string, _response: any) => {
-            if (successFileId === fileId) {
+          // Uppy passes the file object, not its id.
+          const successHandler = (uploaded: any) => {
+            if (uploaded?.id === fileId) {
               uppy.off("upload-success", successHandler);
               uppy.off("upload-error", errorHandler);
               resolve(true);
             }
           };
 
-          const errorHandler = (errorFileId: string, error: any) => {
-            if (errorFileId === fileId) {
+          const errorHandler = (errored: any, error: any) => {
+            if (errored?.id === fileId) {
               uppy.off("upload-success", successHandler);
               uppy.off("upload-error", errorHandler);
               console.error("Upload error for file:", file.name, error);
@@ -1994,6 +1994,7 @@ async function _uploadFiles(
     return results.map((r) => (r.status === "fulfilled" ? r.value : false));
   }
 
+  itemsToUpload.forEach((i) => (i.isDisabled = false));
   return responses;
 }
 
