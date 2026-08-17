@@ -1526,7 +1526,7 @@ init();
 .readme-container {
   .v-card-text {
     min-height: 5rem;
-    height: 40rem;
+    max-height: 40rem;
     overflow: auto;
     resize: vertical;
     padding: 1rem;
