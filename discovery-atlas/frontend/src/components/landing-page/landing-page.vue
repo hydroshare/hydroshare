@@ -185,16 +185,6 @@
             </div>
 
             <span
-              v-if="data.dateModified"
-              class="text-body-2 text-medium-emphasis"
-            >
-              Updated {{ parseDate(data.dateModified) }}
-              <span class="font-weight-light"
-                >(<timeago :datetime="data.dateModified" />)</span
-              >
-            </span>
-
-            <span
               v-if="data.viewCount != null"
               class="text-body-2 text-medium-emphasis"
             >
@@ -399,6 +389,11 @@
                   <div v-bind="infoLabelAttr">Created:</div>
                   <div v-bind="infoValueAttr">
                     {{ parseDate(data.dateCreated) }}
+                  </div>
+
+                  <div v-bind="infoLabelAttr">Last updated:</div>
+                  <div v-bind="infoValueAttr">
+                    {{ parseDate(data.dateModified) }}
                   </div>
 
                   <template v-if="data.datePublished">
