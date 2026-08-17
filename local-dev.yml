@@ -179,45 +179,6 @@ services:
     stdin_open: true
     tty: true
     command: celery -A hs_event_s3.celery_app worker -Q s3_events --loglevel=info
-  discovery_collection_worker:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    platform: linux/amd64
-    environment:
-      POSTGIS_HOST: pgbouncer
-      POSTGIS_PORT: 6432
-      POSTGIS_PASSWORD: postgres
-      POSTGIS_DB: postgres
-      POSTGIS_USER: postgres
-      PGPASSWORD: postgres
-      C_FORCE_ROOT: 1
-      POSTGIS_PORT_5432_TCP_ADDR: pgbouncer
-      POSTGIS_DISABLE_SERVER_SIDE_CURSORS: "True"
-      HS_PATH: ${PWD}
-      PYTHONPATH: /hydroshare
-      DJANGO_SETTINGS_MODULE: hydroshare.settings
-      COLUMNS: 80
-      ATLAS_CONNECTION_URL: "mongodb://user:pass@mongodb:27017/"
-      REDIS_HOST: redis
-      REDIS_PORT: "6379"
-      CELERY_BROKER_URL: "redis://redis:6379/0"
-      CELERY_RESULT_BACKEND: "redis://redis:6379/0"
-    volumes:
-      - ".:/hydroshare"
-    links:
-      - pgbouncer:pgbouncer
-      - minio:minio
-      - mongodb:mongodb
-      - redis:redis
-    depends_on:
-      - hydroshare
-      - pgbouncer
-      - redis
-      - mongodb
-    stdin_open: true
-    tty: true
-    command: celery -A hs_event_s3.celery_app worker -Q s3_events --loglevel=info
   hs_extract:
     build:
       context: .
