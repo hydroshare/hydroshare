@@ -339,21 +339,6 @@
                     </div>
                   </template>
 
-                  <template v-if="data.provider">
-                    <div v-bind="infoLabelAttr">Provider:</div>
-                    <div v-bind="infoValueAttr">
-                      <span
-                        v-if="data.provider.url"
-                        class="d-flex align-baseline"
-                      >
-                        <a :href="data.provider.url">{{
-                          data.provider.name
-                        }}</a>
-                      </span>
-                      <template v-else>{{ data.provider.name }}</template>
-                    </div>
-                  </template>
-
                   <template v-if="data.publisher">
                     <div v-bind="infoLabelAttr">Publisher:</div>
                     <div v-bind="infoValueAttr">
