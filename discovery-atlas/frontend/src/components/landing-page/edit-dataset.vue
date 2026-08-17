@@ -495,6 +495,7 @@
                   :root-directory="rootDirectory"
                   :has-folders="fileExplorerConfig.hasFolders"
                   :is-read-only="false"
+                  :show-discard-all="false"
                   :has-file-metadata="() => false"
                   :folder-name-regex="folderNameRegex"
                   :canDownloadItem="(item: IFile | IFolder) => !isFolder(item)"
