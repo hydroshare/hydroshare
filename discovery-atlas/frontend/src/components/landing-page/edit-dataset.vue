@@ -501,6 +501,7 @@
                   :download-zipped="(item: IFile | IFolder) => onZippedDownload(item, resourceId)"
                   :download-archive="() => onDownloadBag(resourceId, bagUrl)"
                   :upload="uploadFiles"
+                  :add-files="onAddFiles"
                   :delete-file-or-folder="deleteFileOrFolder"
                   :rename-file-or-folder="renameFileOrFolder"
                   downloadArchiveHelpText="Download all content as Zipped BagIt Archive"
@@ -516,17 +517,15 @@
                   <template #prepend>
                     <span />
                   </template>
-                  <template #drop-area>
-                    <HsUppy
-                      ref="hsUppyRef"
-                      :s3Info="s3Info"
-                      :s3Host="s3Host"
-                      :fileExplorer="fileExplorer"
-                      :upload-prefix="`${resourceId}/data/contents/`"
-                      @file-uploaded="onUppyFileUploaded"
-                    />
-                  </template>
                 </cz-file-explorer>
+
+                <HsUppy
+                  ref="hsUppyRef"
+                  :s3Info="s3Info"
+                  :s3Host="s3Host"
+                  :upload-prefix="`${resourceId}/data/contents/`"
+                  @file-uploaded="onUppyFileUploaded"
+                />
               </div>
               <v-skeleton-loader
                 v-else
@@ -1745,12 +1744,15 @@ function onReadmeChange(payload: {
   }
 }
 
+function onAddFiles(_folder: IFolder, path: string) {
+  hsUppyRef.value?.openDashboard(path);
+}
+
 /**
  * HsUppy emits this once per successfully uploaded file. We own the
- * file-explorer ref directly (vs. HsUppy, which only sees it as a prop and
- * can't react to its delayed binding) so we shape the item the same way
- * readRootFolder does and push it into the right folder. Idempotent — skips
- * if the name already exists in the target folder.
+ * file-explorer ref directly, so we shape the item the same way readRootFolder
+ * does and push it into the right folder. Idempotent: skips if the name
+ * already exists in the target folder.
  */
 function onUppyFileUploaded(file: any) {
   if (!fileExplorer.value || !file) return;
@@ -1920,7 +1922,6 @@ async function _uploadFiles(
         if (!uppy) {
           throw new Error("Uppy instance not available");
         }
-        uppy.getPlugin("Dashboard")?.openModal();
         const fileId = uppy.addFile({
           name: file.name,
           type: file.file?.type || "application/octet-stream",
