@@ -2,7 +2,9 @@
 
 // }
 @use "@fortawesome/fontawesome-free/css/all.min.css";
-@use "@cznethub/cznet-vue-core/styles";
+// cznet-vue-core styles are imported via JS in main.ts so Vite can track
+// changes to dist/index.css through HMR. SCSS @use inlines the CSS at compile
+// time and doesn't react to library rebuilds.
 @use "leaflet/dist/leaflet.css";
 
 html {
@@ -39,6 +41,32 @@ body {
   }
 }
 
+@media (min-width: 1600px) {
+  #main-container {
+    width: 1600px;
+    max-width: 1600px;
+  }
+}
+
+@media (min-width: 1920px) {
+  #main-container {
+    width: 1800px;
+    max-width: 1800px;
+  }
+}
+
 p {
   max-width: 70rem;
+}
+
+// This app is loaded inside an iframe (search.html) whose height is driven by
+// `iframe.contentWindow.document.body`'s ResizeObserver. Vuetify's default
+// `.v-application__wrap { min-height: 100vh; }` creates a feedback loop with
+// that observer: growing content makes the iframe taller, which makes `100vh`
+// (and the wrap's min-height) larger, which then prevents the body from
+// shrinking when content collapses. Disabling the minimum here lets the body
+// reflect actual content height so collapse animations resize the iframe back
+// down correctly.
+.v-application__wrap {
+  min-height: 0 !important;
 }

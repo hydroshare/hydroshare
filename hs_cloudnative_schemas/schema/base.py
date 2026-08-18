@@ -67,6 +67,19 @@ def modify_json_schema(schema: dict[str, Any]) -> None:
         )
         schema["errorMessage"] = {"pattern": 'must match format "url"'}
 
+    # Hoist a lone $ref out of a single-item allOf/anyOf/oneOf wrapper.
+    for key in ("allOf", "anyOf", "oneOf"):
+        subs = schema.get(key)
+        if (
+            isinstance(subs, list)
+            and len(subs) == 1
+            and isinstance(subs[0], dict)
+            and list(subs[0].keys()) == ["$ref"]
+        ):
+            schema["$ref"] = subs[0]["$ref"]
+            del schema[key]
+            break
+
     for prop in schema.get("properties", {}).values():
         if isinstance(prop, dict):
             modify_json_schema(prop)
@@ -545,8 +558,7 @@ class Grant(SchemaBaseModel):
 class TemporalCoverage(SchemaBaseModel):
     startDate: datetime = Field(
         title="Start date",
-        description="A date/time object containing the instant corresponding to the commencement of the time "
-        "interval (ISO8601 formatted date - YYYY-MM-DDTHH:MM).",
+        description="The start of the time period the resource covers.",
         json_schema_extra={
             "formatMaximum": {"$data": "1/endDate"},
             "errorMessage": {
@@ -556,9 +568,7 @@ class TemporalCoverage(SchemaBaseModel):
     )
     endDate: Optional[datetime] = Field(
         title="End date",
-        description="A date/time object containing the instant corresponding to the termination of the time "
-        "interval (ISO8601 formatted date - YYYY-MM-DDTHH:MM). If the ending date is left off, "
-        "that means the temporal coverage is ongoing.",
+        description="The end of the time period the resource covers. Leave blank if it is ongoing.",
         default=None,
         json_schema_extra=end_date_schema_extra,
     )

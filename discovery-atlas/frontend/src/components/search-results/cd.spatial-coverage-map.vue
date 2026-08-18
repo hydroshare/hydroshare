@@ -5,9 +5,9 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Prop, Ref, toNative } from "vue-facing-decorator";
 import L from "leaflet";
-import "leaflet.fullscreen";
+import { FullScreen } from "leaflet.fullscreen";
+import "leaflet.fullscreen/dist/Control.FullScreen.css";
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
@@ -23,43 +23,67 @@ L.Icon.Default.mergeOptions({
 const coverageMapBoxMaxZoom = 18;
 const coverageMapPointMaxZoom = 7;
 
-@Component({
-  name: "cd-spatial-coverage-map",
-  components: {},
-})
-class CdSpatialCoverageMap extends Vue {
-  @Prop() feature!: any;
-  @Ref("map") mapContainer!: HTMLElement;
+</script>
 
-  protected coverageMap!: L.Map;
-  protected leafletMarkers!: L.FeatureGroup<any>;
-  protected allOverlays = [];
+<script setup lang="ts">
+const props = defineProps<{
+  feature: any;
+}>();
 
-  async mounted() {
-    await this.initMap();
-    this.drawInitialShape();
-  }
+const mapContainer = useTemplateRef<HTMLElement>("map");
 
-  protected async initMap() {
-    // setup a marker group
-    this.leafletMarkers = L.featureGroup();
+let coverageMap: L.Map;
+let leafletMarkers: L.FeatureGroup<any>;
+
+onMounted(async () => {
+  await initMap();
+  drawInitialShape();
+});
+
+async function initMap() {
+  // setup a marker group
+  leafletMarkers = L.featureGroup();
 
     const southWest = L.latLng(-90, -180),
       northEast = L.latLng(90, 180);
     const bounds = L.latLngBounds(southWest, northEast);
 
-    this.coverageMap = L.map(this.mapContainer, {
-      scrollWheelZoom: true,
+    coverageMap = L.map(mapContainer.value!, {
+      // This map is a preview embedded in a scrolling page, so it must not
+      // swallow the wheel — scrolling past it used to zoom the map instead of
+      // moving the page, trapping the user. Ctrl/⌘+wheel still zooms, and the
+      // zoom controls and fullscreen remain available.
+      scrollWheelZoom: false,
       zoomControl: false,
       maxBounds: bounds,
       maxBoundsViscosity: 1.0,
-      // @ts-ignore added by 'leaflet.fullscreen'
-      fullscreenControl: true,
-      fullscreenControlOptions: {
-        position: "bottomright",
-        content: `<i class="fa-solid fa-expand" aria-hidden="true"></i>`,
-      },
     });
+
+    // Opt back in for the deliberate gesture.
+    coverageMap.on("fullscreenchange", () => {
+      const full = (coverageMap as any).isFullscreen?.();
+      if (full) coverageMap!.scrollWheelZoom.enable();
+      else coverageMap!.scrollWheelZoom.disable();
+    });
+    mapContainer.value!.addEventListener(
+      "wheel",
+      (e: WheelEvent) => {
+        if (!(e.ctrlKey || e.metaKey)) return;
+        e.preventDefault();
+        coverageMap!.setZoom(
+          coverageMap!.getZoom() + (e.deltaY < 0 ? 1 : -1),
+        );
+      },
+      { passive: false },
+    );
+
+    // leaflet.fullscreen@5 dropped the auto-register `fullscreenControl: true`
+    // map option, so add the control manually.
+    new FullScreen({
+      position: "bottomright",
+      content: `<i class="fa-solid fa-expand" aria-hidden="true"></i>`,
+      forceSeparateButton: true,
+    }).addTo(coverageMap);
 
     const streets = L.tileLayer(
       "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
@@ -77,7 +101,7 @@ class CdSpatialCoverageMap extends Vue {
         subdomains: ["mt0", "mt1", "mt2", "mt3"],
       },
     );
-    this.coverageMap.attributionControl.setPrefix(
+    coverageMap.attributionControl.setPrefix(
       '<a href="https://leafletjs.com/" target="blank">Leaflet</a>',
     );
 
@@ -88,19 +112,19 @@ class CdSpatialCoverageMap extends Vue {
     };
 
     const overlayMaps = {
-      "Spatial Extent": this.leafletMarkers,
+      "Spatial Extent": leafletMarkers,
     };
 
     L.control
       .zoom({
         position: "bottomright",
       })
-      .addTo(this.coverageMap);
+      .addTo(coverageMap);
 
     const layerControl = L.control.layers(baseMaps, overlayMaps, {
       position: "topright",
     });
-    layerControl.addTo(this.coverageMap);
+    layerControl.addTo(coverageMap);
 
     L.Control.RecenterButton = L.Control.extend({
       onAdd: (_map: L.Map) => {
@@ -117,14 +141,14 @@ class CdSpatialCoverageMap extends Vue {
         L.DomEvent.on(recenterButton, "click", (e) => {
           e.stopPropagation();
           try {
-            this.coverageMap.fitBounds(this.leafletMarkers.getBounds(), {
+            coverageMap.fitBounds(leafletMarkers.getBounds(), {
               maxZoom:
-                this.feature["type"] === "GeoCoordinates"
+                props.feature?.["@type"] === "GeoCoordinates"
                   ? coverageMapPointMaxZoom
                   : coverageMapBoxMaxZoom,
             });
           } catch (error) {
-            this.coverageMap.setView([30, 0], 1);
+            coverageMap.setView([30, 0], 1);
           }
         });
 
@@ -140,21 +164,21 @@ class CdSpatialCoverageMap extends Vue {
       .watermark({
         position: "bottomright",
       })
-      .addTo(this.coverageMap);
+      .addTo(coverageMap);
 
     // show the default layers at start
-    this.coverageMap.addLayer(streets);
-    this.coverageMap.addLayer(this.leafletMarkers);
+    coverageMap.addLayer(streets);
+    coverageMap.addLayer(leafletMarkers);
   }
 
-  drawInitialShape() {
-    // Center the map
-    this.leafletMarkers.clearLayers();
-    if (this.feature["type"] === "GeoCoordinates") {
-      const point = new L.LatLng(this.feature.latitude, this.feature.longitude);
-      this.drawMarker(L.latLng(point));
-    } else if (this.feature["type"] === "GeoShape") {
-      const extents = this.feature.box
+function drawInitialShape() {
+  // Center the map
+  leafletMarkers.clearLayers();
+    if (props.feature?.["@type"] === "GeoCoordinates") {
+      const point = new L.LatLng(props.feature.latitude, props.feature.longitude);
+      drawMarker(L.latLng(point));
+    } else if (props.feature?.["@type"] === "GeoShape") {
+      const extents = props.feature.box
         .trim()
         .split(" ")
         .map((n: string) => +n);
@@ -166,41 +190,39 @@ class CdSpatialCoverageMap extends Vue {
           south: extents[2],
           west: extents[3],
         };
-        this.drawRectangle(rectangle);
+        drawRectangle(rectangle);
       }
     }
   }
 
-  drawRectangle(bounds: any) {
-    this.leafletMarkers.clearLayers();
+function drawRectangle(bounds: any) {
+  leafletMarkers.clearLayers();
     let rectangle = L.rectangle([
       [bounds.north, bounds.east],
       [bounds.south, bounds.west],
     ]);
-    this.leafletMarkers.addLayer(rectangle);
+    leafletMarkers.addLayer(rectangle);
 
-    this.coverageMap.fitBounds(rectangle.getBounds(), {
+    coverageMap.fitBounds(rectangle.getBounds(), {
       maxZoom: coverageMapBoxMaxZoom,
     });
   }
 
-  drawMarker(latLng: L.LatLng) {
-    this.leafletMarkers.clearLayers();
+function drawMarker(latLng: L.LatLng) {
+  leafletMarkers.clearLayers();
     let marker = L.marker(latLng);
-    this.leafletMarkers.addLayer(marker);
+    leafletMarkers.addLayer(marker);
 
     // Center map at new marker
-    this.coverageMap.fitBounds(this.leafletMarkers.getBounds(), {
+    coverageMap.fitBounds(leafletMarkers.getBounds(), {
       maxZoom: coverageMapPointMaxZoom,
     });
-  }
 }
-export default toNative(CdSpatialCoverageMap);
 </script>
 
 <style lang="scss" scoped>
 .map-container {
-  min-width: 25rem;
+  width: 100%;
   min-height: 15rem;
 }
 

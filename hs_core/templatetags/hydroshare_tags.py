@@ -486,6 +486,16 @@ def get_resource_url(short_id):
     return "/resource/{}/".format(short_id)
 
 
+@register.simple_tag
+def get_resource_v2_url(short_id):
+    """
+    Returns the absolute URL for a resource's new landing page given its short_id.
+    """
+    if not short_id:
+        return ""
+    return "/resource-v2/{}/".format(short_id)
+
+
 @register.filter(name='to_date')
 def to_date(value):
     """
