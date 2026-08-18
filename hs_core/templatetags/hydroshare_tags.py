@@ -464,7 +464,8 @@ def schemaorg_contact_point_json(creators):
     if not creators:
         return ""
 
-    sorted_creators = sorted(creators, key=lambda creator: creator.get('order') if creator.get('order') is not None else 999999)
+    sorted_creators = sorted(creators,
+                             key=lambda creator: creator.get('order') if creator.get('order') is not None else 999999)
     creator = sorted_creators[0]
 
     contact_point = {
