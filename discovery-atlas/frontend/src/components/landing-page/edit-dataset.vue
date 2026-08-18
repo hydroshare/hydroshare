@@ -759,13 +759,23 @@
                         No spatial coverage set
                       </v-card-text>
                       <v-divider></v-divider>
-                      <div class="d-flex align-center ga-2 px-3 py-2">
+                      <div class="d-flex align-center flex-wrap ga-2 px-3 py-2">
                         <span
                           v-if="value?.name"
                           class="text-body-2 text-truncate flex-grow-1"
                           >{{ value.name }}</span
                         >
                         <v-spacer v-else />
+                        <v-btn
+                          v-if="canSetSpatialFromFiles"
+                          size="small"
+                          variant="text"
+                          prepend-icon="mdi-calculator"
+                          :loading="isSettingSpatialFromFiles"
+                          title="Set the coverage to the extent that includes all content files"
+                          @click="setSpatialCoverageFromFiles"
+                          >From files</v-btn
+                        >
                         <v-btn
                           v-if="hasSpatialCoverage"
                           size="small"
@@ -1665,6 +1675,94 @@ function clearTemporalCoverage() {
   data.value = rest;
 }
 
+// Only offered when the resource has aggregations that carry spatial
+// coverage — the same condition the legacy coverage template gates on.
+const canSetSpatialFromFiles = computed<boolean>(
+  () => alerts.value.hasLogicalSpatialCoverage === true,
+);
+const isSettingSpatialFromFiles = ref(false);
+
+/**
+ * Ask Django to recompute the resource's spatial coverage as the union of its
+ * content files' coverages, then fold the answer into the form. Same endpoint
+ * the legacy landing page's "Set spatial coverage from content files" button
+ * uses; it answers in the legacy element shape, which we map onto schema.org.
+ * Nothing reaches S3 until the user saves.
+ */
+async function setSpatialCoverageFromFiles() {
+  isSettingSpatialFromFiles.value = true;
+  try {
+    const csrfToken = await User.getCSRFToken();
+    const response = await fetch(
+      `/hsapi/_internal/${resourceId.value}/spatial/update-coverage/`,
+      {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          ...(csrfToken ? { "X-CSRFToken": csrfToken } : {}),
+        },
+      },
+    );
+    const payload = await response.json();
+    if (!response.ok) {
+      throw new Error(payload?.message || `HTTP ${response.status}`);
+    }
+
+    const coverage = payload?.spatial_coverage;
+    if (!coverage || !coverage.type) {
+      Notifications.toast({
+        message: "No spatial coverage was found in the content files.",
+        type: "info",
+      });
+      return;
+    }
+
+    const geo =
+      coverage.type === "point"
+        ? {
+            "@type": "GeoCoordinates",
+            latitude: Number(coverage.north),
+            longitude: Number(coverage.east),
+          }
+        : {
+            "@type": "GeoShape",
+            box: [
+              coverage.northlimit,
+              coverage.eastlimit,
+              coverage.southlimit,
+              coverage.westlimit,
+            ]
+              .map(Number)
+              .join(" "),
+          };
+
+    data.value = {
+      ...(data.value as Record<string, any>),
+      spatialCoverage: {
+        "@type": "Place",
+        // The computed coverage rarely names the place; don't discard a name
+        // the user already typed.
+        name: coverage.name || data.value?.spatialCoverage?.name || undefined,
+        geo,
+      },
+    };
+
+    Notifications.toast({
+      message: "Spatial coverage set from the content files.",
+      type: "success",
+    });
+  } catch (error: any) {
+    console.error("Failed to set spatial coverage from content files:", error);
+    Notifications.toast({
+      title: "Error",
+      message: `Failed to set spatial coverage from content files. ${error.message}`,
+      type: "error",
+    });
+  } finally {
+    isSettingSpatialFromFiles.value = false;
+  }
+}
+
 // Resource-level alerts (missing metadata, version/replacement pointers,
 // publication state). Same source the landing page reads: the Django view
 // injects them onto the host window, so both views agree.
@@ -1674,6 +1772,7 @@ const alerts = ref<{
   missingMetadata?: string[];
   recommendedMissing?: string[];
   hasRequiredContentFiles?: boolean;
+  hasLogicalSpatialCoverage?: boolean;
   isUntitled?: boolean;
   isReplacedBy?: string | null;
   isVersionOf?: string | null;
