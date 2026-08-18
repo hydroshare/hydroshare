@@ -1055,6 +1055,9 @@ const spatialCoverageOptions = {
         label: "Extent",
         options: {
           flat: true,
+          // The schema's prose ("Specifies the geographic coordinates of the
+          // place...") says nothing the labelled inputs don't.
+          description: "",
           detail: {
             0: {
               type: "VerticalLayout",
