@@ -146,6 +146,14 @@
                   <v-icon size="18">mdi-account-multiple</v-icon>
                 </template>
               </v-list-item>
+              <v-list-item
+                title="Delete"
+                @click="openDeleteDialog"
+              >
+                <template #prepend>
+                  <v-icon size="18">mdi-trash-can-outline</v-icon>
+                </template>
+              </v-list-item>
             </v-list>
           </v-menu>
         </div>
@@ -177,16 +185,6 @@
             </div>
 
             <span
-              v-if="data.dateModified"
-              class="text-body-2 text-medium-emphasis"
-            >
-              Updated {{ parseDate(data.dateModified) }}
-              <span class="font-weight-light"
-                >(<timeago :datetime="data.dateModified" />)</span
-              >
-            </span>
-
-            <span
               v-if="data.viewCount != null"
               class="text-body-2 text-medium-emphasis"
             >
@@ -215,6 +213,14 @@
 
             <v-btn
               size="small"
+              prepend-icon="mdi-trash-can-outline"
+              variant="outlined"
+              @click="openDeleteDialog"
+              >Delete</v-btn
+            >
+
+            <v-btn
+              size="small"
               color="primary"
               prepend-icon="mdi-pen"
               variant="outlined"
@@ -231,6 +237,45 @@
         v-model="showManageAccess"
         :resource-id="resourceId"
       />
+
+      <v-dialog v-model="showDeleteDialog" max-width="480" persistent>
+        <v-card>
+          <v-card-title class="text-h6">Delete Resource</v-card-title>
+          <v-card-text>
+            <p class="mb-3 text-body-2">
+              <strong>WARNING! DELETING A RESOURCE IS A PERMANENT ACTION!</strong>
+              <ul class="mt-2 ml-2 mb-2">
+                <li>This will delete the resource and all of the content files.</li>
+                <li>A copy of the resource will NOT be retained by HydroShare.</li>
+                <li>We highly recommend that you download the latest copy of your
+                  resource before confirming this action so that you do not lose
+                  any content you might need later.</li>
+              </ul>
+              If you are sure you want to delete your resource, type the word
+              <strong>DELETE</strong> in the following text box and then click
+              the "Delete" button below.
+            </p>
+            <v-text-field
+              v-model="deleteConfirmText"
+              variant="outlined"
+              density="compact"
+              autofocus
+              hide-details
+            />
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer />
+            <v-btn variant="text" @click="showDeleteDialog = false">Cancel</v-btn>
+            <v-btn
+              color="error"
+              variant="flat"
+              :disabled="deleteConfirmText !== 'DELETE' || isDeletingResource"
+              :loading="isDeletingResource"
+              @click="deleteResource"
+            >Delete</v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
 
       <v-divider></v-divider>
 
@@ -294,21 +339,6 @@
                     </div>
                   </template>
 
-                  <template v-if="data.provider">
-                    <div v-bind="infoLabelAttr">Provider:</div>
-                    <div v-bind="infoValueAttr">
-                      <span
-                        v-if="data.provider.url"
-                        class="d-flex align-baseline"
-                      >
-                        <a :href="data.provider.url">{{
-                          data.provider.name
-                        }}</a>
-                      </span>
-                      <template v-else>{{ data.provider.name }}</template>
-                    </div>
-                  </template>
-
                   <template v-if="data.publisher">
                     <div v-bind="infoLabelAttr">Publisher:</div>
                     <div v-bind="infoValueAttr">
@@ -344,6 +374,11 @@
                   <div v-bind="infoLabelAttr">Created:</div>
                   <div v-bind="infoValueAttr">
                     {{ parseDate(data.dateCreated) }}
+                  </div>
+
+                  <div v-bind="infoLabelAttr">Last updated:</div>
+                  <div v-bind="infoValueAttr">
+                    {{ parseDate(data.dateModified) }}
                   </div>
 
                   <template v-if="data.datePublished">
@@ -808,6 +843,52 @@ const isLoggedIn = computed<boolean>(() => User.$state.isLoggedIn);
 const showDescription = ref(false);
 const isDescriptionClamped = ref(false);
 const showManageAccess = ref(false);
+const showDeleteDialog = ref(false);
+const deleteConfirmText = ref("");
+const isDeletingResource = ref(false);
+
+function getCsrfToken(): string {
+  const match = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
+  return match ? match[1] : "";
+}
+
+function openDeleteDialog() {
+  deleteConfirmText.value = "";
+  showDeleteDialog.value = true;
+}
+
+async function deleteResource() {
+  isDeletingResource.value = true;
+  try {
+    const response = await fetch(
+      `/hsapi/_internal/${resourceId.value}/delete-resource/${deleteConfirmText.value}/`,
+      {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": getCsrfToken(),
+          "X-Requested-With": "XMLHttpRequest",
+        },
+      },
+    );
+    if (response.ok) {
+      showDeleteDialog.value = false;
+      const target = window.parent !== window ? window.parent : window;
+      target.location.href = "/my-resources/";
+    } else {
+      const text = await response.text().catch(() => "");
+      Notifications.toast({
+        message: text || "Failed to delete the resource",
+        type: "error",
+      });
+      showDeleteDialog.value = false;
+    }
+  } catch {
+    Notifications.toast({ message: "Failed to delete the resource", type: "error" });
+    showDeleteDialog.value = false;
+  } finally {
+    isDeletingResource.value = false;
+  }
+}
 const readmeMd = ref("");
 const readMeFileName = ref("");
 const hasTxtReadme = ref(false);
