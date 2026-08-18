@@ -623,8 +623,8 @@
                   <div class="d-flex align-center ga-2 px-4 py-3">
                     <v-icon size="16" color="primary">mdi-map-marker</v-icon>
                     <div>
-                      <div v-bind="infoLabelAttr">Place/Area Name</div>
                       <div v-bind="infoValueAttr">{{ data.spatialCoverage.name }}</div>
+                      <div class="place-name-caption">Place/Area Name</div>
                     </div>
                   </div>
                 </template>
@@ -1459,6 +1459,14 @@ init();
 .dataset-info__label {
   letter-spacing: 0.05em;
   line-height: 1.4;
+}
+
+.place-name-caption {
+  font-size: 0.6875rem;
+  letter-spacing: 0.05em;
+  line-height: 1.2;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.5);
 }
 
 .dataset-info__value {
