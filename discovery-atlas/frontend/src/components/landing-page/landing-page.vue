@@ -230,6 +230,7 @@
         v-if="resourceId"
         v-model="showManageAccess"
         :resource-id="resourceId"
+        :content-size="contentSize"
       />
 
       <v-divider></v-divider>
