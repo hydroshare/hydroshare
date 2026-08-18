@@ -569,6 +569,12 @@
                     </div>
                   </div>
                 </v-expand-transition>
+
+                <hr class="my-3" style="border-color: rgba(0,0,0,0.08)" />
+                <p class="text-body-2 text-medium-emphasis mb-0">
+                  The size of this resource is
+                  <strong>{{ contentSize ?? '—' }}</strong>.
+                </p>
               </v-card-text>
             </v-card>
           </section>
@@ -658,6 +664,7 @@ const props = withDefaults(
   defineProps<{
     modelValue?: boolean;
     resourceId: string;
+    contentSize?: string;
   }>(),
   { modelValue: false },
 );
