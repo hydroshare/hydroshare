@@ -1025,9 +1025,8 @@ const descriptionOptions = {
   },
 };
 
-// Resource coverage is meaningful to the day, so drop the time picker. The
-// value stays an ISO date-time (the schema's format is unchanged) pinned to
-// local midnight.
+// Coverage is meaningful to the day. The stored value stays an ISO
+// date-time, pinned to local midnight.
 const dateOnlyOptions = { dateOnly: true };
 
 // `geo` is anyOf[GeoCoordinates, GeoShape]. AnyOfRenderer indexes
@@ -1037,9 +1036,8 @@ const dateOnlyOptions = { dateOnly: true };
 // renderer found" where lat/long don't resolve. Keying per branch also lets
 // the box tab ask MapLayout for its rectangle draw control.
 const spatialCoverageOptions = {
-  // `flat` on both levels drops the bordered fieldsets and their red +/-
-  // toggles. Nested, they framed every field in its own box and put two
-  // "remove" buttons in a modal whose own Clear button already does that.
+  // `flat` on both levels renders the fields without the bordered fieldset
+  // and its +/- toggle; the modal's own Clear button covers removal.
   flat: true,
   detail: {
     type: "Object",
@@ -1055,8 +1053,7 @@ const spatialCoverageOptions = {
         label: "Extent",
         options: {
           flat: true,
-          // The schema's prose ("Specifies the geographic coordinates of the
-          // place...") says nothing the labelled inputs don't.
+          // The schema's prose says nothing the labelled inputs don't.
           description: "",
           detail: {
             0: {
@@ -1679,7 +1676,7 @@ function clearTemporalCoverage() {
 }
 
 // Only offered when the resource has aggregations that carry spatial
-// coverage — the same condition the legacy coverage template gates on.
+// coverage.
 const canSetSpatialFromFiles = computed<boolean>(
   () => alerts.value.hasLogicalSpatialCoverage === true,
 );
@@ -1743,8 +1740,8 @@ async function setSpatialCoverageFromFiles() {
       ...(data.value as Record<string, any>),
       spatialCoverage: {
         "@type": "Place",
-        // The computed coverage rarely names the place; don't discard a name
-        // the user already typed.
+        // The computed coverage rarely names the place; keep any name the
+        // user already typed.
         name: coverage.name || data.value?.spatialCoverage?.name || undefined,
         geo,
       },

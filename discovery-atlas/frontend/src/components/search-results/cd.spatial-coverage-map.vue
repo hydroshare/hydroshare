@@ -207,8 +207,7 @@ function drawRectangle(bounds: any) {
     fitBox(rectangle.getBounds());
   }
 
-// Back off a level from the tightest fit so the box has breathing room
-// instead of sitting flush against the container edges.
+// A level back from the tightest fit, so the box has breathing room.
 function fitBox(bounds: L.LatLngBounds) {
   const zoom = Math.max(
     coverageMap.getMinZoom(),

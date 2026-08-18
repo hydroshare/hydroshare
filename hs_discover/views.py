@@ -64,8 +64,7 @@ class AtlasLandingView(TemplateView):
         except Exception:
             is_version_of = None
         try:
-            # Gates the "set from content files" button, same as the legacy
-            # coverage template does.
+            # Gates the "set from content files" button on the landing page.
             has_logical_spatial_coverage = bool(resource.has_logical_spatial_coverage)
         except Exception:
             has_logical_spatial_coverage = False
