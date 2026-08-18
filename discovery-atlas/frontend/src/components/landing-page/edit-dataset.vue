@@ -1020,14 +1020,24 @@ const descriptionOptions = {
 // renderer found" where lat/long don't resolve. Keying per branch also lets
 // the box tab ask MapLayout for its rectangle draw control.
 const spatialCoverageOptions = {
+  // `flat` on both levels drops the bordered fieldsets and their red +/-
+  // toggles. Nested, they framed every field in its own box and put two
+  // "remove" buttons in a modal whose own Clear button already does that.
+  flat: true,
   detail: {
     type: "Object",
     elements: [
-      { type: "Control", scope: "#/properties/name" },
+      {
+        type: "Control",
+        scope: "#/properties/name",
+        label: "Place / area name",
+      },
       {
         type: "Control",
         scope: "#/properties/geo",
+        label: "Extent",
         options: {
+          flat: true,
           detail: {
             0: {
               type: "VerticalLayout",
