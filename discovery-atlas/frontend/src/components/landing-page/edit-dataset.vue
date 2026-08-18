@@ -1058,13 +1058,13 @@ const spatialCoverageOptions = {
                   type: "MapLayout",
                   // `format: GeoShape` selects the single "n e s w" string
                   // code path; without it MapLayout looks for northlimit/
-                  // eastlimit/... which this schema doesn't have.
+                  // eastlimit/... which this schema doesn't have. MapLayout
+                  // renders that string as four extent inputs itself, so the
+                  // branch contributes no controls of its own.
                   options: {
                     map: { type: "box", format: "GeoShape", box: "box" },
                   },
-                  elements: [
-                    { type: "Control", scope: "#/properties/box" },
-                  ],
+                  elements: [],
                 },
               ],
             },

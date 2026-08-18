@@ -141,12 +141,13 @@ async function initMap() {
         L.DomEvent.on(recenterButton, "click", (e) => {
           e.stopPropagation();
           try {
-            coverageMap.fitBounds(leafletMarkers.getBounds(), {
-              maxZoom:
-                props.feature?.["@type"] === "GeoCoordinates"
-                  ? coverageMapPointMaxZoom
-                  : coverageMapBoxMaxZoom,
-            });
+            if (props.feature?.["@type"] === "GeoCoordinates") {
+              coverageMap.fitBounds(leafletMarkers.getBounds(), {
+                maxZoom: coverageMapPointMaxZoom,
+              });
+            } else {
+              fitBox(leafletMarkers.getBounds());
+            }
           } catch (error) {
             coverageMap.setView([30, 0], 1);
           }
@@ -203,10 +204,20 @@ function drawRectangle(bounds: any) {
     ]);
     leafletMarkers.addLayer(rectangle);
 
-    coverageMap.fitBounds(rectangle.getBounds(), {
-      maxZoom: coverageMapBoxMaxZoom,
-    });
+    fitBox(rectangle.getBounds());
   }
+
+// Back off a level from the tightest fit so the box has breathing room
+// instead of sitting flush against the container edges.
+function fitBox(bounds: L.LatLngBounds) {
+  const zoom = Math.max(
+    coverageMap.getMinZoom(),
+    coverageMap.getBoundsZoom(bounds) - 1,
+  );
+  coverageMap.fitBounds(bounds, {
+    maxZoom: Math.min(zoom, coverageMapBoxMaxZoom),
+  });
+}
 
 function drawMarker(latLng: L.LatLng) {
   leafletMarkers.clearLayers();
