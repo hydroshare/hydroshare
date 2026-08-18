@@ -101,7 +101,7 @@ class TestToCatalogRecordRelationPartitioning(unittest.TestCase):
         dataset = HydroshareMetadataAdapter.to_catalog_record(metadata)
         self.assertEqual(len(dataset.isPartOf), 1)
         self.assertEqual(len(dataset.hasPart), 0)
-        self.assertEqual(len(dataset.relations), 0)
+        self.assertEqual(len(dataset.relation), 0)
 
     def test_has_part_only_appears_in_has_part(self):
         metadata = {
@@ -114,7 +114,7 @@ class TestToCatalogRecordRelationPartitioning(unittest.TestCase):
         dataset = HydroshareMetadataAdapter.to_catalog_record(metadata)
         self.assertEqual(len(dataset.hasPart), 1)
         self.assertEqual(len(dataset.isPartOf), 0)
-        self.assertEqual(len(dataset.relations), 0)
+        self.assertEqual(len(dataset.relation), 0)
 
     def test_other_relation_only_appears_in_relations(self):
         metadata = {
@@ -122,7 +122,7 @@ class TestToCatalogRecordRelationPartitioning(unittest.TestCase):
             "relations": [{"type": REFERENCES_VALUE, "value": "A paper, https://doi.org/10.1234/abc"}],
         }
         dataset = HydroshareMetadataAdapter.to_catalog_record(metadata)
-        self.assertEqual(len(dataset.relations), 1)
+        self.assertEqual(len(dataset.relation), 1)
         self.assertEqual(len(dataset.isPartOf), 0)
         self.assertEqual(len(dataset.hasPart), 0)
 
@@ -138,4 +138,4 @@ class TestToCatalogRecordRelationPartitioning(unittest.TestCase):
         dataset = HydroshareMetadataAdapter.to_catalog_record(metadata)
         self.assertEqual(len(dataset.isPartOf), 1)
         self.assertEqual(len(dataset.hasPart), 1)
-        self.assertEqual(len(dataset.relations), 1)
+        self.assertEqual(len(dataset.relation), 1)
