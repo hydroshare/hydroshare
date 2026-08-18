@@ -101,30 +101,6 @@
               </div>
               <cz-field scope="#/properties/name" hide-label />
             </div>
-
-            <!-- Mobile: collapse the header actions into a 3-dot menu -->
-            <v-menu v-if="$vuetify.display.smAndDown">
-              <template v-slot:activator="{ props }">
-                <v-btn
-                  v-bind="props"
-                  icon="mdi-dots-vertical"
-                  size="small"
-                  variant="text"
-                  aria-label="More actions"
-                  class="flex-shrink-0"
-                />
-              </template>
-              <v-list density="compact">
-                <v-list-item
-                  title="Back to resource"
-                  @click="leaveToLanding"
-                >
-                  <template #prepend>
-                    <v-icon size="18">mdi-arrow-left</v-icon>
-                  </template>
-                </v-list-item>
-              </v-list>
-            </v-menu>
           </div>
 
           <!-- Meta + actions row mirrors the landing page header layout.
@@ -174,11 +150,9 @@
             <!-- Save is mirrored here as well as at the foot of the form:
                  the page can run to several thousand px inside an iframe the
                  host sets to scrolling="no", so reaching the bottom bar means
-                 scrolling the PARENT window all the way down. -->
-            <div
-              v-if="!$vuetify.display.smAndDown"
-              class="d-flex flex-wrap align-center ga-2 ml-auto"
-            >
+                 scrolling the PARENT window all the way down. On narrow
+                 screens the wrap drops this pair onto its own line. -->
+            <div class="d-flex flex-wrap align-center ga-2 ml-auto">
               <v-btn
                 size="small"
                 variant="outlined"
@@ -231,7 +205,7 @@
         </v-select>
 
         <!-- ===== MAIN GRID: content column + sidebar ===== -->
-        <div class="d-flex flex-column flex-lg-row ga-6 mt-6">
+        <div class="d-flex flex-column flex-lg-row mt-6 single-col-layout">
           <v-container
             class="page-content pa-0"
             :class="{ 'is-sm': $vuetify.display.mdAndDown }"
@@ -674,7 +648,7 @@
                    collapses control margins differently inside a .v-card, so
                    these two sections silently lost the spacing the others
                    had. -->
-              <div class="mb-6">
+              <div id="subject" class="mb-6">
                 <div class="sidebar-heading">
                   Subject Keywords<span class="required-mark">{{
                     requiredMark("#/properties/keywords")
@@ -697,20 +671,7 @@
                 </v-alert>
               </div>
 
-              <div class="mb-6">
-                <div class="sidebar-heading">
-                  License<span class="required-mark">{{
-                    requiredMark("#/properties/license")
-                  }}</span>
-                </div>
-                <cz-field
-                  scope="#/properties/license"
-                  :options="licenseOptions"
-                  hide-label
-                />
-              </div>
-
-              <div class="mb-6">
+              <div id="spatial" class="mb-6">
                 <div class="sidebar-heading">
                   Spatial Coverage<span class="required-mark">{{
                     requiredMark("#/properties/spatialCoverage")
@@ -788,7 +749,7 @@
                 </cz-field-modal>
               </div>
 
-              <div class="mb-6 temporal-coverage">
+              <div id="temporal" class="mb-6 temporal-coverage">
                 <div class="sidebar-heading">
                   Temporal Coverage<span class="required-mark">{{
                     requiredMark("#/properties/temporalCoverage")
@@ -847,11 +808,46 @@
                 <div
                   v-for="(citation, index) of citations"
                   :key="index"
-                  class="text-body-2 text-medium-emphasis"
-                  style="word-break: break-word;"
+                  class="citation-card"
                 >
-                  {{ citation }}
+                  <div class="citation-text">{{ citation }}</div>
+                  <div class="citation-actions">
+                    <v-btn
+                      class="citation-copy"
+                      size="small"
+                      variant="tonal"
+                      color="accent"
+                      :prepend-icon="copiedCitation === index ? 'mdi-check' : 'mdi-content-copy'"
+                      @click="onCopyCitation(citation, index)"
+                    >{{ copiedCitation === index ? "Copied" : "Copy citation" }}</v-btn>
+                  </div>
                 </div>
+
+                <div v-if="!isPublished" class="citation-note">
+                  <v-icon class="citation-note__icon" size="16">mdi-information-outline</v-icon>
+                  <div>
+                    When permanently published, this resource will have a formal Digital
+                    Object Identifier (DOI) and will be accessible at the following URL:
+                    <a :href="potentialDoiUrl" target="_blank" rel="noopener">{{ potentialDoiUrl }}</a>.
+                    When you are ready to permanently publish, click the Publish button at
+                    the top of the page to request your DOI. Reminder: Once you have published
+                    your resource, modifications to Title, Authors, or Content files will
+                    require a new version of the resource.
+                  </div>
+                </div>
+              </div>
+
+              <div id="license" class="mb-6">
+                <div class="sidebar-heading">
+                  License<span class="required-mark">{{
+                    requiredMark("#/properties/license")
+                  }}</span>
+                </div>
+                <cz-field
+                  scope="#/properties/license"
+                  :options="licenseOptions"
+                  hide-label
+                />
               </div>
             </div>
           </div>
@@ -866,7 +862,6 @@
           <v-spacer></v-spacer>
 
           <v-btn
-            v-if="!$vuetify.display.smAndDown"
             variant="outlined"
             prepend-icon="mdi-arrow-left"
             @click="leaveToLanding"
@@ -1101,33 +1096,15 @@ const personDetailLayout = {
       type: "Control",
       scope: "#/properties/affiliation",
       options: {
-        // Render the affiliation's fields directly instead of behind a
-        // bordered box with a +/- toggle stuck to the input.
-        flat: true,
         detail: {
           type: "Object",
           elements: [
-            // Explicit labels: rendered flat, the affiliation's own "Name"
-            // sits directly under the person's "Name" with nothing to tell
-            // the two apart.
-            {
-              type: "Control",
-              scope: "#/properties/name",
-              label: "Affiliation",
-            },
+            { type: "Control", scope: "#/properties/name" },
             {
               type: "HorizontalLayout",
               elements: [
-                {
-                  type: "Control",
-                  scope: "#/properties/url",
-                  label: "Affiliation website",
-                },
-                {
-                  type: "Control",
-                  scope: "#/properties/address",
-                  label: "Affiliation address",
-                },
+                { type: "Control", scope: "#/properties/url" },
+                { type: "Control", scope: "#/properties/address" },
               ],
             },
           ],
@@ -1185,30 +1162,15 @@ const fundingOptions = {
         type: "Control",
         scope: "#/properties/funder",
         options: {
-          flat: true,
           detail: {
             type: "Object",
             elements: [
-              // Rendered flat, the funder's "Name" sits under the grant's own
-              // "Name or title" with nothing to distinguish them.
-              {
-                type: "Control",
-                scope: "#/properties/name",
-                label: "Funding organization",
-              },
+              { type: "Control", scope: "#/properties/name" },
               {
                 type: "HorizontalLayout",
                 elements: [
-                  {
-                    type: "Control",
-                    scope: "#/properties/url",
-                    label: "Organization website",
-                  },
-                  {
-                    type: "Control",
-                    scope: "#/properties/address",
-                    label: "Organization address",
-                  },
+                  { type: "Control", scope: "#/properties/url" },
+                  { type: "Control", scope: "#/properties/address" },
                 ],
               },
             ],
@@ -1376,7 +1338,33 @@ function allowLocalhostUrls(node: any): void {
 // building the same list shape lights up both at once.
 const tocItems = computed(() => User.$state.toc);
 
-const citations = computed<string[]>(() => data.value?.document?.[0]?.citation ?? []);
+// user_metadata.json holds the generated citation as a top-level string array.
+const citations = computed<string[]>(() => {
+  const raw = data.value?.citation;
+  if (Array.isArray(raw)) return raw.filter((c: any) => typeof c === "string" && c.trim());
+  if (typeof raw === "string" && raw.trim()) return [raw];
+  return [];
+});
+
+const isPublished = computed<boolean>(
+  () => data.value?.creativeWorkStatus?.name === "Published",
+);
+
+const potentialDoiUrl = computed<string>(
+  () => `https://doi.org/10.4211/hs.${resourceId.value}`,
+);
+
+const copiedCitation = ref<number | null>(null);
+let copiedTimeout: ReturnType<typeof setTimeout> | undefined;
+
+function onCopyCitation(citation: string, index: number) {
+  // Collapse line breaks and repeated whitespace so the citation pastes as one line.
+  navigator.clipboard.writeText(citation.replace(/\s+/g, " ").trim());
+  Notifications.toast({ message: "Copied to clipboard", type: "info" });
+  copiedCitation.value = index;
+  clearTimeout(copiedTimeout);
+  copiedTimeout = setTimeout(() => (copiedCitation.value = null), 2000);
+}
 
 function scrollToSection(hash: string | null) {
   if (!hash) return;
@@ -1411,30 +1399,26 @@ function scrollToSection(hash: string | null) {
 }
 
 function buildToc() {
-  const d = data.value;
   const toc: { text: string; to: string; level?: number }[] = [
     { text: "Overview", to: "#overview" },
     { text: "Details", to: "#details" },
   ];
 
-  if (d?.description !== undefined) {
-    toc.push({ text: "Abstract", to: "#description" });
-  }
-
+  toc.push({ text: "Abstract", to: "#description" });
+  toc.push({ text: "Subject Keywords", to: "#subject" });
+  toc.push({ text: "Spatial Coverage", to: "#spatial" });
+  toc.push({ text: "Temporal Coverage", to: "#temporal" });
   toc.push({ text: "Content", to: "#content" });
   toc.push({ text: "Files", to: "#fileExplorer", level: 4 });
+  toc.push({ text: "Additional metadata", to: "#additional" });
+  toc.push({ text: "Related Resources", to: "#related" });
   toc.push({ text: "Funding", to: "#funding" });
 
-  const hasRelated =
-    d?.hasPart?.length ||
-    d?.isPartOf?.length ||
-    d?.subjectOf?.length ||
-    d?.relation?.length;
-  if (hasRelated) {
-    toc.push({ text: "Related Resources", to: "#related" });
+  if (citations.value.length) {
+    toc.push({ text: "How to cite", to: "#citation" });
   }
 
-  toc.push({ text: "Additional metadata", to: "#additional" });
+  toc.push({ text: "License", to: "#license" });
 
   User.$state.toc = toc;
   User.$state.isTocReady = true;
@@ -1445,6 +1429,7 @@ onBeforeUnmount(() => {
   // section list. Mirrors landing-page.vue's beforeUnmount.
   User.$state.toc = [];
   User.$state.isTocReady = false;
+  clearTimeout(copiedTimeout);
 });
 
 const isLoadingFiles = ref(true);
@@ -2463,6 +2448,87 @@ init();
 
 .details-card {
   border-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+.citation-card {
+  padding: 1rem 1rem 0.75rem;
+  border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  border-left: 3px solid rgb(var(--v-theme-accent));
+  border-radius: 4px;
+  background-color: rgba(var(--v-theme-accent), 0.04);
+
+  & + .citation-card {
+    margin-top: 0.75rem;
+  }
+}
+
+.citation-text {
+  min-width: 0;
+  word-break: break-word;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: rgba(var(--v-theme-on-surface), 0.87);
+}
+
+.citation-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.75rem;
+}
+
+// Fixed width so swapping the label to "Copied" doesn't resize the button.
+.citation-copy {
+  min-width: 9.5rem;
+  letter-spacing: 0.03em;
+  text-transform: none;
+}
+
+.citation-note {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  min-width: 0;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: rgba(var(--v-theme-on-surface), 0.6);
+
+  // The DOI URL has no break opportunities and would otherwise widen the section.
+  > div {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+}
+
+.citation-note__icon {
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+  opacity: 0.7;
+}
+
+.single-col-layout {
+  gap: 1.5rem;
+
+  @media (max-width: 1279px) {
+    gap: 0;
+
+    > .page-content,
+    > .sidebar,
+    > .sidebar > div {
+      display: contents;
+    }
+
+    #details { order: 1; }
+    #description { order: 2; }
+    #subject { order: 3; }
+    #spatial { order: 4; }
+    #temporal { order: 5; }
+    #content { order: 6; }
+    #additional { order: 7; }
+    #related { order: 8; }
+    #funding { order: 9; }
+    #citation { order: 10; }
+    #license { order: 11; }
+  }
 }
 
 .sidebar {
