@@ -809,6 +809,7 @@
                     </div>
                     <cz-field
                       scope="#/properties/temporalCoverage/properties/startDate"
+                      :options="dateOnlyOptions"
                       hide-label
                     />
 
@@ -820,6 +821,7 @@
                     </div>
                     <cz-field
                       scope="#/properties/temporalCoverage/properties/endDate"
+                      :options="dateOnlyOptions"
                       hide-label
                     />
 
@@ -1012,6 +1014,11 @@ const descriptionOptions = {
     "v-textarea": { "auto-grow": true, rows: 6, "max-rows": 24 },
   },
 };
+
+// Resource coverage is meaningful to the day, so drop the time picker. The
+// value stays an ISO date-time (the schema's format is unchanged) pinned to
+// local midnight.
+const dateOnlyOptions = { dateOnly: true };
 
 // `geo` is anyOf[GeoCoordinates, GeoShape]. AnyOfRenderer indexes
 // `options.detail` by branch, so this must be an index-keyed map — a single
