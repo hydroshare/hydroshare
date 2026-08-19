@@ -200,13 +200,13 @@
     "dateModified": "{{ cm.last_updated | date:"c"}}",
     {% if cm.raccess.published %}"datePublished": "{{ cm|published_date | date:"c"}}", {% endif %}
     {% if cm.raccess.published %}"dateAccepted": "{{ cm|published_date | date:"Y-m-d"}}", {% endif %}
-    {% if cm.metadata.formats.all %}
+    {% with formats=cm.metadata.formats.all %}{% if formats %}
     "encodingFormat": [
-    {% for format_obj in cm.metadata.formats.all %}
+    {% for format_obj in formats %}
         "{{ format_obj.value | escapejs }}"{%if not forloop.last%},{%endif%}
     {% endfor %}
     ],
-    {% endif %}
+    {% endif %}{% endwith %}
     "subjectOf": {
         "@type": "DataDownload",
         "name": "resourcemetadata.xml",
