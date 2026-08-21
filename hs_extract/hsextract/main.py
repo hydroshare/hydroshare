@@ -59,8 +59,8 @@ def write_resource_jsonld_metadata(md: BaseMetadataObject) -> bool:
     # read the user resource metadata file
     user_json = load_metadata(md.user_metadata_path)
 
-    # Combine system metadata and user metadata
-    combined_metadata = {**system_json, **user_json}
+    # Combine system metadata and user metadata (system metadata takes priority on key conflicts)
+    combined_metadata = {**user_json, **system_json}
 
     # TODO: If we can assume that the user is not allowed to edit the hasPart relationship in the user metadata,
     # then we can optimize the generation of the has_parts.json so that we only re-generate this file on
