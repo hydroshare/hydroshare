@@ -1,6 +1,6 @@
 import re
 from datetime import datetime
-from enum import Enum
+from enum import Enum, Enum as PyEnum
 from typing import Any, List, Optional, Union, Literal, Annotated
 
 from pydantic import (
@@ -17,6 +17,14 @@ from pydantic import (
     WithJsonSchema,
 )
 from pydantic.json_schema import JsonSchemaValue
+
+from hsmodels.schemas.enums import RelationType as HSRelationType
+from hs_core.enums import NOT_USER_EDITABLE_RELATION_TYPES
+
+UserEditableRelationType = PyEnum(
+    'UserEditableRelationType',
+    {m.name: m.value for m in HSRelationType if m.name not in NOT_USER_EDITABLE_RELATION_TYPES},
+)
 
 
 orcid_pattern = "\\b\\d{4}-\\d{4}-\\d{4}-\\d{3}[0-9X]\\b"
@@ -387,6 +395,10 @@ class IsPartOf(CreativeWork):
 
 
 class Relation(CreativeWork):
+    name: Optional[UserEditableRelationType] = Field(  # type: ignore[assignment]
+        default=None,
+        json_schema_extra=remove_none_default,
+    )
     url: Optional[HttpUrl] = Field(
         title="URL",
         description="The URL address to the data resource.",
