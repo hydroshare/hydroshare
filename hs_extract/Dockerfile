@@ -13,7 +13,7 @@ RUN apt-get -y upgrade
 RUN curl -1sLf 'https://dl.redpanda.com/nzc4ZYQK3WRGd9sy/redpanda/cfg/setup/bash.deb.sh' | bash
 RUN apt install -y redpanda-rpk redpanda-connect
 
-RUN curl -O https://dl.min.io/client/mc/release/linux-amd64/mc \
+RUN curl -Lo mc https://dl.min.io/client/mc/release/linux-amd64/mc \
     && chmod +x mc \
     && mv mc /usr/local/bin/
 
