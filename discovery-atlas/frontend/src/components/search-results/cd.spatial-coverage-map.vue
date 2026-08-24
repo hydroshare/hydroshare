@@ -27,7 +27,7 @@ const coverageMapPointMaxZoom = 7;
 
 <script setup lang="ts">
 const props = defineProps<{
-  feature: any;
+  feature?: any;
 }>();
 
 const mapContainer = useTemplateRef<HTMLElement>("map");
@@ -37,8 +37,13 @@ let leafletMarkers: L.FeatureGroup<any>;
 
 onMounted(async () => {
   await initMap();
-  drawInitialShape();
+  drawFeature();
 });
+
+// The feature can arrive or change after mount, and while the user edits it
+// the incoming value is briefly incomplete, so ignore anything unparseable
+// and keep the last good shape on screen.
+watch(() => props.feature, drawFeature, { deep: true });
 
 async function initMap() {
   // setup a marker group
@@ -172,29 +177,39 @@ async function initMap() {
     coverageMap.addLayer(leafletMarkers);
   }
 
-function drawInitialShape() {
-  // Center the map
-  leafletMarkers.clearLayers();
-    if (props.feature?.["@type"] === "GeoCoordinates") {
-      const point = new L.LatLng(props.feature.latitude, props.feature.longitude);
-      drawMarker(L.latLng(point));
-    } else if (props.feature?.["@type"] === "GeoShape") {
-      const extents = props.feature.box
-        .trim()
-        .split(" ")
-        .map((n: string) => +n);
+function drawFeature() {
+  if (!coverageMap) return;
 
-      if (extents.length === 4) {
-        const rectangle = {
-          north: extents[0],
-          east: extents[1],
-          south: extents[2],
-          west: extents[3],
-        };
-        drawRectangle(rectangle);
-      }
+  if (props.feature?.["@type"] === "GeoCoordinates") {
+    const lat = Number(props.feature.latitude);
+    const lng = Number(props.feature.longitude);
+    if (Number.isFinite(lat) && Number.isFinite(lng)) {
+      drawMarker(L.latLng(lat, lng));
     }
+    return;
   }
+
+  if (props.feature?.["@type"] === "GeoShape") {
+    const extents = String(props.feature.box ?? "")
+      .trim()
+      .split(/\s+/)
+      .map(Number);
+
+    if (extents.length === 4 && extents.every(Number.isFinite)) {
+      drawRectangle({
+        north: extents[0],
+        east: extents[1],
+        south: extents[2],
+        west: extents[3],
+      });
+    }
+    return;
+  }
+
+  // No coverage: clear the shape and show the whole world.
+  leafletMarkers.clearLayers();
+  coverageMap.setView([30, 0], 1);
+}
 
 function drawRectangle(bounds: any) {
   leafletMarkers.clearLayers();

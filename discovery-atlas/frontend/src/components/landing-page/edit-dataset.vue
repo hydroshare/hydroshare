@@ -748,22 +748,18 @@
                         >
                         Coverage has validation issues
                       </div>
-                      <cd-spatial-coverage-map
-                        v-if="value?.geo"
-                        :feature="value.geo"
-                      />
-                      <v-card-text
-                        v-else
-                        class="text-body-2 text-medium-emphasis font-italic pb-0"
-                      >
-                        No spatial coverage set
-                      </v-card-text>
+                      <cd-spatial-coverage-map :feature="value?.geo" />
                       <v-divider></v-divider>
                       <div class="d-flex align-center flex-wrap ga-2 px-3 py-2">
                         <span
                           v-if="value?.name"
                           class="text-body-2 text-truncate flex-grow-1"
                           >{{ value.name }}</span
+                        >
+                        <span
+                          v-else-if="!value?.geo"
+                          class="text-body-2 text-medium-emphasis font-italic flex-grow-1"
+                          >No spatial coverage set</span
                         >
                         <v-spacer v-else />
                         <v-btn
@@ -1683,11 +1679,8 @@ const canSetSpatialFromFiles = computed<boolean>(
 const isSettingSpatialFromFiles = ref(false);
 
 /**
- * Ask Django to recompute the resource's spatial coverage as the union of its
- * content files' coverages, then fold the answer into the form. Same endpoint
- * the legacy landing page's "Set spatial coverage from content files" button
- * uses; it answers in the legacy element shape, which we map onto schema.org.
- * Nothing reaches S3 until the user saves.
+ * Asks the server to recompute spatial coverage from the content files, then
+ * maps the legacy response shape onto schema.org. Not saved until the user saves.
  */
 async function setSpatialCoverageFromFiles() {
   isSettingSpatialFromFiles.value = true;
