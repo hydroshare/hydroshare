@@ -9,7 +9,7 @@ from pydantic import (
 )
 
 from .base import (
-    CreativeWork,
+    License,
     LinkedData,
     SchemaBaseModel,
     Creator,
@@ -101,7 +101,7 @@ class CoreMetadata(SchemaBaseModel):
         min_length=1,
         description="Keywords or tags used to describe the dataset, delimited by commas.",
     )
-    license: Union[CreativeWork, Annotated[HttpUrl, Field(title="Custom License")]] = Field(
+    license: Union[License, Annotated[HttpUrl, Field(title="Custom License")]] = Field(
         description="A license document that applies to the resource."
     )
     provider: Union[Organization, Provider] = Field(
