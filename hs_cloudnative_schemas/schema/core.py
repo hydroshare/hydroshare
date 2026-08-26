@@ -9,6 +9,7 @@ from pydantic import (
 )
 
 from .base import (
+    AdditionalPropertyValue,
     License,
     LinkedData,
     SchemaBaseModel,
@@ -34,7 +35,6 @@ from .base import (
     IsPartOf,
     Relation,
     MediaType,
-    PropertyValue,
     read_only_schema_extra,
     remove_none_default,
 )
@@ -198,7 +198,7 @@ class CoreMetadata(SchemaBaseModel):
         description="All other types of relations",
         default=[],
     )
-    additionalProperty: Optional[List[PropertyValue]] = Field(
+    additionalProperty: Optional[List[AdditionalPropertyValue]] = Field(
         title="Additional properties",
         default=[],
         description="Additional properties of the place.",

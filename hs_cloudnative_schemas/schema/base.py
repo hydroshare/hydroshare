@@ -733,6 +733,29 @@ class PropertyValue(SchemaBaseModel):
     )
 
 
+class AdditionalPropertyValue(SchemaBaseModel):
+    model_config = ConfigDict(
+        **SchemaBaseModel.model_config,
+        populate_by_name=True,  # Ensures aliases work during model initialization
+        title="PropertyValue",
+    )
+
+    type: Literal["PropertyValue"] = Field(
+        alias="@type",  # type: ignore
+        default="PropertyValue",
+        description="A property-value pair.",
+    )
+    name: str = Field(description="The name of the property.")
+
+    value: str = Field(description="The value of the property.")
+
+    description: Optional[str] = Field(
+        description="A description of the property.",
+        default=None,
+        json_schema_extra=remove_none_default,
+    )
+
+
 class Place(SchemaBaseModel):
     type: Literal["Place"] = Field(
         alias="@type",  # type: ignore

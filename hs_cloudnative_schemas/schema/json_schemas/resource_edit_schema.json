@@ -1,6 +1,42 @@
 {
   "additionalProperties": true,
   "definitions": {
+    "AdditionalPropertyValue": {
+      "additionalProperties": true,
+      "properties": {
+        "@type": {
+          "const": "PropertyValue",
+          "default": "PropertyValue",
+          "description": "A property-value pair.",
+          "enum": [
+            "PropertyValue"
+          ],
+          "title": "@Type",
+          "type": "string"
+        },
+        "description": {
+          "description": "A description of the property.",
+          "title": "Description",
+          "type": "string"
+        },
+        "name": {
+          "description": "The name of the property.",
+          "title": "Name",
+          "type": "string"
+        },
+        "value": {
+          "description": "The value of the property.",
+          "title": "Value",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "value"
+      ],
+      "title": "PropertyValue",
+      "type": "object"
+    },
     "Affiliation": {
       "additionalProperties": true,
       "properties": {
@@ -1484,7 +1520,7 @@
       "default": [],
       "description": "Additional properties of the place.",
       "items": {
-        "$ref": "#/definitions/PropertyValue"
+        "$ref": "#/definitions/AdditionalPropertyValue"
       },
       "title": "Additional properties",
       "type": "array"
