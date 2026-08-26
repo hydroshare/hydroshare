@@ -1,3 +1,4 @@
+import logging
 import uuid
 
 from hsextract.content_types.models import BaseMetadataObject
@@ -84,3 +85,39 @@ def test_combined_metadata_preserves_all_system_metadata_unchanged():
     # contains for those same keys
     for key, value in system_json.items():
         assert result[key] == value
+
+
+def test_warns_when_system_metadata_overrides_user_metadata(caplog):
+    resource_id = str(uuid.uuid4())
+    md = _make_resource_metadata_object(resource_id)
+
+    system_json = _system_metadata_json(resource_id)
+    write_s3_json(md.system_metadata_path, system_json)
+    write_s3_json(
+        md.user_metadata_path,
+        {
+            "doi": "10.4211/hs.user-supplied-doi",
+            "abstract": "user abstract",
+        },
+    )
+
+    with caplog.at_level(logging.WARNING):
+        write_resource_jsonld_metadata(md)
+
+    warnings = [record.message for record in caplog.records if record.levelno == logging.WARNING]
+    assert any("doi" in message for message in warnings)
+
+
+def test_no_warning_when_no_keys_are_overridden(caplog):
+    resource_id = str(uuid.uuid4())
+    md = _make_resource_metadata_object(resource_id)
+
+    system_json = _system_metadata_json(resource_id)
+    write_s3_json(md.system_metadata_path, system_json)
+    write_s3_json(md.user_metadata_path, {"abstract": "user abstract"})
+
+    with caplog.at_level(logging.WARNING):
+        write_resource_jsonld_metadata(md)
+
+    warnings = [record.message for record in caplog.records if record.levelno == logging.WARNING]
+    assert warnings == []
