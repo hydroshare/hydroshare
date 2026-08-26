@@ -89,6 +89,8 @@ def write_content_type_jsonld_metadata(md: BaseMetadataObject) -> bool:
     # read the content type user metadata file
     user_json = load_metadata(md.content_type_md_user_path)
     if not content_type_metadata and not user_json:
+        # need to delete the content type jsonld metadata file if it exists
+        delete_metadata(md.content_type_md_jsonld_path)
         return
     # generate content type isPartOf relationships
     is_part_of = [f"{os.environ['AWS_S3_ENDPOINT_URL']}/{md.resource_md_jsonld_path}/dataset_metadata.json"]
