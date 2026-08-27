@@ -19,6 +19,8 @@ from hsextract.utils.s3 import (
     write_metadata,
 )
 
+logger = logging.getLogger(__name__)
+
 
 def _normalize_list(value) -> list:
     if not value:
@@ -52,6 +54,20 @@ def _iter_resource_has_parts(md: BaseMetadataObject, user_json: dict):
         yield has_part
 
 
+def _warn_on_overridden_keys(user_json: dict, system_json: dict) -> None:
+    overwritten_keys = user_json.keys() & system_json.keys()
+    overridden = {
+        key: (user_json[key], system_json[key])
+        for key in overwritten_keys
+        if user_json[key] != system_json[key]
+    }
+    if overridden:
+        logger.warning(
+            "System metadata is overriding user metadata for keys: %s",
+            overridden,
+        )
+
+
 def write_resource_jsonld_metadata(md: BaseMetadataObject) -> bool:
     # read the system metadata file
     system_json = load_metadata(md.system_metadata_path)
@@ -59,8 +75,9 @@ def write_resource_jsonld_metadata(md: BaseMetadataObject) -> bool:
     # read the user resource metadata file
     user_json = load_metadata(md.user_metadata_path)
 
-    # Combine system metadata and user metadata
-    combined_metadata = {**system_json, **user_json}
+    # Combine system metadata and user metadata (system metadata takes priority on key conflicts)
+    _warn_on_overridden_keys(user_json, system_json)
+    combined_metadata = {**user_json, **system_json}
 
     # TODO: If we can assume that the user is not allowed to edit the hasPart relationship in the user metadata,
     # then we can optimize the generation of the has_parts.json so that we only re-generate this file on
