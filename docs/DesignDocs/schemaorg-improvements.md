@@ -44,22 +44,12 @@ so we derive this from the first listed creator: their name, email,
 affiliation, ORCID, and profile URL. This is emitted as a structured contact
 block in the metadata.
 
-**Provenance — lineage history**
-If a resource links to related resources (e.g. it is derived from another
-dataset, is a new version of an older one, or is part of a collection), those
-links are now collected and exposed as a lineage trail. This tells tools and
-users where the data came from and how it relates to other resources.
-
-**Provenance — source resource**
-A specific subset of the lineage: if the resource was directly derived from or
-supersedes another resource, that parent/prior resource is called out
-explicitly as the "source entity". If no such link exists the field is omitted.
-
-**File list with names and formats**
-Each file in the resource is now listed individually in the metadata, with its
-filename and file type (e.g. `text/csv`, `image/tiff`). Previously only a
-single zip-archive download link was described. This lets MetaDIG verify that
-the dataset contains named entities with known formats.
+**Distribution name**
+The `distribution` block now includes a `name` field (the resource title with
+a "(BagIt Archive)" suffix). The MetaDIG `entity.name.present` check evaluates
+`distribution` entries with `@type: DataDownload` and requires each to have a
+non-blank `name`; this change satisfies that check. See
+[entity.name.present-2.1.0.xml](https://github.com/NCEAS/metadig-checks/blob/main/src/checks/entity.name.present-2.1.0.xml).
 
 ### What was already working (no change)
 
@@ -72,7 +62,7 @@ resource links were all already present and did not need to change.
 | Status | What it means |
 |---|---|
 | **Passing before this PR** | Title length, abstract length, creator presence, publisher name, keywords, publication date, landing page URL, license, spatial coverage, temporal coverage, resource identifier |
-| **Now passing after this PR** | Publisher has a recognized identifier (ROR), creators have persistent identifiers (ORCID), a contact person is identified, provenance/lineage links are present, files are listed with names and formats |
+| **Now passing after this PR** | Publisher has a recognized identifier (ROR), creators have persistent identifiers (ORCID), a contact person is identified, `entity.name.present` satisfied by adding `name` to the distribution block |
 | **Out of scope** | Checks that require column-level or attribute-level metadata (units, measurement scale, enumerated domains, etc.), per-file checksums, and a structured methods section — HydroShare does not currently store or expose this information on the landing page |
 
 ## A Note on Relation Links

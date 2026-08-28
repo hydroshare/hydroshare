@@ -5,8 +5,6 @@ from django.test import SimpleTestCase
 
 from hs_core.templatetags.hydroshare_tags import (
     creator_json_ld_element,
-    first_relation_value_for_types,
-    provenance_trace_json,
     schemaorg_contact_point_json,
 )
 
@@ -70,34 +68,4 @@ class TestSchemaorgTemplateFilters(SimpleTestCase):
         self.assertEqual(contact_point["sameAs"], "https://orcid.org/0000-0001-0000-0001")
         self.assertIn("https://www.hydroshare.org/user/1/", contact_point["url"])
 
-    def test_first_relation_value_for_types_prefers_requested_order(self):
-        relations = [
-            {"type": "isVersionOf", "value": "https://example.com/version"},
-            {"type": "source", "value": "https://example.com/source"},
-        ]
 
-        self.assertEqual(
-            first_relation_value_for_types(relations, "source,isVersionOf"),
-            "https://example.com/source",
-        )
-        self.assertEqual(
-            first_relation_value_for_types(relations, "isVersionOf,source"),
-            "https://example.com/version",
-        )
-
-    def test_provenance_trace_json_keeps_lineage_relations_only(self):
-        relations = [
-            {"type": "source", "value": "https://example.com/source"},
-            {"type": "isVersionOf", "value": "https://example.com/version"},
-            {"type": "references", "value": "https://example.com/reference"},
-        ]
-
-        trace_values = json.loads(provenance_trace_json(relations))
-
-        self.assertEqual(
-            trace_values,
-            [
-                "https://example.com/source",
-                "https://example.com/version",
-            ],
-        )

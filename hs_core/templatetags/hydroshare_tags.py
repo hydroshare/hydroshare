@@ -425,24 +425,6 @@ def relation_values_json(relations, relation_type):
 
 
 @register.filter
-def first_relation_value_for_types(relations, relation_types):
-    relation_type_list = [relation_type.strip() for relation_type in relation_types.split(',') if relation_type.strip()]
-    for relation_type in relation_type_list:
-        for relation in relations or []:
-            if relation.get('type') == relation_type and relation.get('value'):
-                return relation.get('value')
-    return ""
-
-
-@register.filter
-def provenance_trace_json(relations):
-    lineage_relation_types = {'source', 'isVersionOf', 'isPartOf', 'hasPart'}
-    values = [rel.get('value') for rel in (relations or [])
-              if rel.get('type') in lineage_relation_types and rel.get('value')]
-    return dumps(values) if values else ""
-
-
-@register.filter
 def schemaorg_contact_point_json(creators):
     if not creators:
         return ""
