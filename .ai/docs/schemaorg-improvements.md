@@ -78,6 +78,19 @@ no MetaDIG check has a `contactPoint` jq selector. It is included because
 by [Google Dataset Search](https://developers.google.com/search/docs/appearance/structured-data/dataset#dataset-properties),
 and the data cost is zero since it reuses the same first-creator lookup.
 
+**Known schema.org/MetaDIG clash: `roleName` on `Person`**
+The schema.org validator issues a warning that `roleName` is not a recognized
+property of `Person` or `Organization` — in strict schema.org, a role is expressed
+by wrapping the entity in a `Role` object
+(`{"@type": "Role", "roleName": "Contact", "creator": {...}}`). However, MetaDIG's
+jq selectors for both checks are `select(.roleName? == "Contact") | .identifier // .sameAs`,
+which expect `roleName` and `identifier`/`sameAs` to be on the same object. With a
+`Role` wrapper the identifiers would be inside the nested `Person`, not on the `Role`
+itself, breaking `resource.distributionContactIdentifier.present`. Using `roleName`
+directly on the creator entry is therefore a deliberate MetaDIG compatibility
+choice — it cannot be corrected without MetaDIG updating their schema.org jq
+selectors to understand `Role` wrappers.
+
 **Distribution name**
 The `distribution` block now includes a `name` field (the resource title with
 a "(BagIt Archive)" suffix). The MetaDIG `entity.name.present` check evaluates

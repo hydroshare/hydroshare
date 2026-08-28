@@ -33,7 +33,7 @@ The mapping below groups the fields by intent so the relationship is easier to f
 | Rights statement / license | `rights` | `license` | Rights / license |
 | Language | hardcoded `"en-US"` | `inLanguage` | Language |
 | Funding | `fundingagency` | `funding` | Funding reference |
-| Publication state | resource access state | `creativeWorkStatus`, `isAccessibleForFree`, `datePublished`, `dateAccepted` | Publication / availability metadata |
+| Publication state | resource access state | `creativeWorkStatus`, `isAccessibleForFree`, `datePublished` | Publication / availability metadata |
 | Creation date | `cm.created` | `dateCreated` | Date (Created) |
 | Modification date | `cm.last_updated` | `dateModified` | Date (Updated) |
 | File formats | `cm.metadata.formats.all` | `encodingFormat` | Format |

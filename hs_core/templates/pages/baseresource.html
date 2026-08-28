@@ -204,7 +204,6 @@
     "dateCreated": "{{ cm.created | date:"c" }}",
     "dateModified": "{{ cm.last_updated | date:"c"}}",
     {% if cm.raccess.published %}"datePublished": "{{ cm|published_date | date:"c"}}", {% endif %}
-    {% if cm.raccess.published %}"dateAccepted": "{{ cm|published_date | date:"Y-m-d"}}", {% endif %}
     {% with formats=cm.metadata.formats.all %}{% if formats %}
     "encodingFormat": [
     {% for format_obj in formats %}

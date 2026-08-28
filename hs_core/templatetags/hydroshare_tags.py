@@ -469,11 +469,6 @@ def schemaorg_contact_point_json(creators):
         contact_point['email'] = creator['email']
     if creator.get('phone'):
         contact_point['telephone'] = creator['phone']
-    if creator_organization:
-        contact_point['affiliation'] = {
-            '@type': 'Organization',
-            'name': creator_organization
-        }
 
     identifiers = []
     if creator.get('identifiers'):
