@@ -9,7 +9,8 @@ from pydantic import (
 )
 
 from .base import (
-    CreativeWork,
+    AdditionalPropertyValue,
+    License,
     LinkedData,
     SchemaBaseModel,
     Creator,
@@ -34,7 +35,6 @@ from .base import (
     IsPartOf,
     Relation,
     MediaType,
-    PropertyValue,
     read_only_schema_extra,
     remove_none_default,
 )
@@ -101,7 +101,7 @@ class CoreMetadata(SchemaBaseModel):
         min_length=1,
         description="Keywords or tags used to describe the dataset, delimited by commas.",
     )
-    license: Union[CreativeWork, Annotated[HttpUrl, Field(title="Custom License")]] = Field(
+    license: Union[License, Annotated[HttpUrl, Field(title="Custom License")]] = Field(
         description="A license document that applies to the resource."
     )
     provider: Union[Organization, Provider] = Field(
@@ -198,7 +198,7 @@ class CoreMetadata(SchemaBaseModel):
         description="All other types of relations",
         default=[],
     )
-    additionalProperty: Optional[List[PropertyValue]] = Field(
+    additionalProperty: Optional[List[AdditionalPropertyValue]] = Field(
         title="Additional properties",
         default=[],
         description="Additional properties of the place.",
