@@ -20,14 +20,14 @@ That companion note defines a two-stage validation strategy:
 | `metadata.identifier.present` / `metadata.identifier.resolvable` | `identifier`, landing page URL, `contentUrl` | Strong overlap for discoverability and resolvable identifiers |
 | `resource.titleLength.sufficient` | `name` | Direct mapping for the title content check |
 | `resource.abstractLength.sufficient` | `description` | Direct mapping for descriptive summary content |
-| `resource.creator.present` / `resource.creatorIdentifier.present` | `creator` | Creator name maps directly; identifier coverage is partial unless an ORCID or equivalent is present |
+| `resource.creator.present` / `resource.creatorIdentifier.present` | `creator` | Creator name maps directly. ORCID is now emitted as `identifier`/`sameAs` when present in the HydroShare profile. The `creator` property uses a plain JSON array (not `@list`-wrapped) so MetaDIG jq selectors iterate individual entries. |
 | `resource.keywords.present` / `dataset.keywords.minimum-2.0.0` | `keywords` | Direct mapping for keyword presence; controlled vocabulary support is partial |
 | `resource.publicationDate.present` / `resource.publicationDate.timeframe` | `datePublished` and `dateAccepted` | Strong overlap for published resources |
 | `resource.landingPage.present` | `url`, `contentUrl`, `subjectOf` | Direct support for a landing page plus downloadable content |
 | `resource.license.present` | `license` | Direct mapping |
 | `resource.accessControlRules.present` | `creativeWorkStatus`, `isAccessibleForFree` | Partial overlap; HydroShare expresses publication/access state rather than the full EML access-control vocabulary |
 | `resource.publisher.present` / `resource.publisherIdentifier.present` | `publisher`, `provider`, `includedInDataCatalog` | Implemented for published resources; the template emits a full `Organization` object with `@type`, `@id`, `name`, and `url` sourced dynamically from `cm.cached_metadata.publisher`. No explicit ROR identifier property is emitted — `@id` carries the publisher URL. `resource.publisherIdentifier.present` via a dedicated identifier field remains partial. |
-| `resource.distributionContact.present` / `resource.distributionContactIdentifier.present` | not fully represented in schema.org output | Treat this as the main person responsible for the content. Use an explicit contact record if it exists, otherwise use the first author record and its public profile fields |
+| `resource.distributionContact.present` / `resource.distributionContactIdentifier.present` | `creator` (Contact-tagged entry) and `contactPoint` | MetaDIG jq looks in `.creator[]` for `roleName == "Contact"` — it does not evaluate `contactPoint`. First creator (by `order`) is appended with `"roleName": "Contact"` in the flat `creator` array. A separate `contactPoint` object is also emitted for Google Dataset Search (not evaluated by MetaDIG). |
 | `resource.spatialExtent.present` / `geographic.description.present` | `spatialCoverage.geo` | Direct overlap for point and box coverage; descriptive geographic text is partial |
 | `resource.temporalExtent.present` | `temporalCoverage` | Direct overlap |
 | `resource.methods.present` | out of scope for the current schema.org landing page | HydroShare does not expose a dedicated methods field that can be mapped cleanly today |
@@ -43,9 +43,9 @@ That companion note defines a two-stage validation strategy:
 
 For the DataONE FAIR suite, the practical status is:
 
-- **Direct**: identifier, title, abstract, creator, keywords, publication date, landing page, license, spatial coverage, temporal coverage.
-- **Partial**: access rules, distribution contact, controlled keywords, provenance, entity identifiers, bag/resource checksum, file formats.
-- **Missing from schema.org output**: metadata/distribution contacts, methods/process steps, provenance detail, and attribute/entity-level completeness checks.
+- **Direct**: identifier, title, abstract, creator (with ORCID and Contact-tagged entry), keywords, publication date, landing page, license, spatial coverage, temporal coverage.
+- **Partial**: access rules, controlled keywords, entity identifiers, bag/resource checksum, file formats.
+- **Missing from schema.org output**: methods/process steps, PROV-O provenance, and attribute/entity-level completeness checks.
 
 So the practical interpretation is:
 
@@ -59,7 +59,7 @@ The checks below are the best candidates for future HydroShare work because they
 
 | MetaDIG FAIR check | Why it is currently incomplete | Practical HydroShare implementation path |
 | --- | --- | --- |
-| `resource.distributionContact.present` / `resource.distributionContactIdentifier.present` | The landing page does not emit a dedicated `contactPoint` object today; contact data only exists through creator/profile metadata | Emit schema.org `contactPoint` from an explicit contact record when available, otherwise from the first creator profile, and populate `name`, `email`, `affiliation`, `identifier`, `url`, `telephone`, and `sameAs` |
+| `resource.distributionContact.present` / `resource.distributionContactIdentifier.present` | **Implemented.** First creator (by `order`) is appended with `"roleName": "Contact"` in the flat `creator` array, satisfying the MetaDIG jq `select(.roleName == "Contact")`. A separate `contactPoint` object is also emitted for Google Dataset Search — this is not what MetaDIG evaluates, but is the conventional schema.org field for contact info. | — |
 | `resource.publisherIdentifier.present` | `publisher` is already emitted with `name` and `url`; no dedicated identifier property (e.g. ROR) is currently included | Add an explicit `identifier` or `sameAs` on the `publisher` object pointing to the ROR URL for CUAHSI |
 | `resource.methods.present` | Methods text is not exposed as a dedicated landing page field | No clear schema.org mapping exists in the current landing page model |
 | `provenance.trace.present` | The landing page has relations and dates, but not a structured provenance object | Build a provenance structure that captures the full lineage history using `source`, `isPartOf`, `hasPart`, version links, and publication dates |
@@ -103,8 +103,8 @@ If the goal is to improve HydroShare so it passes more of the DataONE FAIR check
 
 | Priority | MetaDIG FAIR checks | Why |
 | --- | --- | --- |
-| Achievable now | `metadata.identifier.present`, `metadata.identifier.resolvable`, `resource.titleLength.sufficient`, `resource.abstractLength.sufficient`, `resource.creator.present`, `resource.publisher.present`, `resource.publisherIdentifier.present` (published resources only), `resource.keywords.present`, `resource.publicationDate.present`, `resource.landingPage.present`, `resource.license.present`, `resource.spatialExtent.present`, `resource.temporalExtent.present` | These are already exposed in HydroShare metadata or schema.org JSON-LD, so they are the closest fit to the current implementation |
-| Achievable with work | `resource.creatorIdentifier.present`, `resource.distributionContact.present`, `resource.distributionContactIdentifier.present`, `entity.format.present` | `entity.format` is already captured in DataCite, but the schema.org `encodingFormat` output still needs to be derived from the same source; the rest are plausible because HydroShare already stores some of the needed metadata, or could add a narrow new public representation without redesigning the whole model |
+| Achievable now | `metadata.identifier.present`, `metadata.identifier.resolvable`, `resource.titleLength.sufficient`, `resource.abstractLength.sufficient`, `resource.creator.present`, `resource.publisher.present`, `resource.publisherIdentifier.present` (published resources only), `resource.keywords.present`, `resource.publicationDate.present`, `resource.landingPage.present`, `resource.license.present`, `resource.spatialExtent.present`, `resource.temporalExtent.present`, `resource.creatorIdentifier.present`, `resource.distributionContact.present`, `resource.distributionContactIdentifier.present` | These are already exposed in HydroShare metadata or schema.org JSON-LD, so they are the closest fit to the current implementation |
+| Achievable with work | `entity.format.present` | `entity.format` is already captured in DataCite, but the schema.org `encodingFormat` output still needs to be derived from the same source |
 | Outside current scope | `provenance.trace.present`, `provenance.sourceEntity.present`, `entity.attributeDefinition.present`, `entity.attributeUnits.present`, `entity.attributeMeasurementScale.present`, `entity.attributeStorageType.present`, `entity.attributePrecision.present`, `entity.attributeEnumeratedDomains.present`, `entity.attributeDomain.present`, `entity.attributeNames.unique`, `entity.attributeName.differs`, `entity.attributeCoverageContentType.present` | The provenance checks require PROV-O terms (`prov:wasGeneratedBy`, `prov:wasDerivedFrom`) that are outside the schema.org vocabulary; the attribute checks require deeper EML-style tabular metadata support |
 
 The shortest version is: HydroShare can already cover the discovery checks, can plausibly add a number of contact/provenance/entity checks, and would need a broader metadata model to satisfy the attribute-level EML checks.
@@ -115,8 +115,8 @@ This matrix is a stricter operational view of the same checks.
 
 | Status | MetaDIG FAIR checks | Interpretation |
 | --- | --- | --- |
-| Pass now | `metadata.identifier.present`, `metadata.identifier.resolvable`, `resource.titleLength.sufficient`, `resource.abstractLength.sufficient`, `resource.creator.present`, `resource.publisher.present`, `resource.publisherIdentifier.present` (published resources only), `resource.keywords.present`, `resource.publicationDate.present`, `resource.landingPage.present`, `resource.license.present`, `resource.spatialExtent.present`, `resource.temporalExtent.present` | HydroShare already exposes these in the current resource model or schema.org output |
-| Needs work | `resource.creatorIdentifier.present`, `resource.distributionContact.present`, `resource.distributionContactIdentifier.present`, `entity.format.present` | `entity.format` is captured in DataCite, but the schema.org mapping still needs to be emitted from that source; the other checks are realistic additions because HydroShare already stores some of the needed information, or could expose it with a focused metadata extension |
+| Pass now | `metadata.identifier.present`, `metadata.identifier.resolvable`, `resource.titleLength.sufficient`, `resource.abstractLength.sufficient`, `resource.creator.present`, `resource.publisher.present`, `resource.publisherIdentifier.present` (published resources only), `resource.keywords.present`, `resource.publicationDate.present`, `resource.landingPage.present`, `resource.license.present`, `resource.spatialExtent.present`, `resource.temporalExtent.present`, `resource.creatorIdentifier.present`, `resource.distributionContact.present`, `resource.distributionContactIdentifier.present` | HydroShare already exposes these in the current resource model or schema.org output |
+| Needs work | `entity.format.present` | `entity.format` is captured in DataCite, but the schema.org `encodingFormat` mapping still needs to be emitted from that source |
 | Out of scope for current schema.org layer | `provenance.trace.present`, `provenance.sourceEntity.present`, `entity.attributeDefinition.present`, `entity.attributeUnits.present`, `entity.attributeMeasurementScale.present`, `entity.attributeStorageType.present`, `entity.attributePrecision.present`, `entity.attributeEnumeratedDomains.present`, `entity.attributeDomain.present`, `entity.attributeNames.unique`, `entity.attributeName.differs`, `entity.attributeCoverageContentType.present` | The provenance checks require PROV-O terms (`prov:wasGeneratedBy`, `prov:wasDerivedFrom`) that are not part of the schema.org vocabulary; the attribute checks need richer tabular metadata support |
 
 The practical takeaway is that the biggest near-term gains are contact metadata and entity-level formats. The provenance checks require PROV-O vocabulary that is outside schema.org, and the attribute-level checks are a separate modeling problem.
@@ -127,9 +127,9 @@ The checks in the "Needs work" bucket can be implemented by using the metadata H
 
 | MetaDIG FAIR check | HydroShare metadata source | Suggested mapping approach |
 | --- | --- | --- |
-| `resource.creatorIdentifier.present` | creator records | Emit an `identifier` value for each creator when ORCID or another persistent identifier is available |
+| `resource.creatorIdentifier.present` | creator records | **Implemented.** ORCID is now emitted as `identifier`/`sameAs` per creator, and the `creator` property uses a plain JSON array instead of an `@list`-wrapped object so MetaDIG jq selectors reach individual entries. |
 | `resource.publisherIdentifier.present` | `cm.cached_metadata.publisher` | `resource.publisher.present` is already satisfied; add an explicit `identifier` or `sameAs` with the ROR URL to satisfy `resource.publisherIdentifier.present` |
-| `resource.distributionContact.present` / `resource.distributionContactIdentifier.present` | contact metadata or first author profile | Emit `contactPoint` from an explicit contact source when available; otherwise use the first creator profile and map its public contact fields |
+| `resource.distributionContact.present` / `resource.distributionContactIdentifier.present` | contact metadata or first author profile | **Implemented.** First creator (by `order`) is appended with `"roleName": "Contact"` in the flat `creator` array. MetaDIG jq evaluates `select(.roleName == "Contact")` on `.creator[]` — it does not look at `contactPoint`. A separate `contactPoint` object is also emitted for Google Dataset Search but is not what satisfies these MetaDIG checks. |
 | `resource.methods.present` | resource methods / description metadata | No clear schema.org mapping exists in the current landing page model |
 | `provenance.trace.present` | Not applicable — requires PROV-O | The check's schema.org JSON-path looks for `prov:wasGeneratedBy` ([source](https://github.com/NCEAS/metadig-checks/blob/main/src/checks/provenance.trace.present-2.0.0.xml)), a W3C PROV Ontology term outside the schema.org vocabulary. Out of scope for the current implementation. |
 | `provenance.sourceEntity.present` | Not applicable — requires PROV-O | The check's schema.org JSON-path looks for `prov:wasDerivedFrom` ([source](https://github.com/NCEAS/metadig-checks/blob/main/src/checks/provenance.sourceEntity.present-2.0.0.xml)), a W3C PROV Ontology term outside the schema.org vocabulary. Out of scope for the current implementation. |
@@ -143,10 +143,9 @@ The checks in the "Needs work" bucket can be implemented by using the metadata H
 
 ### Suggested implementation order
 
-1. **Add creator identifiers first.** These are the easiest to wire because HydroShare already stores creator records, and the gain for FAIR validation is immediate. Publisher name and URL are already emitted; a dedicated publisher identifier (e.g. ROR) is the remaining gap.
-2. **Add contact metadata next.** `distributionContact` should become a `contactPoint` emitted from the explicit contact source or first creator profile.
-3. **Add entity-level identifiers, names, formats, and checksums.** This requires iterating over the resource’s files or aggregations, but it is still a focused metadata serialization task.
-4. **Leave attribute-level and provenance checks for later.** Attribute checks need column/attribute semantics outside the current schema.org layer. Provenance checks (`provenance.trace.present`, `provenance.sourceEntity.present`) require PROV-O terms (`prov:wasGeneratedBy`, `prov:wasDerivedFrom`) that are not part of the schema.org vocabulary and are out of scope for the current implementation.
+1. **Creator identifiers and contact — implemented.** ORCID is now emitted per creator, the `creator` array is a plain JSON array (not `@list`-wrapped), and the first creator is appended as a Contact-tagged entry satisfying `resource.distributionContact.present` and `resource.distributionContactIdentifier.present`. A separate `contactPoint` is also emitted for Google Dataset Search (not evaluated by MetaDIG).
+2. **Add entity-level identifiers, names, formats, and checksums.** This requires iterating over the resource’s files or aggregations, but it is still a focused metadata serialization task.
+3. **Leave attribute-level and provenance checks for later.** Attribute checks need column/attribute semantics outside the current schema.org layer. Provenance checks (`provenance.trace.present`, `provenance.sourceEntity.present`) require PROV-O terms (`prov:wasGeneratedBy`, `prov:wasDerivedFrom`) that are not part of the schema.org vocabulary and are out of scope for the current implementation.
 
 ### Practical rule of thumb
 
@@ -162,12 +161,12 @@ If the check depends on per-column semantics, units, measurement scale, or enume
 
 ### Implementation plan
 
-**Quick wins**
+**Implemented**
 
 - `resource.creatorIdentifier.present`
 - `resource.distributionContact.present` / `resource.distributionContactIdentifier.present`
 
-These are the easiest to justify because they build on existing resource-level metadata and mostly need better serialization.
+These were satisfied by fixing the `creator` array format (`@list` → plain array) and appending a Contact-tagged copy of the first creator.
 
 **Medium effort**
 

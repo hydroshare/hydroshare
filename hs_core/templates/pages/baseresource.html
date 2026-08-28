@@ -75,10 +75,15 @@
             {% endfor %}
     ],
     {% endif %}
-    "creator": {{ cm.cached_metadata.creators | creator_json_ld_element | safe }},
+    "creator": {{ cm.cached_metadata.creators | creator_with_contact_json_ld | safe }},
     {% if cm.cached_metadata.contributors %}
     "contributor": {{ cm.cached_metadata.contributors | creator_json_ld_element | safe }},
     {% endif %}
+    {% with contact_point=cm.cached_metadata.creators|schemaorg_contact_point_json %}
+    {% if contact_point %}
+    "contactPoint": {{ contact_point|safe }},
+    {% endif %}
+    {% endwith %}
     {# There is discussion about adding more linked data fields for referenced items #}
     {# https://github.com/hydroshare/hydroshare/issues/4566#issuecomment-1124283370 #}
     {% if cm.cached_metadata.temporal_coverage %}

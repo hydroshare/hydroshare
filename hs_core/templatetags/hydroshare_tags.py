@@ -354,63 +354,82 @@ def display_name_to_class(value):
     return value.replace(" ", "_").lower()
 
 
+def _creator_to_schemaorg_dict(cr):
+    """Convert a single creator metadata dict to a schema.org Person/Organization dict."""
+    cr_dict = {}
+    urls = []
+    identifiers = []
+    if cr['email']:
+        cr_dict["email"] = cr['email']
+    if cr['address']:
+        cr_dict["address"] = {
+            "@type": "PostalAddress",
+            "streetAddress": cr['address']
+        }
+    if cr['name']:
+        cr_dict["@type"] = "Person"
+        cr_dict["name"] = name_without_commas(cr['name'])
+        if cr['organization']:
+            cr_dict["affiliation"] = {
+                "@type": "Organization",
+                "name": cr['organization']
+            }
+    else:
+        cr_dict["@type"] = "Organization"
+        cr_dict["name"] = cr['organization']
+
+    if cr['relative_uri']:
+        if cr['name']:
+            # append www.hydroshare.org since schema.org script is only embedded in production
+            urls.append("https://www.hydroshare.org" + cr['relative_uri'])
+        else:
+            # organization
+            urls.append(cr['relative_uri'])
+    if cr['homepage']:
+        urls.append(cr['homepage'])
+    if cr['identifiers']:
+        for k in cr['identifiers']:
+            identifier_value = cr['identifiers'][k]
+            urls.append(identifier_value)
+            identifiers.append(identifier_value)
+    if len(identifiers) == 1:
+        cr_dict['identifier'] = identifiers[0]
+        cr_dict['sameAs'] = identifiers[0]
+    elif len(identifiers) > 1:
+        cr_dict['identifier'] = identifiers
+        cr_dict['sameAs'] = identifiers
+    if len(urls) == 1:
+        cr_dict['url'] = urls[0]
+    elif len(urls) > 1:
+        cr_dict['url'] = urls
+    return cr_dict
+
+
 @register.filter
 def creator_json_ld_element(crs):
     """ return json ld element for creators for schema.org script embedded on resource landing page"""
-    crs_array = []
-    for cr in crs:
-        cr_dict = {}
-        urls = []
-        identifiers = []
-        if cr['email']:
-            cr_dict["email"] = cr['email']
-        if cr['address']:
-            cr_dict["address"] = {
-                "@type": "PostalAddress",
-                "streetAddress": cr['address']
-            }
-        if cr['name']:
-            cr_dict["@type"] = "Person"
-            cr_dict["name"] = name_without_commas(cr['name'])
-            if cr['organization']:
-                affl_dict = {
-                    "@type": "Organization",
-                    "name": cr['organization']
-                }
-                cr_dict["affiliation"] = affl_dict
-        else:
-            cr_dict["@type"] = "Organization"
-            cr_dict["name"] = cr['organization']
-
-        if cr['relative_uri']:
-            if cr['name']:
-                # append www.hydroshare.org since schema.org script is only embedded in production
-                urls.append("https://www.hydroshare.org" + cr['relative_uri'])
-            else:
-                # organization
-                urls.append(cr['relative_uri'])
-        if cr['homepage']:
-            urls.append(cr['homepage'])
-        if cr['identifiers']:
-            for k in cr['identifiers']:
-                identifier_value = cr['identifiers'][k]
-                urls.append(identifier_value)
-                identifiers.append(identifier_value)
-        if len(identifiers) == 1:
-            cr_dict['identifier'] = identifiers[0]
-            cr_dict['sameAs'] = identifiers[0]
-        elif len(identifiers) > 1:
-            cr_dict['identifier'] = identifiers
-            cr_dict['sameAs'] = identifiers
-        if len(urls) == 1:
-            cr_dict['url'] = urls[0]
-        elif len(urls) > 1:
-            cr_dict['url'] = urls
-        crs_array.append(cr_dict)
+    crs_array = [_creator_to_schemaorg_dict(cr) for cr in crs]
     # reformat json dumped str a bit to fix the indentation issue with the last bracket
     default_dump = dumps({"@list": crs_array}, sort_keys=True, indent=6)
     format_dump = '{}    {}'.format(default_dump[:-1], default_dump[-1])
     return format_dump
+
+
+@register.filter
+def creator_with_contact_json_ld(crs):
+    """Returns creators as a plain JSON array (not @list-wrapped) with an appended
+    Contact entry for the first creator (by order). The flat array format is required
+    for MetaDIG resource.distributionContact.present and
+    resource.distributionContactIdentifier.present, whose schema.org jq selectors
+    iterate .creator[] and filter by .roleName == "Contact"."""
+    if not crs:
+        return "[]"
+    crs_array = [_creator_to_schemaorg_dict(cr) for cr in crs]
+    sorted_crs = sorted(crs, key=lambda c: c.get('order') if c.get('order') is not None else 999999)
+    contact_dict = _creator_to_schemaorg_dict(sorted_crs[0])
+    contact_dict['roleName'] = 'Contact'
+    crs_array.append(contact_dict)
+    return dumps(crs_array, sort_keys=True, indent=6)
 
 
 @register.filter

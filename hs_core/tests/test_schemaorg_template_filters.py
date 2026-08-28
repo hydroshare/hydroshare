@@ -1,10 +1,10 @@
 import json
-from unittest.mock import MagicMock
 
 from django.test import SimpleTestCase
 
 from hs_core.templatetags.hydroshare_tags import (
     creator_json_ld_element,
+    creator_with_contact_json_ld,
     schemaorg_contact_point_json,
 )
 
@@ -30,6 +30,45 @@ class TestSchemaorgTemplateFilters(SimpleTestCase):
 
         self.assertEqual(creator["identifier"], "https://orcid.org/0000-0002-1825-0097")
         self.assertEqual(creator["sameAs"], "https://orcid.org/0000-0002-1825-0097")
+
+    def test_creator_with_contact_json_ld_appends_contact_entry(self):
+        creators = [
+            {
+                "name": "Doe, Jane",
+                "organization": "USU",
+                "email": "jane@example.com",
+                "address": "",
+                "relative_uri": "/user/1/",
+                "homepage": "",
+                "order": 1,
+                "identifiers": {
+                    "ORCID": "https://orcid.org/0000-0002-1825-0097",
+                },
+            },
+            {
+                "name": "Smith, John",
+                "organization": "MIT",
+                "email": "john@example.com",
+                "address": "",
+                "relative_uri": "/user/2/",
+                "homepage": "",
+                "order": 2,
+                "identifiers": {},
+            },
+        ]
+
+        result = json.loads(creator_with_contact_json_ld(creators))
+
+        # Must be a plain list, not an @list-wrapped object
+        self.assertIsInstance(result, list)
+        # Original creators plus one Contact entry
+        self.assertEqual(len(result), 3)
+        contact_entries = [c for c in result if c.get("roleName") == "Contact"]
+        self.assertEqual(len(contact_entries), 1)
+        # Contact entry should be derived from the first creator (order=1)
+        contact = contact_entries[0]
+        self.assertEqual(contact["name"], "Jane Doe")
+        self.assertEqual(contact["identifier"], "https://orcid.org/0000-0002-1825-0097")
 
     def test_schemaorg_contact_point_json_uses_first_ordered_creator(self):
         creators = [
@@ -67,5 +106,3 @@ class TestSchemaorgTemplateFilters(SimpleTestCase):
         self.assertEqual(contact_point["identifier"], "https://orcid.org/0000-0001-0000-0001")
         self.assertEqual(contact_point["sameAs"], "https://orcid.org/0000-0001-0000-0001")
         self.assertIn("https://www.hydroshare.org/user/1/", contact_point["url"])
-
-

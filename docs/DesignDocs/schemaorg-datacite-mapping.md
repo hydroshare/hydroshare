@@ -1,6 +1,6 @@
 # HydroShare DataCite and schema.org Mapping
 
-This note summarizes the HydroShare code changes that align the internal metadata model with schema.org JSON-LD and the DataCite vocabulary.
+This is a reference mapping of HydroShare's internal metadata model to schema.org JSON-LD and the DataCite vocabulary as rendered on public resource landing pages.
 
 Primary code paths:
 
@@ -24,7 +24,10 @@ The mapping below groups the fields by intent so the relationship is easier to f
 | Abstract | `abstract` | `description` | Description |
 | Keywords / subjects | subject list | `keywords` | Subject / keyword terms |
 | Resource type | `cm.cached_metadata.type` | `additionalType` | ResourceType |
-| Creator | `creator` | `creator` | Creator |
+| Creator | `creator` (ordered by `order` field; plain JSON array, not `@list`-wrapped) | `creator` | Creator |
+| Creator identifier | `creator[].identifiers` (e.g. ORCID) | `creator[].identifier`, `creator[].sameAs` | Creator identifier |
+| Contact person (derived) | first creator by `order` — no dedicated contact field exists | appended `creator[]` entry with `roleName: "Contact"` — satisfies MetaDIG `resource.distributionContact.present`; see [schemaorg-improvements.md](schemaorg-improvements.md) | Not a stored field; derived at render time |
+| Contact point | first creator by `order` | `contactPoint` (`@type: ContactPoint`) — indexed by Google Dataset Search; not evaluated by MetaDIG checks | Not a stored field; derived at render time |
 | Contributor | `contributor` | `contributor` | Contributor |
 | Alternate identifier | `identifier` | `identifier` | Alternate identifier |
 | Rights statement / license | `rights` | `license` | Rights / license |
@@ -38,47 +41,6 @@ The mapping below groups the fields by intent so the relationship is easier to f
 | Publisher | `cm.cached_metadata.publisher` | `publisher` (`Organization`) | Publisher; only emitted for published resources |
 | Schema version marker | n/a | `schemaVersion` | DataCite schema URI reference |
 | Provider / catalog | n/a | `provider`, `includedInDataCatalog` | Repository / catalog context |
-
-## Proposed Distribution Contact Mapping
-
-HydroShare does not currently expose a first-class `distributionContact` metadata element on the landing page. In MetaDIG terms, this field is best understood as the main person responsible for the content. The implementation should therefore build a schema.org contact object from the same profile-backed fields used for authors.
-
-Recommended source order:
-
-1. An explicit distribution-contact record, if HydroShare ever stores one.
-2. The first creator / first author record.
-3. The public creator profile fields for that record.
-
-This is a semantic mapping, not an existing stored field. If HydroShare needs to satisfy a check that specifically looks for `resource.distributionContact.present`, the implementation should render a schema.org `contactPoint` object, or an equivalent contact structure, from the selected source record. The object should carry the public contact name, email, affiliation, identifier, homepage, phone, and profile URL when available.
-
-This makes the mapping deterministic and keeps the fallback aligned with the MetaDIG intent.
-
-The best current source is the creator/contact data already emitted in the landing page JSON-LD author block in [hs_core/templates/pages/baseresource.html](../../hs_core/templates/pages/baseresource.html). That block already includes profile-derived name, email, organization, identifiers, homepage, phone, and profile URL.
-
-| Proposed `distributionContact` field | Likely HydroShare source | Notes |
-| --- | --- | --- |
-| `name` | creator full name / profile display name | Use the public profile name when available |
-| `email` | `author.email` | Already present in the landing page author object |
-| `affiliation` / organization | `author.organization` | Comes from the user profile organization field |
-| `identifier` | `author.identifiers` | Can carry ORCID or other public identifiers |
-| `url` / homepage | `author.homepage` | Use the profile or personal website if present |
-| `telephone` | `author.phone` | Use the public phone value from the profile |
-| `sameAs` / profile URL | `author.profileUrl` | Useful if the profile page itself should be treated as the contact landing page |
-
-Code-generation rule:
-
-- Use `contactPoint` as the primary schema.org property.
-- Populate `name`, `email`, `affiliation`, `identifier`, `url`, and `telephone` from the chosen contact source.
-- Use the first author only as the fallback source when no explicit contact exists.
-- Do not infer contact responsibility from author order unless the fallback path is needed.
-
-Implementation recipe:
-
-1. Select the contact source in this order: explicit contact record, first creator record, public profile for that person.
-2. Build a schema.org `ContactPoint` object from that source.
-3. Map `name`, `email`, `affiliation`, `identifier`, `url`, `telephone`, and `sameAs` from the selected source.
-4. Emit the object as `contactPoint` in the landing page JSON-LD.
-5. Keep the output deterministic so the same resource always produces the same contact object.
 
 ## Relation Mapping
 
@@ -152,11 +114,4 @@ The main implementation pattern is:
 
 See [MetaDIG FAIR Suite Comparison](metadig-fair-suite-comparison.md) for a check-by-check comparison between the DataONE FAIR suite and HydroShare schema.org output.
 
-## What Changed In HydroShare
-
-The code changes were in two files:
-
-- [hs_core/templatetags/hydroshare_tags.py](../../hs_core/templatetags/hydroshare_tags.py) — added a `relation_values_json` template filter that extracts relation values by type from the cached metadata and returns them as a JSON array string. This filter is what makes the typed relation fields below possible without duplicating logic in the template.
-- [hs_core/templates/pages/baseresource.html](../../hs_core/templates/pages/baseresource.html) — extended the landing-page JSON-LD block with the new fields described in this document. The `about` block that previously emitted URL-valued geospatial relations as bare `Place` objects was also removed; those relations are now represented through the explicit named relation fields (`isPartOf`, `hasPart`, etc.) and the generic `citation` fallback.
-
-The relation vocabulary itself (`source`, `isVersionOf`, `isPartOf`, etc.) already existed in the HydroShare metadata model before this PR. No changes were made to `hs_core/models.py`.
+For a full record of what changed in this PR and why, see [schemaorg-improvements.md](schemaorg-improvements.md).
