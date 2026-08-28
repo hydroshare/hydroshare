@@ -1073,13 +1073,13 @@ const spatialCoverageOptions = {
   },
 };
 
-// `@type` is a const discriminator, not user input — rendering it dispatches
-// to AnyOfRenderer (the item schema is anyOf Person/Organization), whose
-// VTabs throws and takes the whole dialog down. `url`/`address` don't exist
-// on Creator/Contributor either; they only resolved via the Organization
-// branch, so they showed organization copy under a person's name.
-const personDetailLayout = {
+// `@type` is a const discriminator, not user input. It is excluded from all
+// branch layouts below — JsonForms only renders explicitly listed elements,
+// and the schema's `default` ensures the correct value is written to data
+// when an item is created or the branch is switched.
+const personBranchLayout = {
   type: "VerticalLayout",
+  options: { label: "Person" },
   elements: [
     {
       type: "HorizontalLayout",
@@ -1093,21 +1093,35 @@ const personDetailLayout = {
     {
       type: "Control",
       scope: "#/properties/identifier",
-      label: "ORCID iD",
+      label: "ORCID ID",
     },
     {
       type: "Control",
       scope: "#/properties/affiliation",
       options: {
         detail: {
-          type: "Object",
+          type: "VerticalLayout",
           elements: [
-            { type: "Control", scope: "#/properties/name" },
+            {
+              type: "Control",
+              scope: "#/properties/name",
+              label: "Organization",
+              // Prevent org name from showing as required since org is optional
+              options: { hideRequiredAsterisk: true },
+            },
             {
               type: "HorizontalLayout",
               elements: [
-                { type: "Control", scope: "#/properties/url" },
-                { type: "Control", scope: "#/properties/address" },
+                {
+                  type: "Control",
+                  scope: "#/properties/url",
+                  label: "Organization website",
+                },
+                {
+                  type: "Control",
+                  scope: "#/properties/address",
+                  label: "Organization address",
+                },
               ],
             },
           ],
@@ -1117,12 +1131,36 @@ const personDetailLayout = {
   ],
 };
 
+const organizationBranchLayout = {
+  type: "VerticalLayout",
+  options: { label: "Organization" },
+  elements: [
+    { type: "Control", scope: "#/properties/name" },
+    { type: "Control", scope: "#/properties/url" },
+    { type: "Control", scope: "#/properties/address" },
+  ],
+};
+
+// Per-item branch layouts consumed by ArrayLayoutRenderer's inline type switcher.
+// ArrayLayoutRenderer reads options.detail.options.detail[branchIndex] to find
+// the VerticalLayout for each concrete branch (Person = 0, Organization = 1).
+const personOrOrgDetail = {
+  options: {
+    detail: {
+      0: personBranchLayout,
+      1: organizationBranchLayout,
+    },
+  },
+};
+
+// detail = personOrOrgDetail lets branchItems resolve labels from
+// options.detail.options.detail[i].options.label = "Person" / "Organization".
 const creatorOptions = computed(() => ({
   elementLabelProp: ["name"],
   childLabelProp: "name",
   showSortButtons: true,
   collapsed: true,
-  detail: personDetailLayout,
+  detail: personOrOrgDetail,
 }));
 
 const contributorOptions = computed(() => ({
@@ -1130,7 +1168,7 @@ const contributorOptions = computed(() => ({
   childLabelProp: "name",
   showSortButtons: true,
   collapsed: true,
-  detail: personDetailLayout,
+  detail: personOrOrgDetail,
 }));
 
 const fundingOptions = {
