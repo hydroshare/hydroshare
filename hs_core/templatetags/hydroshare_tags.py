@@ -419,23 +419,6 @@ def json_dumps(value):
 
 
 @register.filter
-def resource_files_json_ld(resource):
-    """Return a JSON-LD array of schema.org MediaObject entries for each resource file.
-    Satisfies MetaDIG entity.name.present by emitting at minimum name and encodingFormat
-    for every file in the resource."""
-    entries = []
-    for f in resource.files.all():
-        entry = {
-            "@type": "MediaObject",
-            "name": f.file_name,
-        }
-        if f.mime_type:
-            entry["encodingFormat"] = f.mime_type
-        entries.append(entry)
-    return dumps(entries, indent=4) if entries else ""
-
-
-@register.filter
 def relation_values_json(relations, relation_type):
     values = [rel.get('value') for rel in relations if rel.get('type') == relation_type and rel.get('value')]
     return dumps(values) if values else ""

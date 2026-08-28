@@ -216,6 +216,7 @@
     },
     "distribution": {
         "@type": "DataDownload",
+        "name": "{{ cm.cached_metadata.title.value }} (BagIt Archive)",
         "contentSize": "{{ cm.size|filesizeformat }}",
         "encodingFormat": "application/zip",
         "contentUrl": "https://www.hydroshare.org/hsapi/resource/{{ cm.short_id }}/",

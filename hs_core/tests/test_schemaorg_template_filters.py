@@ -7,7 +7,6 @@ from hs_core.templatetags.hydroshare_tags import (
     creator_json_ld_element,
     first_relation_value_for_types,
     provenance_trace_json,
-    resource_files_json_ld,
     schemaorg_contact_point_json,
 )
 
@@ -102,55 +101,3 @@ class TestSchemaorgTemplateFilters(SimpleTestCase):
                 "https://example.com/version",
             ],
         )
-
-
-class TestResourceFilesJsonLd(SimpleTestCase):
-    def _make_resource(self, files_data):
-        """Return a mock resource whose .files.all() yields simple file mocks."""
-        file_mocks = []
-        for name, mime in files_data:
-            f = MagicMock()
-            f.file_name = name
-            f.mime_type = mime
-            file_mocks.append(f)
-
-        resource = MagicMock()
-        resource.files.all.return_value = file_mocks
-        return resource
-
-    def test_emits_media_object_with_name_and_encoding_format(self):
-        resource = self._make_resource([("data.csv", "text/csv")])
-        entries = json.loads(resource_files_json_ld(resource))
-
-        self.assertEqual(len(entries), 1)
-        self.assertEqual(entries[0]["@type"], "MediaObject")
-        self.assertEqual(entries[0]["name"], "data.csv")
-        self.assertEqual(entries[0]["encodingFormat"], "text/csv")
-
-    def test_emits_multiple_files(self):
-        resource = self._make_resource([
-            ("report.pdf", "application/pdf"),
-            ("data.nc", "application/x-netcdf"),
-            ("readme.txt", "text/plain"),
-        ])
-        entries = json.loads(resource_files_json_ld(resource))
-
-        self.assertEqual(len(entries), 3)
-        names = [e["name"] for e in entries]
-        self.assertIn("report.pdf", names)
-        self.assertIn("data.nc", names)
-        self.assertIn("readme.txt", names)
-
-    def test_omits_encoding_format_when_mime_type_is_none(self):
-        resource = self._make_resource([("archive.zip", None)])
-        entries = json.loads(resource_files_json_ld(resource))
-
-        self.assertEqual(len(entries), 1)
-        self.assertNotIn("encodingFormat", entries[0])
-        self.assertEqual(entries[0]["name"], "archive.zip")
-
-    def test_returns_empty_string_for_resource_with_no_files(self):
-        resource = self._make_resource([])
-        result = resource_files_json_ld(resource)
-
-        self.assertEqual(result, "")
