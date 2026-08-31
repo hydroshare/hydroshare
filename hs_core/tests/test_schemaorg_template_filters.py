@@ -61,11 +61,11 @@ class TestSchemaorgTemplateFilters(SimpleTestCase):
 
         # Must be a plain list, not an @list-wrapped object
         self.assertIsInstance(result, list)
-        # Original creators plus one Contact entry
-        self.assertEqual(len(result), 3)
+        # No duplication — same number of entries as input creators
+        self.assertEqual(len(result), 2)
         contact_entries = [c for c in result if c.get("roleName") == "Contact"]
         self.assertEqual(len(contact_entries), 1)
-        # Contact entry should be derived from the first creator (order=1)
+        # roleName is on the first creator (order=1)
         contact = contact_entries[0]
         self.assertEqual(contact["name"], "Jane Doe")
         self.assertEqual(contact["identifier"], "https://orcid.org/0000-0002-1825-0097")

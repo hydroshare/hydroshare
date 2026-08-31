@@ -417,18 +417,16 @@ def creator_json_ld_element(crs):
 
 @register.filter
 def creator_with_contact_json_ld(crs):
-    """Returns creators as a plain JSON array (not @list-wrapped) with an appended
-    Contact entry for the first creator (by order). The flat array format is required
-    for MetaDIG resource.distributionContact.present and
-    resource.distributionContactIdentifier.present, whose schema.org jq selectors
-    iterate .creator[] and filter by .roleName == "Contact"."""
+    """Returns creators as a plain JSON array (not @list-wrapped). The first creator
+    (by order) is tagged with roleName: 'Contact' in-place to satisfy MetaDIG
+    resource.distributionContact.present and resource.distributionContactIdentifier.present,
+    whose schema.org jq selectors iterate .creator[] and filter by .roleName == "Contact".
+    No duplicate entry is created."""
     if not crs:
         return "[]"
-    crs_array = [_creator_to_schemaorg_dict(cr) for cr in crs]
     sorted_crs = sorted(crs, key=lambda c: c.get('order') if c.get('order') is not None else 999999)
-    contact_dict = _creator_to_schemaorg_dict(sorted_crs[0])
-    contact_dict['roleName'] = 'Contact'
-    crs_array.append(contact_dict)
+    crs_array = [_creator_to_schemaorg_dict(cr) for cr in sorted_crs]
+    crs_array[0]['roleName'] = 'Contact'
     return dumps(crs_array, sort_keys=True, indent=6)
 
 
