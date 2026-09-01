@@ -34,18 +34,22 @@ class ResourceAccess(models.Model):
                                  help_text='whether resource is currently active')
     # both resources and groups
     discoverable = models.BooleanField(default=False,
-                                       help_text='whether resource is discoverable by everyone')
+                                       help_text='whether resource is discoverable by everyone',
+                                       db_index=True)
     public = models.BooleanField(default=False,
-                                 help_text='whether resource data can be viewed by everyone')
+                                 help_text='whether resource data can be viewed by everyone',
+                                 db_index=True)
     shareable = models.BooleanField(default=True,
                                     help_text='whether resource can be shared by non-owners')
     # these are for resources only
     review_pending = models.BooleanField(default=False,
                                          help_text='whether resource is under metadata review')
     published = models.BooleanField(default=False,
-                                    help_text='whether resource has been published')
+                                    help_text='whether resource has been published',
+                                    db_index=True)
     immutable = models.BooleanField(default=False,
-                                    help_text='whether to prevent all changes to the resource')
+                                    help_text='whether to prevent all changes to the resource',
+                                    db_index=True)
 
     require_download_agreement = models.BooleanField(default=False,
                                                      help_text='whether to require agreement to '
