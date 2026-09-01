@@ -10,6 +10,7 @@ from pydantic import (
 
 from .base import (
     CreativeWork,
+    LinkedData,
     SchemaBaseModel,
     Creator,
     Contributor,
@@ -181,7 +182,7 @@ class CoreMetadata(SchemaBaseModel):
         default=None,
         json_schema_extra=remove_none_default,
     )
-    hasPart: Optional[List[HasPart]] = Field(
+    hasPart: Optional[List[Union[LinkedData, HasPart]]] = Field(
         title="Has part",
         description="Link to or citation for a related resource that is part of this resource.",
         default=[],
@@ -204,7 +205,7 @@ class CoreMetadata(SchemaBaseModel):
     )
 
     # using MediaType here to allow for MediaObject and its subclasses (e.g., DataDownload, VideoObject)
-    associatedMedia: Optional[Union[MediaType, List[MediaType]]] = Field(
+    associatedMedia: Optional[List[Union[LinkedData, MediaType]]] = Field(
         title="Resource content",
         description="A media object that encodes this CreativeWork. This property is a synonym for encoding.",
         default=None,
@@ -305,7 +306,7 @@ class CoreMetadataEdit(CoreMetadata):
         description="The date on which the resource was most recently modified or updated.",
         json_schema_extra={"readOnly": True},
     )
-    hasPart: Optional[List[HasPart]] = Field(
+    hasPart: Optional[Union[LinkedData, HasPart, List[Union[LinkedData, HasPart]]]] = Field(
         title="Has part",
         description="Link to or citation for a related resource that is part of this resource.",
         default=[],
@@ -318,7 +319,7 @@ class CoreMetadataEdit(CoreMetadata):
         default=[],
         json_schema_extra={"readOnly": True},
     )
-    associatedMedia: Optional[Union[MediaType, List[MediaType]]] = Field(
+    associatedMedia: Optional[Union[LinkedData, MediaType, List[Union[LinkedData, MediaType]]]] = Field(
         title="Resource content",
         description="A media object that encodes this CreativeWork. This property is a synonym for encoding.",
         default=None,

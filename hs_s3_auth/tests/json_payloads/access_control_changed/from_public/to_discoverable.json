@@ -1,0 +1,12 @@
+{
+    "resources": [
+        {
+            "id": "a2c0df5bf3eb4d8c8a34beaffe169f91",
+            "public": "false",
+            "allow_private_sharing": "false",
+            "discoverable": "true",
+            "user_access": [],
+            "bucket_name": "user1"
+        }
+    ]
+}

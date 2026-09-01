@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>HydroShare Resource Metadata</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Source+Sans+3:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f5f7f4;
+  --paper: rgba(255,255,255,.9);
+  --paper-strong: #ffffff;
+  --line: #d8e0d5;
+  --text: #20312a;
+  --muted: #60756a;
+  --accent: #0f766e;
+  --accent-soft: #d8f0ec;
+  --danger: #b42318;
+  --radius: 16px;
+  --shadow: 0 20px 60px rgba(32,49,42,.08);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: 'Source Sans 3', sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(circle at top left, rgba(15,118,110,.12), transparent 28%),
+    radial-gradient(circle at top right, rgba(217,119,6,.08), transparent 24%),
+    linear-gradient(180deg, #f8faf7 0%, #eef4ee 100%);
+  min-height: 100vh;
+}
+
+.page {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 32px 20px 56px;
+}
+
+.hero {
+  background: linear-gradient(135deg, rgba(255,255,255,.92), rgba(244,250,247,.92));
+  border: 1px solid rgba(216,224,213,.9);
+  border-radius: 24px;
+  box-shadow: var(--shadow);
+  padding: 28px;
+  backdrop-filter: blur(8px);
+}
+
+.eyebrow,
+.meta-label,
+.pill,
+.section h2,
+.stat-label {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.eyebrow {
+  color: var(--accent);
+  font-size: 12px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.hero h1 {
+  margin: 0;
+  font-size: clamp(30px, 4vw, 48px);
+  line-height: 1.02;
+}
+
+.hero .subtitle {
+  margin: 14px 0 0;
+  max-width: 860px;
+  font-size: 18px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.button,
+.button:visited {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--paper-strong);
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1.6fr .9fr;
+  gap: 18px;
+  margin-top: 24px;
+}
+
+.card {
+  background: var(--paper);
+  border: 1px solid rgba(216,224,213,.95);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.stat {
+  padding: 16px;
+  border-radius: 14px;
+  background: rgba(255,255,255,.8);
+  border: 1px solid var(--line);
+}
+
+.stat-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--muted);
+  letter-spacing: .06em;
+}
+
+.stat-value {
+  margin-top: 8px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.content {
+  display: grid;
+  grid-template-columns: 1.2fr .8fr;
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.stack {
+  display: grid;
+  gap: 18px;
+}
+
+.section {
+  padding: 22px;
+}
+
+.section h2 {
+  margin: 0 0 16px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--accent);
+}
+
+.meta-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.meta-item {
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(255,255,255,.68);
+}
+
+.meta-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--muted);
+}
+
+.meta-value {
+  margin-top: 8px;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.list,
+.chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip,
+.pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+}
+
+.chip {
+  padding: 7px 10px;
+  background: #fff;
+  border: 1px solid var(--line);
+  font-size: 14px;
+}
+
+.pill {
+  padding: 6px 10px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+.person,
+.relation,
+.media-item {
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+}
+
+.person:first-child,
+.relation:first-child,
+.media-item:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.person-name,
+.relation-title,
+.media-title {
+  font-weight: 700;
+  font-size: 17px;
+}
+
+.person-meta,
+.relation-meta,
+.media-meta {
+  margin-top: 6px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.empty {
+  color: var(--muted);
+  font-style: italic;
+}
+
+.notice,
+.error {
+  padding: 14px 16px;
+  border-radius: 14px;
+  line-height: 1.5;
+}
+
+.notice {
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  color: #9a3412;
+}
+
+.error {
+  background: #fef3f2;
+  border: 1px solid #fecdca;
+  color: var(--danger);
+}
+
+pre {
+  margin: 0;
+  padding: 18px;
+  overflow: auto;
+  border-radius: 14px;
+  background: #14211c;
+  color: #e7f3ed;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+a { color: var(--accent); }
+
+@media (max-width: 920px) {
+  .hero-grid,
+  .content,
+  .meta-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .page {
+    padding: 20px 14px 40px;
+  }
+
+  .hero,
+  .section {
+    padding: 18px;
+  }
+}
+</style>
+</head>
+<body>
+<main class="page">
+  <section class="hero card">
+    <div class="eyebrow">HydroShare Metadata Viewer</div>
+    <h1 id="name">Loading resource metadata...</h1>
+    <p class="subtitle" id="description">Fetching JSON-LD from the resource metadata file.</p>
+    <div class="hero-actions" id="hero-actions"></div>
+    <div class="hero-grid">
+      <div class="card section">
+        <h2>Summary</h2>
+        <div class="list" id="summary-pills"></div>
+        <div class="meta-grid" style="margin-top:16px;" id="summary-grid"></div>
+      </div>
+      <div class="stats" id="stats"></div>
+    </div>
+  </section>
+
+  <div class="content">
+    <div class="stack">
+      <section class="card section">
+        <h2>People</h2>
+        <div id="people"></div>
+      </section>
+
+      <section class="card section">
+        <h2>Coverage</h2>
+        <div class="meta-grid" id="coverage"></div>
+      </section>
+
+      <section class="card section">
+        <h2>Rights And Citation</h2>
+        <div class="meta-grid" id="rights"></div>
+      </section>
+
+      <section class="card section">
+        <h2>Relations</h2>
+        <div id="relations"></div>
+      </section>
+    </div>
+
+    <div class="stack">
+      <section class="card section">
+        <h2>Keywords</h2>
+        <div class="chip-list" id="keywords"></div>
+      </section>
+
+      <section class="card section">
+        <h2>Parts And Media</h2>
+        <div id="parts-media"></div>
+      </section>
+
+      <section class="card section">
+        <h2>Raw JSON-LD</h2>
+        <pre id="raw-json">Loading...</pre>
+      </section>
+    </div>
+  </div>
+</main>
+
+<script>
+//const S3_ORIGIN = `${window.location.protocol}//s3.${window.location.hostname}`;
+const S3_ORIGIN = `http://localhost:9000`;
+const RESOURCE_ID = (() => {
+  const parts = window.location.pathname.split('/').filter(Boolean);
+  const idx = parts.indexOf('resource-metadata-view');
+  return (idx >= 0 && parts[idx + 1]) ? parts[idx + 1] : '';
+})();
+const JSONLD_URL = `${S3_ORIGIN}/resource/${RESOURCE_ID}/.hsjsonld/dataset_metadata.json`;
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
+function formatDate(value) {
+  if (!value) return 'Not provided';
+  const dt = new Date(value);
+  return Number.isNaN(dt.getTime()) ? String(value) : dt.toLocaleString();
+}
+
+function asArray(value) {
+  if (!value) return [];
+  return Array.isArray(value) ? value : [value];
+}
+
+function toText(value) {
+  if (value == null || value === '') return 'Not provided';
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return String(value);
+  if (Array.isArray(value)) return value.map(toText).join(', ');
+  if (typeof value === 'object') {
+    if (value.name) return String(value.name);
+    if (value.url) return String(value.url);
+    return JSON.stringify(value, null, 2);
+  }
+  return String(value);
+}
+
+function coverageText(value) {
+  if (!value) return 'Not provided';
+  const parts = [];
+  for (const key of ['name', 'type', 'northlimit', 'southlimit', 'eastlimit', 'westlimit', 'units', 'projection', 'value', 'start', 'end']) {
+    if (value[key] != null && value[key] !== '') parts.push(`${key}: ${value[key]}`);
+  }
+  return parts.length ? parts.join(' | ') : toText(value);
+}
+
+function renderMetaGrid(targetId, items) {
+  const target = document.getElementById(targetId);
+  target.innerHTML = items.map(item => `
+    <div class="meta-item">
+      <div class="meta-label">${escapeHtml(item.label)}</div>
+      <div class="meta-value">${item.html ?? escapeHtml(item.value ?? 'Not provided')}</div>
+    </div>
+  `).join('');
+}
+
+function renderStats(metadata) {
+  const stats = [
+    { label: 'Type', value: metadata.type || 'Dataset' },
+    { label: 'Creators', value: asArray(metadata.creator).length },
+    { label: 'Keywords', value: asArray(metadata.keywords).length },
+    { label: 'Has Part', value: asArray(metadata.hasPart).length },
+  ];
+  document.getElementById('stats').innerHTML = stats.map(stat => `
+    <div class="stat card">
+      <div class="stat-label">${escapeHtml(stat.label)}</div>
+      <div class="stat-value">${escapeHtml(stat.value)}</div>
+    </div>
+  `).join('');
+}
+
+function renderPeople(metadata) {
+  const people = [];
+  for (const creator of asArray(metadata.creator)) {
+    people.push({ role: 'Creator', item: creator });
+  }
+  for (const contributor of asArray(metadata.contributor)) {
+    people.push({ role: 'Contributor', item: contributor });
+  }
+
+  const target = document.getElementById('people');
+  if (!people.length) {
+    target.innerHTML = '<div class="empty">No people metadata found.</div>';
+    return;
+  }
+
+  target.innerHTML = people.map(({ role, item }) => {
+    const links = [];
+    if (item?.homepage) links.push(item.homepage);
+    if (item?.identifiers && typeof item.identifiers === 'object') {
+      links.push(...Object.values(item.identifiers).filter(Boolean));
+    }
+    return `
+      <div class="person">
+        <div class="pill">${escapeHtml(role)}</div>
+        <div class="person-name" style="margin-top:8px;">${escapeHtml(item?.name || item?.organization || 'Unnamed')}</div>
+        <div class="person-meta">
+          ${escapeHtml(item?.organization || item?.affiliation?.name || 'No organization listed')}
+          ${item?.email ? `<br><a href="mailto:${escapeHtml(item.email)}">${escapeHtml(item.email)}</a>` : ''}
+          ${links.length ? `<br>${links.map(link => `<a href="${escapeHtml(link)}" target="_blank" rel="noreferrer">${escapeHtml(link)}</a>`).join('<br>')}` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderKeywords(metadata) {
+  const target = document.getElementById('keywords');
+  const keywords = asArray(metadata.keywords);
+  if (!keywords.length) {
+    target.innerHTML = '<div class="empty">No keywords listed.</div>';
+    return;
+  }
+  target.innerHTML = keywords.map(keyword => `<span class="chip">${escapeHtml(keyword)}</span>`).join('');
+}
+
+function renderRelations(metadata) {
+  const target = document.getElementById('relations');
+  const relations = asArray(metadata.relations);
+  if (!relations.length) {
+    target.innerHTML = '<div class="empty">No relation metadata found.</div>';
+    return;
+  }
+  target.innerHTML = relations.map(relation => `
+    <div class="relation">
+      <div class="relation-title">${escapeHtml(relation.type || relation.name || 'Relation')}</div>
+      <div class="relation-meta">
+        ${escapeHtml(relation.value || relation.description || relation.url || 'No details available')}
+        ${relation.url ? `<br><a href="${escapeHtml(relation.url)}" target="_blank" rel="noreferrer">${escapeHtml(relation.url)}</a>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderPartsMedia(metadata) {
+  const target = document.getElementById('parts-media');
+  const groups = [
+    ...asArray(metadata.hasPart).map(item => ({ kind: 'Has Part', item })),
+    ...asArray(metadata.associatedMedia).map(item => ({ kind: 'Associated Media', item })),
+  ];
+
+  if (!groups.length) {
+    target.innerHTML = '<div class="empty">No part or media links were found.</div>';
+    return;
+  }
+
+  target.innerHTML = groups.map(({ kind, item }) => `
+    <div class="media-item">
+      <div class="pill">${escapeHtml(kind)}</div>
+      <div class="media-title" style="margin-top:8px;">${escapeHtml(item.name || item.description || item.contentUrl || item.url || 'Untitled')}</div>
+      <div class="media-meta">
+        ${item.description ? `${escapeHtml(item.description)}<br>` : ''}
+        ${item.encodingFormat ? `Format: ${escapeHtml(item.encodingFormat)}<br>` : ''}
+        ${item.contentSize ? `Size: ${escapeHtml(item.contentSize)}<br>` : ''}
+        ${(item.contentUrl || item.url) ? `<a href="${escapeHtml(item.contentUrl || item.url)}" target="_blank" rel="noreferrer">${escapeHtml(item.contentUrl || item.url)}</a>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderActions(metadata) {
+  const actions = [];
+  if (metadata.url) actions.push(`<a class="button primary" href="${escapeHtml(metadata.url)}" target="_blank" rel="noreferrer">Open Resource</a>`);
+  actions.push(`<a class="button" href="/resource-metadata-edit/${escapeHtml(RESOURCE_ID)}/">Edit Metadata And Files</a>`);
+  actions.push(`<a class="button" href="${escapeHtml(JSONLD_URL)}" target="_blank" rel="noreferrer">Open JSON-LD</a>`);
+  document.getElementById('hero-actions').innerHTML = actions.join('');
+}
+
+function renderPage(metadata) {
+  document.name = metadata.name ? `${metadata.name} | HydroShare Metadata` : 'HydroShare Resource Metadata';
+  document.getElementById('name').textContent = metadata.name || 'Untitled resource';
+  document.getElementById('description').textContent = metadata.description || 'No description provided in the JSON-LD metadata.';
+  document.getElementById('raw-json').textContent = JSON.stringify(metadata, null, 2);
+
+  const pills = [];
+  if (metadata.sharing_status) pills.push(`<span class="pill">${escapeHtml(metadata.sharing_status)}</span>`);
+  if (metadata.language) pills.push(`<span class="pill">${escapeHtml(metadata.language)}</span>`);
+  if (metadata.type) pills.push(`<span class="pill">${escapeHtml(metadata.type)}</span>`);
+  document.getElementById('summary-pills').innerHTML = pills.join('');
+
+  renderMetaGrid('summary-grid', [
+    { label: 'Identifier', value: metadata.identifier || 'Not provided' },
+    { label: 'Created', value: formatDate(metadata.created) },
+    { label: 'Modified', value: formatDate(metadata.modified) },
+    { label: 'Published', value: formatDate(metadata.published) },
+  ]);
+
+  renderStats(metadata);
+  renderPeople(metadata);
+  renderKeywords(metadata);
+  renderRelations(metadata);
+  renderPartsMedia(metadata);
+  renderActions(metadata);
+
+  renderMetaGrid('coverage', [
+    { label: 'Spatial Coverage', value: coverageText(metadata.spatial_coverage) },
+    { label: 'Period Coverage', value: coverageText(metadata.period_coverage) },
+    { label: 'Funding', value: asArray(metadata.awards).map(toText).join(', ') || 'Not provided' },
+    { label: 'Additional Type', value: metadata.type || 'Not provided' },
+  ]);
+
+  const rightsStatement = metadata.rights?.statement || metadata.rights?.description || 'Not provided';
+  const rightsUrl = metadata.rights?.url ? `<a href="${escapeHtml(metadata.rights.url)}" target="_blank" rel="noreferrer">${escapeHtml(metadata.rights.url)}</a>` : 'Not provided';
+  renderMetaGrid('rights', [
+    { label: 'Rights Statement', value: rightsStatement },
+    { label: 'Rights URL', html: rightsUrl },
+    { label: 'Citation', value: metadata.citation || 'Not provided' },
+    { label: 'Resource URL', html: metadata.url ? `<a href="${escapeHtml(metadata.url)}" target="_blank" rel="noreferrer">${escapeHtml(metadata.url)}</a>` : 'Not provided' },
+  ]);
+}
+
+async function boot() {
+  if (!RESOURCE_ID) {
+    document.getElementById('name').textContent = 'Missing resource id';
+    document.getElementById('description').innerHTML = '<div class="error">The URL must include a resource id.</div>';
+    document.getElementById('raw-json').textContent = '';
+    return;
+  }
+
+  try {
+    const resp = await fetch(JSONLD_URL, { credentials: 'include' });
+    if (!resp.ok) throw new Error(`Failed to fetch metadata: ${resp.status}`);
+    const metadata = await resp.json();
+    renderPage(metadata);
+  } catch (error) {
+    document.getElementById('name').textContent = 'Unable to load resource metadata';
+    document.getElementById('description').innerHTML = `<div class="error">${escapeHtml(error.message)}</div><div class="notice" style="margin-top:12px;">Expected JSON-LD URL: ${escapeHtml(JSONLD_URL)}</div>`;
+    document.getElementById('raw-json').textContent = String(error.stack || error);
+  }
+}
+
+boot();
+</script>
+</body>
+</html>

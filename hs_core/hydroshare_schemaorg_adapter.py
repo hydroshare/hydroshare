@@ -335,7 +335,7 @@ class _HydroshareResourceMetadata(BaseModel):
         dataset.associatedMedia = self.to_dataset_associated_media()
         dataset.isPartOf = is_part_of
         dataset.hasPart = has_part
-        dataset.relations = other_relations
+        dataset.relation = other_relations
         dataset.license = self.to_dataset_license()
         dataset.citation = [self.citation]
         dataset.creativeWorkStatus = self.to_dataset_creative_work_status()

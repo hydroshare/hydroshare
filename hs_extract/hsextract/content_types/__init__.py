@@ -31,18 +31,18 @@ ReturnMetaObjectType = Union[
 ]
 
 
-def determine_metadata_object(file_object_path: str, file_updated: bool) -> ReturnMetaObjectType:
+def determine_metadata_object(file_object_path: str, file_updated: bool, zone: str) -> ReturnMetaObjectType:
     for metadata_class in metadata_classes:
-        if metadata_class.is_content_type(file_object_path):
-            return metadata_class(file_object_path, file_updated)
-    return BaseMetadataObject(file_object_path, file_updated)
+        if metadata_class.is_content_type(file_object_path, zone):
+            return metadata_class(file_object_path, file_updated, zone)
+    return BaseMetadataObject(file_object_path, file_updated, zone)
 
 
 def determine_metadata_object_from_user_metadata(
-        user_metadata_file_path: str, file_updated: bool
+        user_metadata_file_path: str, file_updated: bool, zone: str
 ) -> ReturnMetaObjectType:
     if not user_metadata_file_path.endswith("user_metadata.json"):
-        return BaseMetadataObject(user_metadata_file_path, file_updated)
+        return BaseMetadataObject(user_metadata_file_path, file_updated, zone)
 
     bucket_path, relative_user_meta_path = user_metadata_file_path.split("/.hsmetadata/", 1)
     is_fileset_user_metadata = False
@@ -57,6 +57,6 @@ def determine_metadata_object_from_user_metadata(
     if not is_fileset_user_metadata:
         # check content path exists, if not return BaseMetadataObject (unknown content type)
         from hsextract.utils.s3 import exists
-        if not exists(content_path):
-            return BaseMetadataObject(content_path, file_updated)
-    return determine_metadata_object(content_path, file_updated)
+        if not exists(content_path, zone):
+            return BaseMetadataObject(content_path, file_updated, zone)
+    return determine_metadata_object(content_path, file_updated, zone)

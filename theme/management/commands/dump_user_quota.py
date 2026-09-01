@@ -51,7 +51,7 @@ class Command(BaseCommand):
         data = []
         errors = []
         for uq in user_quotas:
-            used = uq.used_value
+            used = uq.data_zone_value
             user = uq.user
             allocated = uq.allocated_value
             if exceeded and used < allocated:
