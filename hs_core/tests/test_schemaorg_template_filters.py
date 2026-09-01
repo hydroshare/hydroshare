@@ -1,0 +1,115 @@
+import json
+
+from django.test import SimpleTestCase
+
+from hs_core.templatetags.hydroshare_tags import (
+    creator_json_ld_element,
+    creator_with_contact_json_ld,
+    schemaorg_contact_point_json,
+)
+
+
+class TestSchemaorgTemplateFilters(SimpleTestCase):
+    def test_creator_json_ld_element_emits_identifier_and_same_as(self):
+        creators = [
+            {
+                "name": "Doe, Jane",
+                "organization": "USU",
+                "email": "jane@example.com",
+                "address": "123 Main St",
+                "relative_uri": "/user/123/",
+                "homepage": "https://example.com/jane",
+                "identifiers": {
+                    "ORCID": "https://orcid.org/0000-0002-1825-0097",
+                },
+            }
+        ]
+
+        payload = json.loads(creator_json_ld_element(creators))
+        creator = payload["@list"][0]
+
+        self.assertEqual(creator["identifier"], "https://orcid.org/0000-0002-1825-0097")
+        self.assertEqual(creator["sameAs"], "https://orcid.org/0000-0002-1825-0097")
+
+    def test_creator_with_contact_json_ld_appends_contact_entry(self):
+        creators = [
+            {
+                "name": "Doe, Jane",
+                "organization": "USU",
+                "email": "jane@example.com",
+                "address": "",
+                "relative_uri": "/user/1/",
+                "homepage": "",
+                "order": 1,
+                "identifiers": {
+                    "ORCID": "https://orcid.org/0000-0002-1825-0097",
+                },
+            },
+            {
+                "name": "Smith, John",
+                "organization": "MIT",
+                "email": "john@example.com",
+                "address": "",
+                "relative_uri": "/user/2/",
+                "homepage": "",
+                "order": 2,
+                "identifiers": {},
+            },
+        ]
+
+        result = json.loads(creator_with_contact_json_ld(creators))
+
+        # Must be a plain list, not an @list-wrapped object
+        self.assertIsInstance(result, list)
+        # No duplication — same number of entries as input creators
+        self.assertEqual(len(result), 2)
+        contact_entries = [c for c in result if c.get("roleName") == "Contact"]
+        self.assertEqual(len(contact_entries), 1)
+        # roleName is on the first creator (order=1)
+        contact = contact_entries[0]
+        self.assertEqual(contact["roleName"], "Contact")
+        self.assertEqual(contact["name"], "Jane Doe")
+        self.assertEqual(contact["identifier"], "https://orcid.org/0000-0002-1825-0097")
+        # contactPoint nested inside the contact creator (not top-level on Dataset)
+        self.assertIn("contactPoint", contact)
+        cp = contact["contactPoint"]
+        self.assertEqual(cp["@type"], "ContactPoint")
+        self.assertEqual(cp["name"], "Jane Doe")
+        self.assertEqual(cp["email"], "jane@example.com")
+
+    def test_schemaorg_contact_point_json_uses_first_ordered_creator(self):
+        creators = [
+            {
+                "name": "Second Person",
+                "organization": "Org B",
+                "email": "second@example.com",
+                "phone": "555-1111",
+                "relative_uri": "/user/2/",
+                "homepage": "https://example.com/second",
+                "order": 2,
+                "identifiers": {
+                    "ORCID": "https://orcid.org/0000-0002-0000-0002",
+                },
+            },
+            {
+                "name": "First Person",
+                "organization": "Org A",
+                "email": "first@example.com",
+                "phone": "555-0000",
+                "relative_uri": "/user/1/",
+                "homepage": "https://example.com/first",
+                "order": 1,
+                "identifiers": {
+                    "ORCID": "https://orcid.org/0000-0001-0000-0001",
+                },
+            },
+        ]
+
+        contact_point = json.loads(schemaorg_contact_point_json(creators))
+
+        self.assertEqual(contact_point["name"], "First Person")
+        self.assertEqual(contact_point["email"], "first@example.com")
+        self.assertEqual(contact_point["telephone"], "555-0000")
+        self.assertNotIn("identifier", contact_point)
+        self.assertNotIn("sameAs", contact_point)
+        self.assertIn("https://www.hydroshare.org/user/1/", contact_point["url"])
