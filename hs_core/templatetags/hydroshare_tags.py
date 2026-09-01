@@ -354,59 +354,142 @@ def display_name_to_class(value):
     return value.replace(" ", "_").lower()
 
 
+def _creator_to_schemaorg_dict(cr):
+    """Convert a single creator metadata dict to a schema.org Person/Organization dict."""
+    cr_dict = {}
+    urls = []
+    identifiers = []
+    if cr['email']:
+        cr_dict["email"] = cr['email']
+    if cr['address']:
+        cr_dict["address"] = {
+            "@type": "PostalAddress",
+            "streetAddress": cr['address']
+        }
+    if cr['name']:
+        cr_dict["@type"] = "Person"
+        cr_dict["name"] = name_without_commas(cr['name'])
+        if cr['organization']:
+            cr_dict["affiliation"] = {
+                "@type": "Organization",
+                "name": cr['organization']
+            }
+    else:
+        cr_dict["@type"] = "Organization"
+        cr_dict["name"] = cr['organization']
+
+    if cr['relative_uri']:
+        if cr['name']:
+            # append www.hydroshare.org since schema.org script is only embedded in production
+            urls.append("https://www.hydroshare.org" + cr['relative_uri'])
+        else:
+            # organization
+            urls.append(cr['relative_uri'])
+    if cr['homepage']:
+        urls.append(cr['homepage'])
+    if cr['identifiers']:
+        for k in cr['identifiers']:
+            identifier_value = cr['identifiers'][k]
+            urls.append(identifier_value)
+            identifiers.append(identifier_value)
+    if len(identifiers) == 1:
+        cr_dict['identifier'] = identifiers[0]
+        cr_dict['sameAs'] = identifiers[0]
+    elif len(identifiers) > 1:
+        cr_dict['identifier'] = identifiers
+        cr_dict['sameAs'] = identifiers
+    if len(urls) == 1:
+        cr_dict['url'] = urls[0]
+    elif len(urls) > 1:
+        cr_dict['url'] = urls
+    return cr_dict
+
+
 @register.filter
 def creator_json_ld_element(crs):
     """ return json ld element for creators for schema.org script embedded on resource landing page"""
-    crs_array = []
-    for cr in crs:
-        cr_dict = {}
-        urls = []
-        if cr['email']:
-            cr_dict["email"] = cr['email']
-        if cr['address']:
-            cr_dict["address"] = {
-                "@type": "PostalAddress",
-                "streetAddress": cr['address']
-            }
-        if cr['name']:
-            cr_dict["@type"] = "Person"
-            cr_dict["name"] = name_without_commas(cr['name'])
-            if cr['organization']:
-                affl_dict = {
-                    "@type": "Organization",
-                    "name": cr['organization']
-                }
-                cr_dict["affiliation"] = affl_dict
-        else:
-            cr_dict["@type"] = "Organization"
-            cr_dict["name"] = cr['organization']
-
-        if cr['relative_uri']:
-            if cr['name']:
-                # append www.hydroshare.org since schema.org script is only embedded in production
-                urls.append("https://www.hydroshare.org" + cr['relative_uri'])
-            else:
-                # organization
-                urls.append(cr['relative_uri'])
-        if cr['homepage']:
-            urls.append(cr['homepage'])
-        if cr['identifiers']:
-            for k in cr['identifiers']:
-                urls.append(cr['identifiers'][k])
-        if len(urls) == 1:
-            cr_dict['url'] = urls[0]
-        elif len(urls) > 1:
-            cr_dict['url'] = urls
-        crs_array.append(cr_dict)
+    crs_array = [_creator_to_schemaorg_dict(cr) for cr in crs]
     # reformat json dumped str a bit to fix the indentation issue with the last bracket
     default_dump = dumps({"@list": crs_array}, sort_keys=True, indent=6)
     format_dump = '{}    {}'.format(default_dump[:-1], default_dump[-1])
     return format_dump
 
 
+def _build_contact_point_dict(creator):
+    """Build a ContactPoint dict from a raw creator dict, or return None if no name/org."""
+    contact_point = {'@type': 'ContactPoint'}
+
+    creator_name = creator.get('name')
+    creator_organization = creator.get('organization')
+    if creator_name:
+        contact_point['name'] = name_without_commas(creator_name)
+    elif creator_organization:
+        contact_point['name'] = creator_organization
+    else:
+        return None
+
+    if creator.get('email'):
+        contact_point['email'] = creator['email']
+    if creator.get('phone'):
+        contact_point['telephone'] = creator['phone']
+
+    identifiers = []
+    if creator.get('identifiers'):
+        identifiers = [value for value in creator.get('identifiers').values() if value]
+
+    urls = []
+    if creator.get('relative_uri') and creator_name:
+        urls.append('https://www.hydroshare.org' + creator.get('relative_uri'))
+    if creator.get('homepage'):
+        urls.append(creator.get('homepage'))
+    urls.extend(identifiers)
+
+    unique_urls = list(dict.fromkeys(urls))
+    if len(unique_urls) == 1:
+        contact_point['url'] = unique_urls[0]
+    elif len(unique_urls) > 1:
+        contact_point['url'] = unique_urls
+
+    return contact_point
+
+
+@register.filter
+def creator_with_contact_json_ld(crs):
+    """Returns creators as a plain JSON array (not @list-wrapped). The first creator
+    (by order) is tagged with roleName: 'Contact' and contactPoint in-place to satisfy
+    MetaDIG resource.distributionContact.present and resource.distributionContactIdentifier.present,
+    whose schema.org jq selectors iterate .creator[] and filter by .roleName == "Contact".
+    contactPoint is nested inside the contact creator per Google's Dataset structured data spec.
+    No duplicate entry is created."""
+    if not crs:
+        return "[]"
+    sorted_crs = sorted(crs, key=lambda c: c.get('order') if c.get('order') is not None else 999999)
+    crs_array = [_creator_to_schemaorg_dict(cr) for cr in sorted_crs]
+    crs_array[0]['roleName'] = 'Contact'
+    cp = _build_contact_point_dict(sorted_crs[0])
+    if cp:
+        crs_array[0]['contactPoint'] = cp
+    return dumps(crs_array, sort_keys=True, indent=6)
+
+
 @register.filter
 def json_dumps(value):
     return dumps(value)
+
+
+@register.filter
+def schemaorg_contact_point_json(creators):
+    """Returns the ContactPoint for the first (by order) creator as a JSON string.
+    Kept for backwards compatibility and testing; the template now embeds this inside
+    the contact creator via creator_with_contact_json_ld instead."""
+    if not creators:
+        return ""
+    sorted_creators = sorted(creators,
+                             key=lambda creator: creator.get('order') if creator.get('order') is not None else 999999)
+    cp = _build_contact_point_dict(sorted_creators[0])
+    if cp is None:
+        return ""
+    return dumps(cp, sort_keys=True, indent=4)
 
 
 @register.filter
