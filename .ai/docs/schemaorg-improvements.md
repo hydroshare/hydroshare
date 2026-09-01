@@ -19,13 +19,9 @@ changes to the database model or stored metadata.
 - `hs_core/templates/pages/baseresource.html` — the section of the page that
   embeds machine-readable metadata was extended with the new fields below;
   the legacy `about` block that emitted URL-valued geospatial relations as bare
-  `Place` objects was removed (those relations are now covered by the explicit
-  named relation fields and the generic `citation` fallback)
+  `Place` objects was removed
 - `hs_core/templatetags/hydroshare_tags.py` — helper functions were added to
-  pull together contact info, and relation links so the template stays readable;
-  `relation_values_json` extracts relation values by type from `cached_metadata`
-  and returns them as a JSON array string, enabling typed relation fields in the
-  template without duplicating logic
+  pull together contact info so the template stays readable
 
 ### Metadata fields added or improved
 
@@ -71,12 +67,13 @@ ORCID when one is stored, satisfying `resource.distributionContactIdentifier.pre
 If no ORCID is stored, `resource.distributionContact.present` still passes but
 `resource.distributionContactIdentifier.present` does not.
 
-A separate `contactPoint` object (`@type: ContactPoint`) is also emitted at the
-`Dataset` level from the same first creator. **This is not evaluated by MetaDIG** —
-no MetaDIG check has a `contactPoint` jq selector. It is included because
-`contactPoint` is the conventional schema.org field for contact information, indexed
-by [Google Dataset Search](https://developers.google.com/search/docs/appearance/structured-data/dataset#dataset-properties),
-and the data cost is zero since it reuses the same first-creator lookup.
+A `contactPoint` object (`@type: ContactPoint`) is also nested inside the contact
+creator entry. **This is not evaluated by MetaDIG** — no MetaDIG check has a
+`contactPoint` jq selector. It is included because `contactPoint` is the
+conventional schema.org field for contact information per
+[Google Dataset Search](https://developers.google.com/search/docs/appearance/structured-data/dataset#dataset-properties).
+Nesting it inside the creator (rather than at the top `Dataset` level) matches
+Google's own example structure.
 
 **Known schema.org/MetaDIG clash: `roleName` on `Person`**
 The schema.org validator issues a warning that `roleName` is not a recognized
@@ -109,14 +106,13 @@ resource links were all already present and did not need to change.
 | Status | What it means |
 |---|---|
 | **Passing before this PR** | Title length, abstract length, creator presence, publisher name, keywords, publication date, landing page URL, license, spatial coverage, temporal coverage, resource identifier |
-| **Now passing after this PR** | `resource.publisherIdentifier.present` — CUAHSI ROR identifier added to the `publisher` block; `resource.creatorIdentifier.present` — ORCID emitted as `identifier`/`sameAs`, `creator` changed from `@list`-wrapped object to plain JSON array so MetaDIG jq iterates individual entries; `resource.distributionContact.present` and `resource.distributionContactIdentifier.present` — first creator duplicated with `"roleName": "Contact"` in the `creator` array (a separate `contactPoint` field is also emitted for Google Dataset Search but is not evaluated by MetaDIG); `entity.name.present` — `name` added to the `distribution` block |
+| **Now passing after this PR** | `resource.publisherIdentifier.present` — CUAHSI ROR identifier added to the `publisher` block; `resource.creatorIdentifier.present` — ORCID emitted as `identifier`/`sameAs`, `creator` changed from `@list`-wrapped object to plain JSON array so MetaDIG jq iterates individual entries; `resource.distributionContact.present` and `resource.distributionContactIdentifier.present` — `"roleName": "Contact"` added in-place to the first creator in the `creator` array (a nested `contactPoint` is also added to that entry for Google Dataset Search but is not evaluated by MetaDIG); `entity.name.present` — `name` added to the `distribution` block |
 | **Out of scope** | Checks that require column-level or attribute-level metadata (units, measurement scale, enumerated domains, etc.), per-file checksums, and a structured methods section — HydroShare does not currently store or expose this information on the landing page |
 
 ## A Note on Relation Links
 
-HydroShare uses slightly different terminology internally for one relation type.
-When a resource is marked as derived from another source, HydroShare calls it
-`source`. The standard schema.org term for the same concept is `isBasedOn`.
-The landing page translates this automatically so external tools see the
-correct term. All other relation types (`isPartOf`, `hasPart`, `isVersionOf`,
-`references`, etc.) use the same name in both systems.
+Relation fields (`isPartOf`, `hasPart`, `isBasedOn`, `isReplacedBy`, `citation`,
+etc.) were initially added to the JSON-LD but removed because they caused
+schema.org validation errors. HydroShare relation data remains available through
+the REST API and resource metadata XML; it is simply not emitted in the
+schema.org JSON-LD at this time.

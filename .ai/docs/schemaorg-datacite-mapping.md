@@ -58,15 +58,15 @@ In practice, the divergence is not about losing information; it is about transla
 
 | HydroShare relation type | Internal HydroShare vocabulary | schema.org field in [hs_core/templates/pages/baseresource.html](../../hs_core/templates/pages/baseresource.html) | Notes |
 | --- | --- | --- | --- |
-| `isPartOf` | Supported | `isPartOf` | Direct mapping |
-| `hasPart` | Supported | `hasPart` | Direct mapping |
-| `source` | Supported | `isBasedOn` | HydroShare stores `source`, schema.org renders it as `isBasedOn` |
-| `isVersionOf` | Supported | `isVersionOf` | Direct mapping |
-| `isReplacedBy` | Supported | `isReplacedBy` | Direct mapping |
-| `isDescribedBy` | Supported | `isDescribedBy` | Direct mapping |
-| `isReferencedBy` | Supported | `isReferencedBy` | Direct mapping |
-| `references` | Supported | `references` | Direct mapping |
-| `relation` | General relation wrapper | `citation` | The landing page also emits a generic citation list of relation values |
+| `isPartOf` | Supported | *(not emitted)* | Removed — caused schema.org validation errors |
+| `hasPart` | Supported | *(not emitted)* | Removed — caused schema.org validation errors |
+| `source` | Supported | *(not emitted)* | Removed — caused schema.org validation errors; was translated to `isBasedOn` |
+| `isVersionOf` | Supported | *(not emitted)* | Removed — caused schema.org validation errors |
+| `isReplacedBy` | Supported | *(not emitted)* | Removed — caused schema.org validation errors |
+| `isDescribedBy` | Supported | *(not emitted)* | Removed — caused schema.org validation errors |
+| `isReferencedBy` | Supported | *(not emitted)* | Removed — caused schema.org validation errors |
+| `references` | Supported | *(not emitted)* | Removed — caused schema.org validation errors |
+| `relation` | General relation wrapper | *(not emitted)* | Removed — caused schema.org validation errors |
 
 ### Where The Relation Mapping Diverges
 

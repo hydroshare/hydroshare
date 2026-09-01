@@ -478,12 +478,6 @@ def json_dumps(value):
 
 
 @register.filter
-def relation_values_json(relations, relation_type):
-    values = [rel.get('value') for rel in relations if rel.get('type') == relation_type and rel.get('value')]
-    return dumps(values) if values else ""
-
-
-@register.filter
 def schemaorg_contact_point_json(creators):
     """Returns the ContactPoint for the first (by order) creator as a JSON string.
     Kept for backwards compatibility and testing; the template now embeds this inside

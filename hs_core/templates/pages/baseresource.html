@@ -148,26 +148,6 @@
 	{% endif %}
     {% if cm.raccess.public %} "isAccessibleForFree": true, {% endif %}
     {% if cm.cached_metadata.relations %}
-    {% with rel_is_part_of=cm.cached_metadata.relations|relation_values_json:'isPartOf' %}
-    {% if rel_is_part_of %}
-    "isPartOf": {{ rel_is_part_of|safe }},
-    {% endif %}
-    {% endwith %}
-    {% with rel_has_part=cm.cached_metadata.relations|relation_values_json:'hasPart' %}
-    {% if rel_has_part %}
-    "hasPart": {{ rel_has_part|safe }},
-    {% endif %}
-    {% endwith %}
-    {% with rel_is_based_on=cm.cached_metadata.relations|relation_values_json:'source' %}
-    {% if rel_is_based_on %}
-    "isBasedOn": {{ rel_is_based_on|safe }},
-    {% endif %}
-    {% endwith %}
-    {% with rel_is_replaced_by=cm.cached_metadata.relations|relation_values_json:'isReplacedBy' %}
-    {% if rel_is_replaced_by %}
-    "isReplacedBy": {{ rel_is_replaced_by|safe }},
-    {% endif %}
-    {% endwith %}
     "citation": [
     {% for relation in cm.cached_metadata.relations %}
         "{{ relation.value | escapejs }}"{%if not forloop.last%},{%endif%}
