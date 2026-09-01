@@ -415,44 +415,9 @@ def creator_json_ld_element(crs):
     return format_dump
 
 
-@register.filter
-def creator_with_contact_json_ld(crs):
-    """Returns creators as a plain JSON array (not @list-wrapped). The first creator
-    (by order) is tagged with roleName: 'Contact' in-place to satisfy MetaDIG
-    resource.distributionContact.present and resource.distributionContactIdentifier.present,
-    whose schema.org jq selectors iterate .creator[] and filter by .roleName == "Contact".
-    No duplicate entry is created."""
-    if not crs:
-        return "[]"
-    sorted_crs = sorted(crs, key=lambda c: c.get('order') if c.get('order') is not None else 999999)
-    crs_array = [_creator_to_schemaorg_dict(cr) for cr in sorted_crs]
-    crs_array[0]['roleName'] = 'Contact'
-    return dumps(crs_array, sort_keys=True, indent=6)
-
-
-@register.filter
-def json_dumps(value):
-    return dumps(value)
-
-
-@register.filter
-def relation_values_json(relations, relation_type):
-    values = [rel.get('value') for rel in relations if rel.get('type') == relation_type and rel.get('value')]
-    return dumps(values) if values else ""
-
-
-@register.filter
-def schemaorg_contact_point_json(creators):
-    if not creators:
-        return ""
-
-    sorted_creators = sorted(creators,
-                             key=lambda creator: creator.get('order') if creator.get('order') is not None else 999999)
-    creator = sorted_creators[0]
-
-    contact_point = {
-        '@type': 'ContactPoint'
-    }
+def _build_contact_point_dict(creator):
+    """Build a ContactPoint dict from a raw creator dict, or return None if no name/org."""
+    contact_point = {'@type': 'ContactPoint'}
 
     creator_name = creator.get('name')
     creator_organization = creator.get('organization')
@@ -461,7 +426,7 @@ def schemaorg_contact_point_json(creators):
     elif creator_organization:
         contact_point['name'] = creator_organization
     else:
-        return ""
+        return None
 
     if creator.get('email'):
         contact_point['email'] = creator['email']
@@ -485,15 +450,52 @@ def schemaorg_contact_point_json(creators):
     elif len(unique_urls) > 1:
         contact_point['url'] = unique_urls
 
-    unique_identifiers = list(dict.fromkeys(identifiers))
-    if len(unique_identifiers) == 1:
-        contact_point['identifier'] = unique_identifiers[0]
-        contact_point['sameAs'] = unique_identifiers[0]
-    elif len(unique_identifiers) > 1:
-        contact_point['identifier'] = unique_identifiers
-        contact_point['sameAs'] = unique_identifiers
+    return contact_point
 
-    return dumps(contact_point, sort_keys=True, indent=4)
+
+@register.filter
+def creator_with_contact_json_ld(crs):
+    """Returns creators as a plain JSON array (not @list-wrapped). The first creator
+    (by order) is tagged with roleName: 'Contact' and contactPoint in-place to satisfy
+    MetaDIG resource.distributionContact.present and resource.distributionContactIdentifier.present,
+    whose schema.org jq selectors iterate .creator[] and filter by .roleName == "Contact".
+    contactPoint is nested inside the contact creator per Google's Dataset structured data spec.
+    No duplicate entry is created."""
+    if not crs:
+        return "[]"
+    sorted_crs = sorted(crs, key=lambda c: c.get('order') if c.get('order') is not None else 999999)
+    crs_array = [_creator_to_schemaorg_dict(cr) for cr in sorted_crs]
+    crs_array[0]['roleName'] = 'Contact'
+    cp = _build_contact_point_dict(sorted_crs[0])
+    if cp:
+        crs_array[0]['contactPoint'] = cp
+    return dumps(crs_array, sort_keys=True, indent=6)
+
+
+@register.filter
+def json_dumps(value):
+    return dumps(value)
+
+
+@register.filter
+def relation_values_json(relations, relation_type):
+    values = [rel.get('value') for rel in relations if rel.get('type') == relation_type and rel.get('value')]
+    return dumps(values) if values else ""
+
+
+@register.filter
+def schemaorg_contact_point_json(creators):
+    """Returns the ContactPoint for the first (by order) creator as a JSON string.
+    Kept for backwards compatibility and testing; the template now embeds this inside
+    the contact creator via creator_with_contact_json_ld instead."""
+    if not creators:
+        return ""
+    sorted_creators = sorted(creators,
+                             key=lambda creator: creator.get('order') if creator.get('order') is not None else 999999)
+    cp = _build_contact_point_dict(sorted_creators[0])
+    if cp is None:
+        return ""
+    return dumps(cp, sort_keys=True, indent=4)
 
 
 @register.filter

@@ -67,8 +67,15 @@ class TestSchemaorgTemplateFilters(SimpleTestCase):
         self.assertEqual(len(contact_entries), 1)
         # roleName is on the first creator (order=1)
         contact = contact_entries[0]
+        self.assertEqual(contact["roleName"], "Contact")
         self.assertEqual(contact["name"], "Jane Doe")
         self.assertEqual(contact["identifier"], "https://orcid.org/0000-0002-1825-0097")
+        # contactPoint nested inside the contact creator (not top-level on Dataset)
+        self.assertIn("contactPoint", contact)
+        cp = contact["contactPoint"]
+        self.assertEqual(cp["@type"], "ContactPoint")
+        self.assertEqual(cp["name"], "Jane Doe")
+        self.assertEqual(cp["email"], "jane@example.com")
 
     def test_schemaorg_contact_point_json_uses_first_ordered_creator(self):
         creators = [
@@ -103,6 +110,6 @@ class TestSchemaorgTemplateFilters(SimpleTestCase):
         self.assertEqual(contact_point["name"], "First Person")
         self.assertEqual(contact_point["email"], "first@example.com")
         self.assertEqual(contact_point["telephone"], "555-0000")
-        self.assertEqual(contact_point["identifier"], "https://orcid.org/0000-0001-0000-0001")
-        self.assertEqual(contact_point["sameAs"], "https://orcid.org/0000-0001-0000-0001")
+        self.assertNotIn("identifier", contact_point)
+        self.assertNotIn("sameAs", contact_point)
         self.assertIn("https://www.hydroshare.org/user/1/", contact_point["url"])
