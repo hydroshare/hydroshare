@@ -2287,6 +2287,10 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
             hs_json['content_types'] = list(set(res.aggregation_type_names).union({self.resource_type}))
         from hs_core.hydroshare_schemaorg_adapter import HydroshareMetadataAdapter
         hs_json = HydroshareMetadataAdapter.to_catalog_record(hs_json).model_dump()
+        # remove dateCreated, dateModified, and datePublished as they are part of system metadata
+        hs_json.pop('dateCreated', None)
+        hs_json.pop('dateModified', None)
+        hs_json.pop('datePublished', None)
         hs_json = json.dumps(hs_json, indent=2, default=str)
         with NamedTemporaryFile(mode='w+') as temp_file:
             temp_file.write(hs_json)
@@ -2295,11 +2299,13 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
 
     def write_system_metadata_json_file(self):
         """Write system metadata JSON file to resource .hsmetadata directory in S3"""
+        published_date = self.metadata.dates.filter(type='published').first()
         json_dict = {
             "resource_id": self.short_id,
             "doi": self.doi,
-            "created": self.created.isoformat(),
-            "modified": self.updated.isoformat(),
+            "dateCreated": self.created.isoformat(),
+            "dateModified": self.updated.isoformat(),
+            "datePublished": published_date.start_date.isoformat() if published_date else None,
             "status": {
                 "public": self.raccess.public,
                 "discoverable": self.raccess.discoverable,
