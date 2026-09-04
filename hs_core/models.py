@@ -2287,10 +2287,6 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
             hs_json['content_types'] = list(set(res.aggregation_type_names).union({self.resource_type}))
         from hs_core.hydroshare_schemaorg_adapter import HydroshareMetadataAdapter
         hs_json = HydroshareMetadataAdapter.to_catalog_record(hs_json).model_dump()
-        # remove dateCreated, dateModified, and datePublished as they are part of system metadata
-        hs_json.pop('dateCreated', None)
-        hs_json.pop('dateModified', None)
-        hs_json.pop('datePublished', None)
         hs_json = json.dumps(hs_json, indent=2, default=str)
         with NamedTemporaryFile(mode='w+') as temp_file:
             temp_file.write(hs_json)

@@ -188,13 +188,13 @@ class HydroshareMetadataAdapter:
     @staticmethod
     def to_catalog_record(metadata: dict):
         """Converts hydroshare resource metadata to a catalog dataset record"""
-        hs_metadata_model = _HydroshareResourceMetadata(**metadata)
+        hs_metadata_model = _ResourceUserMetadata(**metadata)
         if metadata["type"] == "CompositeResource":
             return hs_metadata_model.to_catalog_dataset()
         return hs_metadata_model.to_catalog_dataset()
 
 
-class _HydroshareResourceMetadata(BaseModel):
+class _ResourceUserMetadata(BaseModel):
     model_config = ConfigDict(extra='allow')
 
     type: Optional[str] = None
@@ -204,9 +204,6 @@ class _HydroshareResourceMetadata(BaseModel):
     identifier: Optional[HttpUrl] = None
     creators: List[Creator] = []
     contributors: List[Contributor] = []
-    created: Optional[datetime] = None
-    modified: Optional[datetime] = None
-    published: Optional[datetime] = None
     subjects: Optional[List[str]] = None
     language: Optional[str] = None
     rights: Optional[Rights] = None
@@ -324,9 +321,6 @@ class _HydroshareResourceMetadata(BaseModel):
         dataset.identifier = [str(self.identifier)] if self.identifier else None
         dataset.creator = self.to_dataset_creators()
         dataset.contributor = self.to_dataset_contributors()
-        dataset.dateCreated = self.created
-        dataset.dateModified = self.modified
-        dataset.datePublished = self.published
         dataset.keywords = self.to_dataset_keywords()
         dataset.inLanguage = self._to_dataset_language()
         dataset.funding = self.to_dataset_funding()
