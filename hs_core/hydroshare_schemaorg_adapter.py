@@ -204,6 +204,9 @@ class _ResourceUserMetadata(BaseModel):
     identifier: Optional[HttpUrl] = None
     creators: List[Creator] = []
     contributors: List[Contributor] = []
+    created: Optional[datetime] = None
+    modified: Optional[datetime] = None
+    published: Optional[datetime] = None
     subjects: Optional[List[str]] = None
     language: Optional[str] = None
     rights: Optional[Rights] = None
