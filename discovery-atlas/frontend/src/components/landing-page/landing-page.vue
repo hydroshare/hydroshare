@@ -1251,19 +1251,32 @@ function findCreatorProfile(creator: any) {
   );
 }
 
+// Reads the HydroShareID entry from a Creator/Contributor's `identifier`
+// array (PersonIdentifier[]) — the schema.org adapter now emits this
+// directly, so it's a fallback when the side-channel name-match below misses.
+function creatorHydroShareProfileUrl(creator: any): string | null {
+  if (!Array.isArray(creator?.identifier)) return null;
+  const entry = creator.identifier.find(
+    (item: any) => item?.propertyID === "HydroShareID" && typeof item.value === "string",
+  );
+  return entry?.value || null;
+}
+
 function creatorProfileLink(creator: any): string | null {
-  // The schema.org dataset_metadata.json carries no HydroShare-user linkage,
-  // so we match by name against the side-channel `creatorProfiles` payload
-  // (populated by AtlasLandingView from resource.cached_metadata.creators).
+  // Preferred: the side-channel `creatorProfiles` payload (populated by
+  // AtlasLandingView from resource.cached_metadata.creators), matched by
+  // name. It carries `is_active_user`, which the schema.org `identifier`
+  // array does not — a HydroShareID URL can be stale for a deactivated
+  // or renamed account, so it's only used as a fallback.
+  // TODO: Read this from dataset_metadata.json (need to figure out
+  // how to handle inactive users)
   const profile = findCreatorProfile(creator);
-  if (!profile || !profile.is_active_user || !profile.relative_uri) return null;
-  return profile.relative_uri;
+  if (profile?.is_active_user && profile.relative_uri) return profile.relative_uri;
+  return creatorHydroShareProfileUrl(creator);
 }
 
 function creatorIdentifiers(creator: any): Record<string, string> {
-  // Same side-channel rationale as creatorProfileLink — the schema.org
-  // adapter only emits ORCID, so we sourcemap the full dict from
-  // cached_metadata.creators.
+  // Same side-channel rationale as creatorProfileLink
   const profile = findCreatorProfile(creator);
   return profile?.identifiers || {};
 }

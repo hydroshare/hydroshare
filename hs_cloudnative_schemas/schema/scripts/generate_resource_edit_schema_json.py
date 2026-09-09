@@ -88,10 +88,28 @@ def convert_defs_to_definitions(schema: dict[str, Any]) -> dict[str, Any]:
     return _normalize_schema_value(schema)
 
 
+def _exclude_hydroshare_id_from_person_identifier_enum(schema: dict[str, Any]) -> dict[str, Any]:
+    """Remove "HydroShareID" from the editable PersonIdentifier propertyID enum.
+
+    HydroShareID identifiers are populated by a separate mechanism (e.g.
+    importing a HydroShare user profile), not chosen manually by the user, so
+    the edit form's propertyID dropdown should not offer it as an option.
+    This only affects the generated edit schema; the underlying pydantic
+    model still accepts HydroShareID values written by other code paths.
+    """
+    enum_def = schema.get("definitions", {}).get("PersonIdentifierPropertyID")
+    if isinstance(enum_def, dict) and isinstance(enum_def.get("enum"), list):
+        enum_def["enum"] = [
+            value for value in enum_def["enum"] if value != "HydroShareID"
+        ]
+    return schema
+
+
 def build_resource_edit_schema() -> dict[str, Any]:
     """Build the JSON schema for the CoreMetadataEdit model."""
     schema = CoreMetadataEdit.model_json_schema(schema_generator=_GenerateJsonSchemaNoNullableAnyOf)
-    return convert_defs_to_definitions(schema)
+    schema = convert_defs_to_definitions(schema)
+    return _exclude_hydroshare_id_from_person_identifier_enum(schema)
 
 
 def write_resource_edit_schema(output_path: Path = OUTPUT_FILE) -> Path:

@@ -1,8 +1,9 @@
 import unittest
+from unittest import mock
 from unittest_parametrize import ParametrizedTestCase, parametrize, param
 
 from hs_cloudnative_schemas.schema import base as schema
-from hs_core.hydroshare_schemaorg_adapter import HydroshareMetadataAdapter, Relation
+from hs_core.hydroshare_schemaorg_adapter import Contributor, Creator, HydroshareMetadataAdapter, Relation
 
 
 IS_PART_OF_VALUE = "The content of this resource is part of"
@@ -88,6 +89,66 @@ class TestRelationToDatasetRelation(ParametrizedTestCase):
         result = relation.to_dataset_relation()
         self.assertIsInstance(result, schema.Relation)
         self.assertEqual(result.name, REFERENCES_VALUE)
+
+
+class TestPersonIdentifierConversion(unittest.TestCase):
+    """Creator/Contributor.identifier is now a list of PersonIdentifier objects
+    (propertyID + value), built from the person's `identifiers` dict."""
+
+    def test_creator_identifiers_convert_to_person_identifier_list(self):
+        creator = Creator(
+            name="Jane Smith",
+            identifiers={
+                "ORCID": "https://orcid.org/0000-0001-2345-6789",
+                "ResearchGateID": "https://www.researchgate.net/profile/jane",
+            },
+        )
+        result = creator.to_dataset_creator()
+
+        self.assertIsInstance(result, schema.Creator)
+        self.assertEqual(len(result.identifier), 2)
+        by_property_id = {identifier.propertyID: str(identifier.value) for identifier in result.identifier}
+        self.assertEqual(by_property_id["ORCID"], "https://orcid.org/0000-0001-2345-6789")
+        self.assertEqual(by_property_id["ResearchGateID"], "https://www.researchgate.net/profile/jane")
+
+    def test_contributor_with_no_identifiers_has_no_identifier_list(self):
+        contributor = Contributor(name="John Doe", identifiers={})
+        result = contributor.to_dataset_contributor()
+
+        self.assertIsInstance(result, schema.Contributor)
+        self.assertFalse(hasattr(result, "identifier") and result.identifier)
+
+    def test_unsupported_identifier_key_is_skipped(self):
+        creator = Creator(
+            name="Jane Smith",
+            identifiers={"HydroShareID": "https://www.hydroshare.org/user/123/", "Unknown": "https://example.com"},
+        )
+        result = creator.to_dataset_creator()
+
+        # HydroShareID is a valid enum member (populated through a separate
+        # mechanism, not from Party.identifiers) so it round-trips; "Unknown"
+        # isn't a PersonIdentifierPropertyID member and is dropped.
+        self.assertEqual(len(result.identifier), 1)
+        self.assertEqual(result.identifier[0].propertyID, "HydroShareID")
+
+    @mock.patch("hs_core.hydroshare.utils.current_site_url", return_value="https://www.hydroshare.org")
+    def test_linked_hydroshare_user_gets_hydroshareid_identifier(self, _mock_site_url):
+        creator = Creator(name="Jane Smith", identifiers={"ORCID": "https://orcid.org/0000-0001-2345-6789"},
+                           hydroshare_user_id=123)
+        result = creator.to_dataset_creator()
+
+        by_property_id = {identifier.propertyID: str(identifier.value) for identifier in result.identifier}
+        self.assertEqual(len(result.identifier), 2)
+        self.assertEqual(by_property_id["HydroShareID"], "https://www.hydroshare.org/user/123/")
+        self.assertEqual(by_property_id["ORCID"], "https://orcid.org/0000-0001-2345-6789")
+
+    @mock.patch("hs_core.hydroshare.utils.current_site_url", return_value="https://www.hydroshare.org")
+    def test_contributor_without_hydroshare_user_id_has_no_hydroshareid_identifier(self, _mock_site_url):
+        contributor = Contributor(name="John Doe", identifiers={})
+        result = contributor.to_dataset_contributor()
+
+        self.assertFalse(hasattr(result, "identifier") and result.identifier)
+        _mock_site_url.assert_not_called()
 
 
 class TestToCatalogRecordRelationPartitioning(unittest.TestCase):
