@@ -31,7 +31,7 @@ class TestSchemaorgTemplateFilters(SimpleTestCase):
         self.assertEqual(creator["identifier"], "https://orcid.org/0000-0002-1825-0097")
         self.assertEqual(creator["sameAs"], "https://orcid.org/0000-0002-1825-0097")
 
-    def test_creator_with_contact_json_ld_appends_contact_entry(self):
+    def test_creator_with_contact_json_ld_adds_contact_point(self):
         creators = [
             {
                 "name": "Doe, Jane",
@@ -63,11 +63,7 @@ class TestSchemaorgTemplateFilters(SimpleTestCase):
         self.assertIsInstance(result, list)
         # No duplication — same number of entries as input creators
         self.assertEqual(len(result), 2)
-        contact_entries = [c for c in result if c.get("roleName") == "Contact"]
-        self.assertEqual(len(contact_entries), 1)
-        # roleName is on the first creator (order=1)
-        contact = contact_entries[0]
-        self.assertEqual(contact["roleName"], "Contact")
+        contact = result[0]
         self.assertEqual(contact["name"], "Jane Doe")
         self.assertEqual(contact["identifier"], "https://orcid.org/0000-0002-1825-0097")
         # contactPoint nested inside the contact creator (not top-level on Dataset)
