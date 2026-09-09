@@ -20,7 +20,7 @@ class UserQuotaForm(forms.ModelForm):
 
     class Meta:
         model = UserQuota
-        fields = ['allocated_value', 'unit', 'zone']
+        fields = ['allocated_value', 'unit', 'zone', 'required_community_membership']
         readonly_fields = ['data_zone_value',]
 
     allocated_value = forms.FloatField()
@@ -70,11 +70,11 @@ class QuotaAdmin(admin.ModelAdmin):
     model = UserQuota
     form = UserQuotaForm
 
-    list_display = ('user', 'allocated_value', 'unit', 'zone')
-    list_filter = ('zone',)
+    list_display = ('user', 'allocated_value', 'unit', 'zone', 'required_community_membership')
+    list_filter = ('zone', 'required_community_membership')
 
     readonly_fields = ('user', 'data_zone_value')
-    fields = ('allocated_value', 'unit', 'zone', 'user', 'data_zone_value')
+    fields = ('allocated_value', 'unit', 'zone', 'user', 'data_zone_value', 'required_community_membership')
     search_fields = ('user__username',)
 
 

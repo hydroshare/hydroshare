@@ -241,6 +241,14 @@ class UserQuota(models.Model):
 
     zone = models.CharField(max_length=100, default="hydroshare")
 
+    required_community_membership = models.ForeignKey(
+        'hs_access_control.Community',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='restricted_user_quotas',
+    )
+
     class Meta:
         verbose_name = _("User quota")
         verbose_name_plural = _("User quotas")
