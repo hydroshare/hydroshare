@@ -1090,10 +1090,37 @@ const personBranchLayout = {
     },
     // `label` belongs on the element, not in `options` — computeLabel reads
     // uischema.label; options.label is only consulted for combinator tabs.
+    // identifier is now an array of PersonIdentifier objects (propertyID +
+    // value); `@type` is a const discriminator so it's excluded from the
+    // item detail layout, same as personBranchLayout's own `@type` above.
+    // Shared between the Author and Contributor forms, so the label stays
+    // generic rather than trying to say "Author"/"Contributor" per-context.
     {
       type: "Control",
       scope: "#/properties/identifier",
-      label: "ORCID ID",
+      label: "Author Identifiers",
+      options: {
+        itemNoun: "identifier",
+        elementLabelProp: ["propertyID"],
+        childLabelProp: "propertyID",
+        showSortButtons: true,
+        collapsed: true,
+        detail: {
+          type: "VerticalLayout",
+          elements: [
+            {
+              type: "Control",
+              scope: "#/properties/propertyID",
+              label: "Identifier Name",
+            },
+            {
+              type: "Control",
+              scope: "#/properties/value",
+              label: "Identifier URL",
+            },
+          ],
+        },
+      },
     },
     {
       type: "Control",
