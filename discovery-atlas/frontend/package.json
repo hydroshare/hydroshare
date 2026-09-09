@@ -62,7 +62,7 @@
     "vite": "^8.0.0",
     "vite-ssg": "^28.3.0",
     "vite-ssg-sitemap": "^0.10.0",
-    "vitest": "^4.1.0",
+    "vitest": "^4.1.11",
     "vue-tsc": "^3.2.5"
   },
   "engines": {
