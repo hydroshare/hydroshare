@@ -17,8 +17,9 @@ def _system_metadata_json(resource_id: str) -> dict:
     return {
         "resource_id": resource_id,
         "doi": "10.4211/hs.system-doi",
-        "created": "2024-01-01T00:00:00",
-        "modified": "2024-06-01T00:00:00",
+        "dateCreated": "2024-01-01T00:00:00",
+        "dateModified": "2024-06-01T00:00:00",
+        "datePublished": None,
         "status": {
             "public": True,
             "discoverable": True,
@@ -38,7 +39,8 @@ def test_system_metadata_wins_on_key_conflict():
         md.user_metadata_path,
         {
             "doi": "10.4211/hs.user-supplied-doi",
-            "modified": "2099-12-31T00:00:00",
+            "dateModified": "2099-12-31T00:00:00",
+            "datePublished": "2099-12-31T00:00:00",
             "abstract": "user abstract",
         },
     )
@@ -49,7 +51,8 @@ def test_system_metadata_wins_on_key_conflict():
 
     # system metadata value must win over the conflicting user metadata value
     assert result["doi"] == system_json["doi"]
-    assert result["modified"] == system_json["modified"]
+    assert result["dateModified"] == system_json["dateModified"]
+    assert result["datePublished"] == system_json["datePublished"]
     # non-conflicting key from user metadata is preserved
     assert result["abstract"] == "user abstract"
 
@@ -65,8 +68,9 @@ def test_combined_metadata_preserves_all_system_metadata_unchanged():
         {
             "resource_id": "not-the-real-id",
             "doi": "10.4211/hs.user-supplied-doi",
-            "created": "2099-01-01T00:00:00",
-            "modified": "2099-12-31T00:00:00",
+            "dateCreated": "2099-01-01T00:00:00",
+            "dateModified": "2099-12-31T00:00:00",
+            "datePublished": "2099-12-31T00:00:00",
             "status": {
                 "public": False,
                 "discoverable": False,
