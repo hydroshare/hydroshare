@@ -13,17 +13,39 @@ on:
 jobs:
   sync-deliverable:
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event.issue.parent != null }} # {Link: GitHub Docs on automating projects https://docs.github.com/en/issues/planning-and-tracking-with-projects/automating-your-project/automating-projects-using-actions}
-    
+
     steps:
       - name: Generate token
         id: generate-token
         uses: actions/create-github-app-token@v3
         with:
-          client-id: ${{ vars.APP_CLIENT_ID }}
-          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          client-id: ${{ vars.WORKFLOWS_APP_CLIENT_ID }}
+          private-key: ${{ secrets.WORKFLOWS_APP_PRIVATE_KEY }}
+
+      - name: Check for parent issue
+        id: check-parent
+        env:
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+          ISSUE_NODE_ID: ${{ github.event_name == 'workflow_dispatch' && inputs.issue_node_id || github.event.issue.node_id }}
+        run: |
+          PARENT_EXISTS=$(gh api graphql -f query='
+            query($issueId: ID!) {
+              node(id: $issueId) {
+                ... on Issue {
+                  parent { id }
+                }
+              }
+            }' -f issueId="$ISSUE_NODE_ID" | jq -r '.data.node.parent != null')
+
+          echo "has_parent=$PARENT_EXISTS" >> "$GITHUB_OUTPUT"
+
+          if [ "$PARENT_EXISTS" != "true" ]; then
+            echo "Skipping: this issue does not have a parent issue."
+            exit 0
+          fi
 
       - name: Inherit Deliverable Select Field
+        if: ${{ steps.check-parent.outputs.has_parent == 'true' }}
         env:
           GH_TOKEN: ${{ steps.generate-token.outputs.token }}
           PROJECT_ID: PVT_kwDOADSPDc4AiwwP
