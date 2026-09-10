@@ -456,16 +456,11 @@ def _build_contact_point_dict(creator):
 @register.filter
 def creator_with_contact_json_ld(crs):
     """Returns creators as a plain JSON array (not @list-wrapped). The first creator
-    (by order) is tagged with roleName: 'Contact' and contactPoint in-place to satisfy
-    MetaDIG resource.distributionContact.present and resource.distributionContactIdentifier.present,
-    whose schema.org jq selectors iterate .creator[] and filter by .roleName == "Contact".
-    contactPoint is nested inside the contact creator per Google's Dataset structured data spec.
-    No duplicate entry is created."""
+    (by order) gets a nested contactPoint in-place."""
     if not crs:
         return "[]"
     sorted_crs = sorted(crs, key=lambda c: c.get('order') if c.get('order') is not None else 999999)
     crs_array = [_creator_to_schemaorg_dict(cr) for cr in sorted_crs]
-    crs_array[0]['roleName'] = 'Contact'
     cp = _build_contact_point_dict(sorted_crs[0])
     if cp:
         crs_array[0]['contactPoint'] = cp
