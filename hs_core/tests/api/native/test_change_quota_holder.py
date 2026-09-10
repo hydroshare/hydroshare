@@ -154,7 +154,7 @@ class TestChangeQuotaHolderCommunityRestriction(MockS3TestCaseMixin, DjangoTestC
         )
 
         # set the community restriction on restricted_user's UserQuota
-        user_quota = self.restricted_user.quotas.get(zone='hydroshare')
+        user_quota = self.restricted_user.quotas.get()
         user_quota.required_community_membership = self.required_community
         user_quota.save()
 

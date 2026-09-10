@@ -91,7 +91,7 @@ class TestChangeQuotaHolder(MockS3TestCaseMixin, ViewTestCase):
         community.active = True
         community.save()
 
-        user_quota = self.user2.quotas.get(zone='hydroshare')
+        user_quota = self.user2.quotas.get()
         user_quota.required_community_membership = community
         user_quota.save()
 

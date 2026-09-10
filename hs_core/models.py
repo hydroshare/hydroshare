@@ -2866,7 +2866,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
 
         # Validate that the new quota holder is allowed to be set as the quota holder for this resource
         # User quotas can optionally require that a resource owner be a member of a specific community
-        user_quota = new_holder.quotas.filter(zone="hydroshare").first()
+        user_quota = new_holder.quotas.first()
         if user_quota and user_quota.required_community_membership_id:
             other_owners = self.raccess.owners.exclude(pk=new_holder.pk)
             allowed = UserGroupPrivilege.objects.filter(
