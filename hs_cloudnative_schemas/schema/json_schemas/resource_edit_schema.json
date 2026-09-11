@@ -55,12 +55,8 @@
           "type": "string"
         },
         "affiliation": {
-          "allOf": [
-            {
-              "$ref": "#/definitions/Affiliation"
-            }
-          ],
-          "description": "The affiliation of the creator with the organization."
+          "$ref": "#/definitions/Affiliation",
+          "description": "The affiliation of the contributor with the organization."
         },
         "email": {
           "description": "A string containing an email address for the contributor.",
@@ -105,6 +101,27 @@
           "title": "@Type",
           "type": "string"
         },
+        "associatedMedia": {
+          "description": "A media object that encodes this CreativeWork. This property is a synonym for encoding.",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/LinkedData"
+              },
+              {
+                "$ref": "#/definitions/MediaObject"
+              },
+              {
+                "$ref": "#/definitions/DataDownload"
+              },
+              {
+                "$ref": "#/definitions/VideoObject"
+              }
+            ]
+          },
+          "title": "Resource content",
+          "type": "array"
+        },
         "description": {
           "description": "The description of the creative work.",
           "title": "Description",
@@ -144,11 +161,7 @@
           "type": "string"
         },
         "affiliation": {
-          "allOf": [
-            {
-              "$ref": "#/definitions/Affiliation"
-            }
-          ],
+          "$ref": "#/definitions/Affiliation",
           "description": "The affiliation of the creator with the organization."
         },
         "email": {
@@ -328,7 +341,11 @@
           "type": "string"
         },
         "name": {
+          "const": "Discoverable",
           "default": "Discoverable",
+          "enum": [
+            "Discoverable"
+          ],
           "title": "Name",
           "type": "string"
         }
@@ -356,7 +373,11 @@
           "type": "string"
         },
         "name": {
+          "const": "Draft",
           "default": "Draft",
+          "enum": [
+            "Draft"
+          ],
           "title": "Name",
           "type": "string"
         }
@@ -485,11 +506,7 @@
           "type": "string"
         },
         "funder": {
-          "allOf": [
-            {
-              "$ref": "#/definitions/FunderOrganization"
-            }
-          ],
+          "$ref": "#/definitions/FunderOrganization",
           "description": "The organization that provided the funding or sponsorship."
         },
         "identifier": {
@@ -522,41 +539,31 @@
           "title": "@Type",
           "type": "string"
         },
+        "associatedMedia": {
+          "description": "A media object that encodes this CreativeWork. This property is a synonym for encoding.",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/LinkedData"
+              },
+              {
+                "$ref": "#/definitions/MediaObject"
+              },
+              {
+                "$ref": "#/definitions/DataDownload"
+              },
+              {
+                "$ref": "#/definitions/VideoObject"
+              }
+            ]
+          },
+          "title": "Resource content",
+          "type": "array"
+        },
         "description": {
           "description": "Information about a related resource that is part of this resource.",
           "title": "Description",
           "type": "string"
-        },
-        "associatedMedia": {
-          "anyOf": [
-            {
-              "$ref": "#/definitions/MediaObject"
-            },
-            {
-              "$ref": "#/definitions/DataDownload"
-            },
-            {
-              "$ref": "#/definitions/VideoObject"
-            },
-            {
-              "items": {
-                "anyOf": [
-                  {
-                    "$ref": "#/definitions/MediaObject"
-                  },
-                  {
-                    "$ref": "#/definitions/DataDownload"
-                  },
-                  {
-                    "$ref": "#/definitions/VideoObject"
-                  }
-                ]
-              },
-              "type": "array"
-            }
-          ],
-          "description": "A media object that encodes this CreativeWork. This property is a synonym for encoding.",
-          "title": "Resource content"
         },
         "name": {
           "description": "Submission's name or title",
@@ -598,7 +605,11 @@
           "type": "string"
         },
         "name": {
+          "const": "Incomplete",
           "default": "Incomplete",
+          "enum": [
+            "Incomplete"
+          ],
           "title": "Name",
           "type": "string"
         }
@@ -618,6 +629,27 @@
           ],
           "title": "@Type",
           "type": "string"
+        },
+        "associatedMedia": {
+          "description": "A media object that encodes this CreativeWork. This property is a synonym for encoding.",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/LinkedData"
+              },
+              {
+                "$ref": "#/definitions/MediaObject"
+              },
+              {
+                "$ref": "#/definitions/DataDownload"
+              },
+              {
+                "$ref": "#/definitions/VideoObject"
+              }
+            ]
+          },
+          "title": "Resource content",
+          "type": "array"
         },
         "description": {
           "description": "Information about a related resource that this resource is a part of - e.g., a related collection.",
@@ -652,6 +684,33 @@
       ],
       "title": "Language",
       "type": "string"
+    },
+    "LinkedData": {
+      "additionalProperties": true,
+      "properties": {
+        "@id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "errorMessage": {
+                "pattern": "must match format \"url\""
+              },
+              "minLength": 1,
+              "pattern": "^(http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|https:\\/\\/)?[a-z0-9]+([\\-\\.]{1}[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/.*)?$",
+              "type": "string"
+            }
+          ],
+          "description": "The unique identifier for the linked data object.",
+          "title": "@Id"
+        }
+      },
+      "required": [
+        "@id"
+      ],
+      "title": "LinkedData",
+      "type": "object"
     },
     "MediaObject": {
       "additionalProperties": true,
@@ -725,6 +784,27 @@
           "title": "@Type",
           "type": "string"
         },
+        "associatedMedia": {
+          "description": "A media object that encodes this CreativeWork. This property is a synonym for encoding.",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/LinkedData"
+              },
+              {
+                "$ref": "#/definitions/MediaObject"
+              },
+              {
+                "$ref": "#/definitions/DataDownload"
+              },
+              {
+                "$ref": "#/definitions/VideoObject"
+              }
+            ]
+          },
+          "title": "Resource content",
+          "type": "array"
+        },
         "description": {
           "description": "Information about a related metadata document.",
           "title": "Description",
@@ -770,7 +850,11 @@
           "type": "string"
         },
         "name": {
+          "const": "Obsolete",
           "default": "Obsolete",
+          "enum": [
+            "Obsolete"
+          ],
           "title": "Name",
           "type": "string"
         }
@@ -857,15 +941,39 @@
           "type": "string"
         },
         "srs": {
-          "allOf": [
-            {
-              "$ref": "#/definitions/SpatialReference"
-            }
-          ],
+          "$ref": "#/definitions/SpatialReference",
           "description": "The spatial reference system associated with the Place's geographic representation"
         }
       },
       "title": "Place",
+      "type": "object"
+    },
+    "Private": {
+      "additionalProperties": true,
+      "properties": {
+        "@type": {
+          "default": "DefinedTerm",
+          "title": "@Type",
+          "type": "string"
+        },
+        "description": {
+          "default": "The resource is private and can only be accessed by authorized users",
+          "description": "The description of the item being defined.",
+          "readOnly": true,
+          "title": "Description",
+          "type": "string"
+        },
+        "name": {
+          "const": "Private",
+          "default": "Private",
+          "enum": [
+            "Private"
+          ],
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "title": "Private",
       "type": "object"
     },
     "PropertyValue": {
@@ -953,12 +1061,8 @@
           "type": "string"
         },
         "affiliation": {
-          "allOf": [
-            {
-              "$ref": "#/definitions/Affiliation"
-            }
-          ],
-          "description": "The affiliation of the creator with the organization."
+          "$ref": "#/definitions/Affiliation",
+          "description": "The affiliation of the provider with the organization."
         },
         "email": {
           "description": "A string containing an email address for the provider.",
@@ -1006,7 +1110,11 @@
           "type": "string"
         },
         "name": {
+          "const": "Public",
           "default": "Public",
+          "enum": [
+            "Public"
+          ],
           "title": "Name",
           "type": "string"
         }
@@ -1030,7 +1138,11 @@
           "type": "string"
         },
         "name": {
+          "const": "Published",
           "default": "Published",
+          "enum": [
+            "Published"
+          ],
           "title": "Name",
           "type": "string"
         }
@@ -1090,6 +1202,27 @@
           ],
           "title": "@Type",
           "type": "string"
+        },
+        "associatedMedia": {
+          "description": "A media object that encodes this CreativeWork. This property is a synonym for encoding.",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/LinkedData"
+              },
+              {
+                "$ref": "#/definitions/MediaObject"
+              },
+              {
+                "$ref": "#/definitions/DataDownload"
+              },
+              {
+                "$ref": "#/definitions/VideoObject"
+              }
+            ]
+          },
+          "title": "Resource content",
+          "type": "array"
         },
         "description": {
           "description": "Holds all relations other than 'hasPart' and 'isPartOf'.",
@@ -1170,6 +1303,27 @@
           "title": "@Type",
           "type": "string"
         },
+        "associatedMedia": {
+          "description": "A media object that encodes this CreativeWork. This property is a synonym for encoding.",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/LinkedData"
+              },
+              {
+                "$ref": "#/definitions/MediaObject"
+              },
+              {
+                "$ref": "#/definitions/DataDownload"
+              },
+              {
+                "$ref": "#/definitions/VideoObject"
+              }
+            ]
+          },
+          "title": "Resource content",
+          "type": "array"
+        },
         "description": {
           "description": "Information about a related resource that is about or describes this resource - e.g., a related metadata document describing the resource.",
           "title": "Description",
@@ -1199,7 +1353,7 @@
       "additionalProperties": true,
       "properties": {
         "endDate": {
-          "description": "A date/time object containing the instant corresponding to the termination of the time interval (ISO8601 formatted date - YYYY-MM-DDTHH:MM). If the ending date is left off, that means the temporal coverage is ongoing.",
+          "description": "The end of the time period the resource covers. Leave blank if it is ongoing.",
           "errorMessage": {
             "formatMinimum": "must be greater than or equal to Start date"
           },
@@ -1211,7 +1365,7 @@
           "type": "string"
         },
         "startDate": {
-          "description": "A date/time object containing the instant corresponding to the commencement of the time interval (ISO8601 formatted date - YYYY-MM-DDTHH:MM).",
+          "description": "The start of the time period the resource covers.",
           "errorMessage": {
             "formatMaximum": "must be lesser than or equal to End date"
           },
@@ -1329,6 +1483,9 @@
     "associatedMedia": {
       "anyOf": [
         {
+          "$ref": "#/definitions/LinkedData"
+        },
+        {
           "$ref": "#/definitions/MediaObject"
         },
         {
@@ -1340,6 +1497,9 @@
         {
           "items": {
             "anyOf": [
+              {
+                "$ref": "#/definitions/LinkedData"
+              },
               {
                 "$ref": "#/definitions/MediaObject"
               },
@@ -1402,6 +1562,9 @@
           "$ref": "#/definitions/Public"
         },
         {
+          "$ref": "#/definitions/Private"
+        },
+        {
           "$ref": "#/definitions/Discoverable"
         }
       ],
@@ -1460,14 +1623,31 @@
       "type": "array"
     },
     "hasPart": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/LinkedData"
+        },
+        {
+          "$ref": "#/definitions/HasPart"
+        },
+        {
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/LinkedData"
+              },
+              {
+                "$ref": "#/definitions/HasPart"
+              }
+            ]
+          },
+          "type": "array"
+        }
+      ],
       "default": [],
       "description": "Link to or citation for a related resource that is part of this resource.",
-      "items": {
-        "$ref": "#/definitions/HasPart"
-      },
       "readOnly": true,
-      "title": "Has part",
-      "type": "array"
+      "title": "Has part"
     },
     "identifier": {
       "description": "Any kind of identifier for the resource. Identifiers may be DOIs or unique strings assigned by a repository. Multiple identifiers can be entered. Where identifiers can be encoded as URLs, enter URLs here.",
@@ -1479,11 +1659,7 @@
       "type": "array"
     },
     "inLanguage": {
-      "allOf": [
-        {
-          "$ref": "#/definitions/LanguageEnum"
-        }
-      ],
+      "$ref": "#/definitions/LanguageEnum",
       "description": "The language of the content of the resource.",
       "readOnly": true
     },
@@ -1518,6 +1694,7 @@
           "maxLength": 2083,
           "minLength": 1,
           "pattern": "^(http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|https:\\/\\/)?[a-z0-9]+([\\-\\.]{1}[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/.*)?$",
+          "title": "Custom License",
           "type": "string"
         }
       ],
@@ -1543,11 +1720,7 @@
       "title": "Provider"
     },
     "publisher": {
-      "allOf": [
-        {
-          "$ref": "#/definitions/PublisherOrganization"
-        }
-      ],
+      "$ref": "#/definitions/PublisherOrganization",
       "description": "Where the resource is permanently published, indicated the repository, service provider, or organization that published the resource - e.g., CUAHSI HydroShare. This may be the same as Provider.",
       "readOnly": true,
       "title": "Publisher"
@@ -1562,11 +1735,7 @@
       "type": "array"
     },
     "spatialCoverage": {
-      "allOf": [
-        {
-          "$ref": "#/definitions/Place"
-        }
-      ],
+      "$ref": "#/definitions/Place",
       "description": "The spatialCoverage of a CreativeWork indicates the place(s) which are the focus of the content. It is a sub property of contentLocation intended primarily for more technical and detailed materials. For example with a Dataset, it indicates areas that the dataset describes: a dataset of New York weather would have spatialCoverage which was the place: the state of New York."
     },
     "subjectOf": {
@@ -1579,11 +1748,7 @@
       "type": "array"
     },
     "temporalCoverage": {
-      "allOf": [
-        {
-          "$ref": "#/definitions/TemporalCoverage"
-        }
-      ],
+      "$ref": "#/definitions/TemporalCoverage",
       "description": "The time period that applies to all of the content within the resource.",
       "title": "Temporal coverage"
     },

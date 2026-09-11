@@ -12,6 +12,7 @@ Usage:
     docker exec hydroshare python manage.py seed_dev_resources
     docker exec hydroshare python manage.py seed_dev_resources --username myuser
     docker exec hydroshare python manage.py seed_dev_resources --force  # re-create if exists
+    docker exec hydroshare python manage.py seed_dev_resources --public-count 10 --published-count 10
 """
 
 import io
@@ -36,15 +37,19 @@ from hs_core.tasks import create_bag_by_s3
 from theme.models import UserQuota
 
 
+DEFAULT_SEED_COUNT = 5
+
+
+def _generate_short_ids(prefix, count):
+    """Return deterministic short_ids for seeded resources."""
+    return [f"{prefix}{'0' * 27}{i}" for i in range(1, count + 1)]
+
+
 # ---------------------------------------------------------------------------
 # Fixed short_ids — deterministic so URLs are consistent across resets.
 # ---------------------------------------------------------------------------
-PUBLIC_SHORT_IDS = [
-    f"aaaa{'0' * 27}{i}" for i in range(1, 6)
-]
-PUBLISHED_SHORT_IDS = [
-    f"bbbb{'0' * 27}{i}" for i in range(1, 6)
-]
+PUBLIC_SHORT_IDS = _generate_short_ids("aaaa", DEFAULT_SEED_COUNT)
+PUBLISHED_SHORT_IDS = _generate_short_ids("bbbb", DEFAULT_SEED_COUNT)
 
 # ---------------------------------------------------------------------------
 # Shared author / org for all seed resources.
@@ -202,7 +207,8 @@ def _stagger_dates(resource, index):
     Updates the Date metadata elements, the Mezzanine Page.updated field, and
     the cached_metadata JSON field so all date sources are consistent.
     """
-    offset = datetime.timedelta(days=(4 - index) * 2)
+    # Keep each seeded resource back-dated by 2 days from the previous one.
+    offset = datetime.timedelta(days=(index + 1) * 2)
     backdated = datetime.datetime.now(tz.UTC) - offset
 
     # 1. Update Date metadata elements (hs_core_date table)
@@ -217,8 +223,10 @@ def _stagger_dates(resource, index):
 
 
 def _base_metadata(owner, index):
-    bbox = BBOXES[index]
-    period = TIME_PERIODS[index]
+    source_index = index % len(TITLES)
+    bbox = BBOXES[source_index]
+    period = TIME_PERIODS[source_index]
+    title = TITLES[source_index]
     return [
         {
             "creator": {
@@ -242,7 +250,7 @@ def _base_metadata(owner, index):
                     "eastlimit": bbox[2],
                     "westlimit": bbox[3],
                     "units": "Decimal degrees",
-                    "name": TITLES[index],
+                    "name": title,
                 }
             }
         },
@@ -260,6 +268,12 @@ def _base_metadata(owner, index):
 
 def _create_public_resource(owner, index, short_id, stdout):
     """Create a public (unpublished) resource."""
+    source_index = index % len(TITLES)
+    cycle = index // len(TITLES) + 1
+    title = TITLES[source_index]
+    if cycle > 1:
+        title = f"{title} [seed set {cycle}]"
+
     csv_bytes = _generate_csv(index)
     csv_file = io.BytesIO(csv_bytes)
     csv_file.name = f"streamflow_data_{index + 1:02d}.csv"
@@ -276,8 +290,8 @@ def _create_public_resource(owner, index, short_id, stdout):
     resource = create_resource(
         resource_type="CompositeResource",
         owner=owner,
-        title=TITLES[index],
-        keywords=KEYWORDS_POOL[index],
+        title=title,
+        keywords=KEYWORDS_POOL[source_index],
         metadata=_base_metadata(owner, index),
         files=(csv_file,),
         short_id=short_id,
@@ -286,17 +300,23 @@ def _create_public_resource(owner, index, short_id, stdout):
     resource.set_public(True)
 
     _stagger_dates(resource, index)
-    stdout.write(f"  Created public resource {short_id}: {TITLES[index][:50]}…")
+    stdout.write(f"  Created public resource {short_id}: {title[:50]}…")
     return resource
 
 
 def _create_published_resource(owner, published_user, index, short_id, stdout):
     """Create a fully published resource, bypassing DataCite."""
+    source_index = index % len(TITLES)
+    cycle = index // len(TITLES) + 1
+    base_title = TITLES[source_index]
+    if cycle > 1:
+        base_title = f"{base_title} [seed set {cycle}]"
+
     csv_bytes = _generate_csv(index + 5)  # different seed from public resources
     csv_file = io.BytesIO(csv_bytes)
     csv_file.name = f"streamflow_data_published_{index + 1:02d}.csv"
 
-    title = TITLES[index] + " (Published)"
+    title = base_title + " (Published)"
 
     # Clean up any orphaned CoreMetaData from a previous partial run.
     linked_metadata_ids = BaseResource.objects.values_list('object_id', flat=True)
@@ -308,7 +328,7 @@ def _create_published_resource(owner, published_user, index, short_id, stdout):
         resource_type="CompositeResource",
         owner=owner,
         title=title,
-        keywords=KEYWORDS_POOL[index],
+        keywords=KEYWORDS_POOL[source_index],
         metadata=_base_metadata(owner, index),
         files=(csv_file,),
         short_id=short_id,
@@ -391,10 +411,30 @@ class Command(BaseCommand):
             action="store_true",
             help="Delete and re-create seed resources if they already exist",
         )
+        parser.add_argument(
+            "--public-count",
+            type=int,
+            default=DEFAULT_SEED_COUNT,
+            help=f"Number of public resources to create (default: {DEFAULT_SEED_COUNT})",
+        )
+        parser.add_argument(
+            "--published-count",
+            type=int,
+            default=DEFAULT_SEED_COUNT,
+            help=f"Number of published resources to create (default: {DEFAULT_SEED_COUNT})",
+        )
 
     def handle(self, *args, **options):
         username = options["username"]
         force = options["force"]
+        public_count = options["public_count"]
+        published_count = options["published_count"]
+
+        if public_count < 0 or published_count < 0:
+            raise CommandError("--public-count and --published-count must be non-negative")
+
+        public_short_ids = _generate_short_ids("aaaa", public_count)
+        published_short_ids = _generate_short_ids("bbbb", published_count)
 
         try:
             owner = User.objects.get(username=username)
@@ -405,7 +445,7 @@ class Command(BaseCommand):
         published_user = _ensure_published_user(self.stdout)
 
         self.stdout.write("\n=== Creating public (not published) resources ===")
-        for i, short_id in enumerate(PUBLIC_SHORT_IDS):
+        for i, short_id in enumerate(public_short_ids):
             if BaseResource.objects.filter(short_id=short_id).exists():
                 if force:
                     self.stdout.write(f"  --force: deleting existing resource {short_id}")
@@ -422,7 +462,7 @@ class Command(BaseCommand):
             _create_public_resource(owner, i, short_id, self.stdout)
 
         self.stdout.write("\n=== Creating published resources ===")
-        for i, short_id in enumerate(PUBLISHED_SHORT_IDS):
+        for i, short_id in enumerate(published_short_ids):
             if BaseResource.objects.filter(short_id=short_id).exists():
                 if force:
                     self.stdout.write(f"  --force: deleting existing resource {short_id}")
@@ -439,9 +479,9 @@ class Command(BaseCommand):
 
         self.stdout.write("\n=== Seed complete ===")
         self.stdout.write("Public resource URLs:")
-        for sid in PUBLIC_SHORT_IDS:
+        for sid in public_short_ids:
             self.stdout.write(f"  http://localhost/resource/{sid}/")
         self.stdout.write("Published resource URLs:")
-        for sid in PUBLISHED_SHORT_IDS:
+        for sid in published_short_ids:
             self.stdout.write(f"  http://localhost/resource/{sid}/")
         self.stdout.write("")
