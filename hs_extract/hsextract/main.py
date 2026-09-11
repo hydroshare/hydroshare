@@ -1,3 +1,4 @@
+import logging
 import os
 from hs_cloudnative_schemas.schema.base import IsPartOf, HasPart
 from hsextract.content_types.models import ContentType
