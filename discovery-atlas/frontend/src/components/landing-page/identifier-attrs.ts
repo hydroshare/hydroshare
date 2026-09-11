@@ -48,3 +48,30 @@ export function listIdentifiers(
       attrs: identifierAttributes[key],
     }));
 }
+
+/**
+ * Converts the schema.org `identifier` array format used by Creator/
+ * Contributor (`[{ "@type": "PropertyValue", propertyID, value }, ...]`) into
+ * the `{ propertyID: value }` dict shape `listIdentifiers` expects.
+ * `HydroShareID` is excluded — that entry backs the "Profile" button
+ * (`profileLink`), not the icon row, so including it here would render it
+ * twice.
+ */
+export function personIdentifiersToRecord(
+  identifiers: Array<{ propertyID?: string; value?: string }> | null | undefined,
+): Record<string, string> {
+  if (!Array.isArray(identifiers)) return {};
+  const record: Record<string, string> = {};
+  for (const item of identifiers) {
+    if (
+      item &&
+      typeof item.propertyID === "string" &&
+      item.propertyID !== "HydroShareID" &&
+      typeof item.value === "string" &&
+      item.value.trim().length > 0
+    ) {
+      record[item.propertyID] = item.value;
+    }
+  }
+  return record;
+}

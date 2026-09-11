@@ -233,6 +233,33 @@ class Affiliation(Organization):
     )
 
 
+class PersonIdentifierPropertyID(str, Enum):
+    ORCID = "ORCID"
+    ResearchGateID = "ResearchGateID"
+    ResearcherID = "ResearcherID"
+    GoogleScholarID = "GoogleScholarID"
+    HydroShareID = "HydroShareID"
+
+
+class PersonIdentifier(SchemaBaseModel):
+    model_config = ConfigDict(
+        **{**SchemaBaseModel.model_config, "extra": "forbid"},
+        populate_by_name=True,  # Ensures aliases work during model initialization
+        title="PersonIdentifier",
+    )
+
+    type: Literal["PropertyValue"] = Field(
+        alias="@type",  # type: ignore
+        default="PropertyValue",
+        description="A property-value pair.",
+    )
+    propertyID: PersonIdentifierPropertyID = Field(
+        title="Property ID",
+        description="The type of identifier, e.g. ORCID or HydroShareID.",
+    )
+    value: HttpUrl = Field(description="The identifier value, expressed as a URL.")
+
+
 class Provider(Person):
     identifier: Optional[str] = Field(
         description="ORCID identifier for the person.",
@@ -252,10 +279,11 @@ class Provider(Person):
 
 
 class Creator(Person):
-    identifier: Optional[str] = Field(
-        description="ORCID identifier for creator.",
+    identifier: Optional[List[PersonIdentifier]] = Field(
+        title="Identifiers",
+        description="Unique identifiers for the creator, e.g. ORCID or HydroShare user profile.",
         default=None,
-        json_schema_extra=identifier_schema_extra,
+        json_schema_extra=remove_none_default,
     )
     email: Optional[EmailStr] = Field(
         description="A string containing an email address for the creator.",
@@ -270,10 +298,11 @@ class Creator(Person):
 
 
 class Contributor(Person):
-    identifier: Optional[str] = Field(
-        description="ORCID identifier for contributor.",
+    identifier: Optional[List[PersonIdentifier]] = Field(
+        title="Identifiers",
+        description="Unique identifiers for the contributor, e.g. ORCID or HydroShare user profile.",
         default=None,
-        json_schema_extra=identifier_schema_extra,
+        json_schema_extra=remove_none_default,
     )
     email: Optional[EmailStr] = Field(
         description="A string containing an email address for the contributor.",
