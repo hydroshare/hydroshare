@@ -282,7 +282,8 @@ class Creator(Person):
     identifier: Optional[List[PersonIdentifier]] = Field(
         title="Identifiers",
         description="Unique identifiers for the creator, e.g. ORCID or HydroShare user profile.",
-        default=[],
+        default=None,
+        json_schema_extra=remove_none_default,
     )
     email: Optional[EmailStr] = Field(
         description="A string containing an email address for the creator.",
@@ -300,7 +301,8 @@ class Contributor(Person):
     identifier: Optional[List[PersonIdentifier]] = Field(
         title="Identifiers",
         description="Unique identifiers for the contributor, e.g. ORCID or HydroShare user profile.",
-        default=[],
+        default=None,
+        json_schema_extra=remove_none_default,
     )
     email: Optional[EmailStr] = Field(
         description="A string containing an email address for the contributor.",
