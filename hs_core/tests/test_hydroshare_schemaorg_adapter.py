@@ -133,8 +133,10 @@ class TestPersonIdentifierConversion(unittest.TestCase):
 
     @mock.patch("hs_core.hydroshare.utils.current_site_url", return_value="https://www.hydroshare.org")
     def test_linked_hydroshare_user_gets_hydroshareid_identifier(self, _mock_site_url):
-        creator = Creator(name="Jane Smith", identifiers={"ORCID": "https://orcid.org/0000-0001-2345-6789"},
-                           hydroshare_user_id=123)
+        creator = Creator(
+            name="Jane Smith", identifiers={"ORCID": "https://orcid.org/0000-0001-2345-6789"},
+            hydroshare_user_id=123
+        )
         result = creator.to_dataset_creator()
 
         by_property_id = {identifier.propertyID: str(identifier.value) for identifier in result.identifier}
