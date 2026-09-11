@@ -365,6 +365,14 @@
                       </cz-field-modal>
                     </div>
 
+                    <!-- "Find HydroShare user" dialog, opened via the
+                         customActions button rendered inside the Authors/
+                         Contributors ArrayLayoutRenderer modal. -->
+                    <cd-find-hydroshare-user
+                      v-model="hsUserDialogOpen"
+                      @select="onHsUserSelected"
+                    />
+
                     <template v-if="data.provider">
                       <div v-bind="infoLabelAttr">Provider:</div>
                       <div v-bind="infoValueAttr">
@@ -954,6 +962,7 @@ import CdReadmeEditor from "./cd.readme-editor.vue";
 import CdSaveButton from "./cd.save-button.vue";
 import CdFileUrlDialog from "./cd.file-url-dialog.vue";
 import CdAddReferenceDialog from "./cd.add-reference-dialog.vue";
+import CdFindHydroshareUser from "./cd.find-hydroshare-user.vue";
 import User from "@/models/user.model";
 import { onBeforeRouteLeave, useRoute, useRouter } from "vue-router";
 import { contentTypeLabels, contentTypeLogos, S3_PROXY_URL } from "@/constants";
@@ -1246,12 +1255,21 @@ const personOrOrgDetail = {
 
 // detail = personOrOrgDetail lets branchItems resolve labels from
 // options.detail.options.detail[i].options.label = "Person" / "Organization".
+// customActions renders a "Find HydroShare user" button next to Add inside
+// ArrayLayoutRenderer (cznet-vue-core); see .ai/docs/6442-research-add-hydroshare-user-as-author.md.
 const creatorOptions = computed(() => ({
   elementLabelProp: ["name"],
   childLabelProp: "name",
   showSortButtons: true,
   collapsed: true,
   detail: personOrOrgDetail,
+  customActions: [
+    {
+      label: "Find HydroShare user",
+      icon: "mdi-account-search",
+      handler: () => openHsUserDialog("creator"),
+    },
+  ],
 }));
 
 const contributorOptions = computed(() => ({
@@ -1260,7 +1278,32 @@ const contributorOptions = computed(() => ({
   showSortButtons: true,
   collapsed: true,
   detail: personOrOrgDetail,
+  customActions: [
+    {
+      label: "Find HydroShare user",
+      icon: "mdi-account-search",
+      handler: () => openHsUserDialog("contributor"),
+    },
+  ],
 }));
+
+// -----------------------------------------------------------------
+// "Find HydroShare user" dialog — cd.find-hydroshare-user.vue owns the
+// search UI, import fetch, and viewport-alignment; this file just opens
+// it for the right field and pushes the emitted person onto that array.
+// -----------------------------------------------------------------
+const hsUserDialogOpen = ref(false);
+const hsUserDialogTarget = ref<"creator" | "contributor">("creator");
+
+function openHsUserDialog(target: "creator" | "contributor") {
+  hsUserDialogTarget.value = target;
+  hsUserDialogOpen.value = true;
+}
+
+function onHsUserSelected(person: Record<string, any>) {
+  const key = hsUserDialogTarget.value;
+  data.value[key] = [...(data.value[key] ?? []), person];
+}
 
 const fundingOptions = {
   itemNoun: "funding source",
