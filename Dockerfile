@@ -1,4 +1,4 @@
-FROM hydroshare/hs_docker_base:a73451a
+FROM hydroshare/hs_docker_base:bf8a7e3
 
 ADD . /hydroshare
 

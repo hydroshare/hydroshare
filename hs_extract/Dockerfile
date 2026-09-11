@@ -11,7 +11,7 @@ RUN python -m pip config set global.break-system-packages true
 RUN apt-get update
 RUN apt-get -y upgrade
 
-RUN curl -O https://dl.min.io/client/mc/release/linux-amd64/mc \
+RUN curl -Lo mc https://dl.min.io/client/mc/release/linux-amd64/mc \
     && chmod +x mc \
     && mv mc /usr/local/bin/
 
