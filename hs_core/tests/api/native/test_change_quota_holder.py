@@ -169,21 +169,17 @@ class TestChangeQuotaHolderCommunityRestriction(MockS3TestCaseMixin, DjangoTestC
             self.res.delete()
         super(TestChangeQuotaHolderCommunityRestriction, self).tearDown()
 
-    def test_denied_when_no_other_owner_qualifies(self):
-        # make restricted_user an owner, but no other owner belongs to a qualifying group
+    def test_denied_when_setter_does_not_qualify(self):
+        # owner1 (setter) does not belong to any group in the required community
         self.owner1.uaccess.share_resource_with_user(
             self.res, self.restricted_user, PrivilegeCodes.OWNER
-        )
-        self.owner1.uaccess.share_resource_with_user(
-            self.res, self.non_qualifying_owner, PrivilegeCodes.OWNER
         )
 
         with self.assertRaises(PermissionDenied):
             self.res.set_quota_holder(self.owner1, self.restricted_user)
 
-    def test_allowed_when_another_owner_qualifies(self):
-        # make restricted_user an owner, and qualifying_owner (who belongs to a group in the
-        # required community) is also an owner
+    def test_allowed_when_setter_qualifies(self):
+        # qualifying_owner (setter) belongs to a group in the required community
         self.owner1.uaccess.share_resource_with_user(
             self.res, self.restricted_user, PrivilegeCodes.OWNER
         )
@@ -191,12 +187,13 @@ class TestChangeQuotaHolderCommunityRestriction(MockS3TestCaseMixin, DjangoTestC
             self.res, self.qualifying_owner, PrivilegeCodes.OWNER
         )
 
-        self.res.set_quota_holder(self.owner1, self.restricted_user)
+        self.res.set_quota_holder(self.qualifying_owner, self.restricted_user)
         self.assertEqual(self.res.quota_holder, self.restricted_user)
 
-    def test_restricted_users_own_membership_does_not_satisfy_check(self):
-        # even if restricted_user is themselves a member of the qualifying group,
-        # this should not satisfy the check since they are excluded from the owner search
+    def test_new_holders_own_membership_does_not_satisfy_check_for_a_different_setter(self):
+        # even if restricted_user (the new holder) is themselves a member of the qualifying
+        # group, this should not satisfy the check when a different, non-qualifying user (owner1)
+        # is the one making the change
         self.qualifying_owner.uaccess.share_group_with_user(
             self.qualifying_group, self.restricted_user, PrivilegeCodes.VIEW
         )
@@ -206,6 +203,19 @@ class TestChangeQuotaHolderCommunityRestriction(MockS3TestCaseMixin, DjangoTestC
 
         with self.assertRaises(PermissionDenied):
             self.res.set_quota_holder(self.owner1, self.restricted_user)
+
+    def test_allowed_when_restricted_user_is_setter_and_qualifies(self):
+        # when restricted_user is both the setter and the new holder, their own membership in a
+        # qualifying group is sufficient to satisfy the check
+        self.qualifying_owner.uaccess.share_group_with_user(
+            self.qualifying_group, self.restricted_user, PrivilegeCodes.VIEW
+        )
+        self.owner1.uaccess.share_resource_with_user(
+            self.res, self.restricted_user, PrivilegeCodes.OWNER
+        )
+
+        self.res.set_quota_holder(self.restricted_user, self.restricted_user)
+        self.assertEqual(self.res.quota_holder, self.restricted_user)
 
     def test_unaffected_when_no_restriction_set(self):
         # sanity check: users without a community restriction on their UserQuota are unaffected

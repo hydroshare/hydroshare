@@ -2865,18 +2865,17 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
             raise PermissionDenied("Only owners can set or be set as quota holder for the resource")
 
         # Validate that the new quota holder is allowed to be set as the quota holder for this resource
-        # User quotas can optionally require that a resource owner be a member of a specific community
+        # Quotas can optionally require that modyfing user be a member of a specific community
         user_quota = new_holder.quotas.first()
         if user_quota and user_quota.required_community_membership_id:
-            other_owners = self.raccess.owners.exclude(pk=new_holder.pk)
             allowed = UserGroupPrivilege.objects.filter(
-                user__in=other_owners,
+                user=setter,
                 group__g2gcp__community_id=user_quota.required_community_membership_id,
                 group__gaccess__active=True,
             ).exists()
             if not allowed:
                 raise PermissionDenied(
-                    "New quota holder can only be set when an owner of the resource "
+                    "New quota holder can only be set by a user who "
                     "belongs to a group in the community "
                     f"'{user_quota.required_community_membership.name}'"
                 )

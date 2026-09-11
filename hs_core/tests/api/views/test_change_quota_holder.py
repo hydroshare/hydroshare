@@ -82,8 +82,9 @@ class TestChangeQuotaHolder(MockS3TestCaseMixin, ViewTestCase):
         )
 
     def test_change_quota_holder_community_restriction_message_surfaced(self):
-        # when the new holder's UserQuota has a required_community_membership set and no other
-        # owner belongs to a qualifying group, the community-specific message should be surfaced
+        # when the new holder's UserQuota has a required_community_membership set and the
+        # requesting user (setter) does not belong to a qualifying group, the community-specific
+        # message should be surfaced
         community = self.user1.uaccess.create_community(
             'Required Community',
             'A community used to restrict quota holder changes.'
@@ -106,6 +107,6 @@ class TestChangeQuotaHolder(MockS3TestCaseMixin, ViewTestCase):
         self.assertEqual(response_data['status'], 'error')
         self.assertEqual(
             response_data['message'],
-            "New quota holder can only be set when an owner of the resource "
+            "New quota holder can only be set by a user who "
             f"belongs to a group in the community '{community.name}'"
         )
