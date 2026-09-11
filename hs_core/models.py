@@ -2855,6 +2855,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
         setter is the requesting user to transfer quota holder and setter must also be an owner
         """
         from hs_core.hydroshare.utils import validate_user_quota
+        from hs_access_control.models.privilege import UserGroupPrivilege
 
         if __debug__:
             assert (isinstance(setter, User))
@@ -2862,6 +2863,22 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
         if not setter.uaccess.owns_resource(self) or \
                 not new_holder.uaccess.owns_resource(self):
             raise PermissionDenied("Only owners can set or be set as quota holder for the resource")
+
+        # Validate that the new quota holder is allowed to be set as the quota holder for this resource
+        # Quotas can optionally require that modyfing user be a member of a specific community
+        user_quota = new_holder.quotas.first()
+        if user_quota and user_quota.required_community_membership_id:
+            allowed = UserGroupPrivilege.objects.filter(
+                user=setter,
+                group__g2gcp__community_id=user_quota.required_community_membership_id,
+                group__gaccess__active=True,
+            ).exists()
+            if not allowed:
+                raise PermissionDenied(
+                    "New quota holder can only be set by a user who "
+                    "belongs to a group in the community "
+                    f"'{user_quota.required_community_membership.name}'"
+                )
 
         # ensure the new holder has a bucket, buckets only exist for users with resources
         istorage = self.get_s3_storage()
