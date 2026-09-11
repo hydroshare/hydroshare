@@ -1112,6 +1112,14 @@ const personBranchLayout = {
               type: "Control",
               scope: "#/properties/propertyID",
               label: "Identifier Name",
+              options: {
+                // HydroShareID is populated by a separate mechanism (e.g.
+                // importing a HydroShare user profile), not chosen manually
+                // here. `hidden` only filters this dropdown's options —
+                // schema.enum still allows it, so an existing author who
+                // already has a HydroShareID entry loads/validates fine.
+                hidden: ["HydroShareID"],
+              },
             },
             {
               type: "Control",

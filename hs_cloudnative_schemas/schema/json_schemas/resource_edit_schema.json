@@ -65,7 +65,6 @@
           "type": "string"
         },
         "identifier": {
-          "default": [],
           "description": "Unique identifiers for the contributor, e.g. ORCID or HydroShare user profile.",
           "items": {
             "$ref": "#/definitions/PersonIdentifier"
@@ -168,7 +167,6 @@
           "type": "string"
         },
         "identifier": {
-          "default": [],
           "description": "Unique identifiers for the creator, e.g. ORCID or HydroShare user profile.",
           "items": {
             "$ref": "#/definitions/PersonIdentifier"
@@ -938,7 +936,8 @@
         "ORCID",
         "ResearchGateID",
         "ResearcherID",
-        "GoogleScholarID"
+        "GoogleScholarID",
+        "HydroShareID"
       ],
       "title": "PersonIdentifierPropertyID",
       "type": "string"
