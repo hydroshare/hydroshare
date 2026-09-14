@@ -182,6 +182,27 @@ class CreativeWork(SchemaBaseModel):
     )
 
 
+class LicenseEnum(str, Enum):
+    @classmethod
+    def __get_pydantic_json_schema__(
+        cls, schema: JsonSchemaValue, handler: GetJsonSchemaHandler
+    ) -> JsonSchemaValue:
+        json_schema = handler(schema)
+        json_schema.update(type="string", title="License Name", description="")
+        return json_schema
+
+    CC_BY = "Creative Commons Attribution CC BY"
+    CC_BY_SA = "Creative Commons Attribution-ShareAlike CC BY-SA"
+    CC_BY_ND = "Creative Commons Attribution-NoDerivs CC BY-ND"
+    CC_BY_NC_SA = "Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA"
+    CC_BY_NC = "Creative Commons Attribution-NoCommercial CC BY-NC"
+    CC_BY_NC_ND = "Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND"
+
+
+class License(CreativeWork):
+    name: LicenseEnum = Field(description="The name of the license.")
+
+
 class Person(SchemaBaseModel):
     model_config = ConfigDict(
         **SchemaBaseModel.model_config,
@@ -707,6 +728,29 @@ class PropertyValue(SchemaBaseModel):
     measurementTechnique: Optional[str] = Field(
         title="Measurement technique",
         description="A technique or technology used in a measurement.",
+        default=None,
+        json_schema_extra=remove_none_default,
+    )
+
+
+class AdditionalPropertyValue(SchemaBaseModel):
+    model_config = ConfigDict(
+        **SchemaBaseModel.model_config,
+        populate_by_name=True,  # Ensures aliases work during model initialization
+        title="PropertyValue",
+    )
+
+    type: Literal["PropertyValue"] = Field(
+        alias="@type",  # type: ignore
+        default="PropertyValue",
+        description="A property-value pair.",
+    )
+    name: str = Field(description="The name of the property.")
+
+    value: str = Field(description="The value of the property.")
+
+    description: Optional[str] = Field(
+        description="A description of the property.",
         default=None,
         json_schema_extra=remove_none_default,
     )

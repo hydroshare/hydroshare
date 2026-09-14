@@ -1,6 +1,42 @@
 {
   "additionalProperties": true,
   "definitions": {
+    "AdditionalPropertyValue": {
+      "additionalProperties": true,
+      "properties": {
+        "@type": {
+          "const": "PropertyValue",
+          "default": "PropertyValue",
+          "description": "A property-value pair.",
+          "enum": [
+            "PropertyValue"
+          ],
+          "title": "@Type",
+          "type": "string"
+        },
+        "description": {
+          "description": "A description of the property.",
+          "title": "Description",
+          "type": "string"
+        },
+        "name": {
+          "description": "The name of the property.",
+          "title": "Name",
+          "type": "string"
+        },
+        "value": {
+          "description": "The value of the property.",
+          "title": "Value",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "value"
+      ],
+      "title": "PropertyValue",
+      "type": "object"
+    },
     "Affiliation": {
       "additionalProperties": true,
       "properties": {
@@ -86,65 +122,6 @@
         "name"
       ],
       "title": "Contributor",
-      "type": "object"
-    },
-    "CreativeWork": {
-      "additionalProperties": true,
-      "properties": {
-        "@type": {
-          "const": "CreativeWork",
-          "default": "CreativeWork",
-          "description": "Submission type can include various forms of content, such as datasets, software source code, digital documents, etc.",
-          "enum": [
-            "CreativeWork"
-          ],
-          "title": "@Type",
-          "type": "string"
-        },
-        "associatedMedia": {
-          "description": "A media object that encodes this CreativeWork. This property is a synonym for encoding.",
-          "items": {
-            "anyOf": [
-              {
-                "$ref": "#/definitions/LinkedData"
-              },
-              {
-                "$ref": "#/definitions/MediaObject"
-              },
-              {
-                "$ref": "#/definitions/DataDownload"
-              },
-              {
-                "$ref": "#/definitions/VideoObject"
-              }
-            ]
-          },
-          "title": "Resource content",
-          "type": "array"
-        },
-        "description": {
-          "description": "The description of the creative work.",
-          "title": "Description",
-          "type": "string"
-        },
-        "name": {
-          "description": "Submission's name or title",
-          "title": "Name or title",
-          "type": "string"
-        },
-        "url": {
-          "description": "A URL to the creative work.",
-          "errorMessage": {
-            "pattern": "must match format \"url\""
-          },
-          "maxLength": 2083,
-          "minLength": 1,
-          "pattern": "^(http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|https:\\/\\/)?[a-z0-9]+([\\-\\.]{1}[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/.*)?$",
-          "title": "URL",
-          "type": "string"
-        }
-      },
-      "title": "CreativeWork",
       "type": "object"
     },
     "Creator": {
@@ -683,6 +660,80 @@
         "esp"
       ],
       "title": "Language",
+      "type": "string"
+    },
+    "License": {
+      "additionalProperties": true,
+      "properties": {
+        "@type": {
+          "const": "CreativeWork",
+          "default": "CreativeWork",
+          "description": "Submission type can include various forms of content, such as datasets, software source code, digital documents, etc.",
+          "enum": [
+            "CreativeWork"
+          ],
+          "title": "@Type",
+          "type": "string"
+        },
+        "associatedMedia": {
+          "description": "A media object that encodes this CreativeWork. This property is a synonym for encoding.",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/LinkedData"
+              },
+              {
+                "$ref": "#/definitions/MediaObject"
+              },
+              {
+                "$ref": "#/definitions/DataDownload"
+              },
+              {
+                "$ref": "#/definitions/VideoObject"
+              }
+            ]
+          },
+          "title": "Resource content",
+          "type": "array"
+        },
+        "description": {
+          "description": "The description of the creative work.",
+          "title": "Description",
+          "type": "string"
+        },
+        "name": {
+          "$ref": "#/definitions/LicenseEnum",
+          "description": "The name of the license."
+        },
+        "url": {
+          "description": "A URL to the creative work.",
+          "errorMessage": {
+            "pattern": "must match format \"url\""
+          },
+          "maxLength": 2083,
+          "minLength": 1,
+          "pattern": "^(http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|https:\\/\\/)?[a-z0-9]+([\\-\\.]{1}[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/.*)?$",
+          "title": "URL",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "License",
+      "type": "object"
+    },
+    "LicenseEnum": {
+      "description": "",
+      "enum": [
+        "Creative Commons Attribution CC BY",
+        "Creative Commons Attribution-ShareAlike CC BY-SA",
+        "Creative Commons Attribution-NoDerivs CC BY-ND",
+        "Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA",
+        "Creative Commons Attribution-NoCommercial CC BY-NC",
+        "Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND"
+      ],
+      "title": "License Name",
       "type": "string"
     },
     "LinkedData": {
@@ -1469,7 +1520,7 @@
       "default": [],
       "description": "Additional properties of the place.",
       "items": {
-        "$ref": "#/definitions/PropertyValue"
+        "$ref": "#/definitions/AdditionalPropertyValue"
       },
       "title": "Additional properties",
       "type": "array"
@@ -1685,7 +1736,7 @@
     "license": {
       "anyOf": [
         {
-          "$ref": "#/definitions/CreativeWork"
+          "$ref": "#/definitions/License"
         },
         {
           "errorMessage": {
