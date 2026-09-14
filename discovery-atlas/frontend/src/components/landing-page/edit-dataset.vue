@@ -1176,11 +1176,20 @@ const organizationBranchLayout = {
   ],
 };
 
-// Per-item branch layouts consumed by ArrayLayoutRenderer's inline type switcher.
-// ArrayLayoutRenderer reads options.detail.options.detail[branchIndex] to find
-// the VerticalLayout for each concrete branch (Person = 0, Organization = 1).
+// Per-item branch layouts consumed by AnyOfRenderer for each array item.
+// The item `detail` must itself be a Control at scope "#" so AnyOfRenderer
+// (not ObjectControlRenderer) picks it up; `dropdown: true` swaps the tab
+// strip for a select (fits the 22rem sidebar) and `flat: true` removes the
+// +/- toggle box since Person/Organization is always required per item.
+// options.detail is keyed by branch index (Person = 0, Organization = 1),
+// same convention as licenseOptions/spatialCoverageOptions above.
 const personOrOrgDetail = {
+  type: "Control",
+  scope: "#",
   options: {
+    dropdown: true,
+    flat: true,
+    title: "Type",
     detail: {
       0: personBranchLayout,
       1: organizationBranchLayout,
