@@ -258,7 +258,7 @@
         </template>
       </v-select>
 
-      <div class="d-flex flex-column flex-lg-row ga-6 mt-6">
+      <div class="d-flex flex-column flex-lg-row mt-6 single-col-layout">
         <v-container
           class="page-content pa-0"
           :class="{ 'is-sm': $vuetify.display.mdAndDown }"
@@ -594,23 +594,7 @@
               </div>
             </v-card>
 
-            <v-card v-if="data.license" variant="flat" class="mb-6">
-              <v-card-title class="sidebar-heading pa-0">
-                License
-              </v-card-title>
-              <div class="text-body-2 text-medium-emphasis">
-                <a v-if="data.license.url" :href="data.license.url" target="_blank" rel="noopener">{{ data.license.name }}</a>
-                <template v-else>{{ data.license.name }}</template>
-              </div>
-              <img
-                v-if="licenseBadgeUrl"
-                :src="licenseBadgeUrl"
-                :alt="data.license.name"
-                class="cc-badge mt-2"
-              />
-            </v-card>
-
-            <div v-if="hasSpatialFeatures" class="mb-6">
+            <div v-if="hasSpatialFeatures" id="spatial" class="mb-6">
               <div class="sidebar-heading">
                 Spatial Coverage
               </div>
@@ -672,7 +656,7 @@
               </v-card>
             </div>
 
-            <div v-if="data.temporalCoverage" class="mb-6">
+            <div v-if="data.temporalCoverage" id="temporal" class="mb-6">
               <div class="sidebar-heading">
                 Temporal Coverage
               </div>
@@ -710,47 +694,57 @@
               </v-card>
             </div>
 
-            <v-card
-              v-if="citations.length"
-              class="mb-6"
-              variant="flat"
-              id="citation"
-            >
-              <v-card-title class="sidebar-heading pa-0">
+            <div v-if="citations.length" id="citation" class="mb-6">
+              <div class="sidebar-heading">
                 How to cite
-              </v-card-title>
-              <v-card-text
+              </div>
+
+              <div
                 v-for="(citation, index) of citations"
                 :key="index"
-                class="pa-0 text-body-2 text-medium-emphasis"
+                class="citation-card"
               >
-                <div class="d-flex align-center justify-space-between ga-3">
-                  <div class="citation-text">
-                    {{ citation }}
-                  </div>
-
-                  <v-tooltip bottom>
-                    <template v-slot:activator="{ props }">
-                      <v-btn icon v-bind="props" @click="onCopy(citation)" size="small" variant="text">
-                        <v-icon> mdi-content-copy </v-icon>
-                      </v-btn>
-                    </template>
-                    <span>Copy</span>
-                  </v-tooltip>
+                <div class="citation-text">{{ citation }}</div>
+                <div class="citation-actions">
+                  <v-btn
+                    class="citation-copy"
+                    size="small"
+                    variant="tonal"
+                    color="accent"
+                    :prepend-icon="copiedCitation === index ? 'mdi-check' : 'mdi-content-copy'"
+                    @click="onCopyCitation(citation, index)"
+                  >{{ copiedCitation === index ? "Copied" : "Copy citation" }}</v-btn>
                 </div>
-              </v-card-text>
-              <v-card-text
-                v-if="!isPublished"
-                class="pa-0 pt-2 text-caption text-medium-emphasis font-italic"
-              >
-                When permanently published, this resource will have a formal Digital
-                Object Identifier (DOI) and will be accessible at the following URL:
-                <a :href="potentialDoiUrl" target="_blank" rel="noopener">{{ potentialDoiUrl }}</a>.
-                When you are ready to permanently publish, click the Publish button at
-                the top of the page to request your DOI. Reminder: Once you have published
-                your resource, modifications to Title, Authors, or Content files will
-                require a new version of the resource.
-              </v-card-text>
+              </div>
+
+              <div v-if="!isPublished" class="citation-note">
+                <v-icon class="citation-note__icon" size="16">mdi-information-outline</v-icon>
+                <div>
+                  When permanently published, this resource will have a formal Digital
+                  Object Identifier (DOI) and will be accessible at the following URL:
+                  <a :href="potentialDoiUrl" target="_blank" rel="noopener">{{ potentialDoiUrl }}</a>.
+                  When you are ready to permanently publish, click the Publish button at
+                  the top of the page to request your DOI. Reminder: Once you have published
+                  your resource, modifications to Title, Authors, or Content files will
+                  require a new version of the resource.
+                </div>
+              </div>
+            </div>
+
+            <v-card v-if="data.license" id="license" variant="flat" class="mb-6">
+              <v-card-title class="sidebar-heading pa-0">
+                License
+              </v-card-title>
+              <div class="text-body-2 text-medium-emphasis">
+                <a v-if="data.license.url" :href="data.license.url" target="_blank" rel="noopener">{{ data.license.name }}</a>
+                <template v-else>{{ data.license.name }}</template>
+              </div>
+              <img
+                v-if="licenseBadgeUrl"
+                :src="licenseBadgeUrl"
+                :alt="data.license.name"
+                class="cc-badge mt-2"
+              />
             </v-card>
           </div>
         </div>
@@ -916,6 +910,17 @@ function onShowMetadata(item: any) {
 function onCopy(text: string) {
   navigator.clipboard.writeText(text);
   Notifications.toast({ message: "Copied to clipboard", type: "info" });
+}
+
+const copiedCitation = ref<number | null>(null);
+let copiedTimeout: ReturnType<typeof setTimeout> | undefined;
+
+function onCopyCitation(citation: string, index: number) {
+  // Collapse line breaks and repeated whitespace so the citation pastes as one line.
+  onCopy(citation.replace(/\s+/g, " ").trim());
+  copiedCitation.value = index;
+  clearTimeout(copiedTimeout);
+  copiedTimeout = setTimeout(() => (copiedCitation.value = null), 2000);
 }
 
 const tocItems = computed(() => User.$state.toc);
@@ -1223,15 +1228,35 @@ function buildToc() {
     toc.push({ text: "Abstract", to: "#description" });
   }
 
+  if (d.keywords?.length) {
+    toc.push({ text: "Subject Keywords", to: "#subject" });
+  }
+
+  if (hasSpatialFeatures.value) {
+    toc.push({ text: "Spatial Coverage", to: "#spatial" });
+  }
+
+  if (d.temporalCoverage) {
+    toc.push({ text: "Temporal Coverage", to: "#temporal" });
+  }
+
   toc.push({ text: "Content", to: "#content" });
   toc.push({ text: "Files", to: "#fileExplorer", level: 4 });
+
+  if (hasRelatedResources.value) {
+    toc.push({ text: "Related Resources", to: "#related" });
+  }
 
   if (d.funding?.length) {
     toc.push({ text: "Funding", to: "#funding" });
   }
 
-  if (hasRelatedResources.value) {
-    toc.push({ text: "Related Resources", to: "#related" });
+  if (citations.value.length) {
+    toc.push({ text: "How to cite", to: "#citation" });
+  }
+
+  if (d.license) {
+    toc.push({ text: "License", to: "#license" });
   }
 
   User.$state.toc = toc;
@@ -1242,6 +1267,7 @@ onBeforeUnmount(() => {
   User.$state.toc = [];
   User.$state.isTocReady = false;
   window.removeEventListener("message", onParentMessage);
+  clearTimeout(copiedTimeout);
 });
 
 function findCreatorProfile(creator: any) {
@@ -1344,6 +1370,31 @@ init();
   text-transform: uppercase;
 }
 
+.single-col-layout {
+  gap: 1.5rem;
+
+  @media (max-width: 1279px) {
+    gap: 0;
+
+    > .page-content,
+    > .sidebar,
+    > .sidebar > div {
+      display: contents;
+    }
+
+    #details { order: 1; }
+    #description { order: 2; }
+    #subject { order: 3; }
+    #spatial { order: 4; }
+    #temporal { order: 5; }
+    #content { order: 6; }
+    #related { order: 8; }
+    #funding { order: 9; }
+    #citation { order: 10; }
+    #license { order: 11; }
+  }
+}
+
 .sidebar {
   flex-basis: 22rem;
   flex-shrink: 0;
@@ -1426,9 +1477,59 @@ init();
   height: 15rem;
 }
 
+.citation-card {
+  padding: 1rem 1rem 0.75rem;
+  border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  border-left: 3px solid rgb(var(--v-theme-accent));
+  border-radius: 4px;
+  background-color: rgba(var(--v-theme-accent), 0.04);
+
+  & + .citation-card {
+    margin-top: 0.75rem;
+  }
+}
+
 .citation-text {
   min-width: 0;
   word-break: break-word;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: rgba(var(--v-theme-on-surface), 0.87);
+}
+
+.citation-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.75rem;
+}
+
+// Fixed width so swapping the label to "Copied" doesn't resize the button.
+.citation-copy {
+  min-width: 9.5rem;
+  letter-spacing: 0.03em;
+  text-transform: none;
+}
+
+.citation-note {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  min-width: 0;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: rgba(var(--v-theme-on-surface), 0.6);
+
+  // The DOI URL has no break opportunities and would otherwise widen the section.
+  > div {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+}
+
+.citation-note__icon {
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+  opacity: 0.7;
 }
 
 .dataset-info {
@@ -1481,7 +1582,7 @@ init();
 .readme-container {
   .v-card-text {
     min-height: 5rem;
-    height: 40rem;
+    max-height: 40rem;
     overflow: auto;
     resize: vertical;
     padding: 1rem;
