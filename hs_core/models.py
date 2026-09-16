@@ -27,7 +27,9 @@ from django.db.models import Q, Sum
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.forms.models import model_to_dict
+from django.template.defaultfilters import filesizeformat, floatformat
 from django.urls import reverse
+from django.utils import dateformat
 from django.utils.timezone import now
 from django_s3.exceptions import SessionException
 from dominate.tags import div, h4, legend, table, tbody, td, th, tr
@@ -3214,6 +3216,249 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
             url=url,
             pending_suffix=pending_suffix,
         )
+
+    def get_schemaorg_dict(self):
+        """Build the schema.org/JSON-LD dict shown in the resource landing page's
+        ``<script id="schemaorg">`` tag, using ``cached_metadata`` as the data source.
+        """
+        from hs_core.templatetags.hydroshare_tags import (
+            _build_contact_point_dict, _creator_to_schemaorg_dict)
+
+        self.refresh_from_db(fields=['cached_metadata'])
+        md = self.cached_metadata
+        raccess = self.raccess
+        published = raccess.published
+        short_id = self.short_id
+        hs_resource_url = f"https://www.hydroshare.org/resource/{short_id}"
+        doi_url = f"https://doi.org/10.4211/hs.{short_id}"
+
+        if published:
+            schemaorg = {
+                "@context": "https://schema.org",
+                "schemaVersion": "http://datacite.org/schema/kernel-4",
+                "@id": f"{doi_url}#schemaorg",
+                "sameAs": hs_resource_url,
+                "url": doi_url,
+            }
+        else:
+            schemaorg = {
+                "@context": "https://schema.org",
+                "schemaVersion": "http://datacite.org/schema/kernel-4",
+                "@id": f"{hs_resource_url}#schemaorg",
+                "url": hs_resource_url,
+            }
+
+        title = md.get('title') or {}
+        abstract = md.get('abstract') or {}
+        schemaorg["@type"] = "Dataset"
+        schemaorg["additionalType"] = md.get('type')
+        schemaorg["name"] = title.get('value')
+        schemaorg["description"] = abstract.get('value')
+        schemaorg["keywords"] = md.get('subjects', [])
+
+        is_replaced_by = self.get_relation_version_res_url(RelationTypes.isReplacedBy)
+        if published:
+            creative_work_status = "Published"
+        elif raccess.public:
+            creative_work_status = "Public"
+        elif raccess.discoverable:
+            creative_work_status = "Discoverable"
+        elif is_replaced_by:
+            creative_work_status = "Obsolete"
+        else:
+            creative_work_status = "Private"
+        schemaorg["creativeWorkStatus"] = creative_work_status
+
+        schemaorg["inLanguage"] = "en-US"
+
+        identifiers = md.get('identifiers', [])
+        if published:
+            identifier_list = [
+                {
+                    "@id": doi_url,
+                    "@type": "PropertyValue",
+                    "propertyID": "https://registry.identifiers.org/registry/doi",
+                    "url": doi_url,
+                    "value": f"doi:10.4211/hs.{short_id}",
+                },
+                hs_resource_url,
+            ]
+            identifier_list.extend(
+                {
+                    "@type": "PropertyValue",
+                    "propertyID": identifier.get('name'),
+                    "value": identifier.get('url'),
+                }
+                for identifier in identifiers
+                if identifier.get('name') not in ('hydroShareIdentifier', 'doi')
+            )
+        else:
+            identifier_list = [hs_resource_url]
+            identifier_list.extend(
+                {
+                    "@type": "PropertyValue",
+                    "propertyID": identifier.get('name'),
+                    "value": identifier.get('url'),
+                }
+                for identifier in identifiers
+                if identifier.get('name') != 'hydroShareIdentifier'
+            )
+        schemaorg["identifier"] = identifier_list
+
+        creators = md.get('creators', [])
+        sorted_creators = sorted(
+            creators, key=lambda c: c.get('order') if c.get('order') is not None else 999999)
+        creator_list = [_creator_to_schemaorg_dict(cr) for cr in sorted_creators]
+        if sorted_creators:
+            contact_point = _build_contact_point_dict(sorted_creators[0])
+            if contact_point:
+                creator_list[0]['contactPoint'] = contact_point
+        schemaorg["creator"] = creator_list
+
+        contributors = md.get('contributors', [])
+        if contributors:
+            schemaorg["contributor"] = {
+                "@list": [_creator_to_schemaorg_dict(cr) for cr in contributors]
+            }
+
+        temporal_coverage = md.get('temporal_coverage')
+        if temporal_coverage:
+            schemaorg["temporalCoverage"] = "{}/{}".format(
+                temporal_coverage.get('start_date'), temporal_coverage.get('end_date'))
+
+        spatial_coverage = md.get('spatial_coverage')
+        if spatial_coverage and spatial_coverage.get('exists'):
+            if spatial_coverage.get('type') == 'point':
+                geo = {
+                    "@type": "GeoCoordinates",
+                    "latitude": float(floatformat(spatial_coverage.get('north'), 4)),
+                    "longitude": float(floatformat(spatial_coverage.get('east'), 4)),
+                }
+            else:
+                geo = {
+                    "@type": "GeoShape",
+                    "box": "{} {} {} {}".format(
+                        floatformat(spatial_coverage.get('southlimit'), 4),
+                        floatformat(spatial_coverage.get('westlimit'), 4),
+                        floatformat(spatial_coverage.get('northlimit'), 4),
+                        floatformat(spatial_coverage.get('eastlimit'), 4),
+                    ),
+                }
+            spatial_coverage_dict = {"@type": "Place"}
+            if spatial_coverage.get('name'):
+                spatial_coverage_dict["name"] = spatial_coverage.get('name')
+            spatial_coverage_dict["geo"] = geo
+            schemaorg["spatialCoverage"] = spatial_coverage_dict
+
+        if published:
+            publisher = md.get('publisher') or {}
+            schemaorg["publisher"] = {
+                "@type": "Organization",
+                "@id": "https://ror.org/003b04c03",
+                "name": publisher.get('name') or "CUAHSI",
+                "identifier": "https://ror.org/003b04c03",
+                "sameAs": "https://ror.org/003b04c03",
+                "url": publisher.get('url') or "https://www.cuahsi.org",
+            }
+
+        schemaorg["provider"] = {
+            "@id": "https://www.hydroshare.org",
+            "@type": "Organization",
+            "name": "HydroShare",
+            "url": "https://www.hydroshare.org",
+        }
+        schemaorg["includedInDataCatalog"] = {
+            "@type": "DataCatalog",
+            "name": "HydroShare",
+            "url": "https://www.hydroshare.org/search/",
+        }
+
+        rights = md.get('rights') or {}
+        rights_statement = rights.get('statement')
+        rights_url = rights.get('url')
+        if rights_statement or rights_url:
+            license_dict = {"@type": "CreativeWork"}
+            if rights_statement and rights_url:
+                license_dict["text"] = rights_statement
+                license_dict["url"] = rights_url
+            elif rights_statement:
+                license_dict["text"] = rights_statement
+                license_dict["name"] = "Customized license"
+            else:
+                license_dict["url"] = rights_url
+            schemaorg["license"] = license_dict
+
+        if raccess.public:
+            schemaorg["isAccessibleForFree"] = True
+
+        schemaorg["citation"] = self.get_citation(forceHydroshareURI=False)
+
+        funding_agencies = md.get('funding_agencies') or []
+        if funding_agencies:
+            schemaorg["funding"] = [
+                {
+                    "@type": "Grant",
+                    "identifier": agency.get('award_number')
+                    if agency.get('award_number') is not None else "",
+                    "name": agency.get('award_title')
+                    if agency.get('award_title') is not None else "",
+                    "funder": {
+                        "@type": "Organization",
+                        "name": agency.get('agency_name'),
+                        "identifier": agency.get('agency_url')
+                        if agency.get('agency_url') is not None else "",
+                    },
+                }
+                for agency in funding_agencies
+            ]
+
+        schemaorg["dateCreated"] = dateformat.format(self.created, 'c')
+        schemaorg["dateModified"] = dateformat.format(self.last_updated, 'c')
+        if published:
+            published_date_element = self.metadata.dates.filter(type='published').first()
+            if published_date_element:
+                schemaorg["datePublished"] = dateformat.format(published_date_element.start_date, 'c')
+
+        formats = self.metadata.formats.all()
+        if formats:
+            schemaorg["encodingFormat"] = [format_obj.value for format_obj in formats]
+
+        schemaorg["subjectOf"] = {
+            "@type": "DataDownload",
+            "name": "resourcemetadata.xml",
+            "description": "Dublin Core Metadata Document Describing the Dataset",
+            "url": f"https://www.hydroshare.org/hsapi/resource/{short_id}/scimeta/",
+            "encodingFormat": "application/rdf+xml",
+        }
+
+        distribution = {
+            "@type": "DataDownload",
+            "name": f"{title.get('value')} (BagIt Archive)",
+            "contentSize": filesizeformat(self.size),
+            "encodingFormat": "application/zip",
+            "contentUrl": f"https://www.hydroshare.org/hsapi/resource/{short_id}/",
+            "description": "Zipped BagIt Bag containing the HydroShare Resource",
+            "dateModified": dateformat.format(self.last_updated, 'c'),
+        }
+        if published:
+            distribution["identifier"] = [
+                hs_resource_url,
+                {
+                    "@type": "PropertyValue",
+                    "additionalType": [
+                        "http://www.wikidata.org/entity/Q185235",
+                        "http://id.loc.gov/vocabulary/preservation/cryptographicHashFunctions/md5",
+                    ],
+                    "identifier": f"md5:{self.bag_checksum}",
+                    "propertyID": "MD5",
+                    "value": self.bag_checksum,
+                },
+            ]
+        else:
+            distribution["identifier"] = [hs_resource_url]
+        schemaorg["distribution"] = distribution
+
+        return schemaorg
 
     @classmethod
     def get_supported_upload_file_types(cls):

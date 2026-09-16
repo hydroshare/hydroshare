@@ -33,9 +33,11 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         content_model = page.get_content_model()
 
     if resource_edit:
-        return get_editable_page_context(content_model, user, extended_metadata_layout, request)
+        context = get_editable_page_context(content_model, user, extended_metadata_layout, request)
     else:
-        return get_readonly_page_context(content_model, user, request)
+        context = get_readonly_page_context(content_model, user, request)
+    context['schemaorg_json'] = content_model.get_schemaorg_dict()
+    return context
 
 
 def get_readonly_page_context(content_model, user, request=None):

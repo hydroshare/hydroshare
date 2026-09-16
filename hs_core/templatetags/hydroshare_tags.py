@@ -468,8 +468,8 @@ def creator_with_contact_json_ld(crs):
 
 
 @register.filter
-def json_dumps(value):
-    return dumps(value)
+def json_dumps(value, indent=None):
+    return dumps(value, indent=indent, ensure_ascii=False)
 
 
 @register.filter
