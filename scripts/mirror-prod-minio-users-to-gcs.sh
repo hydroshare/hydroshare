@@ -41,7 +41,7 @@ DRY_RUN="${DRY_RUN:-false}"
 OVERWRITE="${OVERWRITE:-false}"
 REMOVE="${REMOVE:-false}"
 INCLUDE_REGEX="${INCLUDE_REGEX:-.*}"
-EXCLUDE_REGEX="${EXCLUDE_REGEX:-^(published|ciroh-data)}"
+EXCLUDE_REGEX="${EXCLUDE_REGEX:-^(published|ciroh-data|bags|tmp|zips)}"
 
 if [[ -z "$PROD_ALIAS" || -z "$GCS_ALIAS" || -z "$GCS_BUCKET" ]]; then
   echo "ERROR: PROD_ALIAS, GCS_ALIAS, and GCS_BUCKET are required."
