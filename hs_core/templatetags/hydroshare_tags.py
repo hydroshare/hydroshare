@@ -469,7 +469,17 @@ def creator_with_contact_json_ld(crs):
 
 @register.filter
 def json_dumps(value, indent=None):
-    return dumps(value, indent=indent, ensure_ascii=False)
+    """Dump ``value`` as JSON, safe to embed directly (e.g. via |safe) inside an HTML
+    <script> tag. json.dumps does not escape '<', '>', '&', so without this a value
+    containing '</script>' could break out of the tag; escape them the same way
+    Django's json_script template tag does.
+    """
+    return (
+        dumps(value, indent=indent, ensure_ascii=False)
+        .replace("<", "\\u003c")
+        .replace(">", "\\u003e")
+        .replace("&", "\\u0026")
+    )
 
 
 @register.filter
