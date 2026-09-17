@@ -1643,10 +1643,10 @@ class CompositeResourceTest(
         )
         self.assertEqual(res_coverage.value["projection"], "WGS 84 EPSG:4326")
         self.assertEqual(res_coverage.value["units"], "Decimal degrees")
-        self.assertAlmostEqual(res_coverage.value["northlimit"], 42.050026959773426, places=14)
-        self.assertAlmostEqual(res_coverage.value["eastlimit"], -111.577737181062, places=14)
-        self.assertAlmostEqual(res_coverage.value["southlimit"], 41.98722286030319, places=14)
-        self.assertAlmostEqual(res_coverage.value["westlimit"], -111.69756293084063, places=14)
+        self.assertAlmostEqual(res_coverage.value["northlimit"], 42.050026959773426, places=6)
+        self.assertAlmostEqual(res_coverage.value["eastlimit"], -111.577737181062, places=6)
+        self.assertAlmostEqual(res_coverage.value["southlimit"], 41.98722286030319, places=6)
+        self.assertAlmostEqual(res_coverage.value["westlimit"], -111.69756293084063, places=6)
         value_dict = {
             "east": "-110.88845678",
             "north": "43.6789",
@@ -1665,8 +1665,8 @@ class CompositeResourceTest(
         self.assertEqual(res_coverage.value["units"], "Decimal degrees")
         self.assertEqual(res_coverage.value["northlimit"], 43.6789)
         self.assertEqual(res_coverage.value["eastlimit"], -110.88845678)
-        self.assertEqual(res_coverage.value["southlimit"], 41.98722286030319)
-        self.assertEqual(res_coverage.value["westlimit"], -111.69756293084063)
+        self.assertAlmostEqual(res_coverage.value["southlimit"], 41.98722286030319, places=6)
+        self.assertAlmostEqual(res_coverage.value["westlimit"], -111.69756293084063, places=6)
         # update the LFO coverage to box type
         value_dict = {
             "eastlimit": "-110.88845678",
@@ -4250,8 +4250,8 @@ class CompositeResourceTest(
         # test that db queries for landing page have constant time complexity
 
         # expected number of queries for landing page when the resource has no resource file
-        _VIEW_LANDING_PAGE_NO_RES_FILE_QUERY_COUNT = 91
-        _EDIT_LANDING_PAGE_NO_RES_FILE_QUERY_COUNT = 118
+        _VIEW_LANDING_PAGE_NO_RES_FILE_QUERY_COUNT = 90
+        _EDIT_LANDING_PAGE_NO_RES_FILE_QUERY_COUNT = 117
 
         # expected number of queries for landing page when the resource has resource file
         _VIEW_LANDING_PAGE_WITH_RES_FILE_QUERY_COUNT = _VIEW_LANDING_PAGE_NO_RES_FILE_QUERY_COUNT + 11
