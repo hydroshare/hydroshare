@@ -8,7 +8,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('hs_access_control', '0046_requestcommunity_cancelled'),
-        ('theme', '0041_remove_quotamessage_enforce_quota_and_more'),
+        ('theme', '0044_merge_20260723_1927'),
     ]
 
     operations = [
