@@ -1230,9 +1230,7 @@
           "type": "string"
         },
         "name": {
-          "description": "Submission's name or title",
-          "title": "Name or title",
-          "type": "string"
+          "$ref": "#/definitions/UserEditableRelationType"
         },
         "url": {
           "description": "The URL address to the data resource.",
@@ -1382,6 +1380,24 @@
       ],
       "title": "TemporalCoverage",
       "type": "object"
+    },
+    "UserEditableRelationType": {
+      "enum": [
+        "The content of this resource can be executed by",
+        "The content of this resource was created by a related App or software program",
+        "This resource is described by",
+        "This resource conforms to established standard described by",
+        "This resource has a related resource in another format",
+        "This resource is a different format of",
+        "This resource is required by",
+        "This resource requires",
+        "This resource is referenced by",
+        "The content of this resource references",
+        "The content of this resource is derived from",
+        "The content of this resource is similar to"
+      ],
+      "title": "Type of relationship",
+      "type": "string"
     },
     "VideoObject": {
       "additionalProperties": true,
