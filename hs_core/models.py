@@ -2286,7 +2286,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
             hs_json['content_types'] = list(set(res.aggregation_type_names).union({self.resource_type}))
         from hs_core.hydroshare_schemaorg_adapter import HydroshareMetadataAdapter
         hs_json = HydroshareMetadataAdapter.to_catalog_record(hs_json).model_dump(
-            exclude={'dateCreated', 'dateModified', 'datePublished'}, by_alias=True, exclude_none=True
+            exclude={'dateCreated', 'dateModified', 'datePublished'}, by_alias=True
         )
         hs_json = json.dumps(hs_json, indent=2, default=str)
         with NamedTemporaryFile(mode='w+') as temp_file:
@@ -2854,6 +2854,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
         setter is the requesting user to transfer quota holder and setter must also be an owner
         """
         from hs_core.hydroshare.utils import validate_user_quota
+        from hs_access_control.models.privilege import UserGroupPrivilege
 
         if __debug__:
             assert (isinstance(setter, User))
@@ -2861,6 +2862,22 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
         if not setter.uaccess.owns_resource(self) or \
                 not new_holder.uaccess.owns_resource(self):
             raise PermissionDenied("Only owners can set or be set as quota holder for the resource")
+
+        # Validate that the new quota holder is allowed to be set as the quota holder for this resource
+        # Quotas can optionally require that modyfing user be a member of a specific community
+        user_quota = new_holder.quotas.first()
+        if user_quota and user_quota.required_community_membership_id:
+            allowed = UserGroupPrivilege.objects.filter(
+                user=setter,
+                group__g2gcp__community_id=user_quota.required_community_membership_id,
+                group__gaccess__active=True,
+            ).exists()
+            if not allowed:
+                raise PermissionDenied(
+                    "New quota holder can only be set by a user who "
+                    "belongs to a group in the community "
+                    f"'{user_quota.required_community_membership.name}'"
+                )
 
         # QuotaException will be raised if new_holder does not have enough quota to hold this
         # new resource, in which case, set_quota_holder to the new user fails
