@@ -637,12 +637,6 @@
                   </v-table>
                 </v-card>
               </template>
-
-              <cz-field
-                scope="#/properties/subjectOf"
-                :options="subjectOfOptions"
-                label="Subject of"
-              />
               <cz-field
                 scope="#/properties/relation"
                 :options="relationOptions"
