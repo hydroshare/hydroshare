@@ -59,7 +59,7 @@ class Award(BaseModel):
     funding_agency_url: Optional[HttpUrl] = None
 
     def to_dataset_grant(self):
-        grant = schema.Grant.construct()
+        grant = schema.Grant.model_construct()
         if self.title:
             grant.name = self.title
         else:
@@ -67,7 +67,7 @@ class Award(BaseModel):
         if self.number:
             grant.identifier = self.number
 
-        funder = schema.Organization.construct()
+        funder = schema.FunderOrganization.model_construct()
         funder.name = self.funding_agency_name
         if self.funding_agency_url:
             funder.url = self.funding_agency_url
