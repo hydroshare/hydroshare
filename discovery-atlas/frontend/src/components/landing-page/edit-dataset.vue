@@ -525,9 +525,11 @@
                   :folder-name-regex="folderNameRegex"
                   :canDownloadItem="(item: IFile | IFolder) => !isFolder(item)"
                   :download-zipped="(item: IFile | IFolder) => onZippedDownload(item, resourceId)"
+                  :download-archive="() => onDownloadBag(resourceId, bagUrl)"
                   :upload="uploadFiles"
                   :delete-file-or-folder="deleteFileOrFolder"
                   :rename-file-or-folder="renameFileOrFolder"
+                  downloadArchiveHelpText="Download all content as Zipped BagIt Archive"
                   @download="
                     onFileDownload(
                       $event,
@@ -916,6 +918,7 @@ import {
 import {
   fetchResource,
   getStatusColor,
+  onDownloadBag,
   onFileDownload,
   onZippedDownload,
   parseDate,
