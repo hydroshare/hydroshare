@@ -166,8 +166,9 @@ async def proxy_s3_request(request: Request, full_path: str):
             auth_info=auth_info,
             is_presigned=is_presigned,
         )
-    else:
-        user_id, username, error_response = _verify_csrf_session_request(request)
+    # disabling csrf session verification until it has a use case
+    # else:
+    #     user_id, username, error_response = _verify_csrf_session_request(request)
     if error_response:
         return error_response
 
