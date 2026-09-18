@@ -55,3 +55,58 @@ class TestChangeQuotaHolder(MockS3TestCaseMixin, ViewTestCase):
 
         # clean up
         hydroshare.delete_resource(self.res.short_id)
+
+    def test_change_quota_holder_permission_denied_message_surfaced(self):
+        # a non-owner attempting to become quota holder should surface the specific
+        # PermissionDenied message raised by set_quota_holder, not a generic one
+        self.user3 = hydroshare.create_account(
+            'test_user3@email.com',
+            username='nonowner' + str(uuid.uuid4()),
+            first_name='nonowner_first_name',
+            last_name='nonowner_last_name',
+            superuser=False,
+            groups=[self.hs_group]
+        )
+        url_params = {'shortkey': self.res.short_id}
+        url = reverse('change_quota_holder', kwargs=url_params)
+        request = self.factory.post(url, data={'new_holder_username': self.user3.username})
+        request.user = self.user1
+
+        self.add_session_to_request(request)
+        response = change_quota_holder(request, shortkey=self.res.short_id)
+        response_data = json.loads(response.content.decode())
+        self.assertEqual(response_data['status'], 'error')
+        self.assertEqual(
+            response_data['message'],
+            "Only owners can set or be set as quota holder for the resource"
+        )
+
+    def test_change_quota_holder_community_restriction_message_surfaced(self):
+        # when the new holder's UserQuota has a required_community_membership set and the
+        # requesting user (setter) does not belong to a qualifying group, the community-specific
+        # message should be surfaced
+        community = self.user1.uaccess.create_community(
+            'Required Community',
+            'A community used to restrict quota holder changes.'
+        )
+        community.active = True
+        community.save()
+
+        user_quota = self.user2.quotas.get()
+        user_quota.required_community_membership = community
+        user_quota.save()
+
+        url_params = {'shortkey': self.res.short_id}
+        url = reverse('change_quota_holder', kwargs=url_params)
+        request = self.factory.post(url, data={'new_holder_username': self.user2.username})
+        request.user = self.user1
+
+        self.add_session_to_request(request)
+        response = change_quota_holder(request, shortkey=self.res.short_id)
+        response_data = json.loads(response.content.decode())
+        self.assertEqual(response_data['status'], 'error')
+        self.assertEqual(
+            response_data['message'],
+            "New quota holder can only be set by a user who "
+            f"belongs to a group in the community '{community.name}'"
+        )

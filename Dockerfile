@@ -1,4 +1,4 @@
-FROM hydroshare/hs_docker_base:a73451a
+FROM hydroshare/hs_docker_base:bf8a7e3
 
 ADD . /hydroshare
 
@@ -6,10 +6,7 @@ ADD . /hydroshare
 RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
     locale-gen
 
-RUN curl -fsSL https://dl.min.io/client/mc/release/linux-amd64/mc \
-    --create-dirs \
-    -o $HOME/minio-binaries/mc
-RUN mv $HOME/minio-binaries/mc /usr/local/bin/mc
+COPY --from=quay.io/minio/mc:RELEASE.2025-08-13T08-35-41Z-cpuv1 /usr/bin/mc /usr/local/bin/mc
 RUN chmod +x /usr/local/bin/mc
 
 RUN apt-get update
