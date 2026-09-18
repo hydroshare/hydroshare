@@ -2088,6 +2088,99 @@ def short_id():
     return uuid4().hex
 
 
+def _creator_to_schemaorg_dict(cr):
+    """Convert a single creator metadata dict to a schema.org Person/Organization dict."""
+    from hs_core.templatetags.hydroshare_tags import name_without_commas
+
+    cr_dict = {}
+    urls = []
+    identifiers = []
+    if cr['email']:
+        cr_dict["email"] = cr['email']
+    if cr['address']:
+        cr_dict["address"] = {
+            "@type": "PostalAddress",
+            "streetAddress": cr['address']
+        }
+    if cr['name']:
+        cr_dict["@type"] = "Person"
+        cr_dict["name"] = name_without_commas(cr['name'])
+        if cr['organization']:
+            cr_dict["affiliation"] = {
+                "@type": "Organization",
+                "name": cr['organization']
+            }
+    else:
+        cr_dict["@type"] = "Organization"
+        cr_dict["name"] = cr['organization']
+
+    if cr['relative_uri']:
+        if cr['name']:
+            # append www.hydroshare.org since schema.org script is only embedded in production
+            urls.append("https://www.hydroshare.org" + cr['relative_uri'])
+        else:
+            # organization
+            urls.append(cr['relative_uri'])
+    if cr['homepage']:
+        urls.append(cr['homepage'])
+    if cr['identifiers']:
+        for k in cr['identifiers']:
+            identifier_value = cr['identifiers'][k]
+            urls.append(identifier_value)
+            identifiers.append(identifier_value)
+    if len(identifiers) == 1:
+        cr_dict['identifier'] = identifiers[0]
+        cr_dict['sameAs'] = identifiers[0]
+    elif len(identifiers) > 1:
+        cr_dict['identifier'] = identifiers
+        cr_dict['sameAs'] = identifiers
+    if len(urls) == 1:
+        cr_dict['url'] = urls[0]
+    elif len(urls) > 1:
+        cr_dict['url'] = urls
+    return cr_dict
+
+
+def _build_contact_point_dict(creator):
+    """Build a ContactPoint dict from a raw creator dict, or return None if no name/org."""
+    from hs_core.templatetags.hydroshare_tags import name_without_commas
+
+    contact_point = {'@type': 'ContactPoint'}
+
+    creator_name = creator.get('name')
+    creator_organization = creator.get('organization')
+    if creator_name:
+        contact_point['name'] = name_without_commas(creator_name)
+    elif creator_organization:
+        contact_point['name'] = creator_organization
+    else:
+        return None
+
+    if creator.get('email'):
+        contact_point['email'] = creator['email']
+    if creator.get('phone'):
+        contact_point['telephone'] = creator['phone']
+
+    identifiers = []
+    if creator.get('identifiers'):
+        identifiers = [value for value in creator.get('identifiers').values() if value]
+
+    urls = []
+    if creator.get('relative_uri') and creator_name:
+        urls.append('https://www.hydroshare.org' + creator.get('relative_uri'))
+    if creator.get('homepage'):
+        urls.append(creator.get('homepage'))
+    urls.extend(identifiers)
+
+    unique_urls = list(dict.fromkeys(urls))
+    if len(unique_urls) == 1:
+        contact_point['url'] = unique_urls[0]
+    elif len(unique_urls) > 1:
+        contact_point['url'] = unique_urls
+
+    return contact_point
+
+
 class ResourceManager(PageManager):
     """Extend mezzanine PageManager to manage Resource pages."""
 
@@ -3221,9 +3314,6 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
         """Build the schema.org/JSON-LD dict shown in the resource landing page's
         ``<script id="schemaorg">`` tag, using ``cached_metadata`` as the data source.
         """
-        from hs_core.templatetags.hydroshare_tags import (
-            _build_contact_point_dict, _creator_to_schemaorg_dict)
-
         self.refresh_from_db(fields=['cached_metadata'])
         md = self.cached_metadata
         raccess = self.raccess
