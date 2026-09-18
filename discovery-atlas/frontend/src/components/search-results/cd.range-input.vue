@@ -69,37 +69,36 @@
   </div>
 </template>
 
-<script lang="ts">
-import { Component, Vue, toNative, Prop } from "vue-facing-decorator";
+<script setup lang="ts">
+defineEmits(["end", "update:model-value", "update:is-active"]);
 
-@Component({
-  name: "cd-range-input",
-  components: {},
-  emits: ["end", "update:model-value", "update:is-active"],
-})
-class CdRangeInput extends Vue {
-  @Prop() modelValue!: [number, number];
-  @Prop() isActive!: boolean;
-  @Prop() label!: string;
-  @Prop() min!: number;
-  @Prop() max!: number;
+const props = withDefaults(
+  defineProps<{
+    modelValue: [number, number];
+    isActive: boolean;
+    label: string;
+    // Optional so callers can bind a possibly-undefined source (e.g. Filter);
+    // defaults keep the internal numeric math well-typed.
+    min?: number;
+    max?: number;
+  }>(),
+  { min: 0, max: 0 },
+);
 
-  public get range() {
-    // Check date range cross over
-    if (this.modelValue[0] > this.modelValue[1]) {
-      // swap values
-      const temp = this.modelValue[0];
-      this.modelValue[0] = this.modelValue[1];
-      this.modelValue[1] = temp;
-    }
-    // Clip values
-    return [
-      Math.max(this.min, this.modelValue[0]),
-      Math.min(this.max, this.modelValue[1]),
-    ];
+const range = computed(() => {
+  // Check date range cross over
+  if (props.modelValue[0] > props.modelValue[1]) {
+    // swap values
+    const temp = props.modelValue[0];
+    props.modelValue[0] = props.modelValue[1];
+    props.modelValue[1] = temp;
   }
-}
-export default toNative(CdRangeInput);
+  // Clip values
+  return [
+    Math.max(props.min, props.modelValue[0]),
+    Math.min(props.max, props.modelValue[1]),
+  ];
+});
 </script>
 
 <style lang="scss" scoped>

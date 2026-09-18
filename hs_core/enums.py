@@ -26,6 +26,16 @@ class RelationTypes(str, enum.Enum):
     relation = 'relation'
 
 
+# Relation types managed automatically by HydroShare that users cannot manually set
+NOT_USER_EDITABLE_RELATION_TYPES = frozenset({
+    RelationTypes.isVersionOf,
+    RelationTypes.isReplacedBy,
+    RelationTypes.isPartOf,
+    RelationTypes.hasPart,
+    RelationTypes.replaces,
+})
+
+
 class DataciteSubmissionStatus(str, enum.Enum):
     """Datacite metadata deposit submission status"""
 

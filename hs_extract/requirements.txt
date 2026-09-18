@@ -28,3 +28,4 @@ netCDF4==1.7.2
 h5py
 s3fs
 smart_open
+git+https://github.com/hydroshare/hsmodels.git@22b7d610814a28065511ff03ba044ad66cc1bc98
