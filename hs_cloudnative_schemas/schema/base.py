@@ -19,7 +19,15 @@ from pydantic import (
 from pydantic.json_schema import JsonSchemaValue
 
 from hsmodels.schemas.enums import RelationType as HSRelationType
-from hs_core.enums import NOT_USER_EDITABLE_RELATION_TYPES
+
+# Keep this local so hs_extract does not need the full hs_core dependency tree.
+NOT_USER_EDITABLE_RELATION_TYPES = frozenset({
+    HSRelationType.isVersionOf,
+    HSRelationType.isReplacedBy,
+    HSRelationType.isPartOf,
+    HSRelationType.hasPart,
+    HSRelationType.replaces,
+})
 
 UserEditableRelationType = PyEnum(
     'UserEditableRelationType',
