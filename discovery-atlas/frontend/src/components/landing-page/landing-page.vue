@@ -236,6 +236,7 @@
         v-if="resourceId"
         v-model="showManageAccess"
         :resource-id="resourceId"
+        :content-size="contentSize"
       />
 
       <v-dialog v-model="showDeleteDialog" max-width="480" persistent>

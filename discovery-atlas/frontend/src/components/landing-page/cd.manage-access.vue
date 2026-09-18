@@ -36,25 +36,31 @@
         <template v-else>
           <div class="mb-6">
             <p class="text-body-2 text-medium-emphasis mb-2">
-              Share this resource with specific HydroShare users or set its
-              sharing status. You can give other users the ability to view or
-              edit this resource, or add additional owners with full permissions.
+              Use this window to share your resource with specific HydroShare users 
+              or set its sharing status (Public, Discoverable, Private, Shareable). 
+              You can give other users the ability to view or edit this resource. 
+              You can also add additional owners who will have full permissions.
             </p>
 
             <v-expand-transition>
               <ul v-if="showUsageInfo" class="usage-info text-body-2 mt-2">
                 <li class="mb-2">
-                  <strong>Owners</strong> can perform all operations on a
-                  resource and set whether a resource is Public, Discoverable,
-                  or Private and Shareable.
+                  <strong>Owners</strong> can perform all operations on a resource 
+                  and set whether a resource is Public, Discoverable, or Private 
+                  and Shareable. Resources that are Public have all their content 
+                  visible to all users. Resources that are Discoverable have only 
+                  their metadata public. Resources that are private are only accessible 
+                  to specific users or groups that they have been shared with.
                 </li>
                 <li class="mb-2">
-                  <strong>Editors</strong> can edit resource metadata and add
-                  or delete resource content files.
+                  <strong>Editors</strong> can edit resource metadata and add and 
+                  delete resource content files. If the resource is Shareable editors 
+                  can use manage access to extend editing or viewing access to other users.
                 </li>
                 <li>
-                  <strong>Viewers</strong> can view resource metadata and
-                  download resource content files.
+                  <strong>Viewers</strong> can view resource metadata and download resource 
+                  content files. If the resource is Shareable viewers can use manage access 
+                  to extend viewing access to other users.
                 </li>
               </ul>
             </v-expand-transition>
@@ -435,11 +441,18 @@
                         "
                       />
                       <div class="sharing-hint">
-                        {{
-                          resAccess.isShareable
-                            ? "Others with access can share this resource at the same permission level."
-                            : "Only the owner can share this resource."
-                        }}
+                        <ul class="usage-info text-body-2 mt-2">
+                          <li class="mb-2">
+                            Check the box to let others who have access to this resource be able to 
+                            share it with others at the same permission level (Edit or View) and 
+                            enable adding to Collections.
+                          </li>
+                          <li class="mb-2">
+                            Uncheck the box to prevent others from sharing the resource without the 
+                            owner’s permission, or from adding the resource to Collections before 
+                            the resource is made Discoverable or Public.
+                          </li>
+                        </ul>
                       </div>
                     </div>
 
@@ -460,8 +473,14 @@
                         "
                       />
                       <div class="sharing-hint">
-                        Anyone with the link (including anonymous users) can
-                        access the resource.
+                        <ul class="usage-info text-body-2 mt-2">
+                          <li class="mb-2">
+                            Check the box to let any user (including anonymous not logged in) with the link 
+                            access the resource. This capability is to enable resources still private to be 
+                            shared with journal paper reviewers while a paper citing the resource is under review.
+                          </li>
+                        </ul>
+                        
                       </div>
                     </div>
                   </div>
@@ -550,6 +569,12 @@
                     </div>
                   </div>
                 </v-expand-transition>
+
+                <hr class="my-3" style="border-color: rgba(0,0,0,0.08)" />
+                <p class="text-body-2 text-medium-emphasis mb-0">
+                  The size of this resource is
+                  <strong>{{ contentSize ?? '—' }}</strong>.
+                </p>
               </v-card-text>
             </v-card>
           </section>
@@ -639,6 +664,7 @@ const props = withDefaults(
   defineProps<{
     modelValue?: boolean;
     resourceId: string;
+    contentSize?: string;
   }>(),
   { modelValue: false },
 );
@@ -895,7 +921,8 @@ async function loadData() {
   }
 
 async function postForm(url: string, body: Record<string, string> = {}) {
-    const csrfToken = await User.getCSRFToken();
+    // Always read directly from the cookie — cached state may be stale after login/session change
+    const csrfToken = await User.getCSRFToken(/* forceRefresh */ true);
     const formBody = new URLSearchParams(body).toString();
     return fetch(url, {
       method: "POST",
