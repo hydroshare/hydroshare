@@ -68,24 +68,21 @@ def _build_signer(access_key: str, secret_key: str, region: str) -> Optional[S3S
 def _load_zone_config() -> dict[str, _ZoneBackend]:
     """Parse S3_ZONE_CONFIG (JSON) into a bucket-name → _ZoneBackend map.
 
-    Expected JSON shape::
+        Expected JSON shape, matching ``RESOURCE_S3_ZONES_CONFIG``::
 
         {
           "hydroshare": {
             "bucket_name": "resource",    // required: the sole routable primary bucket name
             "alias":       "resource-2",  // optional: one additional routable name
-            "zone":        "hydroshare",  // logical zone name (defaults to the JSON key)
-            "endpoint":   "http://minio:9000",
-            "access_key": "cuahsi",
-            "secret_key": "devpassword",
-            "region":     "auto"          // optional, defaults to "auto"
+                        "aws_s3_endpoint_url": "http://minio:9000",
+                        "aws_access_key_id": "cuahsi",
+                        "aws_secret_access_key": "devpassword"
           },
           "ciroh": { ... }
         }
 
-    The JSON key is only a config label used to default the zone name; it is never
-    itself registered as a routable bucket name. Buckets not present in the resulting
-    map are rejected with NoSuchBucket.
+        The JSON key is the logical zone name and is never itself registered as a routable
+        bucket name. Buckets not present in the resulting map are rejected with NoSuchBucket.
     """
     raw = os.environ.get("S3_ZONE_CONFIG", "").strip()
     if not raw:
@@ -102,11 +99,11 @@ def _load_zone_config() -> dict[str, _ZoneBackend]:
         if not isinstance(cfg, dict):
             logger.warning(f"S3_ZONE_CONFIG: ignoring non-dict entry for {key!r}")
             continue
-        endpoint = cfg.get("endpoint")
-        ak = cfg.get("access_key", "")
-        sk = cfg.get("secret_key", "")
+        endpoint = cfg.get("aws_s3_endpoint_url")
+        ak = cfg.get("aws_access_key_id", "")
+        sk = cfg.get("aws_secret_access_key", "")
         region = cfg.get("region", "auto")
-        zone_name = cfg.get("zone", key)
+        zone_name = key
         if not endpoint:
             logger.warning(f"S3_ZONE_CONFIG: entry {key!r} has no endpoint, skipping")
             continue

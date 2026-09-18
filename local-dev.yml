@@ -188,10 +188,29 @@ services:
       CELERY_BROKER_URL: "redis://redis:6379/0"
       HS_S3_AUTH_EVENT_ENDPOINT: "http://hs-s3-auth/s3/event/"
       S3_ZONE_CONFIG: >-
-        {
-          "resource":  {"bucket_name": "resource", "alias": "res",  "zone": "hydroshare", "endpoint": "http://minio:9000", "access_key": "cuahsi", "secret_key": "devpassword", "region": "auto"},
-          "published": {"bucket_name": "published", "zone": "published",  "endpoint": "http://minio:9000", "access_key": "cuahsi", "secret_key": "devpassword", "region": "auto"},
-          "ciroh":     {"bucket_name": "ciroh",      "zone": "ciroh",      "endpoint": "http://minio:9000", "access_key": "cuahsi", "secret_key": "devpassword", "region": "auto"}
+       {
+          "hydroshare": {
+              "bucket_name": "resource",
+              "alias": "res",
+              "aws_s3_endpoint_url": "http://minio:9000",
+              "aws_access_key_id": "cuahsi",
+              "aws_secret_access_key": "devpassword",
+              "aws_s3_endpoint_url_public": "http://localhost:9000"
+          },
+          "published": {  # the publisher hydroshare user must be updated to use this zone, see PUBLISHER_USER_NAME
+              "bucket_name": "published",
+              "aws_s3_endpoint_url": "http://minio:9000",
+              "aws_access_key_id": "cuahsi",
+              "aws_secret_access_key": "devpassword",
+              "aws_s3_endpoint_url_public": "http://localhost:9000"
+          },
+          "ciroh": {
+              "bucket_name": "ciroh",
+              "aws_s3_endpoint_url": "http://minio:9000",
+              "aws_access_key_id": "cuahsi",
+              "aws_secret_access_key": "devpassword",
+              "aws_s3_endpoint_url_public": "http://localhost:9000"
+          }
         }
     volumes:
       - "./hs_extract:/app/hs_extract"
@@ -299,9 +318,28 @@ services:
       EVENT_SERVICE_POOL_MAX_KEEPALIVE_CONNECTIONS: "5"
       S3_ZONE_CONFIG: >-
         {
-          "resource":  {"bucket_name": "resource", "alias": "res",  "zone": "hydroshare", "endpoint": "http://minio:9000", "access_key": "cuahsi", "secret_key": "devpassword", "region": "auto"},
-          "published": {"bucket_name": "published", "zone": "published",  "endpoint": "http://minio:9000", "access_key": "cuahsi", "secret_key": "devpassword", "region": "auto"},
-          "ciroh":     {"bucket_name": "ciroh",      "zone": "ciroh",      "endpoint": "http://minio:9000", "access_key": "cuahsi", "secret_key": "devpassword", "region": "auto"}
+          "hydroshare": {
+              "bucket_name": "resource",
+              "alias": "res",
+              "aws_s3_endpoint_url": "http://minio:9000",
+              "aws_access_key_id": "cuahsi",
+              "aws_secret_access_key": "devpassword",
+              "aws_s3_endpoint_url_public": "http://localhost:9000"
+          },
+          "published": {  # the publisher hydroshare user must be updated to use this zone, see PUBLISHER_USER_NAME
+              "bucket_name": "published",
+              "aws_s3_endpoint_url": "http://minio:9000",
+              "aws_access_key_id": "cuahsi",
+              "aws_secret_access_key": "devpassword",
+              "aws_s3_endpoint_url_public": "http://localhost:9000"
+          },
+          "ciroh": {
+              "bucket_name": "ciroh",
+              "aws_s3_endpoint_url": "http://minio:9000",
+              "aws_access_key_id": "cuahsi",
+              "aws_secret_access_key": "devpassword",
+              "aws_s3_endpoint_url_public": "http://localhost:9000"
+          }
         }
       S3_PROXY_TIMEOUT: "300"
       S3_PROXY_POOL_MAX_CONNECTIONS: "50"

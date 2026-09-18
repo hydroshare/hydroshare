@@ -13,10 +13,9 @@ def test_bucket_aliases_are_accepted(monkeypatch):
             {
                 "hydroshare": {
                     "bucket_name": "resource",
-                    "endpoint": "http://minio:9000",
-                    "access_key": "cuahsi",
-                    "secret_key": "devpassword",
-                    "zone": "hydroshare",
+                    "aws_s3_endpoint_url": "http://minio:9000",
+                    "aws_access_key_id": "cuahsi",
+                    "aws_secret_access_key": "devpassword",
                     "alias": "hydroshare-resource",
                 }
             }
@@ -40,10 +39,9 @@ async def test_proxy_request_rewrites_alias_to_bucket_name(monkeypatch):
             {
                 "hydroshare": {
                     "bucket_name": "resource",
-                    "endpoint": "http://minio:9000",
-                    "access_key": "cuahsi",
-                    "secret_key": "devpassword",
-                    "zone": "hydroshare",
+                    "aws_s3_endpoint_url": "http://minio:9000",
+                    "aws_access_key_id": "cuahsi",
+                    "aws_secret_access_key": "devpassword",
                     "alias": "hydroshare-resource",
                 }
             }
