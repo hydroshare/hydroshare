@@ -1134,6 +1134,9 @@ const personBranchLayout = {
       type: "Control",
       scope: "#/properties/affiliation",
       options: {
+        // Render the affiliation's fields directly instead of behind a
+        // bordered box with a +/- toggle stuck to the input.
+        flat: true,
         detail: {
           type: "VerticalLayout",
           elements: [
