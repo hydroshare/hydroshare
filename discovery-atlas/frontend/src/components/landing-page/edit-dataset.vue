@@ -2801,4 +2801,10 @@ init();
     word-break: break-word;
   }
 }
+
+// v-dialog teleports cz-field-modal's content outside this component's DOM
+// tree, so :global needed to reach it; adds spacing under the Person/Org dropdown.
+:global(.cz-field-modal__body .v-select) {
+  margin-bottom: 1rem;
+}
 </style>
