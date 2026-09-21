@@ -35,6 +35,7 @@
 
 <script setup lang="ts">
 import User from "@/models/user.model";
+import { pickActiveSection, type TocOffset } from "@/components/base/toc-active";
 
 const activeItem = ref("");
 const tocEl = ref<HTMLElement | null>(null);
@@ -153,13 +154,15 @@ function updateActive() {
     bandTop = window.scrollY;
   }
 
-  let current = "";
+  const offsets: TocOffset[] = [];
   for (const item of toc.value) {
     const el = document.querySelector(item.to) as HTMLElement | null;
     if (!el) continue;
-    // +80px so a heading counts as "current" slightly before it hits the top.
-    if (el.offsetTop <= bandTop + 80) current = item.to;
+    offsets.push({ to: item.to, offsetTop: el.offsetTop });
   }
+
+  // +80px so a heading counts as "current" slightly before it hits the top.
+  const current = pickActiveSection(offsets, bandTop + 80);
   if (current) activeItem.value = current;
 }
 
