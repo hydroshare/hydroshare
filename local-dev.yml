@@ -162,6 +162,7 @@ services:
       PYTHONPATH: /hydroshare
       DJANGO_SETTINGS_MODULE: hydroshare.settings
       COLUMNS: 80
+      ATLAS_CONNECTION_URL: "mongodb://user:pass@mongodb:27017/"
       REDIS_HOST: redis
       REDIS_PORT: "6379"
       CELERY_BROKER_URL: "redis://redis:6379/0"
@@ -170,10 +171,12 @@ services:
       - ".:/hydroshare"
     links:
       - pgbouncer:pgbouncer
+      - mongodb:mongodb
       - redis:redis
     depends_on:
       - hydroshare
       - pgbouncer
+      - mongodb
       - redis
     stdin_open: true
     tty: true
