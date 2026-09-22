@@ -156,9 +156,8 @@ class TestGetSchemaorgDict(TestCase):
             'contributor', name='Jane Contributor', organization='USU')
         schemaorg = self.resource.get_schemaorg_dict()
         self.assertIn('contributor', schemaorg)
-        self.assertIn('@list', schemaorg['contributor'])
-        self.assertEqual(len(schemaorg['contributor']['@list']), 1)
-        self.assertEqual(schemaorg['contributor']['@list'][0]['name'], 'Jane Contributor')
+        self.assertEqual(len(schemaorg['contributor']), 1)
+        self.assertEqual(schemaorg['contributor'][0]['name'], 'Jane Contributor')
 
     def test_creator_with_all_metadata_fields_and_contact_point(self):
         """A creator with every Party field set (name, organization, email, address,
@@ -245,7 +244,7 @@ class TestGetSchemaorgDict(TestCase):
             },
         )
         schemaorg = self.resource.get_schemaorg_dict()
-        john = schemaorg['contributor']['@list'][0]
+        john = schemaorg['contributor'][0]
 
         self.assertEqual(john['@type'], 'Person')
         self.assertEqual(john['name'], 'John Smith')
