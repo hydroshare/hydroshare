@@ -3407,9 +3407,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
 
         contributors = md.get('contributors', [])
         if contributors:
-            schemaorg["contributor"] = {
-                "@list": [_creator_to_schemaorg_dict(cr) for cr in contributors]
-            }
+            schemaorg["contributor"] = [_creator_to_schemaorg_dict(cr) for cr in contributors]
 
         temporal_coverage = md.get('temporal_coverage')
         if temporal_coverage:
