@@ -1073,13 +1073,13 @@ const spatialCoverageOptions = {
   },
 };
 
-// `@type` is a const discriminator, not user input — rendering it dispatches
-// to AnyOfRenderer (the item schema is anyOf Person/Organization), whose
-// VTabs throws and takes the whole dialog down. `url`/`address` don't exist
-// on Creator/Contributor either; they only resolved via the Organization
-// branch, so they showed organization copy under a person's name.
-const personDetailLayout = {
+// `@type` is a const discriminator, not user input. It is excluded from all
+// branch layouts below — JsonForms only renders explicitly listed elements,
+// and the schema's `default` ensures the correct value is written to data
+// when an item is created or the branch is switched.
+const personBranchLayout = {
   type: "VerticalLayout",
+  options: { label: "Person" },
   elements: [
     {
       type: "HorizontalLayout",
@@ -1090,24 +1090,76 @@ const personDetailLayout = {
     },
     // `label` belongs on the element, not in `options` — computeLabel reads
     // uischema.label; options.label is only consulted for combinator tabs.
+    // identifier is now an array of PersonIdentifier objects (propertyID +
+    // value); `@type` is a const discriminator so it's excluded from the
+    // item detail layout, same as personBranchLayout's own `@type` above.
+    // Shared between the Author and Contributor forms, so the label stays
+    // generic rather than trying to say "Author"/"Contributor" per-context.
     {
       type: "Control",
       scope: "#/properties/identifier",
-      label: "ORCID iD",
+      label: "Author Identifiers",
+      options: {
+        itemNoun: "identifier",
+        elementLabelProp: ["propertyID"],
+        childLabelProp: "propertyID",
+        showSortButtons: true,
+        collapsed: true,
+        detail: {
+          type: "VerticalLayout",
+          elements: [
+            {
+              type: "Control",
+              scope: "#/properties/propertyID",
+              label: "Identifier Name",
+              options: {
+                // HydroShareID is populated by a separate mechanism (e.g.
+                // importing a HydroShare user profile), not chosen manually
+                // here. `hidden` only filters this dropdown's options —
+                // schema.enum still allows it, so an existing author who
+                // already has a HydroShareID entry loads/validates fine.
+                hidden: ["HydroShareID"],
+              },
+            },
+            {
+              type: "Control",
+              scope: "#/properties/value",
+              label: "Identifier URL",
+            },
+          ],
+        },
+      },
     },
     {
       type: "Control",
       scope: "#/properties/affiliation",
       options: {
+        // Render the affiliation's fields directly instead of behind a
+        // bordered box with a +/- toggle stuck to the input.
+        flat: true,
         detail: {
-          type: "Object",
+          type: "VerticalLayout",
           elements: [
-            { type: "Control", scope: "#/properties/name" },
+            {
+              type: "Control",
+              scope: "#/properties/name",
+              label: "Organization",
+              // Prevent org name from showing as required since org is optional
+              options: { hideRequiredAsterisk: true },
+            },
             {
               type: "HorizontalLayout",
               elements: [
-                { type: "Control", scope: "#/properties/url" },
-                { type: "Control", scope: "#/properties/address" },
+                {
+                  type: "Control",
+                  scope: "#/properties/url",
+                  label: "Organization website",
+                },
+                {
+                  type: "Control",
+                  scope: "#/properties/address",
+                  label: "Organization address",
+                },
               ],
             },
           ],
@@ -1117,12 +1169,45 @@ const personDetailLayout = {
   ],
 };
 
+const organizationBranchLayout = {
+  type: "VerticalLayout",
+  options: { label: "Organization" },
+  elements: [
+    { type: "Control", scope: "#/properties/name" },
+    { type: "Control", scope: "#/properties/url" },
+    { type: "Control", scope: "#/properties/address" },
+  ],
+};
+
+// Per-item branch layouts consumed by AnyOfRenderer for each array item.
+// The item `detail` must itself be a Control at scope "#" so AnyOfRenderer
+// (not ObjectControlRenderer) picks it up; `dropdown: true` swaps the tab
+// strip for a select (fits the 22rem sidebar) and `flat: true` removes the
+// +/- toggle box since Person/Organization is always required per item.
+// options.detail is keyed by branch index (Person = 0, Organization = 1),
+// same convention as licenseOptions/spatialCoverageOptions above.
+const personOrOrgDetail = {
+  type: "Control",
+  scope: "#",
+  options: {
+    dropdown: true,
+    flat: true,
+    title: "Type",
+    detail: {
+      0: personBranchLayout,
+      1: organizationBranchLayout,
+    },
+  },
+};
+
+// detail = personOrOrgDetail lets branchItems resolve labels from
+// options.detail.options.detail[i].options.label = "Person" / "Organization".
 const creatorOptions = computed(() => ({
   elementLabelProp: ["name"],
   childLabelProp: "name",
   showSortButtons: true,
   collapsed: true,
-  detail: personDetailLayout,
+  detail: personOrOrgDetail,
 }));
 
 const contributorOptions = computed(() => ({
@@ -1130,7 +1215,7 @@ const contributorOptions = computed(() => ({
   childLabelProp: "name",
   showSortButtons: true,
   collapsed: true,
-  detail: personDetailLayout,
+  detail: personOrOrgDetail,
 }));
 
 const fundingOptions = {
@@ -2718,5 +2803,11 @@ init();
     overflow-wrap: anywhere;
     word-break: break-word;
   }
+}
+
+// v-dialog teleports cz-field-modal's content outside this component's DOM
+// tree, so :global needed to reach it; adds spacing under the Person/Org dropdown.
+:global(.cz-field-modal__body .v-select) {
+  margin-bottom: 1rem;
 }
 </style>

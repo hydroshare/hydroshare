@@ -116,7 +116,7 @@
 </template>
 
 <script setup lang="ts">
-import { listIdentifiers, IdentifierItem } from "./identifier-attrs";
+import { listIdentifiers, personIdentifiersToRecord, IdentifierItem } from "./identifier-attrs";
 
 const props = withDefaults(
   defineProps<{
@@ -136,11 +136,12 @@ const isOrganization = computed<boolean>(
 
 const identifierList = computed<IdentifierItem[]>(() => {
   // Side-channel identifiers (from cached_metadata.creators) are the primary
-  // source; fall back to the schema.org `identifier` field (ORCID URL only)
-  // when name-matching missed in the parent.
+  // source; fall back to the schema.org `identifier` field — an array of
+  // PersonIdentifier objects (propertyID + value) — when name-matching
+  // missed in the parent.
   const list = listIdentifiers(props.identifiers);
-  if (list.length === 0 && typeof props.creator?.identifier === "string") {
-    return listIdentifiers({ ORCID: props.creator.identifier });
+  if (list.length === 0 && Array.isArray(props.creator?.identifier)) {
+    return listIdentifiers(personIdentifiersToRecord(props.creator.identifier));
   }
   return list;
 });
