@@ -237,6 +237,7 @@
                         scope="#/properties/creator"
                         :options="creatorOptions"
                         :label="`Authors${requiredMark('#/properties/creator')}`"
+                        @custom-action="(id: string) => onArrayCustomAction(id, 'creator')"
                       >
                         <template
                           #summary="{
@@ -310,6 +311,7 @@
                         :label="`Contributors${requiredMark(
                           '#/properties/contributor',
                         )}`"
+                        @custom-action="(id: string) => onArrayCustomAction(id, 'contributor')"
                       >
                         <template
                           #summary="{
@@ -1209,10 +1211,10 @@ const personOrOrgDetail = {
   },
 };
 
-// detail = personOrOrgDetail lets branchItems resolve labels from
-// options.detail.options.detail[i].options.label = "Person" / "Organization".
-// customActions renders a "Find HydroShare user" button next to Add inside
-// ArrayLayoutRenderer (cznet-vue-core); see .ai/docs/6442-research-add-hydroshare-user-as-author.md.
+// The customAction is rendered as a button next to the Add button
+// inside ArrayLayoutRenderer (cznet-vue-core); clicking it calls the
+// `cz-custom-action` callback that cz-field-modal provides, which re-emits
+// as this element's `custom-action` event (handled by onArrayCustomAction
 const creatorOptions = computed(() => ({
   elementLabelProp: ["name"],
   childLabelProp: "name",
@@ -1220,11 +1222,7 @@ const creatorOptions = computed(() => ({
   collapsed: true,
   detail: personOrOrgDetail,
   customActions: [
-    {
-      label: "Find HydroShare user",
-      icon: "mdi-account-search",
-      handler: () => openHsUserDialog("creator"),
-    },
+    { id: "findUser", label: "Find HydroShare user", icon: "mdi-account-search" },
   ],
 }));
 
@@ -1235,11 +1233,7 @@ const contributorOptions = computed(() => ({
   collapsed: true,
   detail: personOrOrgDetail,
   customActions: [
-    {
-      label: "Find HydroShare user",
-      icon: "mdi-account-search",
-      handler: () => openHsUserDialog("contributor"),
-    },
+    { id: "findUser", label: "Find HydroShare user", icon: "mdi-account-search" },
   ],
 }));
 
@@ -1254,6 +1248,10 @@ const hsUserDialogTarget = ref<"creator" | "contributor">("creator");
 function openHsUserDialog(target: "creator" | "contributor") {
   hsUserDialogTarget.value = target;
   hsUserDialogOpen.value = true;
+}
+
+function onArrayCustomAction(id: string, target: "creator" | "contributor") {
+  if (id === "findUser") openHsUserDialog(target);
 }
 
 function onHsUserSelected(person: Record<string, any>) {
