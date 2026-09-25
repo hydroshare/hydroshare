@@ -640,6 +640,16 @@
                 <v-card-text flat class="pa-0">
                   <cd-spatial-coverage-map :feature="data.spatialCoverage.geo" />
                 </v-card-text>
+                <template v-if="data.spatialCoverage.name">
+                  <v-divider></v-divider>
+                  <div class="d-flex align-center ga-2 px-4 py-3">
+                    <v-icon size="16" color="primary">mdi-map-marker</v-icon>
+                    <div>
+                      <div v-bind="infoValueAttr">{{ data.spatialCoverage.name }}</div>
+                      <div class="place-name-caption">Place/Area Name</div>
+                    </div>
+                  </div>
+                </template>
                 <v-divider></v-divider>
                 <v-expansion-panels accordion flat>
                   <v-expansion-panel>
@@ -685,8 +695,6 @@
                         <div v-bind="infoValueAttr">WGS 84 EPSG:4326</div>
                         <div v-bind="infoLabelAttr">Coordinate Units:</div>
                         <div v-bind="infoValueAttr">Decimal degrees</div>
-                        <div v-bind="infoLabelAttr">Place/Area Name:</div>
-                        <div v-bind="infoValueAttr">{{ data.spatialCoverage.name }}</div>
                       </v-card-text>
                     </v-expansion-panel-text>
                   </v-expansion-panel>
@@ -1654,6 +1662,14 @@ init();
 .dataset-info__label {
   letter-spacing: 0.05em;
   line-height: 1.4;
+}
+
+.place-name-caption {
+  font-size: 0.6875rem;
+  letter-spacing: 0.05em;
+  line-height: 1.2;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.5);
 }
 
 .dataset-info__value {

@@ -711,24 +711,30 @@
                         >
                         Coverage has validation issues
                       </div>
-                      <cd-spatial-coverage-map
-                        v-if="value?.geo"
-                        :feature="value.geo"
-                      />
-                      <v-card-text
-                        v-else
-                        class="text-body-2 text-medium-emphasis font-italic pb-0"
-                      >
-                        No spatial coverage set
-                      </v-card-text>
+                      <cd-spatial-coverage-map :feature="value?.geo" />
                       <v-divider></v-divider>
-                      <div class="d-flex align-center ga-2 px-3 py-2">
+                      <div class="d-flex align-center flex-wrap ga-2 px-3 py-2">
                         <span
                           v-if="value?.name"
                           class="text-body-2 text-truncate flex-grow-1"
                           >{{ value.name }}</span
                         >
+                        <span
+                          v-else-if="!value?.geo"
+                          class="text-body-2 text-medium-emphasis font-italic flex-grow-1"
+                          >No spatial coverage set</span
+                        >
                         <v-spacer v-else />
+                        <v-btn
+                          v-if="canSetSpatialFromFiles"
+                          size="small"
+                          variant="text"
+                          prepend-icon="mdi-calculator"
+                          :loading="isSettingSpatialFromFiles"
+                          title="Set the coverage to the extent that includes all content files"
+                          @click="setSpatialCoverageFromFiles"
+                          >From files</v-btn
+                        >
                         <v-btn
                           v-if="hasSpatialCoverage"
                           size="small"
@@ -772,6 +778,7 @@
                     </div>
                     <cz-field
                       scope="#/properties/temporalCoverage/properties/startDate"
+                      :options="dateOnlyOptions"
                       hide-label
                     />
 
@@ -783,6 +790,7 @@
                     </div>
                     <cz-field
                       scope="#/properties/temporalCoverage/properties/endDate"
+                      :options="dateOnlyOptions"
                       hide-label
                     />
 
@@ -1011,6 +1019,10 @@ const descriptionOptions = {
   },
 };
 
+// Coverage is meaningful to the day. The stored value stays an ISO
+// date-time, pinned to local midnight.
+const dateOnlyOptions = { dateOnly: true };
+
 // `geo` is anyOf[GeoCoordinates, GeoShape]. AnyOfRenderer indexes
 // `options.detail` by branch, so this must be an index-keyed map — a single
 // layout object gets applied to BOTH branches, which is why the point tab
@@ -1018,14 +1030,25 @@ const descriptionOptions = {
 // renderer found" where lat/long don't resolve. Keying per branch also lets
 // the box tab ask MapLayout for its rectangle draw control.
 const spatialCoverageOptions = {
+  // `flat` on both levels renders the fields without the bordered fieldset
+  // and its +/- toggle; the modal's own Clear button covers removal.
+  flat: true,
   detail: {
     type: "Object",
     elements: [
-      { type: "Control", scope: "#/properties/name" },
+      {
+        type: "Control",
+        scope: "#/properties/name",
+        label: "Place / area name",
+      },
       {
         type: "Control",
         scope: "#/properties/geo",
+        label: "Extent",
         options: {
+          flat: true,
+          // The schema's prose says nothing the labelled inputs don't.
+          description: "",
           detail: {
             0: {
               type: "VerticalLayout",
@@ -1056,13 +1079,13 @@ const spatialCoverageOptions = {
                   type: "MapLayout",
                   // `format: GeoShape` selects the single "n e s w" string
                   // code path; without it MapLayout looks for northlimit/
-                  // eastlimit/... which this schema doesn't have.
+                  // eastlimit/... which this schema doesn't have. MapLayout
+                  // renders that string as four extent inputs itself, so the
+                  // branch contributes no controls of its own.
                   options: {
                     map: { type: "box", format: "GeoShape", box: "box" },
                   },
-                  elements: [
-                    { type: "Control", scope: "#/properties/box" },
-                  ],
+                  elements: [],
                 },
               ],
             },
@@ -1721,6 +1744,91 @@ function clearTemporalCoverage() {
   data.value = rest;
 }
 
+// Only offered when the resource has aggregations that carry spatial
+// coverage.
+const canSetSpatialFromFiles = computed<boolean>(
+  () => alerts.value.hasLogicalSpatialCoverage === true,
+);
+const isSettingSpatialFromFiles = ref(false);
+
+/**
+ * Asks the server to recompute spatial coverage from the content files, then
+ * maps the legacy response shape onto schema.org. Not saved until the user saves.
+ */
+async function setSpatialCoverageFromFiles() {
+  isSettingSpatialFromFiles.value = true;
+  try {
+    const csrfToken = await User.getCSRFToken();
+    const response = await fetch(
+      `/hsapi/_internal/${resourceId.value}/spatial/update-coverage/`,
+      {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          ...(csrfToken ? { "X-CSRFToken": csrfToken } : {}),
+        },
+      },
+    );
+    const payload = await response.json();
+    if (!response.ok) {
+      throw new Error(payload?.message || `HTTP ${response.status}`);
+    }
+
+    const coverage = payload?.spatial_coverage;
+    if (!coverage || !coverage.type) {
+      Notifications.toast({
+        message: "No spatial coverage was found in the content files.",
+        type: "info",
+      });
+      return;
+    }
+
+    const geo =
+      coverage.type === "point"
+        ? {
+            "@type": "GeoCoordinates",
+            latitude: Number(coverage.north),
+            longitude: Number(coverage.east),
+          }
+        : {
+            "@type": "GeoShape",
+            box: [
+              coverage.northlimit,
+              coverage.eastlimit,
+              coverage.southlimit,
+              coverage.westlimit,
+            ]
+              .map(Number)
+              .join(" "),
+          };
+
+    data.value = {
+      ...(data.value as Record<string, any>),
+      spatialCoverage: {
+        "@type": "Place",
+        // The computed coverage rarely names the place; keep any name the
+        // user already typed.
+        name: coverage.name || data.value?.spatialCoverage?.name || undefined,
+        geo,
+      },
+    };
+
+    Notifications.toast({
+      message: "Spatial coverage set from the content files.",
+      type: "success",
+    });
+  } catch (error: any) {
+    console.error("Failed to set spatial coverage from content files:", error);
+    Notifications.toast({
+      title: "Error",
+      message: `Failed to set spatial coverage from content files. ${error.message}`,
+      type: "error",
+    });
+  } finally {
+    isSettingSpatialFromFiles.value = false;
+  }
+}
+
 // Resource-level alerts (missing metadata, version/replacement pointers,
 // publication state). Same source the landing page reads: the Django view
 // injects them onto the host window, so both views agree.
@@ -1730,6 +1838,7 @@ const alerts = ref<{
   missingMetadata?: string[];
   recommendedMissing?: string[];
   hasRequiredContentFiles?: boolean;
+  hasLogicalSpatialCoverage?: boolean;
   isUntitled?: boolean;
   isReplacedBy?: string | null;
   isVersionOf?: string | null;
