@@ -1,4 +1,11 @@
+import pytest
+from pydantic import ValidationError
+
+from hsmodels.schemas.enums import RelationType as HSRelationType
+
+from hs_cloudnative_schemas.schema.base import Relation
 from hs_cloudnative_schemas.schema.core import CoreMetadataEdit
+from hs_core.enums import NOT_USER_EDITABLE_RELATION_TYPES
 
 
 def _get_property(properties: dict, field_name: str) -> dict:
@@ -126,3 +133,41 @@ def test_core_metadata_edit_marks_only_non_editable_fields_as_read_only():
 
     for field_name in read_only_fields:
         assert _get_property(properties, field_name).get("readOnly") is True
+
+
+def test_relation_name_enum_contains_only_user_editable_types():
+    # All user-editable relation types should be accepted
+    for m in HSRelationType:
+        if m.name not in NOT_USER_EDITABLE_RELATION_TYPES:
+            relation = Relation.model_validate({"name": m.value})
+            assert relation.name is not None
+
+    # All non-user-editable relation types should be rejected
+    for m in HSRelationType:
+        if m.name in NOT_USER_EDITABLE_RELATION_TYPES:
+            with pytest.raises(ValidationError):
+                Relation.model_validate({"name": m.value})
+
+
+def test_creator_and_contributor_identifier_is_array_of_person_identifier():
+    schema = CoreMetadataEdit.model_json_schema()
+    defs = schema["$defs"]
+
+    person_identifier_def = defs["PersonIdentifier"]
+    assert person_identifier_def["properties"]["propertyID"]["$ref"] == "#/$defs/PersonIdentifierPropertyID"
+    assert set(defs["PersonIdentifierPropertyID"]["enum"]) == {
+        "ORCID",
+        "ResearchGateID",
+        "ResearcherID",
+        "GoogleScholarID",
+        "HydroShareID",
+    }
+    assert person_identifier_def.get("additionalProperties") is False
+
+    for model_name in ("Creator", "Contributor"):
+        identifier_schema = defs[model_name]["properties"]["identifier"]
+        # Optional[List[PersonIdentifier]] renders as anyOf[array-of-ref, null]
+        array_variant = next(
+            variant for variant in identifier_schema["anyOf"] if variant.get("type") == "array"
+        )
+        assert array_variant["items"]["$ref"] == "#/$defs/PersonIdentifier"

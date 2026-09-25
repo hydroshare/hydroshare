@@ -1,6 +1,6 @@
 import re
 from datetime import datetime
-from enum import Enum
+from enum import Enum, Enum as PyEnum
 from typing import Any, List, Optional, Union, Literal, Annotated
 
 from pydantic import (
@@ -17,6 +17,22 @@ from pydantic import (
     WithJsonSchema,
 )
 from pydantic.json_schema import JsonSchemaValue
+
+from hsmodels.schemas.enums import RelationType as HSRelationType
+
+# Keep this local so hs_extract does not need the full hs_core dependency tree.
+NOT_USER_EDITABLE_RELATION_TYPES = frozenset({
+    HSRelationType.isVersionOf,
+    HSRelationType.isReplacedBy,
+    HSRelationType.isPartOf,
+    HSRelationType.hasPart,
+    HSRelationType.replaces,
+})
+
+UserEditableRelationType = PyEnum(
+    'UserEditableRelationType',
+    {m.name: m.value for m in HSRelationType if m.name not in NOT_USER_EDITABLE_RELATION_TYPES},
+)
 
 
 orcid_pattern = "\\b\\d{4}-\\d{4}-\\d{4}-\\d{3}[0-9X]\\b"
@@ -66,6 +82,19 @@ def modify_json_schema(schema: dict[str, Any]) -> None:
             "(\\/.*)?$"
         )
         schema["errorMessage"] = {"pattern": 'must match format "url"'}
+
+    # Hoist a lone $ref out of a single-item allOf/anyOf/oneOf wrapper.
+    for key in ("allOf", "anyOf", "oneOf"):
+        subs = schema.get(key)
+        if (
+            isinstance(subs, list)
+            and len(subs) == 1
+            and isinstance(subs[0], dict)
+            and list(subs[0].keys()) == ["$ref"]
+        ):
+            schema["$ref"] = subs[0]["$ref"]
+            del schema[key]
+            break
 
     for prop in schema.get("properties", {}).values():
         if isinstance(prop, dict):
@@ -220,6 +249,33 @@ class Affiliation(Organization):
     )
 
 
+class PersonIdentifierPropertyID(str, Enum):
+    ORCID = "ORCID"
+    ResearchGateID = "ResearchGateID"
+    ResearcherID = "ResearcherID"
+    GoogleScholarID = "GoogleScholarID"
+    HydroShareID = "HydroShareID"
+
+
+class PersonIdentifier(SchemaBaseModel):
+    model_config = ConfigDict(
+        **{**SchemaBaseModel.model_config, "extra": "forbid"},
+        populate_by_name=True,  # Ensures aliases work during model initialization
+        title="PersonIdentifier",
+    )
+
+    type: Literal["PropertyValue"] = Field(
+        alias="@type",  # type: ignore
+        default="PropertyValue",
+        description="A property-value pair.",
+    )
+    propertyID: PersonIdentifierPropertyID = Field(
+        title="Property ID",
+        description="The type of identifier, e.g. ORCID or HydroShareID.",
+    )
+    value: HttpUrl = Field(description="The identifier value, expressed as a URL.")
+
+
 class Provider(Person):
     identifier: Optional[str] = Field(
         description="ORCID identifier for the person.",
@@ -239,10 +295,11 @@ class Provider(Person):
 
 
 class Creator(Person):
-    identifier: Optional[str] = Field(
-        description="ORCID identifier for creator.",
+    identifier: Optional[List[PersonIdentifier]] = Field(
+        title="Identifiers",
+        description="Unique identifiers for the creator, e.g. ORCID or HydroShare user profile.",
         default=None,
-        json_schema_extra=identifier_schema_extra,
+        json_schema_extra=remove_none_default,
     )
     email: Optional[EmailStr] = Field(
         description="A string containing an email address for the creator.",
@@ -257,10 +314,11 @@ class Creator(Person):
 
 
 class Contributor(Person):
-    identifier: Optional[str] = Field(
-        description="ORCID identifier for contributor.",
+    identifier: Optional[List[PersonIdentifier]] = Field(
+        title="Identifiers",
+        description="Unique identifiers for the contributor, e.g. ORCID or HydroShare user profile.",
         default=None,
-        json_schema_extra=identifier_schema_extra,
+        json_schema_extra=remove_none_default,
     )
     email: Optional[EmailStr] = Field(
         description="A string containing an email address for the contributor.",
@@ -374,6 +432,10 @@ class IsPartOf(CreativeWork):
 
 
 class Relation(CreativeWork):
+    name: Optional[UserEditableRelationType] = Field(  # type: ignore[assignment]
+        default=None,
+        json_schema_extra=remove_none_default,
+    )
     url: Optional[HttpUrl] = Field(
         title="URL",
         description="The URL address to the data resource.",
@@ -545,8 +607,7 @@ class Grant(SchemaBaseModel):
 class TemporalCoverage(SchemaBaseModel):
     startDate: datetime = Field(
         title="Start date",
-        description="A date/time object containing the instant corresponding to the commencement of the time "
-        "interval (ISO8601 formatted date - YYYY-MM-DDTHH:MM).",
+        description="The start of the time period the resource covers.",
         json_schema_extra={
             "formatMaximum": {"$data": "1/endDate"},
             "errorMessage": {
@@ -556,9 +617,7 @@ class TemporalCoverage(SchemaBaseModel):
     )
     endDate: Optional[datetime] = Field(
         title="End date",
-        description="A date/time object containing the instant corresponding to the termination of the time "
-        "interval (ISO8601 formatted date - YYYY-MM-DDTHH:MM). If the ending date is left off, "
-        "that means the temporal coverage is ongoing.",
+        description="The end of the time period the resource covers. Leave blank if it is ongoing.",
         default=None,
         json_schema_extra=end_date_schema_extra,
     )

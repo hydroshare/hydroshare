@@ -46,7 +46,7 @@ from rdflib.namespace import DC, DCTERMS, RDF
 from spam_patterns.worst_patterns_re import patterns
 
 from django_s3.storage import S3Storage
-from hs_core.enums import (DataciteSubmissionStatus, RelationTypes)
+from hs_core.enums import (DataciteSubmissionStatus, NOT_USER_EDITABLE_RELATION_TYPES, RelationTypes)
 from hs_core.s3 import ResourceFileS3Mixin, ResourceS3Mixin
 from .hs_rdf import (HSTERMS, RDFS1, RDF_MetaData_Mixin, RDF_Term_MixIn,
                      rdf_terms)
@@ -1208,8 +1208,7 @@ class Relation(AbstractRelation):
     # these are hydroshare custom terms that are not Dublin Core terms
     HS_RELATION_TERMS = (RelationTypes.isExecutedBy, RelationTypes.isCreatedBy, RelationTypes.isDescribedBy,
                          RelationTypes.isSimilarTo)
-    NOT_USER_EDITABLE = (RelationTypes.isVersionOf, RelationTypes.isReplacedBy,
-                         RelationTypes.isPartOf, RelationTypes.hasPart, RelationTypes.replaces)
+    NOT_USER_EDITABLE = NOT_USER_EDITABLE_RELATION_TYPES
     term = 'Relation'
     type = models.CharField(max_length=100, choices=SOURCE_TYPES)
     value = models.TextField()
@@ -2287,7 +2286,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
             hs_json['content_types'] = list(set(res.aggregation_type_names).union({self.resource_type}))
         from hs_core.hydroshare_schemaorg_adapter import HydroshareMetadataAdapter
         hs_json = HydroshareMetadataAdapter.to_catalog_record(hs_json).model_dump(
-            exclude={'dateCreated', 'dateModified', 'datePublished'}, by_alias=True
+            exclude={'dateCreated', 'dateModified', 'datePublished'}, by_alias=True, exclude_none=True
         )
         hs_json = json.dumps(hs_json, indent=2, default=str)
         with NamedTemporaryFile(mode='w+') as temp_file:

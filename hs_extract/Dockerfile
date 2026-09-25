@@ -5,6 +5,7 @@ WORKDIR /app
 RUN apt-get update
 RUN apt-get -y install python3.12
 RUN apt-get -y install python3-pip
+RUN apt-get -y install git
 
 RUN python -m pip config set global.break-system-packages true
 

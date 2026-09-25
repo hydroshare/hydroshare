@@ -15,6 +15,48 @@ class BasePerson(BaseModel):
     homepage: Optional[HttpUrl] = None
     address: Optional[str] = None
     identifiers: Optional[dict] = {}
+    # Set by hsmodels' Creator/Contributor schema (Party.hydroshare_user_id)
+    # when this person is a linked HydroShare user. Not present on Provider.
+    hydroshare_user_id: Optional[int] = None
+
+    def _hydroshare_id_identifier(self) -> Optional["schema.PersonIdentifier"]:
+        if not self.hydroshare_user_id:
+            return None
+        # Deferred import: avoids hs_core.hydroshare.utils's heavier import
+        # chain (bagit, access control, theme) at module load time.
+        from hs_core.hydroshare.utils import current_site_url
+
+        profile_url = f"{current_site_url()}/user/{self.hydroshare_user_id}/"
+        try:
+            return schema.PersonIdentifier(
+                propertyID=schema.PersonIdentifierPropertyID.HydroShareID, value=profile_url
+            )
+        except Exception:
+            return None
+
+    def _to_person_identifiers(self) -> List[schema.PersonIdentifier]:
+        # self.identifiers keys already match PersonIdentifierPropertyID values
+        # (ORCID, ResearchGateID, ResearcherID, GoogleScholarID) — see
+        # Party.supported_identifiers in hs_core/models.py. HydroShareID isn't
+        # one of those keys; it's derived below from hydroshare_user_id.
+        identifiers = []
+        for property_id, value in (self.identifiers or {}).items():
+            if not value:
+                continue
+            try:
+                property_id_enum = schema.PersonIdentifierPropertyID(property_id)
+            except ValueError:
+                continue
+            try:
+                identifiers.append(schema.PersonIdentifier(propertyID=property_id_enum, value=value))
+            except Exception:
+                continue
+
+        hydroshare_id_identifier = self._hydroshare_id_identifier()
+        if hydroshare_id_identifier:
+            identifiers.append(hydroshare_id_identifier)
+
+        return identifiers
 
     def to_dataset_person(self, person_type):
         if self.name:
@@ -26,9 +68,14 @@ class BasePerson(BaseModel):
                 affiliation = schema.Organization.construct()
                 affiliation.name = self.organization
                 person.affiliation = affiliation
-            _ORCID_identifier = self.identifiers.get("ORCID", "")
-            if _ORCID_identifier:
-                person.identifier = _ORCID_identifier
+            if person_type is schema.Provider:
+                _ORCID_identifier = self.identifiers.get("ORCID", "")
+                if _ORCID_identifier:
+                    person.identifier = _ORCID_identifier
+            else:
+                identifiers = self._to_person_identifiers()
+                if identifiers:
+                    person.identifier = identifiers
         else:
             person = schema.Organization.construct()
             person.name = self.organization
