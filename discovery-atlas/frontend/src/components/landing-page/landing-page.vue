@@ -595,16 +595,6 @@
                         <a :href="part.url">{{ part.url }}</a>
                       </td>
                     </tr>
-
-                    <tr
-                      v-for="(part, index) in data.subjectOf?.filter(p => p.url)"
-                      :key="`so-${index}`"
-                    >
-                      <td class="relation-label">Subject of</td>
-                      <td class="relation-url">
-                        <a :href="part.url">{{ part.url }}</a>
-                      </td>
-                    </tr>
                   </tbody>
                 </template>
               </v-table>
