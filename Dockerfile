@@ -6,7 +6,7 @@ ADD . /hydroshare
 RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
     locale-gen
 
-COPY --from=quay.io/minio/mc:RELEASE.2025-08-13T08-35-41Z-cpuv1 /usr/bin/mc /usr/local/bin/mc
+COPY --from=quay.io/minio/aistor/mc:RELEASE.2025-08-21T03-14-05Z /usr/bin/mc /usr/local/bin/mc
 RUN chmod +x /usr/local/bin/mc
 
 RUN apt-get update

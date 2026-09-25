@@ -4,6 +4,34 @@ from django.db import migrations, models
 import django.db.models.deletion
 
 
+def add_column_if_missing(apps, schema_editor):
+    # Column may already exist from a prior bad-merge run of this migration
+    with schema_editor.connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT column_name FROM information_schema.columns
+            WHERE table_name = 'theme_userquota'
+            AND column_name = 'required_community_membership_id'
+            """
+        )
+        if cursor.fetchone():
+            return
+
+    UserQuota = apps.get_model('theme', 'UserQuota')
+    schema_editor.add_field(
+        UserQuota,
+        UserQuota._meta.get_field('required_community_membership'),
+    )
+
+
+def remove_column(apps, schema_editor):
+    UserQuota = apps.get_model('theme', 'UserQuota')
+    schema_editor.remove_field(
+        UserQuota,
+        UserQuota._meta.get_field('required_community_membership'),
+    )
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -12,9 +40,17 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AddField(
-            model_name='userquota',
-            name='required_community_membership',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='restricted_user_quotas', to='hs_access_control.community'),
+        migrations.SeparateDatabaseAndState(
+            state_operations=[
+                migrations.AddField(
+                    model_name='userquota',
+                    name='required_community_membership',
+                    field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL,
+                                            related_name='restricted_user_quotas', to='hs_access_control.community'),
+                ),
+            ],
+            database_operations=[
+                migrations.RunPython(add_column_if_missing, remove_column),
+            ],
         ),
     ]
