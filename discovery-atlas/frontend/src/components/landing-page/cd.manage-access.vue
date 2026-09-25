@@ -1,12 +1,5 @@
 <template>
-  <!-- `hs-host-dialog` pins this to the parent window's visible band when
-       embedded; see assets/css/host-dialogs.scss. -->
-  <v-dialog
-    v-model="dialogOpen"
-    max-width="760"
-    scrollable
-    content-class="hs-host-dialog"
-  >
+  <v-dialog v-model="dialogOpen" max-width="760" scrollable>
     <v-card class="manage-access-card" :class="{ 'is-processing': isProcessing }">
       <div class="dialog-banner"></div>
       <v-card-title class="dialog-header">
@@ -790,46 +783,6 @@ function onDialogToggle(open: boolean) {
     if (!open) return;
     if (!dataLoaded.value && !isLoading.value) {
       loadData();
-    }
-    // The discovery app runs inside an iframe with scrolling="no" sized to
-    // its full content (see hs_discover/templates/hs_discover/search.html),
-    // so Vuetify's position:fixed dialog lands at iframe-center — typically
-    // far below the parent viewport. Wait for the dialog to mount and the
-    // parent's ResizeObserver to grow the iframe (otherwise iframe.offsetHeight
-    // is stale), then scroll the parent so iframe-center aligns with the
-    // parent's viewport center.
-    setTimeout(alignDialogToParentViewport, 80);
-  }
-
-function alignDialogToParentViewport() {
-    try {
-      const parentWin = window.parent;
-      if (!parentWin || parentWin === window) return;
-      const iframe = parentWin.document.getElementById(
-        "discovery-app-frame",
-      ) as HTMLIFrameElement | null;
-      if (!iframe) return;
-      const iframeRect = iframe.getBoundingClientRect();
-      // The iframe is sized to body.scrollHeight by the parent's ResizeObserver;
-      // use the larger of the two to stay correct if the resize hasn't yet
-      // settled when we measure.
-      const contentHeight = Math.max(
-        iframe.offsetHeight,
-        document.documentElement.scrollHeight,
-      );
-      const dialogYInParent =
-        iframeRect.top + parentWin.scrollY + contentHeight / 2;
-      // Bias the scroll target up by the HydroShare navbar height so the
-      // dialog's top edge isn't clipped by it after the scroll settles.
-      const navbarOffset = 80;
-      const targetScrollY = Math.max(
-        0,
-        dialogYInParent - parentWin.innerHeight / 2 - navbarOffset,
-      );
-      if (Math.abs(parentWin.scrollY - targetScrollY) < 4) return;
-      parentWin.scrollTo({ top: targetScrollY, behavior: "smooth" });
-    } catch {
-      // cross-origin access denied — nothing we can do from inside the iframe
     }
   }
 
