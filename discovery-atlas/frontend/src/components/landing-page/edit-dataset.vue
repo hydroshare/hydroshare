@@ -237,6 +237,7 @@
                         scope="#/properties/creator"
                         :options="creatorOptions"
                         :label="`Authors${requiredMark('#/properties/creator')}`"
+                        @custom-action="(id: string) => onArrayCustomAction(id, 'creator')"
                       >
                         <template
                           #summary="{
@@ -310,6 +311,7 @@
                         :label="`Contributors${requiredMark(
                           '#/properties/contributor',
                         )}`"
+                        @custom-action="(id: string) => onArrayCustomAction(id, 'contributor')"
                       >
                         <template
                           #summary="{
@@ -364,6 +366,14 @@
                         </template>
                       </cz-field-modal>
                     </div>
+
+                    <!-- "Find HydroShare user" dialog, opened via the
+                         customActions button rendered inside the Authors/
+                         Contributors ArrayLayoutRenderer modal. -->
+                    <cd-find-hydroshare-user
+                      v-model="hsUserDialogOpen"
+                      @select="onHsUserSelected"
+                    />
 
                     <template v-if="data.provider">
                       <div v-bind="infoLabelAttr">Provider:</div>
@@ -925,6 +935,7 @@ import HsUppy from "./hs-uppy.vue";
 import CdSpatialCoverageMap from "@/components/search-results/cd.spatial-coverage-map.vue";
 import CdReadmeEditor from "./cd.readme-editor.vue";
 import CdSaveButton from "./cd.save-button.vue";
+import CdFindHydroshareUser from "./cd.find-hydroshare-user.vue";
 import User from "@/models/user.model";
 import { onBeforeRouteLeave, useRoute, useRouter } from "vue-router";
 import { contentTypeLabels, contentTypeLogos, S3_PROXY_URL } from "@/constants";
@@ -1200,14 +1211,19 @@ const personOrOrgDetail = {
   },
 };
 
-// detail = personOrOrgDetail lets branchItems resolve labels from
-// options.detail.options.detail[i].options.label = "Person" / "Organization".
+// The customAction is rendered as a button next to the Add button
+// inside ArrayLayoutRenderer (cznet-vue-core); clicking it calls the
+// `cz-custom-action` callback that cz-field-modal provides, which re-emits
+// as this element's `custom-action` event (handled by onArrayCustomAction
 const creatorOptions = computed(() => ({
   elementLabelProp: ["name"],
   childLabelProp: "name",
   showSortButtons: true,
   collapsed: true,
   detail: personOrOrgDetail,
+  customActions: [
+    { id: "findUser", label: "Find HydroShare user", icon: "mdi-account-search" },
+  ],
 }));
 
 const contributorOptions = computed(() => ({
@@ -1216,7 +1232,32 @@ const contributorOptions = computed(() => ({
   showSortButtons: true,
   collapsed: true,
   detail: personOrOrgDetail,
+  customActions: [
+    { id: "findUser", label: "Find HydroShare user", icon: "mdi-account-search" },
+  ],
 }));
+
+// -----------------------------------------------------------------
+// "Find HydroShare user" dialog — cd.find-hydroshare-user.vue owns the
+// search UI, import fetch, and viewport-alignment; this file just opens
+// it for the right field and pushes the emitted person onto that array.
+// -----------------------------------------------------------------
+const hsUserDialogOpen = ref(false);
+const hsUserDialogTarget = ref<"creator" | "contributor">("creator");
+
+function openHsUserDialog(target: "creator" | "contributor") {
+  hsUserDialogTarget.value = target;
+  hsUserDialogOpen.value = true;
+}
+
+function onArrayCustomAction(id: string, target: "creator" | "contributor") {
+  if (id === "findUser") openHsUserDialog(target);
+}
+
+function onHsUserSelected(person: Record<string, any>) {
+  const key = hsUserDialogTarget.value;
+  data.value[key] = [...(data.value[key] ?? []), person];
+}
 
 const fundingOptions = {
   itemNoun: "funding source",
