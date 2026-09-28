@@ -21,4 +21,18 @@ html.hs-embedded {
     overflow: visible !important;
     padding-inline-end: 0 !important;
   }
+
+  // Uppy's modal is not a Vuetify overlay, so it needs the band treatment too.
+  .uppy-Dashboard--modal .uppy-Dashboard-inner {
+    top: var(--hs-dialog-top, 24px);
+    bottom: auto;
+    height: min(500px, var(--hs-dialog-max-h, 640px));
+  }
+
+  @media only screen and (min-width: 820px) {
+    .uppy-Dashboard--modal .uppy-Dashboard-inner {
+      // Undo the vertical half of Uppy's translate(-50%, -50%).
+      transform: translateX(-50%);
+    }
+  }
 }

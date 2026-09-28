@@ -3,13 +3,13 @@
 </template>
 
 <script lang="ts">
-import { CzFileExplorer } from "@cznethub/cznet-vue-core";
 import Uppy from "@uppy/core";
 import GoldenRetriever from "@uppy/golden-retriever";
 import GoogleDrivePicker from "@uppy/google-drive-picker";
 import Dashboard from "@uppy/dashboard";
 import AwsS3 from "@uppy/aws-s3";
 import User from "@/models/user.model";
+import { buildUploadKey } from "./upload-key";
 import {
   COMPANION_URL,
   GOOGLE_PICKER_CLIENT_ID,
@@ -112,48 +112,16 @@ const props = withDefaults(
      * files wouldn't appear when readRootFolder walks `data/contents/`.
      */
     uploadPrefix?: string;
-    // `default: null` (not `false`) — the parent's `fileExplorer` ref is
-    // `undefined` until the explorer mounts, and HsUppy renders BEFORE that
-    // (it's now a slot child of cz-file-explorer). Falsy default + a non-Object
-    // value would trip Vue's prop validator with the boolean `false`. Allow
-    // both Object and null/undefined, since registerUploadedFile already
-    // guards against the falsy case at call time.
-    fileExplorer?: InstanceType<typeof CzFileExplorer> | null;
   }>(),
   {
     s3Host: "http://localhost:9000",
     uploadPrefix: "",
-    fileExplorer: null,
   },
 );
 
 const emit = defineEmits(["file-uploaded"]);
 
 const selectedFolder = ref<string | null>(null);
-
-watch(() => props.fileExplorer?.selected, onFileSelect);
-
-function onFileSelect() {
-  // if the selected is a folder, set selectedFolder
-  let selected = props.fileExplorer!.selected;
-  // if selected is an array, take the first element
-  if (Array.isArray(selected)) {
-    if (selected.length > 0) {
-      selected = selected[0];
-    } else {
-      selectedFolder.value = null;
-      return;
-    }
-  }
-  // const isFolder = Object.prototype.hasOwnProperty.call(selected, "children");
-  const isFolder = props.fileExplorer!.isFolder(selected);
-  if (isFolder) {
-    selectedFolder.value = props.fileExplorer!.getPathString(selected);
-  } else {
-    selectedFolder.value = null;
-  }
-  console.log("selectedFolder set to:", selectedFolder.value);
-}
 
 // Method to expose the Uppy instance
 function getUppyInstance(): Uppy | null {
@@ -180,7 +148,19 @@ function upload(): Promise<void> {
   return Promise.reject(new Error("Uppy instance not available"));
 }
 
-defineExpose({ getUppyInstance, addFile, upload });
+/** Opens the upload modal with `folderPath` as the destination ("" = root). */
+function openDashboard(folderPath: string) {
+  if (!uppyInstance) {
+    return;
+  }
+  selectedFolder.value = folderPath || null;
+  uppyInstance.setMeta({
+    existing_path_in_resource: folderPath || undefined,
+  });
+  uppyInstance.getPlugin("Dashboard")?.openModal();
+}
+
+defineExpose({ getUppyInstance, addFile, upload, openDashboard });
 
 onMounted(() => {
   initializeUppy();
@@ -216,37 +196,29 @@ function initializeUppy() {
       id: "uppy",
       autoProceed: true,
       onBeforeUpload: (files) => {
-        // Build the S3 key from `uploadPrefix` (e.g. `<id>/data/contents/`),
-        // any selected subfolder, and the filename. Falls back to s3Info.prefix
-        // only when uploadPrefix wasn't passed — preserves the old contract.
-        const basePrefix =
-          props.uploadPrefix || props.s3Info.prefix || "";
+        const basePrefix = props.uploadPrefix || props.s3Info.prefix || "";
         Object.keys(files).forEach((fileId) => {
           const file = files[fileId];
           file.meta.bucket_name =
             file?.meta?.bucket_name || props.s3Info.bucket;
           if (!file.meta.dynamic_key) {
-            const folder =
-              file.meta.existing_path_in_resource || selectedFolder.value || "";
-            const folderPart = folder ? `${folder.replace(/^\/+|\/+$/g, "")}/` : "";
-            file.meta.dynamic_key = `${basePrefix}${folderPart}${file.name}`;
+            file.meta.dynamic_key = buildUploadKey(
+              basePrefix,
+              file.meta.existing_path_in_resource || selectedFolder.value,
+              file.name,
+            );
           }
-          console.log(
-            "Uppy upload key:",
-            file.meta.dynamic_key,
-            "bucket:",
-            file.meta.bucket_name,
-          );
         });
         return files;
       },
     }).use(Dashboard, {
-      inline: true,
+      inline: false,
+      // `true` puts `height: 100vh` on <body>, collapsing the host iframe.
+      disablePageScrollWhenModalOpen: false,
       fileManagerSelectionType: "both",
       target: "#uppy",
       showProgressDetails: true,
       width: "100%",
-      height: 320,
       note: `TODO: quota?`,
     });
 
@@ -276,21 +248,8 @@ function initializeUppy() {
         },
         uploadPartBytes: cookieUploadPartBytes,
       })
-      .on("dashboard:modal-open", () => {
-        // this is a hack to set the folder when the modal is opened
-        // because the selectedFolder will change when the user clicks in the dashboard
-        if (selectedFolder.value) {
-          uppyInstance.setMeta({
-            existing_path_in_resource: selectedFolder.value,
-          });
-          console.log("Set dashboard folder state to:", selectedFolder.value);
-        }
-      })
       .on("upload-success", (file: any) => {
-        // Hand off to the parent (which owns the file-explorer ref directly).
-        // The `fileExplorer` prop passed in here doesn't reliably propagate
-        // as a reactive value, so accessing it from inside this Uppy handler
-        // is unsafe; an event side-steps that.
+        // The parent owns the file-explorer ref and adds the node to the tree.
         emit("file-uploaded", file);
       })
       .on("error", (errorMessage) => {
