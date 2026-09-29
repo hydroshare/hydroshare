@@ -65,8 +65,7 @@
       var isSingleLabelHost = heapHost.indexOf(".") === -1;
       var isDevHost = /dev/i.test(heapHost);
       var isLocalHost = heapHost === "localhost" || /\.localhost$/i.test(heapHost) || isLoopbackIp || isSingleLabelHost || isDevHost;
-      var isHeapHost = heapHost === "www.hydroshare.org"
-          || heapHost === "beta.hydroshare.org";
+      var isHeapHost = heapHost === "www.hydroshare.org";
       if (isHeapHost) {
           var heapConfig = {secureCookie: true};
           heap.load("1320547260", heapConfig);
