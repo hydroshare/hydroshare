@@ -6,7 +6,8 @@ ADD . /hydroshare
 RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
     locale-gen
 
-COPY --from=quay.io/minio/aistor/mc:RELEASE.2025-08-21T03-14-05Z /usr/bin/mc /usr/local/bin/mc
+RUN wget https://storage.googleapis.com/minio-client-mirror-tmp/mc -O /usr/bin/mc && \
+    cp /usr/bin/mc /usr/local/bin/mc
 RUN chmod +x /usr/local/bin/mc
 
 RUN apt-get update
@@ -14,6 +15,7 @@ RUN apt-get -y upgrade
 RUN pip install pymongo
 
 RUN pip install django-rest-knox
+RUN pip install django-celery-beat==2.7.0
 
 # installs specific commit until hsmodels gets a full release
 RUN pip install --upgrade git+https://github.com/hydroshare/hsmodels.git@22b7d610814a28065511ff03ba044ad66cc1bc98
