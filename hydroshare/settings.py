@@ -414,6 +414,7 @@ INSTALLED_APPS = (
     "django.contrib.postgres",
     "django.contrib.messages",
     "django_s3",
+    "django_celery_beat",
     "drf_yasg",
     "theme",
     "theme.blog_mods",
