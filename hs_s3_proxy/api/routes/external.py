@@ -166,10 +166,14 @@ async def proxy_s3_request(request: Request, full_path: str):
             auth_info=auth_info,
             is_presigned=is_presigned,
         )
+        if error_response:
+            return error_response
     else:
-        user_id, username, error_response = _verify_csrf_session_request(request)
-    if error_response:
-        return error_response
+        return Response(content=b"<Error><Code>AccessDenied</Code><Message>Access Denied</Message></Error>",
+                        status_code=403, media_type="application/xml")
+    # disabling csrf session verification until it has a use case
+    # else:
+    #     user_id, username, error_response = _verify_csrf_session_request(request)
 
     action = get_s3_action_from_request(method, path, query_params)
     logger.info(f"S3 Action: {action} for user: {username}")

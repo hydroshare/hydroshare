@@ -484,7 +484,7 @@ class S3Storage(s3.S3Storage):
         if self.querystring_auth:
             session = self._create_session(zone)
             zone_config = get_zone_config(zone)
-            presign_endpoint = zone_config.aws_s3_endpoint_url_public or zone_config.aws_s3_endpoint_url
+            presign_endpoint = zone_config.aws_s3_endpoint_url
             # Force path-style addressing and s3v4 for GCS S3-compat presigned URLs.
             # Virtual-hosted style changes the string-to-sign host component, causing
             # SignatureDoesNotMatch on GCS even with otherwise correct credentials.

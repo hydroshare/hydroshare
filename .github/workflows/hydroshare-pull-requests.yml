@@ -12,11 +12,27 @@ jobs:
   hydroshare-pull-request-tests:
 
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     env:
       DATACITE_USERNAME: ${{ secrets.DATACITE_USERNAME }}
       DATACITE_PASSWORD: ${{ secrets.DATACITE_PASSWORD }}
     steps:
     - uses: actions/checkout@v4
+
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        workload_identity_provider: projects/518349169741/locations/global/workloadIdentityPools/github-actions/providers/github
+        service_account: artifact-puller@hydroshare-403701.iam.gserviceaccount.com
+
+    - name: Set up Google Cloud CLI
+      uses: google-github-actions/setup-gcloud@v2
+
+    - name: Configure Docker for Artifact Registry
+      run: |
+        gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
 
     - name: Run flake8
       run: |

@@ -9,6 +9,7 @@ from typing import Iterator, Protocol, TYPE_CHECKING
 
 import boto3
 import requests
+from botocore.config import Config
 from hs_cloudnative_schemas.schema.base import LinkedData, MediaObject
 if TYPE_CHECKING:
     from hsextract.content_types.models import ContentType
@@ -43,10 +44,11 @@ def _normalize_zone_entry(config: dict) -> dict[str, str | list[str] | None]:
         buckets = [buckets]
 
     return {
-        "endpoint_url": config.get("endpoint_url") or config.get("aws_s3_endpoint_url"),
+        "aws_s3_endpoint_url": config.get("aws_s3_endpoint_url"),
         "aws_access_key_id": config.get("aws_access_key_id"),
         "aws_secret_access_key": config.get("aws_secret_access_key"),
-        "public_endpoint_url": config.get("public_endpoint_url") or config.get("aws_s3_endpoint_url_public", ""),
+        "aws_s3_public_endpoint_url": config.get("aws_s3_public_endpoint_url")
+        or config.get("aws_s3_endpoint_url_public", ""),
         "buckets": buckets or [],
     }
 
@@ -72,11 +74,17 @@ def _parse_zone_config() -> dict[str, dict]:
 
 
 def _create_s3_client(config: dict) -> boto3.client:
+    # GCS's S3-compatible endpoint rejects botocore's default checksum headers with SignatureDoesNotMatch
     return boto3.client(
         's3',
-        endpoint_url=config.get("endpoint_url"),
+        endpoint_url=config.get("aws_s3_endpoint_url"),
         aws_access_key_id=config.get("aws_access_key_id"),
         aws_secret_access_key=config.get("aws_secret_access_key"),
+        config=Config(
+            s3={"addressing_style": "path"},
+            request_checksum_calculation="when_required",
+            response_checksum_validation="when_required",
+        ),
     )
 
 
@@ -128,7 +136,7 @@ def get_public_endpoint_url(zone: str) -> str:
             f"Set {S3_ZONE_CONFIG_ENV_VAR} with this zone."
             f" Available zones: {', '.join(zone_s3_config.keys())}"
         )
-    public_url = zone_config.get("public_endpoint_url") or zone_config.get("endpoint_url", "")
+    public_url = zone_config.get("aws_s3_public_endpoint_url") or zone_config.get("aws_s3_endpoint_url", "")
     return (public_url or "").rstrip("/")
 
 

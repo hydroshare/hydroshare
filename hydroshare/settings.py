@@ -414,6 +414,7 @@ INSTALLED_APPS = (
     "django.contrib.postgres",
     "django.contrib.messages",
     "django_s3",
+    "django_celery_beat",
     "drf_yasg",
     "theme",
     "theme.blog_mods",
@@ -494,6 +495,7 @@ AWS_S3_SIGNATURE_VERSION = "s3v4"
 RESOURCE_S3_ZONES_CONFIG = {
     "hydroshare": {
         "bucket_name": "resource",
+        "alias": "res",
         "aws_s3_endpoint_url": "http://minio:9000",
         "aws_access_key_id": "cuahsi",
         "aws_secret_access_key": "devpassword",

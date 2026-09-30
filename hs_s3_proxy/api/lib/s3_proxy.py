@@ -56,6 +56,7 @@ class _ZoneBackend:
     zone: str
     endpoint: str
     signer: Optional[S3SigV4Auth]
+    bucket_name: str
 
 
 def _build_signer(access_key: str, secret_key: str, region: str) -> Optional[S3SigV4Auth]:
@@ -67,20 +68,21 @@ def _build_signer(access_key: str, secret_key: str, region: str) -> Optional[S3S
 def _load_zone_config() -> dict[str, _ZoneBackend]:
     """Parse S3_ZONE_CONFIG (JSON) into a bucket-name → _ZoneBackend map.
 
-    Expected JSON shape::
+        Expected JSON shape, matching ``RESOURCE_S3_ZONES_CONFIG``::
 
         {
-          "resource": {
-            "zone":       "hydroshare",   // logical zone name (defaults to bucket name)
-            "endpoint":   "http://minio:9000",
-            "access_key": "cuahsi",
-            "secret_key": "devpassword",
-            "region":     "auto"          // optional, defaults to "auto"
+          "hydroshare": {
+            "bucket_name": "resource",    // required: the sole routable primary bucket name
+            "alias":       "resource-2",  // optional: one additional routable name
+                        "aws_s3_endpoint_url": "http://minio:9000",
+                        "aws_access_key_id": "cuahsi",
+                        "aws_secret_access_key": "devpassword"
           },
           "ciroh": { ... }
         }
 
-    Buckets not present in the map are rejected with NoSuchBucket.
+        The JSON key is the logical zone name and is never itself registered as a routable
+        bucket name. Buckets not present in the resulting map are rejected with NoSuchBucket.
     """
     raw = os.environ.get("S3_ZONE_CONFIG", "").strip()
     if not raw:
@@ -93,24 +95,41 @@ def _load_zone_config() -> dict[str, _ZoneBackend]:
         return {}
 
     backends: dict[str, _ZoneBackend] = {}
-    for bucket, cfg in mapping.items():
+    for key, cfg in mapping.items():
         if not isinstance(cfg, dict):
-            logger.warning(f"S3_ZONE_CONFIG: ignoring non-dict entry for bucket {bucket!r}")
+            logger.warning(f"S3_ZONE_CONFIG: ignoring non-dict entry for {key!r}")
             continue
-        endpoint = cfg.get("endpoint")
-        ak = cfg.get("access_key", "")
-        sk = cfg.get("secret_key", "")
+        endpoint = cfg.get("aws_s3_endpoint_url")
+        ak = cfg.get("aws_access_key_id", "")
+        sk = cfg.get("aws_secret_access_key", "")
         region = cfg.get("region", "auto")
-        zone_name = cfg.get("zone", bucket)
+        zone_name = key
         if not endpoint:
-            logger.warning(f"S3_ZONE_CONFIG: bucket {bucket!r} has no endpoint, skipping")
+            logger.warning(f"S3_ZONE_CONFIG: entry {key!r} has no endpoint, skipping")
             continue
-        backends[bucket] = _ZoneBackend(
+
+        bucket_name = cfg.get("bucket_name")
+        if not isinstance(bucket_name, str) or not bucket_name:
+            logger.warning(f"S3_ZONE_CONFIG: entry {key!r} has no bucket_name, skipping")
+            continue
+
+        backend = _ZoneBackend(
             zone=zone_name,
             endpoint=endpoint,
             signer=_build_signer(ak, sk, region),
+            bucket_name=bucket_name,
         )
-        logger.info(f"Zone config: bucket={bucket!r} → zone={zone_name!r} endpoint={endpoint}")
+        names_to_register = [bucket_name]
+        alias = cfg.get("alias")
+        if isinstance(alias, str) and alias:
+            names_to_register.append(alias)
+        seen = set()
+        for name in names_to_register:
+            if not name or name in seen:
+                continue
+            seen.add(name)
+            backends[name] = backend
+            logger.info(f"Zone config: bucket={name!r} → zone={zone_name!r} endpoint={endpoint}")
 
     return backends
 
@@ -141,7 +160,7 @@ class S3ProxyClient:
     def zone_for_bucket(self, bucket: str) -> str:
         """Return the logical zone name for *bucket*, or the bucket name itself
         when no zone mapping is configured."""
-        backend = self._zone_backends.get(bucket)
+        backend = self._backend_for_bucket(bucket)
         return backend.zone if backend else bucket
 
     # ------------------------------------------------------------------
@@ -153,7 +172,7 @@ class S3ProxyClient:
         return self._zone_backends.get(bucket)
 
     def is_configured_bucket(self, bucket: str) -> bool:
-        """Return True when *bucket* exists in S3_ZONE_CONFIG."""
+        """Return True when *bucket* exists in S3_ZONE_CONFIG or in one of its aliases."""
         return bucket in self._zone_backends
 
     async def close(self) -> None:
@@ -185,7 +204,13 @@ class S3ProxyClient:
                 status_code=404, media_type="application/xml",
             )
 
-        encoded_parts = [quote(part, safe='') for part in path.split('/')]
+        # The inbound path may use an alias; the backend only knows its own bucket_name.
+        path_segments = path.split('/')
+        for i, segment in enumerate(path_segments):
+            if segment:
+                path_segments[i] = zone_backend.bucket_name
+                break
+        encoded_parts = [quote(part, safe='') for part in path_segments]
         encoded_path = '/'.join(encoded_parts)
         url = f"{zone_backend.endpoint}{encoded_path}"
         backend_params = {k: v for k, v in query_params.items()

@@ -13,7 +13,6 @@ from hsextract.utils.s3 import (
     iter_find,
     load_metadata,
     write_file_manifest,
-    write_has_part_file,
     write_metadata,
 )
 
@@ -81,19 +80,19 @@ def write_resource_jsonld_metadata(md: BaseMetadataObject) -> bool:
     # TODO: If we can assume that the user is not allowed to edit the hasPart relationship in the user metadata,
     # then we can optimize the generation of the has_parts.json so that we only re-generate this file on
     # specific s3 object notification.
-    has_part_reference = write_has_part_file(
-        md.resource_has_parts_jsonld_path,
-        _iter_resource_has_parts(md, user_json),
-        md.zone,
-    )
-    combined_metadata["hasPart"] = [has_part_reference] if has_part_reference else []
+    # has_part_reference = write_has_part_file(
+    #     md.resource_has_parts_jsonld_path,
+    #     _iter_resource_has_parts(md, user_json),
+    #     md.zone,
+    # )
+    # combined_metadata["hasPart"] = [has_part_reference] if has_part_reference else []
 
     # file_manifest.json is re-generated only on s3 object notification for a data file
-    manifest_reference = write_file_manifest(
-        md,
-        enabled=True
-    )
-    combined_metadata["associatedMedia"] = [manifest_reference] if manifest_reference else []
+    # manifest_reference = write_file_manifest(
+    #         md,
+    #         enabled=True
+    #     )
+    # combined_metadata["associatedMedia"] = [manifest_reference] if manifest_reference else []
 
     # Write the combined metadata to the resource metadata file
     write_metadata(md.resource_metadata_jsonld_path, combined_metadata, md.zone)
