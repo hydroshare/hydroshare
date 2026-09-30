@@ -1,5 +1,6 @@
 import os
 from enum import Enum
+from urllib.parse import urlparse
 
 from hs_cloudnative_schemas.schema.base import MediaObject
 
@@ -26,9 +27,10 @@ class ContentType(Enum):
 class BaseMetadataObject:
     content_type = ContentType.UNKNOWN
 
-    def __init__(self, file_object_path: str, file_updated: bool):
+    def __init__(self, file_object_path: str, file_updated: bool, zone: str):
         self.file_object_path = file_object_path
         self.file_updated = file_updated
+        self.zone = zone
 
         self.bucket_name = self._bucket_name(file_object_path)
         self.resource_id = self._resource_id(file_object_path)
@@ -55,14 +57,14 @@ class BaseMetadataObject:
         return self.file_object_path.startswith(self.resource_contents_path)
 
     def iter_resource_associated_media(self, folder_path: str | None = None):
-        return iter_file_manifest(self.resource_contents_path, folder_path=folder_path, enabled=True)
+        return iter_file_manifest(self.resource_contents_path, folder_path=folder_path, enabled=True, zone=self.zone)
 
     @staticmethod
     def media_object_path(media_object: dict) -> str:
-        endpoint_url = os.environ.get('AWS_S3_ENDPOINT_URL', '').rstrip('/')
         content_url = media_object["contentUrl"]
-        if endpoint_url and content_url.startswith(endpoint_url):
-            return content_url[len(endpoint_url):].lstrip('/')
+        parsed = urlparse(content_url)
+        if parsed.scheme and parsed.netloc:
+            return parsed.path.lstrip('/')
         return content_url.lstrip('/')
 
     @classmethod
@@ -99,7 +101,7 @@ class BaseMetadataObject:
         return os.path.join(cls._resource_md_path(file_object_path), "user_metadata.json")
 
     @classmethod
-    def is_content_type(cls, file_object_path: str) -> bool:
+    def is_content_type(cls, file_object_path: str, zone: str) -> bool:
         _, extension = os.path.splitext(file_object_path.lower())
         return extension in cls._extensions()
 
@@ -120,8 +122,8 @@ class BaseMetadataObject:
 
 
 class FileMetadataObject(BaseMetadataObject):
-    def __init__(self, file_object_path: str, file_updated: bool):
-        super().__init__(file_object_path, file_updated)
+    def __init__(self, file_object_path: str, file_updated: bool, zone: str):
+        super().__init__(file_object_path, file_updated, zone)
         relative_path = os.path.relpath(self.file_object_path, self.resource_contents_path)
         file_parent_directory = os.path.dirname(relative_path)
         self.content_type_md_jsonld_path = os.path.join(self.resource_md_jsonld_path, relative_path + ".json")
@@ -160,13 +162,13 @@ class FileMetadataObject(BaseMetadataObject):
         return self._content_type_associated_media
 
     @classmethod
-    def is_content_type(cls, file_object_path: str) -> bool:
+    def is_content_type(cls, file_object_path: str, zone: str) -> bool:
         return False
 
 
 class FolderMetadataObject(BaseMetadataObject):
-    def __init__(self, file_object_path: str, file_updated: bool):
-        super().__init__(file_object_path, file_updated)
+    def __init__(self, file_object_path: str, file_updated: bool, zone: str):
+        super().__init__(file_object_path, file_updated, zone)
         _, extension = os.path.splitext(self.file_object_path)
         if extension:
             self.file_object_path = os.path.dirname(self.file_object_path)

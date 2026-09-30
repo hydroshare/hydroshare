@@ -126,7 +126,7 @@ and get the link below that text, paste it into your browser and save the new ac
 For all intents and purposes, Hydroshare is a large Python/Django application with some extra features and technologies added on:
 - A Vue app for searching, backed by MongoDB Atlas
 - Redis for caching
-- RedPanda for concurrency and serialization
+- Celery + Redis for asynchronous background work
 - Minio for a S3 file system
 - PostgreSQL for the database backend
 

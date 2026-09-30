@@ -9,7 +9,7 @@ from pydantic import ValidationError
 from hs_cloudnative_schemas.schema import base
 from hs_cloudnative_schemas.schema import dataset
 from hs_cloudnative_schemas.schema import datavariable
-from hsextract.utils.s3 import s3_client, s3fsInstance
+from hsextract.utils.s3 import get_s3_client
 
 
 # TODO: Looks like a debug helper function - delete?
@@ -217,27 +217,32 @@ def build_coordinates(ds: xarray.Dataset,
     return coords
 
 
-def encode_netcdf(
-    filepath: str,
-    validate_bbox: bool = True,
-    compute_statistics: bool = True,
-) -> dataset.ScientificDataset:
+def encode_netcdf(filepath: str,
+                  zone: str,
+                  validate_bbox: bool = True,
+                  compute_statistics: bool = True) -> dataset.ScientificDataset:
 
-    with s3fsInstance.open(filepath, 'rb') as remote_file:
-        with xarray.open_dataset(remote_file, engine='h5netcdf') as ds:
-            md_metadata = encode_multidimensional_metadata(
-                ds, filepath, validate_bbox, compute_statistics
-            )
-            return md_metadata
+    temp_dir = tempfile.gettempdir()
+    local_copy = os.path.join(temp_dir, os.path.basename(filepath))
+    bucket, key = filepath.split("/", 1)
+    s3_client = get_s3_client(zone)
+    s3_client.download_file(bucket, key, local_copy)
+    ds = xarray.load_dataset(local_copy, engine='netcdf4')
+    md_metadata = encode_multidimensional_metadata(
+        ds, filepath, validate_bbox, compute_statistics)
+    os.remove(local_copy)  # Clean up the local copy
+    return md_metadata
 
 
 def encode_zarr(filepath: str,
+                zone: str,
                 validate_bbox: bool = True,
                 compute_statistics: bool = True) -> dataset.ScientificDataset:
 
     temp_dir = tempfile.gettempdir()
     local_copy = os.path.join(temp_dir, os.path.basename(filepath))
     bucket, key = filepath.split("/", 1)
+    s3_client = get_s3_client(zone)
     s3_client.download_file(bucket, key, local_copy)
     # , chunks={"time":-1, "lat":"auto", "lon":"auto"})
     ds = xarray.open_zarr(local_copy, consolidated=False)

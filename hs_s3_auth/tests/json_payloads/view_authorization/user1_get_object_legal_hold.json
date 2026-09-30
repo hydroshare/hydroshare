@@ -1,0 +1,120 @@
+{
+    "input": {
+        "conditions": {
+            "preferred_username": [],
+            "username": [
+                "user1"
+            ],
+            "Prefix": [],
+            "prefix": [],
+            "content_length": [],
+            "AWSAccessKeyId": [
+                "110NZ7BTUKIODZ6G327E"
+            ],
+            "Accept": [
+                "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            ],
+            "Accept-Encoding": [
+                "gzip, deflate, br, zstd"
+            ],
+            "Accept-Language": [
+                "en-US,en;q=0.5"
+            ],
+            "Cache-Control": [
+                "no-cache"
+            ],
+            "Connection": [
+                "keep-alive"
+            ],
+            "Cookie": [
+                "csrftoken=z7ebpbXCQh8YcIEIeVWyBYnF0f6urRky; _hp2_id.1320547260=%7B%22userId%22%3A%222187379029585657%22%2C%22pageviewId%22%3A%222900534741682822%22%2C%22sessionId%22%3A%226475946284285431%22%2C%22identity%22%3Anull%2C%22trackerVersion%22%3A%224.0%22%7D; djdtProfilingPanel=on; sessionid=imimk29htsdqfsw99mdrao1kjmgbdjs0"
+            ],
+            "CurrentTime": [
+                "2025-06-10T23:35:06Z"
+            ],
+            "EpochTime": [
+                "1749598506"
+            ],
+            "Expires": [
+                "1749602106"
+            ],
+            "Pragma": [
+                "no-cache"
+            ],
+            "Priority": [
+                "u=4"
+            ],
+            "Referer": [
+                "http://localhost:8000/",
+                "http://localhost:8000/"
+            ],
+            "Sec-Fetch-Dest": [
+                "iframe"
+            ],
+            "Sec-Fetch-Mode": [
+                "navigate"
+            ],
+            "Sec-Fetch-Site": [
+                "cross-site"
+            ],
+            "SecureTransport": [
+                "false"
+            ],
+            "Signature": [
+                "mYhcr8n0FwosaH1eu/i4aFQqDzE="
+            ],
+            "SourceIp": [
+                "192.168.65.1"
+            ],
+            "Upgrade-Insecure-Requests": [
+                "1"
+            ],
+            "User-Agent": [
+                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:138.0) Gecko/20100101 Firefox/138.0"
+            ],
+            "UserAgent": [
+                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:138.0) Gecko/20100101 Firefox/138.0"
+            ],
+            "accesskey": [
+                "110NZ7BTUKIODZ6G327E"
+            ],
+            "authType": [
+                "REST-QUERY-STRING"
+            ],
+            "parent": [
+                "user1"
+            ],
+            "principaltype": [
+                "AssumedRole"
+            ],
+            "response-content-disposition": [
+                "attachment; filename=\"Screenshot_2025-06-03_at_9.26.17AM.png\""
+            ],
+            "sa-policy": [
+                "inherited-policy"
+            ],
+            "signatureversion": [
+                "AWS"
+            ],
+            "userid": [
+                "user1"
+            ],
+            "versionid": [
+                ""
+            ]
+        },
+        "action": "s3:GetObjectLegalHold",
+        "bucket": "user1",
+        "object": "f211b93642f84c55a0bdd1b12880e32e/data/contents/Screenshot_2025-06-03_at_9.26.17AM.png",
+        "account": "110NZ7BTUKIODZ6G327E",
+        "groups": null,
+        "originalAction": "",
+        "owner": false,
+        "claims": {
+            "accessKey": "110NZ7BTUKIODZ6G327E",
+            "parent": "user1",
+            "sa-policy": "inherited-policy"
+        },
+        "denyOnly": false
+    }
+}

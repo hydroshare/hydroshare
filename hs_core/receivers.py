@@ -2,7 +2,6 @@
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save, pre_delete, post_delete
 from django.dispatch import receiver
-from django_s3.storage import S3Storage
 from hs_access_control.models.resource import ResourceAccess
 from hs_core.signals import pre_metadata_element_create, pre_metadata_element_update, \
     pre_delete_resource, post_add_geofeature_aggregation, post_add_generic_aggregation, \
@@ -226,10 +225,6 @@ def pre_delete_user_handler(sender, instance, **kwargs):
                                                                                   user.username))
             res.quota_holder = None
         res.save()
-    istorage = S3Storage()
-    if istorage.bucket_exists(user.username):
-        # delete the bucket for the user
-        istorage.delete_bucket(user.username)
 
 
 @receiver(post_save, sender=ResourceAccess)

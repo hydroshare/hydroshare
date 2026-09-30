@@ -1,0 +1,72 @@
+{
+    "input": {
+        "conditions": {
+            "preferred_username": [],
+            "username": [
+                "cuahsi"
+            ],
+            "Prefix": [],
+            "prefix": [],
+            "content_length": [
+                "169"
+            ],
+            "Accept-Encoding": [
+                "zstd,gzip"
+            ],
+            "Authorization": [
+                "AWS4-HMAC-SHA256 Credential=cuahsi/20250611//s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=2eebeaf678b39a78ce39625f2ed8361f79b1a10bb24392b31fd8ee3b05d9b60c"
+            ],
+            "CurrentTime": [
+                "2025-06-11T02:14:23Z"
+            ],
+            "EpochTime": [
+                "1749608063"
+            ],
+            "Referer": [
+                ""
+            ],
+            "SecureTransport": [
+                "false"
+            ],
+            "SourceIp": [
+                "172.18.0.10"
+            ],
+            "User-Agent": [
+                "MinIO (linux; amd64) madmin-go/3.0.70 mc/RELEASE.2025-05-21T01-59-54Z"
+            ],
+            "UserAgent": [
+                "MinIO (linux; amd64) madmin-go/3.0.70 mc/RELEASE.2025-05-21T01-59-54Z"
+            ],
+            "X-Amz-Content-Sha256": [
+                "bae9bcbc5cdfb4dfb38f449b532dedd17e1cf87e0347b0287d9ad4e6816d208d"
+            ],
+            "X-Amz-Date": [
+                "20250611T021423Z"
+            ],
+            "authType": [
+                "REST-HEADER"
+            ],
+            "principaltype": [
+                "Account"
+            ],
+            "signatureversion": [
+                "AWS4-HMAC-SHA256"
+            ],
+            "userid": [
+                "minioadmin"
+            ],
+            "versionid": [
+                ""
+            ]
+        },
+        "action": "admin:CreateServiceAccount",
+        "bucket": "",
+        "object": "",
+        "account": "cuahsi",
+        "groups": null,
+        "originalAction": "",
+        "owner": true,
+        "claims": {},
+        "denyOnly": false
+    }
+}

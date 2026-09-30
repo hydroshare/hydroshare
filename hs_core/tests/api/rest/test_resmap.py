@@ -2,7 +2,6 @@ import os
 import json
 import tempfile
 import shutil
-import requests
 
 from rest_framework import status
 from rdflib import Graph, term
@@ -38,7 +37,7 @@ class TestResourceMap(ResMapTestCase):
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         response2 = self.client.get(response.url)
         self.assertEqual(response2.status_code, status.HTTP_302_FOUND)
-        minio_response = requests.get(response2.url)
+        minio_response = self._get_signed_url(response2.url)
 
         # parse as simple RDF graph
         g = Graph()
@@ -87,7 +86,7 @@ class TestResourceMap(ResMapTestCase):
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         response2 = self.client.get(response.url)
         self.assertEqual(response2.status_code, status.HTTP_302_FOUND)
-        minio_response = requests.get(response2.url)
+        minio_response = self._get_signed_url(response2.url)
 
         # parse as a simple RDF file of triples
         g = Graph()

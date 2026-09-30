@@ -2,6 +2,7 @@ import socket
 import json
 import requests
 import uuid
+from urllib.parse import urljoin, urlparse, urlunparse
 
 from django.contrib.auth.models import Group
 from django.urls import reverse
@@ -17,6 +18,20 @@ from django.contrib.sites.models import Site
 
 
 class HSRESTTestCase(APITransactionTestCase):
+    @staticmethod
+    def _get_signed_url(url):
+        try:
+            return requests.get(url)
+        except requests.exceptions.ConnectionError:
+            parsed = urlparse(url)
+            if parsed.hostname != 'localhost':
+                raise
+
+            # In containerized tests, signed URLs can target localhost:9000,
+            # but MinIO is reachable as minio:9000. Keep Host for SigV4.
+            retry_url = urlunparse(parsed._replace(netloc='minio:9000'))
+            return requests.get(retry_url, headers={'Host': parsed.netloc})
+
     def setUp(self):
         self.hostname = socket.gethostname()
         self.resource_url = "http://example.com/resource/{res_id}/"
@@ -93,14 +108,21 @@ class HSRESTTestCase(APITransactionTestCase):
         # rest_framwork.tests.APIClient doesn't work for the file download
         response = self.client.get(url)
         response2 = self.client.get(response.url)
-        if response2.url.startswith('http://minio:9000'):
-            minio_response = requests.get(response2.url)
+        if response2.url.startswith(('http://', 'https://')):
+            minio_response = self._get_signed_url(response2.url)
             return minio_response
+
         response3 = self.client.get(response2.url)
         if response3['Content-Type'] == 'application/json':
             # async task
             return response3
-        minio_response = requests.get(response3.url)
+
+        minio_url = response3.url
+        if minio_url.startswith('/'):
+            # Keep the original signed host to avoid SigV4 host mismatches.
+            base_url = response2.url if response2.url.startswith(('http://', 'https://')) else ''
+            minio_url = urljoin(base_url, minio_url)
+        minio_response = self._get_signed_url(minio_url)
         return minio_response
 
     def getScienceMetadata(self, res_id, exhaust_stream=True):
@@ -115,7 +137,12 @@ class HSRESTTestCase(APITransactionTestCase):
         """
         url = "/hsapi/scimeta/{res_id}/".format(res_id=res_id)
         response = self._get_file_s3(url, exhaust_stream)
-        self.assertTrue(response.url.startswith('http://minio:9000'))
+        self.assertTrue(response.url.startswith((
+            'http://minio:9000',
+            'http://localhost:9000',
+            'https://minio:9000',
+            'https://localhost:9000',
+        )))
 
         return response
 

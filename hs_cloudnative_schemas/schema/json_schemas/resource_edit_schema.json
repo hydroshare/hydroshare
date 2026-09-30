@@ -527,6 +527,37 @@
           "title": "Description",
           "type": "string"
         },
+        "associatedMedia": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/MediaObject"
+            },
+            {
+              "$ref": "#/definitions/DataDownload"
+            },
+            {
+              "$ref": "#/definitions/VideoObject"
+            },
+            {
+              "items": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/MediaObject"
+                  },
+                  {
+                    "$ref": "#/definitions/DataDownload"
+                  },
+                  {
+                    "$ref": "#/definitions/VideoObject"
+                  }
+                ]
+              },
+              "type": "array"
+            }
+          ],
+          "description": "A media object that encodes this CreativeWork. This property is a synonym for encoding.",
+          "title": "Resource content"
+        },
         "name": {
           "description": "Submission's name or title",
           "title": "Name or title",

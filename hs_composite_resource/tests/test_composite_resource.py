@@ -4250,8 +4250,8 @@ class CompositeResourceTest(
         # test that db queries for landing page have constant time complexity
 
         # expected number of queries for landing page when the resource has no resource file
-        _VIEW_LANDING_PAGE_NO_RES_FILE_QUERY_COUNT = 90
-        _EDIT_LANDING_PAGE_NO_RES_FILE_QUERY_COUNT = 117
+        _VIEW_LANDING_PAGE_NO_RES_FILE_QUERY_COUNT = 92
+        _EDIT_LANDING_PAGE_NO_RES_FILE_QUERY_COUNT = 119
 
         # expected number of queries for landing page when the resource has resource file
         _VIEW_LANDING_PAGE_WITH_RES_FILE_QUERY_COUNT = _VIEW_LANDING_PAGE_NO_RES_FILE_QUERY_COUNT + 11

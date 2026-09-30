@@ -7,7 +7,21 @@ from pymongo import MongoClient
 from django.conf import settings
 
 
-s3 = boto3.client('s3')
+def _make_s3_client():
+    zone_config = settings.RESOURCE_S3_ZONES_CONFIG.get(
+        settings.RESOURCE_S3_DEFAULT_ZONE, {}
+    )
+    kwargs = {}
+    if zone_config.get("aws_s3_endpoint_url"):
+        kwargs["endpoint_url"] = zone_config["aws_s3_endpoint_url"]
+    if zone_config.get("aws_access_key_id"):
+        kwargs["aws_access_key_id"] = zone_config["aws_access_key_id"]
+    if zone_config.get("aws_secret_access_key"):
+        kwargs["aws_secret_access_key"] = zone_config["aws_secret_access_key"]
+    return boto3.client('s3', **kwargs)
+
+
+s3 = _make_s3_client()
 
 
 datetime_format_regex = re.compile(r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{6}\+\d{2}:\d{2}$')
@@ -86,3 +100,17 @@ def collect_file_to_catalog(filepath: str):
 def delete_file_from_catalog(filepath: str):
     _, object_key = filepath.split('/', 1)
     MongoDBClient.get_discovery_collection().delete_one({"_s3_filepath": object_key})
+
+
+def handle_s3_mutation(action: str, bucket: str, object_path: str, status_code: int):
+    """Sync Atlas discovery docs when dataset metadata jsonld is written/deleted."""
+    if status_code not in (200, 204):
+        return
+    if not object_path.endswith('/.hsjsonld/dataset_metadata.json'):
+        return
+
+    key = f"{bucket}/{object_path}"
+    if action in ("s3:PutObject", "s3:CompleteMultipartUpload"):
+        collect_file_to_catalog(key)
+    elif action in ("s3:DeleteObject", "s3:DeleteObjects"):
+        delete_file_from_catalog(key)

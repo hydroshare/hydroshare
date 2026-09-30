@@ -91,7 +91,7 @@ class TestSearchQuery(ParametrizedTestCase):
                     "lt": datetime(data_coverage_end + 1, 1, 1),
                 }
             },
-            {"term": {"path": "type", "query": "ScientificDataset"}},
+            {"term": {"path": "@type", "query": "ScientificDataset"}},
         ]
         expected_must = [
             {
