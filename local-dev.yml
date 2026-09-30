@@ -15,7 +15,11 @@ services:
       MINIO_ROOT_PASSWORD: devpassword
       MINIO_BROWSER_REDIRECT: "false"
       MINIO_SCANNER_SPEED: "fastest"
-    command: server --console-address ":9001" /data
+    entrypoint:
+      - /bin/bash
+      - -c
+    command:
+      - minio server /data --console-address 0.0.0.0:9001
     depends_on:
       - hs-s3-auth
   postgis:
