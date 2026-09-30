@@ -1,7 +1,6 @@
 services:
   minio:
-    image: quay.io/minio/minio:RELEASE.2025-02-28T09-55-16Z
-    platform: linux/amd64
+    image: us-central1-docker.pkg.dev/hydroshare-403701/minio/minio@sha256:52e87db1bffe6eb8ba04c4fd6394ae152e2a122064dd184d66df2805bc7b6f51
     container_name: minio
     ports:
       - "9000:9000"
