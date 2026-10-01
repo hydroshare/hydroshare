@@ -337,7 +337,7 @@ done
 
 echo
 echo '########################################################################################################################'
-echo -e " All done! You can now access your local HydroShare instance at `green 'http://localhost'`"
+echo -e " All done! You can now access your local HydroShare instance at `green 'https://localhost'`"
 echo -e " You are running discovery-atlas using PM2 and the Vite dev server."
 echo -e " Run `green '\"make down-discover\"'` to cleanup the PM2 service when you're done."
 echo '########################################################################################################################'
