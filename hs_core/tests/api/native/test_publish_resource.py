@@ -64,7 +64,7 @@ class TestPublishResource(MockS3TestCaseMixin, TestCase):
         )
 
         # create a 2nd user
-        self.user2 = hydroshare.create_account(
+        self.user_published = hydroshare.create_account(
             'user2@usu.edu',
             username='user2',
             first_name='user2_FirstName',
@@ -74,20 +74,22 @@ class TestPublishResource(MockS3TestCaseMixin, TestCase):
         )
 
         # create a published user
-        self.user2 = hydroshare.create_account(
+        self.user_published = hydroshare.create_account(
             'publisher@usu.edu',
             username='published',
             first_name='user2_FirstName',
             last_name='user2_LastName',
             superuser=False,
         )
+        self.user_published.quotas.first().zone = 'published'
+        self.user_published.quotas.first().save()
 
         # create a resource
         self.res = hydroshare.create_resource(
             'CompositeResource',
             self.user,
             'Test Resource',
-            edit_users=[self.user2]
+            edit_users=[self.user_published]
         )
 
         self.tmp_dir = tempfile.mkdtemp()
@@ -104,7 +106,7 @@ class TestPublishResource(MockS3TestCaseMixin, TestCase):
             'CompositeResource',
             self.user,
             'My Test Resource ' * 10,
-            edit_users=[self.user2],
+            edit_users=[self.user_published],
             files=(self.file_one,),
             keywords=('a', 'b', 'c'),
         )
@@ -337,25 +339,25 @@ class TestPublishResource(MockS3TestCaseMixin, TestCase):
 
         # only the owner or admin can submit a resource for review
         with self.assertRaises(PermissionDenied):
-            hydroshare.submit_resource_for_review(pk=res.short_id, user=self.user2)
+            hydroshare.submit_resource_for_review(pk=res.short_id, user=self.user_published)
 
         # add user2 as an owner
-        UserResourcePrivilege.share(user=self.user2,
+        UserResourcePrivilege.share(user=self.user_published,
                                     resource=res,
                                     privilege=PrivilegeCodes.OWNER,
                                     grantor=self.user)
 
-        hydroshare.submit_resource_for_review(pk=res.short_id, user=self.user2)
+        hydroshare.submit_resource_for_review(pk=res.short_id, user=self.user_published)
         res.refresh_from_db()
 
         # The last_changed_by should now be the user2 who submitted the resource for review
-        self.assertEqual(self.user2, res.last_changed_by)
+        self.assertEqual(self.user_published, res.last_changed_by)
         time_after_submit = res.last_updated
 
         hydroshare.publish_resource(user=admin_user, pk=res.short_id)
 
         # the last_changed_by should still be the user2 who submitted the resource for review
-        self.assertEqual(res.last_changed_by, self.user2)
+        self.assertEqual(res.last_changed_by, self.user_published)
         self.assertTrue(res.metadata.dates.filter(type='published').exists())
 
         # last_updated date should be updated when the resource is published, even though the last_changed_by is not
