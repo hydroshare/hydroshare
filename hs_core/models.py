@@ -2979,6 +2979,10 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
         # new resource, in which case, set_quota_holder to the new user fails
         validate_user_quota(new_holder, self.size)
 
+        # if the resource is new, it does not have a quota holder yet
+        if self.quota_holder:
+            self.get_s3_storage().new_quota_holder(self.short_id, new_holder.id)
+
         self.quota_holder = new_holder
         self.save()
 

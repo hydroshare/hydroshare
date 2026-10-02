@@ -25,6 +25,21 @@ def bucket_and_zone(path):
     return bucket_name, zone
 
 
+def quota_holder_bucket_and_zone(quota_holder_id):
+    zone_query = '''
+        SELECT uq.zone
+        FROM theme_userquota uq
+        WHERE uq.user_id = %s
+    '''
+    with connection.cursor() as cursor:
+        cursor.execute(zone_query, [quota_holder_id])
+        row = cursor.fetchone()
+        zone = row[0]
+        zone_config = get_zone_config(zone)
+        bucket_name = zone_config.bucket_name
+        return bucket_name, zone
+
+
 def is_metadata_xml_file(file_path):
     """Determine whether a given file is metadata.
     Note: this will return true for any file that ends with the metadata endings

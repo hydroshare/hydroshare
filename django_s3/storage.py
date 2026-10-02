@@ -18,6 +18,7 @@ from .utils import (
     is_metadata_json_file,
     is_schema_json_file,
     is_schema_json_values_file,
+    quota_holder_bucket_and_zone,
 )
 
 from uuid import uuid4
@@ -413,6 +414,40 @@ class S3Storage(S3Storage):
         except Exception:
             # TODO check if something went wrong vs not found
             return False
+
+    def new_quota_holder(self, resource_id, new_quota_holder_id):
+        """
+        Moves data across zones if necessary.
+        :param resource_id: the resource id
+        :param new_quota_holder_id: the id of the new quota holder
+        :return: None
+        """
+        src_bucket, src_zone = bucket_and_zone(resource_id)
+        dst_bucket, dest_zone = quota_holder_bucket_and_zone(new_quota_holder_id)
+
+        if src_zone == dest_zone:
+            # Nothing to move if in the same zone
+            return
+
+        bucket = self.connection(src_zone).Bucket(src_bucket)
+        files_to_delete = []
+        for file in bucket.objects.filter(Prefix=resource_id):
+            try:
+                self.connection(src_zone).meta.client.copy_object(
+                    Bucket=dst_bucket,
+                    Key=file.key,
+                    CopySource={"Bucket": src_bucket, "Key": file.key},
+                )
+            except ClientError as e:
+                if "XMinioAdminBucketQuotaExceeded" in str(e):
+                    raise QuotaException(
+                        "Bucket quota exceeded. Please contact your system administrator."
+                    )
+                raise e
+            files_to_delete.append(file.key)
+
+        for src_file_path in files_to_delete:
+            self.connection(src_zone).Object(src_bucket, src_file_path).delete()
 
     def _streaming_copy(
         self,
