@@ -91,7 +91,11 @@ def convert_defs_to_definitions(schema: dict[str, Any]) -> dict[str, Any]:
 def build_resource_edit_schema() -> dict[str, Any]:
     """Build the JSON schema for the CoreMetadataEdit model."""
     schema = CoreMetadataEdit.model_json_schema(schema_generator=_GenerateJsonSchemaNoNullableAnyOf)
-    return convert_defs_to_definitions(schema)
+    normalized = convert_defs_to_definitions(schema)
+    # Set a human-readable title for the relation type enum definition.
+    if "UserEditableRelationType" in normalized.get("definitions", {}):
+        normalized["definitions"]["UserEditableRelationType"]["title"] = "Type of relationship"
+    return normalized
 
 
 def write_resource_edit_schema(output_path: Path = OUTPUT_FILE) -> Path:

@@ -56,6 +56,24 @@ class TestListObjects:
         finally:
             s3_client.delete_object(Bucket=test_bucket, Key=key)
 
+    def test_list_objects_with_space_in_prefix(
+        self, s3_client, test_bucket, unique_prefix
+    ):
+        """Regression: listing a prefix with a space (default "New folder") returns its contents."""
+        key = f"{unique_prefix}/New folder/nested probe.txt"
+        s3_client.put_object(Bucket=test_bucket, Key=key, Body=b"probe")
+
+        try:
+            prefix_dir = f"{unique_prefix}/New folder/"
+            response = s3_client.list_objects_v2(
+                Bucket=test_bucket, Prefix=prefix_dir
+            )
+            assert response["ResponseMetadata"]["HTTPStatusCode"] == 200
+            keys = [obj["Key"] for obj in response.get("Contents", [])]
+            assert key in keys
+        finally:
+            s3_client.delete_object(Bucket=test_bucket, Key=key)
+
 
 # ---------------------------------------------------------------------------
 # Put object
@@ -334,6 +352,24 @@ class TestSessionListObjects:
             assert key in keys
         finally:
             session_s3_client.delete_object(Bucket=test_bucket, Key=key)
+
+    def test_list_objects_with_space_in_prefix(
+        self, s3_client, session_s3_client, test_bucket, unique_prefix
+    ):
+        """Session-auth variant of the "New folder" listing regression test."""
+        key = f"{unique_prefix}/New folder/nested probe session.txt"
+        s3_client.put_object(Bucket=test_bucket, Key=key, Body=b"probe")
+
+        try:
+            prefix_dir = f"{unique_prefix}/New folder/"
+            response = session_s3_client.list_objects_v2(
+                Bucket=test_bucket, Prefix=prefix_dir
+            )
+            assert response["ResponseMetadata"]["HTTPStatusCode"] == 200
+            keys = [obj["Key"] for obj in response.get("Contents", [])]
+            assert key in keys
+        finally:
+            s3_client.delete_object(Bucket=test_bucket, Key=key)
 
 
 class TestSessionPutObject:

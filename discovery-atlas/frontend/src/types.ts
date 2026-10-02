@@ -158,3 +158,16 @@ const a = [
     },
   },
 ];
+
+export enum EnumCreativeWorkStatus {
+  Private = "Private",
+  Discoverable = "Discoverable",
+  Public = "Public",
+  Published = "Published",
+}
+
+export type TocItem = {
+  to: string;
+  text: string;
+  level?: number;
+};

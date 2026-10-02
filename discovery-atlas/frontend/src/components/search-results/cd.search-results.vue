@@ -174,10 +174,10 @@
               </template>
               <template #item.name="{ item }">
                 <a
-                  v-if="item.identifier"
+                  v-if="resourceUrl(item)"
                   class="text-decoration-none text-body-1"
-                  :href="item.identifier"
-                  target="_blank"
+                  :href="resourceUrl(item)"
+                  target="_top"
                   v-html="highlight(item, 'name')"
                 ></a>
                 <p v-else v-html="highlight(item, 'name')"></p>
@@ -369,8 +369,7 @@
   </div>
 </template>
 
-<script lang="ts">
-import { Component, Vue, toNative } from "vue-facing-decorator";
+<script setup lang="ts">
 import {
   MIN_YEAR,
   MAX_YEAR,
@@ -395,7 +394,6 @@ import {
   EnumDictionary,
   EnumHistoryTypes,
 } from "@/types";
-import CdRangeInput from "./cd.range-input.vue";
 import { useRoute, useRouter } from "vue-router";
 import { EnumFilterTypes, Filter } from "./filter";
 import { DataTableHeader } from "vuetify";
@@ -419,22 +417,17 @@ const sortOptions: SortOption[] = [
   { key: "datePublished", title: "Date Published", order: "desc" },
 ];
 
-@Component({
-  name: "cd-search-results",
-  components: { CdSearch, CdSpatialCoverageMap, CdRangeInput, CdSearchSidebar },
-})
-class CdSearchResults extends Vue {
-  isIntersecting = false;
-  searchQuery = "";
-  pageNumber = 1;
-  pageSize = 20;
-  hasMore = true;
-  isSearching = false;
-  isFetchingMore = false;
-  sortTableBy: SortOption[] = []; // Used by the table
-  sortDropdownBy = sortOptions[0]; // Used by the dropdown
+const isIntersecting = ref(false);
+const searchQuery = ref("");
+const pageNumber = ref(1);
+const pageSize = ref(20);
+const hasMore = ref(true);
+const isSearching = ref(false);
+const isFetchingMore = ref(false);
+const sortTableBy = ref<SortOption[]>([]); // Used by the table
+const sortDropdownBy = ref<SortOption>(sortOptions[0]); // Used by the dropdown
 
-  filter: { [key: string]: Filter } = {
+const filter = reactive<{ [key: string]: Filter }>({
     availability: new Filter({
       name: "creativeWorkStatus",
       title: "Availability",
@@ -608,14 +601,12 @@ class CdSearchResults extends Vue {
       type: EnumFilterTypes.STRING,
       icon: "mdi-domain",
     }),
-  };
-  contentTypeLogos = contentTypeLogos;
-  sharingStatusIcons = sharingStatusIcons;
-  sharingStatusOptions = sharingStatusOptions;
-  contentTypeLabels = contentTypeLabels;
-  enumFilterTypes = EnumFilterTypes;
+  });
 
-  headers: Reactive<DataTableHeader[]> = reactive([
+// Aliased for the template; the imported constants above are exposed directly.
+const enumFilterTypes = EnumFilterTypes;
+
+const headers: Reactive<DataTableHeader[]> = reactive([
     {
       title: "",
       key: "icons",
@@ -658,37 +649,20 @@ class CdSearchResults extends Vue {
     },
   ]);
 
-  formatDate = formatDate;
-  route = useRoute();
-  router = useRouter();
-  EnumHistoryTypes = EnumHistoryTypes;
-  sortOptions = sortOptions;
+const route = useRoute();
+const router = useRouter();
 
-  public get registeredFilters() {
-    return Object.values(this.filter);
-  }
+const registeredFilters = computed(() => Object.values(filter));
 
-  public get activeFilters() {
-    return this.registeredFilters.filter((f) => f.isActive());
-  }
+const activeFilters = computed(() =>
+  registeredFilters.value.filter((f) => f.isActive()),
+);
 
-  public get panels() {
-    return SearchResults.$state.panels;
-  }
+const results = computed<IResult[]>(() => Search.$state.results);
 
-  public set panels(range: number[]) {
-    SearchResults.commit((state) => {
-      state.panels = range;
-    });
-  }
-
-  public get results(): IResult[] {
-    return Search.$state.results;
-  }
-
-  public setBannerRef(el: any, item: IResult) {
-    if (el && !item._showMore) {
-      this.$nextTick(() => {
+function setBannerRef(el: any, item: IResult) {
+  if (el && !item._showMore) {
+    nextTick(() => {
         const bannerEl = el.$el || el;
         const textEl = bannerEl.querySelector(".v-banner-text");
         if (textEl) {
@@ -698,61 +672,60 @@ class CdSearchResults extends Vue {
     }
   }
 
-  public get isSomeFilterActive() {
-    return this.registeredFilters.some((f) => f.isActive());
+const isSomeFilterActive = computed(() =>
+  registeredFilters.value.some((f) => f.isActive()),
+);
+
+/** Search query parameters */
+const queryParams = computed<ISearchParams>(() => {
+  let params: ISearchParams = {
+    term: searchQuery.value,
+    pageSize: pageSize.value,
+    pageNumber: pageNumber.value,
+  };
+
+  if (sortTableBy.value[0]) {
+    params.sortBy = sortTableBy.value[0].key;
+    params.order = sortTableBy.value[0].order as "asc" | "desc";
   }
 
-  /** Search query parameters */
-  get queryParams(): ISearchParams {
-    let params: ISearchParams = {
-      term: this.searchQuery,
-      pageSize: this.pageSize,
-      pageNumber: this.pageNumber,
-    };
+  registeredFilters.value.forEach((f) => {
+    params = { ...params, ...f.getQueryParams() };
+  });
 
-    if (this.sortTableBy[0]) {
-      params.sortBy = this.sortTableBy[0].key;
-      params.order = this.sortTableBy[0].order as "asc" | "desc";
-    }
+  return params;
+});
 
-    this.registeredFilters.forEach((f) => {
-      params = { ...params, ...f.getQueryParams() };
-    });
+/** Route query parameters with short keys. These are parameters needed to replicate a search.
+ * Paremeter values are encoded using encodeURIComponent
+ */
+const routeParams = computed<EnumDictionary<EnumShortParams, any>>(() => {
+  let params: { [key: string]: string } = {
+    [EnumShortParams.QUERY]: searchQuery.value,
+  };
 
-    return params;
+  // If sorting by a table column, use that sort
+  if (sortTableBy.value[0]) {
+    params.sortBy = sortTableBy.value[0].key;
+    params.order = sortTableBy.value[0].order as string;
   }
 
-  /** Route query parameters with short keys. These are parameters needed to replicate a search.
-   * Paremeter values are encoded using encodeURIComponent
-  */
-  public get routeParams(): EnumDictionary<EnumShortParams, any> {
-    let params: { [key: string]: string } = {
-      [EnumShortParams.QUERY]: this.searchQuery,
-    };
+  registeredFilters.value.forEach((f) => {
+    params = { ...params, ...f.getRouteParams() };
+  });
+  return params as EnumDictionary<EnumShortParams, any>;
+});
 
-    // If sorting by a table column, use that sort
-    if (this.sortTableBy[0]) {
-      params.sortBy = this.sortTableBy[0].key;
-      params.order = this.sortTableBy[0].order as string;
-    }
+// created()
+_loadRouteParams();
+sendRouteParams();
+_onSearch();
 
-    this.registeredFilters.forEach((f) => {
-      params = { ...params, ...f.getRouteParams() };
-    });
-    return params as EnumDictionary<EnumShortParams, any>;
-  }
-
-  created() {
-    this._loadRouteParams();
-    this.sendRouteParams();
-    this._onSearch();
-  }
-
-  sendRouteParams() {
+function sendRouteParams() {
     // Some properties of routeParams are proxy objects. We need to deconstruct them so that `postMessage` can copy them.
     const paramsCopy: {[key:string]: string} = { }
 
-    Object.entries(this.routeParams).forEach(([key, value]) => {
+    Object.entries(routeParams.value).forEach(([key, value]) => {
       if (value != undefined) {
         if (typeof value === 'object') {
           paramsCopy[key] = JSON.parse(JSON.stringify(value))
@@ -766,25 +739,25 @@ class CdSearchResults extends Vue {
     window.parent.postMessage({ childParams: paramsCopy }, APP_ORIGIN);
   }
 
-  public onIntersect(_isIntersecting: boolean, entries: any[], _observer: any) {
-    this.isIntersecting = entries[0]?.intersectionRatio >= 0.5;
+function onIntersect(_isIntersecting: boolean, entries: any[], _observer: any) {
+    isIntersecting.value = entries[0]?.intersectionRatio >= 0.5;
     if (
-      this.isIntersecting &&
-      this.results.length &&
-      this.hasMore &&
-      !this.isSearching &&
-      !this.isFetchingMore
+      isIntersecting.value &&
+      results.value.length &&
+      hasMore.value &&
+      !isSearching.value &&
+      !isFetchingMore.value
     ) {
-      this.fetchMore();
+      fetchMore();
     }
   }
 
-  logHistory() {
-    if (this.queryParams.term) {
-      SearchHistory.log(this.queryParams.term, EnumHistoryTypes.TERM);
+function logHistory() {
+    if (queryParams.value.term) {
+      SearchHistory.log(queryParams.value.term, EnumHistoryTypes.TERM);
     }
 
-    this.registeredFilters.forEach((f) => {
+    registeredFilters.value.forEach((f) => {
       if (f.historyType && f.value?.trim()) {
         SearchHistory.log(f.value?.trim(), f.historyType);
       }
@@ -792,21 +765,21 @@ class CdSearchResults extends Vue {
   }
 
   /** Pushes the desired search to the router, which will reload the route with the new query parameters */
-  pushSearchRoute(value?: string) {
-    if (value && this.route.name !== "search") {
-      this.router
+function pushSearchRoute(value?: string) {
+    if (value && route.name !== "search") {
+      router
         .push({ name: "search", query: { q: value } })
         .catch(sameRouteNavigationErrorHandler);
     }
 
     try {
-      this.logHistory();
+      logHistory();
 
       // This will reload the component because the router-view in the App component has `:key="route.fullPath"`
-      this.router
+      router
         .push({
           name: "search",
-          query: this.routeParams,
+          query: routeParams.value,
         })
         .catch(sameRouteNavigationErrorHandler);
     } catch (e) {
@@ -821,34 +794,45 @@ class CdSearchResults extends Vue {
     }
   }
 
-  async _onSearch() {
-    this.hasMore = true;
-    this.isSearching = true;
-    this.pageNumber = 1;
+async function _onSearch() {
+    hasMore.value = true;
+    isSearching.value = true;
+    pageNumber.value = 1;
 
-    this.hasMore = !!(await Search.search(this.queryParams));
-    this.isSearching = false;
+    hasMore.value = !!(await Search.search(queryParams.value));
+    isSearching.value = false;
   }
 
   /** Get the next page of results. */
-  public async fetchMore() {
-    this.pageNumber++;
-    this.isFetchingMore = true;
+async function fetchMore() {
+    pageNumber.value++;
+    isFetchingMore.value = true;
     try {
-      this.hasMore = await Search.fetchMore(this.queryParams);
+      hasMore.value = await Search.fetchMore(queryParams.value);
     } catch (e) {
       console.log(e);
     }
-    this.isFetchingMore = false;
+    isFetchingMore.value = false;
   }
 
-  public onFilterControlChange(filter: Filter) {
-    filter.isEnabled = true;
 
-    this.pushSearchRoute();
+  /**
+   * Returns the new resource landing page URL (/resource-v2/<shortkey>/) for a
+   * search result. Extracts the shortkey from the existing identifier/url
+   * (which can be a full https://hydroshare.org/resource/<id>/ URL or just a
+   * relative path) and rebuilds it against the current origin so the link
+   * resolves through the local Django server.
+   */
+function resourceUrl(item: IResult): string {
+    const source = item.identifier || item.url || "";
+    const match = source.match(/\/resource\/([A-Za-z0-9\-_]+)/);
+    if (match) {
+      return `/resource-v2/${match[1]}/`;
+    }
+    return source;
   }
 
-  public highlightCreators(result: IResult) {
+function highlightCreators(result: IResult) {
     if (!result.creator) {
       return "";
     }
@@ -875,7 +859,7 @@ class CdSearchResults extends Vue {
   }
 
   /** Applies highlights to a string or string[] field and returns the new content as HTML */
-  public highlight(
+function highlight(
     result: IResult,
     path: keyof IResult,
     separator?: string,
@@ -910,36 +894,34 @@ class CdSearchResults extends Vue {
   }
 
   /** Load route query parameters into component values. */
-  private _loadRouteParams() {
-    this.searchQuery = this.$route.query[EnumShortParams.QUERY] as string;
-    this.registeredFilters.forEach((f) => f.loadFromRoute(this.$route.query));
+function _loadRouteParams() {
+    searchQuery.value = route.query[EnumShortParams.QUERY] as string;
+    registeredFilters.value.forEach((f) => f.loadFromRoute(route.query));
 
     if (
-      this.$route.query.sortBy &&
-      this.sortOptions.some((option) => option.key === this.$route.query.sortBy)
+      route.query.sortBy &&
+      sortOptions.some((option) => option.key === route.query.sortBy)
     ) {
-      this.sortTableBy = [
+      sortTableBy.value = [
         {
-          key: this.$route.query.sortBy as string,
-          order: this.$route.query.order === "desc" ? "desc" : "asc",
+          key: route.query.sortBy as string,
+          order: route.query.order === "desc" ? "desc" : "asc",
         },
       ];
 
-      this.sortDropdownBy =
-        this.sortOptions.find(
-          (option) => option.key === this.sortTableBy[0].key,
-        ) || this.sortOptions[0];
+      sortDropdownBy.value =
+        sortOptions.find(
+          (option) => option.key === sortTableBy.value[0].key,
+        ) || sortOptions[0];
     } else {
-      this.sortTableBy = [this.sortOptions[0]];
-      this.sortDropdownBy = this.sortOptions[0];
+      sortTableBy.value = [sortOptions[0]];
+      sortDropdownBy.value = sortOptions[0];
     }
   }
 
-  public hasSpatialFeatures(result: IResult): boolean {
-    return !!result.spatialCoverage;
-  }
+function hasSpatialFeatures(result: IResult): boolean {
+  return !!result.spatialCoverage;
 }
-export default toNative(CdSearchResults);
 </script>
 
 <style lang="scss" scoped>

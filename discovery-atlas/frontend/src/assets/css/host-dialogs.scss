@@ -1,0 +1,46 @@
+/**
+  Overlay placement inside the HydroShare iframe
+  ================================================================================
+  Gated on the `hs-embedded` class set by util/host-viewport.ts. Covers every
+  v-dialog and v-snackbar (menus keep their anchored positioning) so overlays
+  opened from any surface, including the file explorer's confirms, preview and
+  download toasts, land in the parent window's visible band.
+*/
+html.hs-embedded {
+  .v-dialog:not(.v-dialog--fullscreen) > .v-overlay__content {
+    align-self: flex-start;
+    margin-top: var(--hs-dialog-top, 24px);
+    // A pixel cap is what makes `scrollable` engage.
+    max-height: var(--hs-dialog-max-h, 640px);
+  }
+
+  // Toasts align to an edge of the overlay box, so shrink the box to the band
+  // rather than offsetting the content.
+  .v-snackbar {
+    top: var(--hs-dialog-top, 24px);
+    bottom: auto;
+    height: var(--hs-dialog-max-h, 640px);
+  }
+
+  // The iframe's <html> is not the scrolling element, so Vuetify's `block`
+  // scroll lock targets the wrong one.
+  .v-overlay-scroll-blocked {
+    position: static;
+    overflow: visible !important;
+    padding-inline-end: 0 !important;
+  }
+
+  // Uppy's modal is not a Vuetify overlay, so it needs the band treatment too.
+  .uppy-Dashboard--modal .uppy-Dashboard-inner {
+    top: var(--hs-dialog-top, 24px);
+    bottom: auto;
+    height: min(500px, var(--hs-dialog-max-h, 640px));
+  }
+
+  @media only screen and (min-width: 820px) {
+    .uppy-Dashboard--modal .uppy-Dashboard-inner {
+      // Undo the vertical half of Uppy's translate(-50%, -50%).
+      transform: translateX(-50%);
+    }
+  }
+}
