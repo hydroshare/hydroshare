@@ -1,5 +1,5 @@
 <template>
-  <v-container>
+  <v-container :fluid="$vuetify.display.mdAndDown">
     <v-skeleton-loader
       v-if="isFetchingMetadata"
       type="card"

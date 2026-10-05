@@ -1,5 +1,5 @@
 <template>
-  <v-container>
+  <v-container :fluid="$vuetify.display.mdAndDown">
     <v-skeleton-loader v-if="isFetchingMetadata" type="card" />
 
     <template v-if="!isFetchingMetadata && wasLoaded">
@@ -503,6 +503,9 @@
                   :download-archive="() => onDownloadBag(resourceId, bagUrl)"
                   :upload="uploadFiles"
                   :add-files="onAddFiles"
+                  :can-upload="canUpload"
+                  :max-files-per-upload="uploadLimits.maxNumberOfFiles"
+                  :validate-upload="validateUpload"
                   :delete-file-or-folder="deleteFileOrFolder"
                   :rename-file-or-folder="renameFileOrFolder"
                   downloadArchiveHelpText="Download all content as Zipped BagIt Archive"
@@ -518,6 +521,15 @@
                   <template #prepend>
                     <span />
                   </template>
+                  <template #append>
+                    <div
+                      v-if="!(alerts.isPublished || alerts.reviewPending)"
+                      class="d-flex align-center ga-2 mt-3 text-body-2 text-medium-emphasis"
+                    >
+                      <v-icon size="16">mdi-upload</v-icon>
+                      {{ uploadHelp }}
+                    </div>
+                  </template>
                 </cz-file-explorer>
 
                 <HsUppy
@@ -525,6 +537,8 @@
                   :s3Info="s3Info"
                   :s3Host="s3Host"
                   :upload-prefix="`${resourceId}/data/contents/`"
+                  :limits="uploadLimits"
+                  :available-quota="uploadQuota"
                   @file-uploaded="onUppyFileUploaded"
                 />
               </div>
@@ -930,6 +944,14 @@ import {
 import { isFolder } from "./zip-download";
 import { createCookieS3Client } from "./cookie-s3-client";
 import HsUppy from "./hs-uppy.vue";
+import {
+  DEFAULT_UPLOAD_LIMITS,
+  availableQuota,
+  fetchUploadLimits,
+  quotaError,
+  uploadHelpText,
+  type UploadLimits,
+} from "./upload-limits";
 import CdSpatialCoverageMap from "@/components/search-results/cd.spatial-coverage-map.vue";
 import CdReadmeEditor from "./cd.readme-editor.vue";
 import CdSaveButton from "./cd.save-button.vue";
@@ -1587,6 +1609,35 @@ const config = {
 };
 
 const toUpload = ref<any[]>([]);
+const uploadLimits = ref<UploadLimits>(DEFAULT_UPLOAD_LIMITS);
+// Bytes uploaded since the limits were fetched, so the remaining quota stays current.
+const uploadedBytes = ref(0);
+const uploadQuota = computed(() =>
+  availableQuota(uploadLimits.value, uploadedBytes.value),
+);
+const canUpload = computed(
+  () => uploadQuota.value === null || uploadQuota.value > 0,
+);
+const uploadHelp = computed(() =>
+  uploadHelpText(uploadLimits.value, uploadQuota.value),
+);
+
+function validateUpload(files: File[]) {
+  return quotaError(
+    files.map((f) => f.size),
+    uploadLimits.value,
+    uploadQuota.value,
+  );
+}
+
+async function loadUploadLimits() {
+  try {
+    uploadLimits.value = await fetchUploadLimits(resourceId.value);
+    uploadedBytes.value = 0;
+  } catch (e) {
+    console.error(e);
+  }
+}
 const rootDirectory = ref<Partial<IFolder>>({
   name: "root",
   children: [],
@@ -1630,6 +1681,7 @@ async function init() {
   }
 
   startS3Client();
+  loadUploadLimits();
 
   // Load the edit schema. Fields marked `readOnly: true` render disabled;
   // the layout itself is composed directly in the template (no uischema).
@@ -1950,6 +2002,7 @@ function onAddFiles(_folder: IFolder, path: string) {
  * already exists in the target folder.
  */
 function onUppyFileUploaded(file: any) {
+  uploadedBytes.value += file?.size || 0;
   if (!fileExplorer.value || !file) return;
   const root = rootDirectory.value as any;
   if (!root || !Array.isArray(root.children)) return;

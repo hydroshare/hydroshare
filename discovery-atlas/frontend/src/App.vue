@@ -1,6 +1,9 @@
 <template>
   <v-app>
-    <v-container id="main-container">
+    <v-container
+      id="main-container"
+      :class="{ 'main-container--fluid-md': $route.meta.fluidBelowLg }"
+    >
       <div class="app-shell">
         <router-view name="toc" />
         <div class="app-content">

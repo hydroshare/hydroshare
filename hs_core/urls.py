@@ -283,6 +283,11 @@ urlpatterns = [
         views.get_manage_access_data,
         name="get_manage_access_data",
     ),
+    re_path(
+        r"^_internal/(?P<shortkey>[0-9a-f-]+)/upload-limits/$",
+        views.get_upload_limits,
+        name="get_upload_limits",
+    ),
     path(
         "_internal/get_tasks_by_user/",
         views.get_tasks_by_user,
