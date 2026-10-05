@@ -448,6 +448,7 @@
                 :load-file-preview="(item) => loadFilePreview(item)"
                 :download-zipped="(item: IFile | IFolder) => onZippedDownload(item, resourceId)"
                 :download-archive="() => onDownloadBag(resourceId, bagUrl)"
+                :custom-actions="fileExplorerActions"
                 @download="
                   onFileDownload($event, resourceId, s3Client, s3Info.bucket)
                 "
@@ -457,6 +458,11 @@
                   <span />
                 </template>
               </cz-file-explorer>
+              <cd-file-url-dialog
+                v-model="showFileUrlDialog"
+                :url="fileUrlValue"
+                :status="data.creativeWorkStatus?.name"
+              />
             </div>
             <!-- <v-skeleton-loader
             class="mb-12"
@@ -827,6 +833,7 @@ import {
   parseDate,
 } from "./shared";
 import { isFolder } from "./zip-download";
+import { fileUrl, getFileUrlAction } from "./file-actions";
 import { loadReadme } from "./readme-s3";
 import { createCookieS3Client } from "./cookie-s3-client";
 import User from "@/models/user.model";
@@ -839,6 +846,7 @@ import CdSpatialCoverageMap from "@/components/search-results/cd.spatial-coverag
 import CdAuthorProfile from "./cd.author-profile.vue";
 import CdOwnerProfile from "./cd.owner-profile.vue";
 import CdManageAccess from "./cd.manage-access.vue";
+import CdFileUrlDialog from "./cd.file-url-dialog.vue";
 
 const route = useRoute();
 
@@ -850,6 +858,15 @@ const showDescription = ref(false);
 const isDescriptionClamped = ref(false);
 const showManageAccess = ref(false);
 const showDeleteDialog = ref(false);
+
+const showFileUrlDialog = ref(false);
+const fileUrlValue = ref("");
+const fileExplorerActions = [
+  getFileUrlAction((item) => {
+    fileUrlValue.value = fileUrl(window.location.origin, resourceId.value, item.path || item.name);
+    showFileUrlDialog.value = true;
+  }),
+];
 const deleteConfirmText = ref("");
 const isDeletingResource = ref(false);
 
