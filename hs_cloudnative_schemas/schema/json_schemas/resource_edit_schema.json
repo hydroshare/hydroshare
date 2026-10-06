@@ -101,16 +101,12 @@
           "type": "string"
         },
         "identifier": {
-          "description": "ORCID identifier for contributor.",
-          "errorMessage": {
-            "pattern": "must match the ORCID pattern. e.g. '0000-0001-2345-6789'"
+          "description": "Unique identifiers for the contributor, e.g. ORCID or HydroShare user profile.",
+          "items": {
+            "$ref": "#/definitions/PersonIdentifier"
           },
-          "options": {
-            "placeholder": "e.g. '0000-0001-2345-6789'"
-          },
-          "pattern": "\\b\\d{4}-\\d{4}-\\d{4}-\\d{3}[0-9X]\\b",
-          "title": "Identifier",
-          "type": "string"
+          "title": "Identifiers",
+          "type": "array"
         },
         "name": {
           "description": "A string containing the full name of the person. Personal name format: Family Name, Given Name.",
@@ -148,16 +144,12 @@
           "type": "string"
         },
         "identifier": {
-          "description": "ORCID identifier for creator.",
-          "errorMessage": {
-            "pattern": "must match the ORCID pattern. e.g. '0000-0001-2345-6789'"
+          "description": "Unique identifiers for the creator, e.g. ORCID or HydroShare user profile.",
+          "items": {
+            "$ref": "#/definitions/PersonIdentifier"
           },
-          "options": {
-            "placeholder": "e.g. '0000-0001-2345-6789'"
-          },
-          "pattern": "\\b\\d{4}-\\d{4}-\\d{4}-\\d{3}[0-9X]\\b",
-          "title": "Identifier",
-          "type": "string"
+          "title": "Identifiers",
+          "type": "array"
         },
         "name": {
           "description": "A string containing the full name of the person. Personal name format: Family Name, Given Name.",
@@ -953,6 +945,54 @@
       "title": "Organization",
       "type": "object"
     },
+    "PersonIdentifier": {
+      "additionalProperties": false,
+      "properties": {
+        "@type": {
+          "const": "PropertyValue",
+          "default": "PropertyValue",
+          "description": "A property-value pair.",
+          "enum": [
+            "PropertyValue"
+          ],
+          "title": "@Type",
+          "type": "string"
+        },
+        "propertyID": {
+          "$ref": "#/definitions/PersonIdentifierPropertyID",
+          "description": "The type of identifier, e.g. ORCID or HydroShareID.",
+          "title": "Property ID"
+        },
+        "value": {
+          "description": "The identifier value, expressed as a URL.",
+          "errorMessage": {
+            "pattern": "must match format \"url\""
+          },
+          "maxLength": 2083,
+          "minLength": 1,
+          "pattern": "^(http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|https:\\/\\/)?[a-z0-9]+([\\-\\.]{1}[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/.*)?$",
+          "title": "Value",
+          "type": "string"
+        }
+      },
+      "required": [
+        "propertyID",
+        "value"
+      ],
+      "title": "PersonIdentifier",
+      "type": "object"
+    },
+    "PersonIdentifierPropertyID": {
+      "enum": [
+        "ORCID",
+        "ResearchGateID",
+        "ResearcherID",
+        "GoogleScholarID",
+        "HydroShareID"
+      ],
+      "title": "PersonIdentifierPropertyID",
+      "type": "string"
+    },
     "Place": {
       "additionalProperties": true,
       "properties": {
@@ -1281,9 +1321,7 @@
           "type": "string"
         },
         "name": {
-          "description": "Submission's name or title",
-          "title": "Name or title",
-          "type": "string"
+          "$ref": "#/definitions/UserEditableRelationType"
         },
         "url": {
           "description": "The URL address to the data resource.",
@@ -1433,6 +1471,24 @@
       ],
       "title": "TemporalCoverage",
       "type": "object"
+    },
+    "UserEditableRelationType": {
+      "enum": [
+        "The content of this resource can be executed by",
+        "The content of this resource was created by a related App or software program",
+        "This resource is described by",
+        "This resource conforms to established standard described by",
+        "This resource has a related resource in another format",
+        "This resource is a different format of",
+        "This resource is required by",
+        "This resource requires",
+        "This resource is referenced by",
+        "The content of this resource references",
+        "The content of this resource is derived from",
+        "The content of this resource is similar to"
+      ],
+      "title": "Type of relationship",
+      "type": "string"
     },
     "VideoObject": {
       "additionalProperties": true,

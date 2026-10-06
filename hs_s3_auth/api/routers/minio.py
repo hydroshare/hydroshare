@@ -308,7 +308,7 @@ async def hs_s3_authorization_check(auth_request: AuthRequest):
         return {"result": {"allow": True}}
 
     if auth_request.input.action in ["s3:GetBucketLocation", "s3:GetBucketObjectLockConfiguration"]:
-        # This is needed by mc to list buckets and does not contain a prefix
+        # This is needed to list buckets and does not contain a prefix
         return {"result": {"allow": True}}
 
     try:

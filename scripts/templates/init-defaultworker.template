@@ -9,7 +9,7 @@ cd /hydroshare
 # based on number of nodes and the cpu limits set in the helm chart
 # https://github.com/CUAHSI/platform-recipes/blob/main/hydroshare/chart/values.yaml#L49-L56
 
-celery -A hydroshare beat  -s /hydroshare/celery/celerybeat-schedule &
+celery -A hydroshare beat -S django &
 
 # Start workers with one queue per worker
 # note that these celery internal workers are distinct from k8 worker pods

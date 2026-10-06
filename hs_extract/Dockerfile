@@ -5,13 +5,14 @@ WORKDIR /app
 RUN apt-get update
 RUN apt-get -y install python3.12
 RUN apt-get -y install python3-pip
+RUN apt-get -y install git
 
 RUN python -m pip config set global.break-system-packages true
 
 RUN apt-get update
 RUN apt-get -y upgrade
 
-RUN curl -O https://dl.min.io/client/mc/release/linux-amd64/mc \
+RUN curl -Lo mc https://dl.min.io/client/mc/release/linux-amd64/mc \
     && chmod +x mc \
     && mv mc /usr/local/bin/
 

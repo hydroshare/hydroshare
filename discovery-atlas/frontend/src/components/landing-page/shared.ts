@@ -2,6 +2,7 @@ import { _Object, CommonPrefix, GetObjectCommand, ListObjectsV2Command, S3Client
 import { Notifications } from "@cznethub/cznet-vue-core";
 import { IFile, IFolder } from "@cznethub/cznet-vue-core/dist/types";
 import { S3_PROXY_URL } from "@/constants";
+import { downloadBag, BagDownloadError } from "./bag-download";
 import { downloadZipped, ZipDownloadError } from "./zip-download";
 
 export const onZippedDownload = async (item: IFile | IFolder, resourceId: string) => {
@@ -39,6 +40,22 @@ const hiddenFileSuffixes = [
 function shouldHideFileName(name: string): boolean {
   const lowerName = name.toLowerCase();
   return hiddenFileSuffixes.some((suffix) => lowerName.endsWith(suffix));
+}
+
+export const onDownloadBag = async (resourceId: string, bagUrl: string | null) => {
+  const requestUrl = bagUrl || `/django_irods/download/bags/${resourceId}.zip`;
+
+  try {
+    await downloadBag(requestUrl);
+  }
+  catch (error: any) {
+    const message =
+      error instanceof BagDownloadError
+        ? error.message
+        : "Failed to download the bag.";
+    console.error("Bag download failed:", error);
+    Notifications.toast({ title: "Error", message, type: "error" });
+  }
 }
 
 export const onFileDownload = async (items: (IFile | IFolder)[], resourceId: string, s3Client: S3Client, bucket: string) => {
@@ -218,6 +235,7 @@ export const fetchResource = async (resourceId: string, s3Client: S3Client, buck
     return false
   }
 }
+
 /**
  * Sharing-status chip colour, shared by the landing page and the edit page.
  *

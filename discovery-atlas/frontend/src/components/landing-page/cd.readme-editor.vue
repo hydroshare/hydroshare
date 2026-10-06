@@ -79,6 +79,9 @@
             v-model="raw"
             class="readme-textarea"
             variant="outlined"
+            auto-grow
+            rows="6"
+            :max-rows="maxRows"
             no-resize
             hide-details
             spellcheck="false"
@@ -123,6 +126,11 @@ const emit = defineEmits(["change", "update:dirty"]);
 
 const tab = ref<"write" | "preview">("write");
 const raw = ref("");
+
+// Touch devices get no resize grabber, so the editor grows to fit rather than
+// scrolling inside a box the user cannot enlarge.
+const isTouch = useMediaQuery("(pointer: coarse)");
+const maxRows = computed(() => (isTouch.value ? undefined : 28));
 const savedRaw = ref("");
 // Local filename; seeded from `fileName`, updated directly on conversion.
 const activeName = ref<string | null>(null);
@@ -300,10 +308,15 @@ async function convert() {
   // Vertically-resizable viewport, mirroring landing-page's README container.
   .v-card-text {
     min-height: 5rem;
-    height: 40rem;
+    max-height: 40rem;
     overflow: auto;
     resize: vertical;
     padding: 1rem;
+
+    @media (pointer: coarse) {
+      max-height: none;
+      resize: none;
+    }
   }
 
   // Undo github-markdown-css's full-page padding/max-width inside the card.
@@ -326,16 +339,15 @@ async function convert() {
 }
 
 .readme-textarea {
-  height: 100%;
+  min-height: 100%;
 
   :deep(.v-input__control),
   :deep(.v-field),
   :deep(.v-field__field) {
-    height: 100%;
+    min-height: 100%;
   }
 
   :deep(textarea) {
-    height: 100%;
     overflow-y: auto;
     font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
     font-size: 0.85rem;

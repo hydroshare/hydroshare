@@ -63,6 +63,11 @@ class AtlasLandingView(TemplateView):
             is_version_of = resource.get_relation_version_res_url(RelationTypes.isVersionOf) or None
         except Exception:
             is_version_of = None
+        try:
+            # Gates the "set from content files" button on the landing page.
+            has_logical_spatial_coverage = bool(resource.has_logical_spatial_coverage)
+        except Exception:
+            has_logical_spatial_coverage = False
 
         alerts = {
             "justCreated": just_created,
@@ -70,6 +75,7 @@ class AtlasLandingView(TemplateView):
             "missingMetadata": missing_metadata,
             "recommendedMissing": recommended_missing,
             "hasRequiredContentFiles": has_required_content_files,
+            "hasLogicalSpatialCoverage": has_logical_spatial_coverage,
             "isUntitled": (title_value or "").strip().lower() == "untitled resource",
             "isReplacedBy": is_replaced_by,
             "isVersionOf": is_version_of,
@@ -112,5 +118,6 @@ class AtlasLandingView(TemplateView):
             "owners_json": json.dumps(owners),
             "creator_profiles_json": json.dumps(creator_profiles),
             "alerts_json": json.dumps(alerts),
+            "bag_url": json.dumps(resource.bag_url),
         }
         return render(request, 'pages/search.html', context)

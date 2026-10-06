@@ -262,10 +262,8 @@ def change_quota_holder(request, shortkey):
             new_holder_u.email,
             context=context,
         )
-    except PermissionDenied:
-        ajax_response_data[
-            "message"
-        ] = "You do not have permission to change the quota holder for this resource."
+    except PermissionDenied as exp:
+        ajax_response_data["message"] = str(exp)
         return JsonResponse(ajax_response_data)
     except hydroshare.utils.QuotaException as ex:
         msg = (

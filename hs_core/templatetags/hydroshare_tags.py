@@ -355,58 +355,18 @@ def display_name_to_class(value):
 
 
 @register.filter
-def creator_json_ld_element(crs):
-    """ return json ld element for creators for schema.org script embedded on resource landing page"""
-    crs_array = []
-    for cr in crs:
-        cr_dict = {}
-        urls = []
-        if cr['email']:
-            cr_dict["email"] = cr['email']
-        if cr['address']:
-            cr_dict["address"] = {
-                "@type": "PostalAddress",
-                "streetAddress": cr['address']
-            }
-        if cr['name']:
-            cr_dict["@type"] = "Person"
-            cr_dict["name"] = name_without_commas(cr['name'])
-            if cr['organization']:
-                affl_dict = {
-                    "@type": "Organization",
-                    "name": cr['organization']
-                }
-                cr_dict["affiliation"] = affl_dict
-        else:
-            cr_dict["@type"] = "Organization"
-            cr_dict["name"] = cr['organization']
-
-        if cr['relative_uri']:
-            if cr['name']:
-                # append www.hydroshare.org since schema.org script is only embedded in production
-                urls.append("https://www.hydroshare.org" + cr['relative_uri'])
-            else:
-                # organization
-                urls.append(cr['relative_uri'])
-        if cr['homepage']:
-            urls.append(cr['homepage'])
-        if cr['identifiers']:
-            for k in cr['identifiers']:
-                urls.append(cr['identifiers'][k])
-        if len(urls) == 1:
-            cr_dict['url'] = urls[0]
-        elif len(urls) > 1:
-            cr_dict['url'] = urls
-        crs_array.append(cr_dict)
-    # reformat json dumped str a bit to fix the indentation issue with the last bracket
-    default_dump = dumps({"@list": crs_array}, sort_keys=True, indent=6)
-    format_dump = '{}    {}'.format(default_dump[:-1], default_dump[-1])
-    return format_dump
-
-
-@register.filter
-def json_dumps(value):
-    return dumps(value)
+def json_dumps(value, indent=None):
+    """Dump ``value`` as JSON, safe to embed directly (e.g. via |safe) inside an HTML
+    <script> tag. json.dumps does not escape '<', '>', '&', so without this a value
+    containing '</script>' could break out of the tag; escape them the same way
+    Django's json_script template tag does.
+    """
+    return (
+        dumps(value, indent=indent, ensure_ascii=False)
+        .replace("<", "\\u003c")
+        .replace(">", "\\u003e")
+        .replace("&", "\\u0026")
+    )
 
 
 @register.filter

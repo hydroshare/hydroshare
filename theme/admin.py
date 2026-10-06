@@ -20,7 +20,7 @@ class UserQuotaForm(forms.ModelForm):
 
     class Meta:
         model = UserQuota
-        fields = ['allocated_value', 'unit', 'zone']
+        fields = ['allocated_value', 'unit', 'zone', 'required_community_membership']
         readonly_fields = ['data_zone_value',]
 
     allocated_value = forms.FloatField()
@@ -42,10 +42,10 @@ class UserQuotaForm(forms.ModelForm):
         instance = super(UserQuotaForm, self).save(commit=False)
         # TODO move resources to the new zone if the zone is changed
         # For now, block changing zone if there are resources in the current zone
-        data_zone_value = instance.data_zone_value
-        if "zone" in self.changed_data and (data_zone_value > 0 or instance.user.baseresources.count() > 0):
-            raise forms.ValidationError("Cannot change zone when there are resources in the current zone. "
-                                        "Please contact support to move your resources to the new zone.")
+        # data_zone_value = instance.data_zone_value
+        # if "zone" in self.changed_data and (data_zone_value > 0 or instance.user.baseresources.count() > 0):
+        #     raise forms.ValidationError("Cannot change zone when there are resources in the current zone. "
+        #                                 "Please contact support to move your resources to the new zone.")
         instance.user.quotas.first().save_allocated_value(self.cleaned_data['allocated_value'],
                                                           self.cleaned_data['unit'])
         return instance
@@ -76,11 +76,11 @@ class QuotaAdmin(admin.ModelAdmin):
     model = UserQuota
     form = UserQuotaForm
 
-    list_display = ('user', 'allocated_value', 'unit', 'zone')
-    list_filter = ('zone',)
+    list_display = ('user', 'allocated_value', 'unit', 'zone', 'required_community_membership')
+    list_filter = ('zone', 'required_community_membership')
 
     readonly_fields = ('user', 'data_zone_value')
-    fields = ('allocated_value', 'unit', 'zone', 'user', 'data_zone_value')
+    fields = ('allocated_value', 'unit', 'zone', 'user', 'data_zone_value', 'required_community_membership')
     search_fields = ('user__username',)
 
 

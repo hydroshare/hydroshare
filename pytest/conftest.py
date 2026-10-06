@@ -90,9 +90,8 @@ def base_sample_resource(username='admin', title=str(uuid.uuid4()), contributor=
     return _res
 
 
-@pytest.mark.django_db
 @pytest.fixture(scope="function")
-def sample_user():
+def sample_user(db):
     hydroshare_author_group, _ = Group.objects.get_or_create(name='Hydroshare Author')
     user = hydroshare.create_account(
         '{}@noreply.org'.format(str(uuid.uuid4())),
@@ -106,9 +105,8 @@ def sample_user():
     user.delete()
 
 
-@pytest.mark.django_db
 @pytest.fixture(scope="function")
-def public_resource_with_metadata():
+def public_resource_with_metadata(db):
     resource = base_sample_resource()
     resource.raccess.public = True
     resource.raccess.discoverable = True
@@ -119,9 +117,8 @@ def public_resource_with_metadata():
     resource.delete()
 
 
-@pytest.mark.django_db
 @pytest.fixture(scope="function")
-def another_public_resource_with_metadata():
+def another_public_resource_with_metadata(db):
     resource = base_sample_resource(title=str(uuid.uuid4()), creator=str(uuid.uuid4()))
     resource.raccess.public = True
     resource.raccess.discoverable = True
@@ -132,9 +129,8 @@ def another_public_resource_with_metadata():
     resource.delete()
 
 
-@pytest.mark.django_db
 @pytest.fixture(scope="function")
-def private_resource_with_metadata(sample_user):
+def private_resource_with_metadata(db, sample_user):
     resource = base_sample_resource(username=sample_user.username)
     resource.keywords_string = str(uuid.uuid4())
     resource.raccess.save()
@@ -163,9 +159,8 @@ def create_composite_resource(u_name, u_email, u_lastname, u_firstname, res_titl
     return _res, user
 
 
-@pytest.mark.django_db
 @pytest.fixture(scope="function")
-def composite_resource():
+def composite_resource(db):
     """composite resource for testing"""
     group, _ = Group.objects.get_or_create(name='Hydroshare Author')
     user = hydroshare.create_account(
@@ -189,9 +184,8 @@ def composite_resource():
     user.delete()
 
 
-@pytest.mark.django_db
 @pytest.fixture(scope="function")
-def composite_resource_2():
+def composite_resource_2(db):
     """composite resource for testing"""
     _res, user = create_composite_resource(u_name='user2', u_email='user2@gmail.com', u_firstname='user2_firstname',
                                            u_lastname='user2_lastname', res_title='Composite Resource-2 for Testing')
@@ -200,9 +194,8 @@ def composite_resource_2():
     user.delete()
 
 
-@pytest.mark.django_db
 @pytest.fixture(scope="function")
-def composite_resource_with_mp_aggregation(composite_resource):
+def composite_resource_with_mp_aggregation(db, composite_resource):
     res, user = composite_resource
     file_path = 'pytest/assets/logan.vrt'
     upload_folder = ''
@@ -218,9 +211,8 @@ def composite_resource_with_mp_aggregation(composite_resource):
     yield res, user
 
 
-@pytest.mark.django_db
 @pytest.fixture(scope="function")
-def composite_resource_2_with_mp_aggregation(composite_resource_2):
+def composite_resource_2_with_mp_aggregation(db, composite_resource_2):
     res, user = composite_resource_2
     file_path = 'pytest/assets/logan.vrt'
     upload_folder = ''
@@ -236,9 +228,8 @@ def composite_resource_2_with_mp_aggregation(composite_resource_2):
     yield res, user
 
 
-@pytest.mark.django_db
 @pytest.fixture(scope="function")
-def composite_resource_with_mi_aggregation(composite_resource):
+def composite_resource_with_mi_aggregation(db, composite_resource):
     res, user = composite_resource
     file_path = 'pytest/assets/generic_file.txt'
     upload_folder = ''
@@ -254,9 +245,8 @@ def composite_resource_with_mi_aggregation(composite_resource):
     yield res, user
 
 
-@pytest.mark.django_db
 @pytest.fixture(scope="function")
-def composite_resource_with_mi_aggregation_folder(composite_resource):
+def composite_resource_with_mi_aggregation_folder(db, composite_resource):
     res, user = composite_resource
     file_path = 'pytest/assets/generic_file.txt'
     mi_folder = "mi-folder"
@@ -273,9 +263,8 @@ def composite_resource_with_mi_aggregation_folder(composite_resource):
     yield res, user
 
 
-@pytest.mark.django_db
 @pytest.fixture(scope="function")
-def composite_resource_with_mi_mp_aggregation(composite_resource):
+def composite_resource_with_mi_mp_aggregation(db, composite_resource):
     res, user = composite_resource
     # create model instance aggregation
     file_path = 'pytest/assets/generic_file.txt'
@@ -305,9 +294,8 @@ def composite_resource_with_mi_mp_aggregation(composite_resource):
     yield res, user
 
 
-@pytest.mark.django_db
 @pytest.fixture(scope="function")
-def resource_for_citation(sample_user):
+def resource_for_citation(db, sample_user):
     resource = base_sample_resource(username=sample_user.username)
     resource.raccess.save()
     resource.save()

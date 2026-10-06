@@ -146,6 +146,14 @@
                   <v-icon size="18">mdi-account-multiple</v-icon>
                 </template>
               </v-list-item>
+              <v-list-item
+                title="Delete"
+                @click="openDeleteDialog"
+              >
+                <template #prepend>
+                  <v-icon size="18">mdi-trash-can-outline</v-icon>
+                </template>
+              </v-list-item>
             </v-list>
           </v-menu>
         </div>
@@ -177,16 +185,6 @@
             </div>
 
             <span
-              v-if="data.dateModified"
-              class="text-body-2 text-medium-emphasis"
-            >
-              Updated {{ parseDate(data.dateModified) }}
-              <span class="font-weight-light"
-                >(<timeago :datetime="data.dateModified" />)</span
-              >
-            </span>
-
-            <span
               v-if="data.viewCount != null"
               class="text-body-2 text-medium-emphasis"
             >
@@ -215,6 +213,14 @@
 
             <v-btn
               size="small"
+              prepend-icon="mdi-trash-can-outline"
+              variant="outlined"
+              @click="openDeleteDialog"
+              >Delete</v-btn
+            >
+
+            <v-btn
+              size="small"
               color="primary"
               prepend-icon="mdi-pen"
               variant="outlined"
@@ -230,7 +236,47 @@
         v-if="resourceId"
         v-model="showManageAccess"
         :resource-id="resourceId"
+        :content-size="contentSize"
       />
+
+      <v-dialog v-model="showDeleteDialog" max-width="480" persistent>
+        <v-card>
+          <v-card-title class="text-h6">Delete Resource</v-card-title>
+          <v-card-text>
+            <p class="mb-3 text-body-2">
+              <strong>WARNING! DELETING A RESOURCE IS A PERMANENT ACTION!</strong>
+              <ul class="mt-2 ml-2 mb-2">
+                <li>This will delete the resource and all of the content files.</li>
+                <li>A copy of the resource will NOT be retained by HydroShare.</li>
+                <li>We highly recommend that you download the latest copy of your
+                  resource before confirming this action so that you do not lose
+                  any content you might need later.</li>
+              </ul>
+              If you are sure you want to delete your resource, type the word
+              <strong>DELETE</strong> in the following text box and then click
+              the "Delete" button below.
+            </p>
+            <v-text-field
+              v-model="deleteConfirmText"
+              variant="outlined"
+              density="compact"
+              autofocus
+              hide-details
+            />
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer />
+            <v-btn variant="text" @click="showDeleteDialog = false">Cancel</v-btn>
+            <v-btn
+              color="error"
+              variant="flat"
+              :disabled="deleteConfirmText !== 'DELETE' || isDeletingResource"
+              :loading="isDeletingResource"
+              @click="deleteResource"
+            >Delete</v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
 
       <v-divider></v-divider>
 
@@ -258,7 +304,7 @@
         </template>
       </v-select>
 
-      <div class="d-flex flex-column flex-lg-row ga-6 mt-6">
+      <div class="d-flex flex-column flex-lg-row mt-6 single-col-layout">
         <v-container
           class="page-content pa-0"
           :class="{ 'is-sm': $vuetify.display.mdAndDown }"
@@ -291,21 +337,6 @@
                         :key="owner.id || ownerIdx"
                         :owner="owner"
                       />
-                    </div>
-                  </template>
-
-                  <template v-if="data.provider">
-                    <div v-bind="infoLabelAttr">Provider:</div>
-                    <div v-bind="infoValueAttr">
-                      <span
-                        v-if="data.provider.url"
-                        class="d-flex align-baseline"
-                      >
-                        <a :href="data.provider.url">{{
-                          data.provider.name
-                        }}</a>
-                      </span>
-                      <template v-else>{{ data.provider.name }}</template>
                     </div>
                   </template>
 
@@ -344,6 +375,11 @@
                   <div v-bind="infoLabelAttr">Created:</div>
                   <div v-bind="infoValueAttr">
                     {{ parseDate(data.dateCreated) }}
+                  </div>
+
+                  <div v-bind="infoLabelAttr">Last updated:</div>
+                  <div v-bind="infoValueAttr">
+                    {{ parseDate(data.dateModified) }}
                   </div>
 
                   <template v-if="data.datePublished">
@@ -411,9 +447,11 @@
                 :canDownloadItem="(item: IFile | IFolder) => !isFolder(item)"
                 :load-file-preview="(item) => loadFilePreview(item)"
                 :download-zipped="(item: IFile | IFolder) => onZippedDownload(item, resourceId)"
+                :download-archive="() => onDownloadBag(resourceId, bagUrl)"
                 @download="
                   onFileDownload($event, resourceId, s3Client, s3Info.bucket)
                 "
+                downloadArchiveHelpText="Download all content as Zipped BagIt Archive"
               >
                 <template #prepend>
                   <span />
@@ -594,23 +632,7 @@
               </div>
             </v-card>
 
-            <v-card v-if="data.license" variant="flat" class="mb-6">
-              <v-card-title class="sidebar-heading pa-0">
-                License
-              </v-card-title>
-              <div class="text-body-2 text-medium-emphasis">
-                <a v-if="data.license.url" :href="data.license.url" target="_blank" rel="noopener">{{ data.license.name }}</a>
-                <template v-else>{{ data.license.name }}</template>
-              </div>
-              <img
-                v-if="licenseBadgeUrl"
-                :src="licenseBadgeUrl"
-                :alt="data.license.name"
-                class="cc-badge mt-2"
-              />
-            </v-card>
-
-            <div v-if="hasSpatialFeatures" class="mb-6">
+            <div v-if="hasSpatialFeatures" id="spatial" class="mb-6">
               <div class="sidebar-heading">
                 Spatial Coverage
               </div>
@@ -618,6 +640,16 @@
                 <v-card-text flat class="pa-0">
                   <cd-spatial-coverage-map :feature="data.spatialCoverage.geo" />
                 </v-card-text>
+                <template v-if="data.spatialCoverage.name">
+                  <v-divider></v-divider>
+                  <div class="d-flex align-center ga-2 px-4 py-3">
+                    <v-icon size="16" color="primary">mdi-map-marker</v-icon>
+                    <div>
+                      <div v-bind="infoValueAttr">{{ data.spatialCoverage.name }}</div>
+                      <div class="place-name-caption">Place/Area Name</div>
+                    </div>
+                  </div>
+                </template>
                 <v-divider></v-divider>
                 <v-expansion-panels accordion flat>
                   <v-expansion-panel>
@@ -663,8 +695,6 @@
                         <div v-bind="infoValueAttr">WGS 84 EPSG:4326</div>
                         <div v-bind="infoLabelAttr">Coordinate Units:</div>
                         <div v-bind="infoValueAttr">Decimal degrees</div>
-                        <div v-bind="infoLabelAttr">Place/Area Name:</div>
-                        <div v-bind="infoValueAttr">{{ data.spatialCoverage.name }}</div>
                       </v-card-text>
                     </v-expansion-panel-text>
                   </v-expansion-panel>
@@ -672,7 +702,7 @@
               </v-card>
             </div>
 
-            <div v-if="data.temporalCoverage" class="mb-6">
+            <div v-if="data.temporalCoverage" id="temporal" class="mb-6">
               <div class="sidebar-heading">
                 Temporal Coverage
               </div>
@@ -710,47 +740,57 @@
               </v-card>
             </div>
 
-            <v-card
-              v-if="citations.length"
-              class="mb-6"
-              variant="flat"
-              id="citation"
-            >
-              <v-card-title class="sidebar-heading pa-0">
+            <div v-if="citations.length" id="citation" class="mb-6">
+              <div class="sidebar-heading">
                 How to cite
-              </v-card-title>
-              <v-card-text
+              </div>
+
+              <div
                 v-for="(citation, index) of citations"
                 :key="index"
-                class="pa-0 text-body-2 text-medium-emphasis"
+                class="citation-card"
               >
-                <div class="d-flex align-center justify-space-between ga-3">
-                  <div class="citation-text">
-                    {{ citation }}
-                  </div>
-
-                  <v-tooltip bottom>
-                    <template v-slot:activator="{ props }">
-                      <v-btn icon v-bind="props" @click="onCopy(citation)" size="small" variant="text">
-                        <v-icon> mdi-content-copy </v-icon>
-                      </v-btn>
-                    </template>
-                    <span>Copy</span>
-                  </v-tooltip>
+                <div class="citation-text">{{ citation }}</div>
+                <div class="citation-actions">
+                  <v-btn
+                    class="citation-copy"
+                    size="small"
+                    variant="tonal"
+                    color="accent"
+                    :prepend-icon="copiedCitation === index ? 'mdi-check' : 'mdi-content-copy'"
+                    @click="onCopyCitation(citation, index)"
+                  >{{ copiedCitation === index ? "Copied" : "Copy citation" }}</v-btn>
                 </div>
-              </v-card-text>
-              <v-card-text
-                v-if="!isPublished"
-                class="pa-0 pt-2 text-caption text-medium-emphasis font-italic"
-              >
-                When permanently published, this resource will have a formal Digital
-                Object Identifier (DOI) and will be accessible at the following URL:
-                <a :href="potentialDoiUrl" target="_blank" rel="noopener">{{ potentialDoiUrl }}</a>.
-                When you are ready to permanently publish, click the Publish button at
-                the top of the page to request your DOI. Reminder: Once you have published
-                your resource, modifications to Title, Authors, or Content files will
-                require a new version of the resource.
-              </v-card-text>
+              </div>
+
+              <div v-if="!isPublished" class="citation-note">
+                <v-icon class="citation-note__icon" size="16">mdi-information-outline</v-icon>
+                <div>
+                  When permanently published, this resource will have a formal Digital
+                  Object Identifier (DOI) and will be accessible at the following URL:
+                  <a :href="potentialDoiUrl" target="_blank" rel="noopener">{{ potentialDoiUrl }}</a>.
+                  When you are ready to permanently publish, click the Publish button at
+                  the top of the page to request your DOI. Reminder: Once you have published
+                  your resource, modifications to Title, Authors, or Content files will
+                  require a new version of the resource.
+                </div>
+              </div>
+            </div>
+
+            <v-card v-if="data.license" id="license" variant="flat" class="mb-6">
+              <v-card-title class="sidebar-heading pa-0">
+                License
+              </v-card-title>
+              <div class="text-body-2 text-medium-emphasis">
+                <a v-if="data.license.url" :href="data.license.url" target="_blank" rel="noopener">{{ data.license.name }}</a>
+                <template v-else>{{ data.license.name }}</template>
+              </div>
+              <img
+                v-if="licenseBadgeUrl"
+                :src="licenseBadgeUrl"
+                :alt="data.license.name"
+                class="cc-badge mt-2"
+              />
             </v-card>
           </div>
         </div>
@@ -781,6 +821,7 @@ import { GetObjectCommand, S3Client, _Object } from "@aws-sdk/client-s3";
 import {
   fetchResource,
   getStatusColor,
+  onDownloadBag,
   onFileDownload,
   onZippedDownload,
   parseDate,
@@ -808,6 +849,52 @@ const isLoggedIn = computed<boolean>(() => User.$state.isLoggedIn);
 const showDescription = ref(false);
 const isDescriptionClamped = ref(false);
 const showManageAccess = ref(false);
+const showDeleteDialog = ref(false);
+const deleteConfirmText = ref("");
+const isDeletingResource = ref(false);
+
+function getCsrfToken(): string {
+  const match = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
+  return match ? match[1] : "";
+}
+
+function openDeleteDialog() {
+  deleteConfirmText.value = "";
+  showDeleteDialog.value = true;
+}
+
+async function deleteResource() {
+  isDeletingResource.value = true;
+  try {
+    const response = await fetch(
+      `/hsapi/_internal/${resourceId.value}/delete-resource/${deleteConfirmText.value}/`,
+      {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": getCsrfToken(),
+          "X-Requested-With": "XMLHttpRequest",
+        },
+      },
+    );
+    if (response.ok) {
+      showDeleteDialog.value = false;
+      const target = window.parent !== window ? window.parent : window;
+      target.location.href = "/my-resources/";
+    } else {
+      const text = await response.text().catch(() => "");
+      Notifications.toast({
+        message: text || "Failed to delete the resource",
+        type: "error",
+      });
+      showDeleteDialog.value = false;
+    }
+  } catch {
+    Notifications.toast({ message: "Failed to delete the resource", type: "error" });
+    showDeleteDialog.value = false;
+  } finally {
+    isDeletingResource.value = false;
+  }
+}
 const readmeMd = ref("");
 const readMeFileName = ref("");
 const hasTxtReadme = ref(false);
@@ -852,6 +939,7 @@ const alerts = ref<{
   isPublished?: boolean;
   displayName?: string;
 }>({});
+const bagUrl = ref<string>("");
 const dismissedAlerts = ref<Record<string, boolean>>({});
 const onParentMessage = (event: MessageEvent) => {
   // search.html in the parent posts `{ parentSearch, owners }` after the
@@ -916,6 +1004,17 @@ function onShowMetadata(item: any) {
 function onCopy(text: string) {
   navigator.clipboard.writeText(text);
   Notifications.toast({ message: "Copied to clipboard", type: "info" });
+}
+
+const copiedCitation = ref<number | null>(null);
+let copiedTimeout: ReturnType<typeof setTimeout> | undefined;
+
+function onCopyCitation(citation: string, index: number) {
+  // Collapse line breaks and repeated whitespace so the citation pastes as one line.
+  onCopy(citation.replace(/\s+/g, " ").trim());
+  copiedCitation.value = index;
+  clearTimeout(copiedTimeout);
+  copiedTimeout = setTimeout(() => (copiedCitation.value = null), 2000);
 }
 
 const tocItems = computed(() => User.$state.toc);
@@ -1169,6 +1268,9 @@ async function init() {
       if (parentWin.HS_RESOURCE_ALERTS && typeof parentWin.HS_RESOURCE_ALERTS === "object") {
         alerts.value = parentWin.HS_RESOURCE_ALERTS;
       }
+      if (parentWin.HS_BAG_URL && typeof parentWin.HS_BAG_URL === "string") {
+        bagUrl.value = parentWin.HS_BAG_URL;
+      }
     }
   } catch {
     // cross-origin access blocked — postMessage listener will handle it
@@ -1223,15 +1325,35 @@ function buildToc() {
     toc.push({ text: "Abstract", to: "#description" });
   }
 
+  if (d.keywords?.length) {
+    toc.push({ text: "Subject Keywords", to: "#subject" });
+  }
+
+  if (hasSpatialFeatures.value) {
+    toc.push({ text: "Spatial Coverage", to: "#spatial" });
+  }
+
+  if (d.temporalCoverage) {
+    toc.push({ text: "Temporal Coverage", to: "#temporal" });
+  }
+
   toc.push({ text: "Content", to: "#content" });
   toc.push({ text: "Files", to: "#fileExplorer", level: 4 });
+
+  if (hasRelatedResources.value) {
+    toc.push({ text: "Related Resources", to: "#related" });
+  }
 
   if (d.funding?.length) {
     toc.push({ text: "Funding", to: "#funding" });
   }
 
-  if (hasRelatedResources.value) {
-    toc.push({ text: "Related Resources", to: "#related" });
+  if (citations.value.length) {
+    toc.push({ text: "How to cite", to: "#citation" });
+  }
+
+  if (d.license) {
+    toc.push({ text: "License", to: "#license" });
   }
 
   User.$state.toc = toc;
@@ -1242,6 +1364,7 @@ onBeforeUnmount(() => {
   User.$state.toc = [];
   User.$state.isTocReady = false;
   window.removeEventListener("message", onParentMessage);
+  clearTimeout(copiedTimeout);
 });
 
 function findCreatorProfile(creator: any) {
@@ -1251,19 +1374,32 @@ function findCreatorProfile(creator: any) {
   );
 }
 
+// Reads the HydroShareID entry from a Creator/Contributor's `identifier`
+// array (PersonIdentifier[]) — the schema.org adapter now emits this
+// directly, so it's a fallback when the side-channel name-match below misses.
+function creatorHydroShareProfileUrl(creator: any): string | null {
+  if (!Array.isArray(creator?.identifier)) return null;
+  const entry = creator.identifier.find(
+    (item: any) => item?.propertyID === "HydroShareID" && typeof item.value === "string",
+  );
+  return entry?.value || null;
+}
+
 function creatorProfileLink(creator: any): string | null {
-  // The schema.org dataset_metadata.json carries no HydroShare-user linkage,
-  // so we match by name against the side-channel `creatorProfiles` payload
-  // (populated by AtlasLandingView from resource.cached_metadata.creators).
+  // Preferred: the side-channel `creatorProfiles` payload (populated by
+  // AtlasLandingView from resource.cached_metadata.creators), matched by
+  // name. It carries `is_active_user`, which the schema.org `identifier`
+  // array does not — a HydroShareID URL can be stale for a deactivated
+  // or renamed account, so it's only used as a fallback.
+  // TODO: Read this from dataset_metadata.json (need to figure out
+  // how to handle inactive users)
   const profile = findCreatorProfile(creator);
-  if (!profile || !profile.is_active_user || !profile.relative_uri) return null;
-  return profile.relative_uri;
+  if (profile?.is_active_user && profile.relative_uri) return profile.relative_uri;
+  return creatorHydroShareProfileUrl(creator);
 }
 
 function creatorIdentifiers(creator: any): Record<string, string> {
-  // Same side-channel rationale as creatorProfileLink — the schema.org
-  // adapter only emits ORCID, so we sourcemap the full dict from
-  // cached_metadata.creators.
+  // Same side-channel rationale as creatorProfileLink
   const profile = findCreatorProfile(creator);
   return profile?.identifiers || {};
 }
@@ -1342,6 +1478,31 @@ init();
   font-weight: 700;
   line-height: 1.375rem;
   text-transform: uppercase;
+}
+
+.single-col-layout {
+  gap: 1.5rem;
+
+  @media (max-width: 1279px) {
+    gap: 0;
+
+    > .page-content,
+    > .sidebar,
+    > .sidebar > div {
+      display: contents;
+    }
+
+    #details { order: 1; }
+    #description { order: 2; }
+    #subject { order: 3; }
+    #spatial { order: 4; }
+    #temporal { order: 5; }
+    #content { order: 6; }
+    #related { order: 8; }
+    #funding { order: 9; }
+    #citation { order: 10; }
+    #license { order: 11; }
+  }
 }
 
 .sidebar {
@@ -1426,9 +1587,59 @@ init();
   height: 15rem;
 }
 
+.citation-card {
+  padding: 1rem 1rem 0.75rem;
+  border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  border-left: 3px solid rgb(var(--v-theme-accent));
+  border-radius: 4px;
+  background-color: rgba(var(--v-theme-accent), 0.04);
+
+  & + .citation-card {
+    margin-top: 0.75rem;
+  }
+}
+
 .citation-text {
   min-width: 0;
   word-break: break-word;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: rgba(var(--v-theme-on-surface), 0.87);
+}
+
+.citation-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.75rem;
+}
+
+// Fixed width so swapping the label to "Copied" doesn't resize the button.
+.citation-copy {
+  min-width: 9.5rem;
+  letter-spacing: 0.03em;
+  text-transform: none;
+}
+
+.citation-note {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  min-width: 0;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: rgba(var(--v-theme-on-surface), 0.6);
+
+  // The DOI URL has no break opportunities and would otherwise widen the section.
+  > div {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+}
+
+.citation-note__icon {
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+  opacity: 0.7;
 }
 
 .dataset-info {
@@ -1451,6 +1662,14 @@ init();
 .dataset-info__label {
   letter-spacing: 0.05em;
   line-height: 1.4;
+}
+
+.place-name-caption {
+  font-size: 0.6875rem;
+  letter-spacing: 0.05em;
+  line-height: 1.2;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.5);
 }
 
 .dataset-info__value {
@@ -1481,7 +1700,7 @@ init();
 .readme-container {
   .v-card-text {
     min-height: 5rem;
-    height: 40rem;
+    max-height: 40rem;
     overflow: auto;
     resize: vertical;
     padding: 1rem;

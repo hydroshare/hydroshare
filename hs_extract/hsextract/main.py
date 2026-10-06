@@ -1,3 +1,4 @@
+import logging
 import os
 from hs_cloudnative_schemas.schema.base import IsPartOf, HasPart
 from hsextract.content_types.models import ContentType
@@ -12,9 +13,10 @@ from hsextract.utils.s3 import (
     iter_find,
     load_metadata,
     write_file_manifest,
-    write_has_part_file,
     write_metadata,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def _normalize_list(value) -> list:
@@ -50,6 +52,20 @@ def _iter_resource_has_parts(md: BaseMetadataObject, user_json: dict):
         yield has_part
 
 
+def _warn_on_overridden_keys(user_json: dict, system_json: dict) -> None:
+    overwritten_keys = user_json.keys() & system_json.keys()
+    overridden = {
+        key: (user_json[key], system_json[key])
+        for key in overwritten_keys
+        if user_json[key] != system_json[key]
+    }
+    if overridden:
+        logger.warning(
+            "System metadata is overriding user metadata for keys: %s",
+            overridden,
+        )
+
+
 def write_resource_jsonld_metadata(md: BaseMetadataObject) -> bool:
     # read the system metadata file
     system_json = load_metadata(md.system_metadata_path, md.zone)
@@ -57,25 +73,26 @@ def write_resource_jsonld_metadata(md: BaseMetadataObject) -> bool:
     # read the user resource metadata file
     user_json = load_metadata(md.user_metadata_path, md.zone)
 
-    # Combine system metadata and user metadata
-    combined_metadata = {**system_json, **user_json}
+    # Combine system metadata and user metadata (system metadata takes priority on key conflicts)
+    _warn_on_overridden_keys(user_json, system_json)
+    combined_metadata = {**user_json, **system_json}
 
     # TODO: If we can assume that the user is not allowed to edit the hasPart relationship in the user metadata,
     # then we can optimize the generation of the has_parts.json so that we only re-generate this file on
     # specific s3 object notification.
-    has_part_reference = write_has_part_file(
-        md.resource_has_parts_jsonld_path,
-        _iter_resource_has_parts(md, user_json),
-        md.zone,
-    )
-    combined_metadata["hasPart"] = [has_part_reference] if has_part_reference else []
+    # has_part_reference = write_has_part_file(
+    #     md.resource_has_parts_jsonld_path,
+    #     _iter_resource_has_parts(md, user_json),
+    #     md.zone,
+    # )
+    # combined_metadata["hasPart"] = [has_part_reference] if has_part_reference else []
 
     # file_manifest.json is re-generated only on s3 object notification for a data file
-    manifest_reference = write_file_manifest(
-        md,
-        enabled=True
-    )
-    combined_metadata["associatedMedia"] = [manifest_reference] if manifest_reference else []
+    # manifest_reference = write_file_manifest(
+    #         md,
+    #         enabled=True
+    #     )
+    # combined_metadata["associatedMedia"] = [manifest_reference] if manifest_reference else []
 
     # Write the combined metadata to the resource metadata file
     write_metadata(md.resource_metadata_jsonld_path, combined_metadata, md.zone)
@@ -88,6 +105,8 @@ def write_content_type_jsonld_metadata(md: BaseMetadataObject) -> bool:
     # read the content type user metadata file
     user_json = load_metadata(md.content_type_md_user_path, md.zone)
     if not content_type_metadata and not user_json:
+        # need to delete the content type jsonld metadata file if it exists
+        delete_metadata(md.content_type_md_jsonld_path)
         return
     # generate content type isPartOf relationships
     is_part_of = [

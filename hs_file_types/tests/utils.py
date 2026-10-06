@@ -719,7 +719,8 @@ def get_path_with_no_file_extension(path):
 
 
 def get_number_of_decimal_places(number):
-    """A helper to find the number of decimal places in the specified number that's used for rounding the number
+    """A helper to find the number of decimal places in the specified number that's used for rounding the number,
+    capped at 6 places since GDAL/GEOS/PROJ can produce tiny floating point differences across versions
     """
     _, decimal_str = str(number).split('.')
-    return len(decimal_str)
+    return min(len(decimal_str), 6)

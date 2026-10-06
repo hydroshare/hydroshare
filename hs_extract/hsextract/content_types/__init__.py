@@ -9,16 +9,18 @@ from hsextract.content_types.netcdf.models import NetCDFMetadataObject
 from hsextract.content_types.feature.models import FeatureMetadataObject
 from hsextract.content_types.models import BaseMetadataObject
 
+metadata_classes = []
 
-metadata_classes = [
-    RasterMetadataObject,
-    TimeSeriesMetadataObject,
-    NetCDFMetadataObject,
-    FeatureMetadataObject,
-    # single file and fileset go last since they are more general
-    SingleFileMetadataObject,
-    FileSetMetadataObject
-]
+# Disable all metadata classes until use case is available for the metadata
+# metadata_classes = [
+#    RasterMetadataObject,
+#    TimeSeriesMetadataObject,
+#    NetCDFMetadataObject,
+#    FeatureMetadataObject,
+#    # single file and fileset go last since they are more general
+#    SingleFileMetadataObject,
+#    FileSetMetadataObject
+# ]
 
 ReturnMetaObjectType = Union[
     RasterMetadataObject,

@@ -101,30 +101,6 @@
               </div>
               <cz-field scope="#/properties/name" hide-label />
             </div>
-
-            <!-- Mobile: collapse the header actions into a 3-dot menu -->
-            <v-menu v-if="$vuetify.display.smAndDown">
-              <template v-slot:activator="{ props }">
-                <v-btn
-                  v-bind="props"
-                  icon="mdi-dots-vertical"
-                  size="small"
-                  variant="text"
-                  aria-label="More actions"
-                  class="flex-shrink-0"
-                />
-              </template>
-              <v-list density="compact">
-                <v-list-item
-                  title="Back to resource"
-                  @click="leaveToLanding"
-                >
-                  <template #prepend>
-                    <v-icon size="18">mdi-arrow-left</v-icon>
-                  </template>
-                </v-list-item>
-              </v-list>
-            </v-menu>
           </div>
 
           <!-- Meta + actions row mirrors the landing page header layout.
@@ -174,11 +150,9 @@
             <!-- Save is mirrored here as well as at the foot of the form:
                  the page can run to several thousand px inside an iframe the
                  host sets to scrolling="no", so reaching the bottom bar means
-                 scrolling the PARENT window all the way down. -->
-            <div
-              v-if="!$vuetify.display.smAndDown"
-              class="d-flex flex-wrap align-center ga-2 ml-auto"
-            >
+                 scrolling the PARENT window all the way down. On narrow
+                 screens the wrap drops this pair onto its own line. -->
+            <div class="d-flex flex-wrap align-center ga-2 ml-auto">
               <v-btn
                 size="small"
                 variant="outlined"
@@ -231,7 +205,7 @@
         </v-select>
 
         <!-- ===== MAIN GRID: content column + sidebar ===== -->
-        <div class="d-flex flex-column flex-lg-row ga-6 mt-6">
+        <div class="d-flex flex-column flex-lg-row mt-6 single-col-layout">
           <v-container
             class="page-content pa-0"
             :class="{ 'is-sm': $vuetify.display.mdAndDown }"
@@ -521,13 +495,17 @@
                   :root-directory="rootDirectory"
                   :has-folders="fileExplorerConfig.hasFolders"
                   :is-read-only="false"
+                  :show-discard-all="false"
                   :has-file-metadata="() => false"
                   :folder-name-regex="folderNameRegex"
                   :canDownloadItem="(item: IFile | IFolder) => !isFolder(item)"
                   :download-zipped="(item: IFile | IFolder) => onZippedDownload(item, resourceId)"
+                  :download-archive="() => onDownloadBag(resourceId, bagUrl)"
                   :upload="uploadFiles"
+                  :add-files="onAddFiles"
                   :delete-file-or-folder="deleteFileOrFolder"
                   :rename-file-or-folder="renameFileOrFolder"
+                  downloadArchiveHelpText="Download all content as Zipped BagIt Archive"
                   @download="
                     onFileDownload(
                       $event,
@@ -540,17 +518,15 @@
                   <template #prepend>
                     <span />
                   </template>
-                  <template #drop-area>
-                    <HsUppy
-                      ref="hsUppyRef"
-                      :s3Info="s3Info"
-                      :s3Host="s3Host"
-                      :fileExplorer="fileExplorer"
-                      :upload-prefix="`${resourceId}/data/contents/`"
-                      @file-uploaded="onUppyFileUploaded"
-                    />
-                  </template>
                 </cz-file-explorer>
+
+                <HsUppy
+                  ref="hsUppyRef"
+                  :s3Info="s3Info"
+                  :s3Host="s3Host"
+                  :upload-prefix="`${resourceId}/data/contents/`"
+                  @file-uploaded="onUppyFileUploaded"
+                />
               </div>
               <v-skeleton-loader
                 v-else
@@ -674,7 +650,7 @@
                    collapses control margins differently inside a .v-card, so
                    these two sections silently lost the spacing the others
                    had. -->
-              <div class="mb-6">
+              <div id="subject" class="mb-6">
                 <div class="sidebar-heading">
                   Subject Keywords<span class="required-mark">{{
                     requiredMark("#/properties/keywords")
@@ -697,20 +673,7 @@
                 </v-alert>
               </div>
 
-              <div class="mb-6">
-                <div class="sidebar-heading">
-                  License<span class="required-mark">{{
-                    requiredMark("#/properties/license")
-                  }}</span>
-                </div>
-                <cz-field
-                  scope="#/properties/license"
-                  :options="licenseOptions"
-                  hide-label
-                />
-              </div>
-
-              <div class="mb-6">
+              <div id="spatial" class="mb-6">
                 <div class="sidebar-heading">
                   Spatial Coverage<span class="required-mark">{{
                     requiredMark("#/properties/spatialCoverage")
@@ -748,24 +711,30 @@
                         >
                         Coverage has validation issues
                       </div>
-                      <cd-spatial-coverage-map
-                        v-if="value?.geo"
-                        :feature="value.geo"
-                      />
-                      <v-card-text
-                        v-else
-                        class="text-body-2 text-medium-emphasis font-italic pb-0"
-                      >
-                        No spatial coverage set
-                      </v-card-text>
+                      <cd-spatial-coverage-map :feature="value?.geo" />
                       <v-divider></v-divider>
-                      <div class="d-flex align-center ga-2 px-3 py-2">
+                      <div class="d-flex align-center flex-wrap ga-2 px-3 py-2">
                         <span
                           v-if="value?.name"
                           class="text-body-2 text-truncate flex-grow-1"
                           >{{ value.name }}</span
                         >
+                        <span
+                          v-else-if="!value?.geo"
+                          class="text-body-2 text-medium-emphasis font-italic flex-grow-1"
+                          >No spatial coverage set</span
+                        >
                         <v-spacer v-else />
+                        <v-btn
+                          v-if="canSetSpatialFromFiles"
+                          size="small"
+                          variant="text"
+                          prepend-icon="mdi-calculator"
+                          :loading="isSettingSpatialFromFiles"
+                          title="Set the coverage to the extent that includes all content files"
+                          @click="setSpatialCoverageFromFiles"
+                          >From files</v-btn
+                        >
                         <v-btn
                           v-if="hasSpatialCoverage"
                           size="small"
@@ -788,7 +757,7 @@
                 </cz-field-modal>
               </div>
 
-              <div class="mb-6 temporal-coverage">
+              <div id="temporal" class="mb-6 temporal-coverage">
                 <div class="sidebar-heading">
                   Temporal Coverage<span class="required-mark">{{
                     requiredMark("#/properties/temporalCoverage")
@@ -809,6 +778,7 @@
                     </div>
                     <cz-field
                       scope="#/properties/temporalCoverage/properties/startDate"
+                      :options="dateOnlyOptions"
                       hide-label
                     />
 
@@ -820,6 +790,7 @@
                     </div>
                     <cz-field
                       scope="#/properties/temporalCoverage/properties/endDate"
+                      :options="dateOnlyOptions"
                       hide-label
                     />
 
@@ -847,11 +818,46 @@
                 <div
                   v-for="(citation, index) of citations"
                   :key="index"
-                  class="text-body-2 text-medium-emphasis"
-                  style="word-break: break-word;"
+                  class="citation-card"
                 >
-                  {{ citation }}
+                  <div class="citation-text">{{ citation }}</div>
+                  <div class="citation-actions">
+                    <v-btn
+                      class="citation-copy"
+                      size="small"
+                      variant="tonal"
+                      color="accent"
+                      :prepend-icon="copiedCitation === index ? 'mdi-check' : 'mdi-content-copy'"
+                      @click="onCopyCitation(citation, index)"
+                    >{{ copiedCitation === index ? "Copied" : "Copy citation" }}</v-btn>
+                  </div>
                 </div>
+
+                <div v-if="!isPublished" class="citation-note">
+                  <v-icon class="citation-note__icon" size="16">mdi-information-outline</v-icon>
+                  <div>
+                    When permanently published, this resource will have a formal Digital
+                    Object Identifier (DOI) and will be accessible at the following URL:
+                    <a :href="potentialDoiUrl" target="_blank" rel="noopener">{{ potentialDoiUrl }}</a>.
+                    When you are ready to permanently publish, click the Publish button at
+                    the top of the page to request your DOI. Reminder: Once you have published
+                    your resource, modifications to Title, Authors, or Content files will
+                    require a new version of the resource.
+                  </div>
+                </div>
+              </div>
+
+              <div id="license" class="mb-6">
+                <div class="sidebar-heading">
+                  License<span class="required-mark">{{
+                    requiredMark("#/properties/license")
+                  }}</span>
+                </div>
+                <cz-field
+                  scope="#/properties/license"
+                  :options="licenseOptions"
+                  hide-label
+                />
               </div>
             </div>
           </div>
@@ -866,7 +872,6 @@
           <v-spacer></v-spacer>
 
           <v-btn
-            v-if="!$vuetify.display.smAndDown"
             variant="outlined"
             prepend-icon="mdi-arrow-left"
             @click="leaveToLanding"
@@ -916,6 +921,7 @@ import {
 import {
   fetchResource,
   getStatusColor,
+  onDownloadBag,
   onFileDownload,
   onZippedDownload,
   parseDate,
@@ -1013,6 +1019,10 @@ const descriptionOptions = {
   },
 };
 
+// Coverage is meaningful to the day. The stored value stays an ISO
+// date-time, pinned to local midnight.
+const dateOnlyOptions = { dateOnly: true };
+
 // `geo` is anyOf[GeoCoordinates, GeoShape]. AnyOfRenderer indexes
 // `options.detail` by branch, so this must be an index-keyed map — a single
 // layout object gets applied to BOTH branches, which is why the point tab
@@ -1020,14 +1030,25 @@ const descriptionOptions = {
 // renderer found" where lat/long don't resolve. Keying per branch also lets
 // the box tab ask MapLayout for its rectangle draw control.
 const spatialCoverageOptions = {
+  // `flat` on both levels renders the fields without the bordered fieldset
+  // and its +/- toggle; the modal's own Clear button covers removal.
+  flat: true,
   detail: {
     type: "Object",
     elements: [
-      { type: "Control", scope: "#/properties/name" },
+      {
+        type: "Control",
+        scope: "#/properties/name",
+        label: "Place / area name",
+      },
       {
         type: "Control",
         scope: "#/properties/geo",
+        label: "Extent",
         options: {
+          flat: true,
+          // The schema's prose says nothing the labelled inputs don't.
+          description: "",
           detail: {
             0: {
               type: "VerticalLayout",
@@ -1058,13 +1079,13 @@ const spatialCoverageOptions = {
                   type: "MapLayout",
                   // `format: GeoShape` selects the single "n e s w" string
                   // code path; without it MapLayout looks for northlimit/
-                  // eastlimit/... which this schema doesn't have.
+                  // eastlimit/... which this schema doesn't have. MapLayout
+                  // renders that string as four extent inputs itself, so the
+                  // branch contributes no controls of its own.
                   options: {
                     map: { type: "box", format: "GeoShape", box: "box" },
                   },
-                  elements: [
-                    { type: "Control", scope: "#/properties/box" },
-                  ],
+                  elements: [],
                 },
               ],
             },
@@ -1075,13 +1096,13 @@ const spatialCoverageOptions = {
   },
 };
 
-// `@type` is a const discriminator, not user input — rendering it dispatches
-// to AnyOfRenderer (the item schema is anyOf Person/Organization), whose
-// VTabs throws and takes the whole dialog down. `url`/`address` don't exist
-// on Creator/Contributor either; they only resolved via the Organization
-// branch, so they showed organization copy under a person's name.
-const personDetailLayout = {
+// `@type` is a const discriminator, not user input. It is excluded from all
+// branch layouts below — JsonForms only renders explicitly listed elements,
+// and the schema's `default` ensures the correct value is written to data
+// when an item is created or the branch is switched.
+const personBranchLayout = {
   type: "VerticalLayout",
+  options: { label: "Person" },
   elements: [
     {
       type: "HorizontalLayout",
@@ -1092,10 +1113,45 @@ const personDetailLayout = {
     },
     // `label` belongs on the element, not in `options` — computeLabel reads
     // uischema.label; options.label is only consulted for combinator tabs.
+    // identifier is now an array of PersonIdentifier objects (propertyID +
+    // value); `@type` is a const discriminator so it's excluded from the
+    // item detail layout, same as personBranchLayout's own `@type` above.
+    // Shared between the Author and Contributor forms, so the label stays
+    // generic rather than trying to say "Author"/"Contributor" per-context.
     {
       type: "Control",
       scope: "#/properties/identifier",
-      label: "ORCID iD",
+      label: "Author Identifiers",
+      options: {
+        itemNoun: "identifier",
+        elementLabelProp: ["propertyID"],
+        childLabelProp: "propertyID",
+        showSortButtons: true,
+        collapsed: true,
+        detail: {
+          type: "VerticalLayout",
+          elements: [
+            {
+              type: "Control",
+              scope: "#/properties/propertyID",
+              label: "Identifier Name",
+              options: {
+                // HydroShareID is populated by a separate mechanism (e.g.
+                // importing a HydroShare user profile), not chosen manually
+                // here. `hidden` only filters this dropdown's options —
+                // schema.enum still allows it, so an existing author who
+                // already has a HydroShareID entry loads/validates fine.
+                hidden: ["HydroShareID"],
+              },
+            },
+            {
+              type: "Control",
+              scope: "#/properties/value",
+              label: "Identifier URL",
+            },
+          ],
+        },
+      },
     },
     {
       type: "Control",
@@ -1105,15 +1161,14 @@ const personDetailLayout = {
         // bordered box with a +/- toggle stuck to the input.
         flat: true,
         detail: {
-          type: "Object",
+          type: "VerticalLayout",
           elements: [
-            // Explicit labels: rendered flat, the affiliation's own "Name"
-            // sits directly under the person's "Name" with nothing to tell
-            // the two apart.
             {
               type: "Control",
               scope: "#/properties/name",
-              label: "Affiliation",
+              label: "Organization",
+              // Prevent org name from showing as required since org is optional
+              options: { hideRequiredAsterisk: true },
             },
             {
               type: "HorizontalLayout",
@@ -1121,12 +1176,12 @@ const personDetailLayout = {
                 {
                   type: "Control",
                   scope: "#/properties/url",
-                  label: "Affiliation website",
+                  label: "Organization website",
                 },
                 {
                   type: "Control",
                   scope: "#/properties/address",
-                  label: "Affiliation address",
+                  label: "Organization address",
                 },
               ],
             },
@@ -1137,12 +1192,45 @@ const personDetailLayout = {
   ],
 };
 
+const organizationBranchLayout = {
+  type: "VerticalLayout",
+  options: { label: "Organization" },
+  elements: [
+    { type: "Control", scope: "#/properties/name" },
+    { type: "Control", scope: "#/properties/url" },
+    { type: "Control", scope: "#/properties/address" },
+  ],
+};
+
+// Per-item branch layouts consumed by AnyOfRenderer for each array item.
+// The item `detail` must itself be a Control at scope "#" so AnyOfRenderer
+// (not ObjectControlRenderer) picks it up; `dropdown: true` swaps the tab
+// strip for a select (fits the 22rem sidebar) and `flat: true` removes the
+// +/- toggle box since Person/Organization is always required per item.
+// options.detail is keyed by branch index (Person = 0, Organization = 1),
+// same convention as licenseOptions/spatialCoverageOptions above.
+const personOrOrgDetail = {
+  type: "Control",
+  scope: "#",
+  options: {
+    dropdown: true,
+    flat: true,
+    title: "Type",
+    detail: {
+      0: personBranchLayout,
+      1: organizationBranchLayout,
+    },
+  },
+};
+
+// detail = personOrOrgDetail lets branchItems resolve labels from
+// options.detail.options.detail[i].options.label = "Person" / "Organization".
 const creatorOptions = computed(() => ({
   elementLabelProp: ["name"],
   childLabelProp: "name",
   showSortButtons: true,
   collapsed: true,
-  detail: personDetailLayout,
+  detail: personOrOrgDetail,
 }));
 
 const contributorOptions = computed(() => ({
@@ -1150,7 +1238,7 @@ const contributorOptions = computed(() => ({
   childLabelProp: "name",
   showSortButtons: true,
   collapsed: true,
-  detail: personDetailLayout,
+  detail: personOrOrgDetail,
 }));
 
 const fundingOptions = {
@@ -1185,30 +1273,15 @@ const fundingOptions = {
         type: "Control",
         scope: "#/properties/funder",
         options: {
-          flat: true,
           detail: {
             type: "Object",
             elements: [
-              // Rendered flat, the funder's "Name" sits under the grant's own
-              // "Name or title" with nothing to distinguish them.
-              {
-                type: "Control",
-                scope: "#/properties/name",
-                label: "Funding organization",
-              },
+              { type: "Control", scope: "#/properties/name" },
               {
                 type: "HorizontalLayout",
                 elements: [
-                  {
-                    type: "Control",
-                    scope: "#/properties/url",
-                    label: "Organization website",
-                  },
-                  {
-                    type: "Control",
-                    scope: "#/properties/address",
-                    label: "Organization address",
-                  },
+                  { type: "Control", scope: "#/properties/url" },
+                  { type: "Control", scope: "#/properties/address" },
                 ],
               },
             ],
@@ -1376,7 +1449,33 @@ function allowLocalhostUrls(node: any): void {
 // building the same list shape lights up both at once.
 const tocItems = computed(() => User.$state.toc);
 
-const citations = computed<string[]>(() => data.value?.document?.[0]?.citation ?? []);
+// user_metadata.json holds the generated citation as a top-level string array.
+const citations = computed<string[]>(() => {
+  const raw = data.value?.citation;
+  if (Array.isArray(raw)) return raw.filter((c: any) => typeof c === "string" && c.trim());
+  if (typeof raw === "string" && raw.trim()) return [raw];
+  return [];
+});
+
+const isPublished = computed<boolean>(
+  () => data.value?.creativeWorkStatus?.name === "Published",
+);
+
+const potentialDoiUrl = computed<string>(
+  () => `https://doi.org/10.4211/hs.${resourceId.value}`,
+);
+
+const copiedCitation = ref<number | null>(null);
+let copiedTimeout: ReturnType<typeof setTimeout> | undefined;
+
+function onCopyCitation(citation: string, index: number) {
+  // Collapse line breaks and repeated whitespace so the citation pastes as one line.
+  navigator.clipboard.writeText(citation.replace(/\s+/g, " ").trim());
+  Notifications.toast({ message: "Copied to clipboard", type: "info" });
+  copiedCitation.value = index;
+  clearTimeout(copiedTimeout);
+  copiedTimeout = setTimeout(() => (copiedCitation.value = null), 2000);
+}
 
 function scrollToSection(hash: string | null) {
   if (!hash) return;
@@ -1411,30 +1510,26 @@ function scrollToSection(hash: string | null) {
 }
 
 function buildToc() {
-  const d = data.value;
   const toc: { text: string; to: string; level?: number }[] = [
     { text: "Overview", to: "#overview" },
     { text: "Details", to: "#details" },
   ];
 
-  if (d?.description !== undefined) {
-    toc.push({ text: "Abstract", to: "#description" });
-  }
-
+  toc.push({ text: "Abstract", to: "#description" });
+  toc.push({ text: "Subject Keywords", to: "#subject" });
+  toc.push({ text: "Spatial Coverage", to: "#spatial" });
+  toc.push({ text: "Temporal Coverage", to: "#temporal" });
   toc.push({ text: "Content", to: "#content" });
   toc.push({ text: "Files", to: "#fileExplorer", level: 4 });
+  toc.push({ text: "Additional metadata", to: "#additional" });
+  toc.push({ text: "Related Resources", to: "#related" });
   toc.push({ text: "Funding", to: "#funding" });
 
-  const hasRelated =
-    d?.hasPart?.length ||
-    d?.isPartOf?.length ||
-    d?.subjectOf?.length ||
-    d?.relation?.length;
-  if (hasRelated) {
-    toc.push({ text: "Related Resources", to: "#related" });
+  if (citations.value.length) {
+    toc.push({ text: "How to cite", to: "#citation" });
   }
 
-  toc.push({ text: "Additional metadata", to: "#additional" });
+  toc.push({ text: "License", to: "#license" });
 
   User.$state.toc = toc;
   User.$state.isTocReady = true;
@@ -1445,6 +1540,7 @@ onBeforeUnmount(() => {
   // section list. Mirrors landing-page.vue's beforeUnmount.
   User.$state.toc = [];
   User.$state.isTocReady = false;
+  clearTimeout(copiedTimeout);
 });
 
 const isLoadingFiles = ref(true);
@@ -1648,6 +1744,91 @@ function clearTemporalCoverage() {
   data.value = rest;
 }
 
+// Only offered when the resource has aggregations that carry spatial
+// coverage.
+const canSetSpatialFromFiles = computed<boolean>(
+  () => alerts.value.hasLogicalSpatialCoverage === true,
+);
+const isSettingSpatialFromFiles = ref(false);
+
+/**
+ * Asks the server to recompute spatial coverage from the content files, then
+ * maps the legacy response shape onto schema.org. Not saved until the user saves.
+ */
+async function setSpatialCoverageFromFiles() {
+  isSettingSpatialFromFiles.value = true;
+  try {
+    const csrfToken = await User.getCSRFToken();
+    const response = await fetch(
+      `/hsapi/_internal/${resourceId.value}/spatial/update-coverage/`,
+      {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          ...(csrfToken ? { "X-CSRFToken": csrfToken } : {}),
+        },
+      },
+    );
+    const payload = await response.json();
+    if (!response.ok) {
+      throw new Error(payload?.message || `HTTP ${response.status}`);
+    }
+
+    const coverage = payload?.spatial_coverage;
+    if (!coverage || !coverage.type) {
+      Notifications.toast({
+        message: "No spatial coverage was found in the content files.",
+        type: "info",
+      });
+      return;
+    }
+
+    const geo =
+      coverage.type === "point"
+        ? {
+            "@type": "GeoCoordinates",
+            latitude: Number(coverage.north),
+            longitude: Number(coverage.east),
+          }
+        : {
+            "@type": "GeoShape",
+            box: [
+              coverage.northlimit,
+              coverage.eastlimit,
+              coverage.southlimit,
+              coverage.westlimit,
+            ]
+              .map(Number)
+              .join(" "),
+          };
+
+    data.value = {
+      ...(data.value as Record<string, any>),
+      spatialCoverage: {
+        "@type": "Place",
+        // The computed coverage rarely names the place; keep any name the
+        // user already typed.
+        name: coverage.name || data.value?.spatialCoverage?.name || undefined,
+        geo,
+      },
+    };
+
+    Notifications.toast({
+      message: "Spatial coverage set from the content files.",
+      type: "success",
+    });
+  } catch (error: any) {
+    console.error("Failed to set spatial coverage from content files:", error);
+    Notifications.toast({
+      title: "Error",
+      message: `Failed to set spatial coverage from content files. ${error.message}`,
+      type: "error",
+    });
+  } finally {
+    isSettingSpatialFromFiles.value = false;
+  }
+}
+
 // Resource-level alerts (missing metadata, version/replacement pointers,
 // publication state). Same source the landing page reads: the Django view
 // injects them onto the host window, so both views agree.
@@ -1657,6 +1838,7 @@ const alerts = ref<{
   missingMetadata?: string[];
   recommendedMissing?: string[];
   hasRequiredContentFiles?: boolean;
+  hasLogicalSpatialCoverage?: boolean;
   isUntitled?: boolean;
   isReplacedBy?: string | null;
   isVersionOf?: string | null;
@@ -1757,12 +1939,15 @@ function onReadmeChange(payload: {
   }
 }
 
+function onAddFiles(_folder: IFolder, path: string) {
+  hsUppyRef.value?.openDashboard(path);
+}
+
 /**
  * HsUppy emits this once per successfully uploaded file. We own the
- * file-explorer ref directly (vs. HsUppy, which only sees it as a prop and
- * can't react to its delayed binding) so we shape the item the same way
- * readRootFolder does and push it into the right folder. Idempotent — skips
- * if the name already exists in the target folder.
+ * file-explorer ref directly, so we shape the item the same way readRootFolder
+ * does and push it into the right folder. Idempotent: skips if the name
+ * already exists in the target folder.
  */
 function onUppyFileUploaded(file: any) {
   if (!fileExplorer.value || !file) return;
@@ -1884,7 +2069,6 @@ async function _uploadFiles(
   );
 
   let responses: boolean[] = [];
-  itemsToUpload.forEach((i) => (i.isDisabled = false));
 
   if (folderPaths.length) {
     responses = await _createFoldersByDepth(folderPaths, 1);
@@ -1932,7 +2116,6 @@ async function _uploadFiles(
         if (!uppy) {
           throw new Error("Uppy instance not available");
         }
-        uppy.getPlugin("Dashboard")?.openModal();
         const fileId = uppy.addFile({
           name: file.name,
           type: file.file?.type || "application/octet-stream",
@@ -1953,16 +2136,17 @@ async function _uploadFiles(
         // Since Uppy has autoProceed: true, it will start uploading automatically
         // Wait for the upload to complete for this specific file
         return new Promise<boolean>((resolve) => {
-          const successHandler = (successFileId: string, _response: any) => {
-            if (successFileId === fileId) {
+          // Uppy passes the file object, not its id.
+          const successHandler = (uploaded: any) => {
+            if (uploaded?.id === fileId) {
               uppy.off("upload-success", successHandler);
               uppy.off("upload-error", errorHandler);
               resolve(true);
             }
           };
 
-          const errorHandler = (errorFileId: string, error: any) => {
-            if (errorFileId === fileId) {
+          const errorHandler = (errored: any, error: any) => {
+            if (errored?.id === fileId) {
               uppy.off("upload-success", successHandler);
               uppy.off("upload-error", errorHandler);
               console.error("Upload error for file:", file.name, error);
@@ -2005,6 +2189,7 @@ async function _uploadFiles(
     return results.map((r) => (r.status === "fulfilled" ? r.value : false));
   }
 
+  itemsToUpload.forEach((i) => (i.isDisabled = false));
   return responses;
 }
 
@@ -2465,6 +2650,87 @@ init();
   border-color: rgba(0, 0, 0, 0.08) !important;
 }
 
+.citation-card {
+  padding: 1rem 1rem 0.75rem;
+  border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  border-left: 3px solid rgb(var(--v-theme-accent));
+  border-radius: 4px;
+  background-color: rgba(var(--v-theme-accent), 0.04);
+
+  & + .citation-card {
+    margin-top: 0.75rem;
+  }
+}
+
+.citation-text {
+  min-width: 0;
+  word-break: break-word;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: rgba(var(--v-theme-on-surface), 0.87);
+}
+
+.citation-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.75rem;
+}
+
+// Fixed width so swapping the label to "Copied" doesn't resize the button.
+.citation-copy {
+  min-width: 9.5rem;
+  letter-spacing: 0.03em;
+  text-transform: none;
+}
+
+.citation-note {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  min-width: 0;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: rgba(var(--v-theme-on-surface), 0.6);
+
+  // The DOI URL has no break opportunities and would otherwise widen the section.
+  > div {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+}
+
+.citation-note__icon {
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+  opacity: 0.7;
+}
+
+.single-col-layout {
+  gap: 1.5rem;
+
+  @media (max-width: 1279px) {
+    gap: 0;
+
+    > .page-content,
+    > .sidebar,
+    > .sidebar > div {
+      display: contents;
+    }
+
+    #details { order: 1; }
+    #description { order: 2; }
+    #subject { order: 3; }
+    #spatial { order: 4; }
+    #temporal { order: 5; }
+    #content { order: 6; }
+    #additional { order: 7; }
+    #related { order: 8; }
+    #funding { order: 9; }
+    #citation { order: 10; }
+    #license { order: 11; }
+  }
+}
+
 .sidebar {
   flex-basis: 22rem;
   flex-shrink: 0;
@@ -2649,5 +2915,11 @@ init();
     overflow-wrap: anywhere;
     word-break: break-word;
   }
+}
+
+// v-dialog teleports cz-field-modal's content outside this component's DOM
+// tree, so :global needed to reach it; adds spacing under the Person/Org dropdown.
+:global(.cz-field-modal__body .v-select) {
+  margin-bottom: 1rem;
 }
 </style>
