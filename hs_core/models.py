@@ -3160,10 +3160,35 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
         """
         return None
 
+    CITATION_NAME_SUFFIXES = {"jr": "Jr.", "sr": "Sr.", "ii": "II", "iii": "III", "iv": "IV", "v": "V"}
+
+    @classmethod
+    def split_citation_name_suffix(cls, name):
+        def pop_suffix(part):
+            words = part.replace(",", " ").split()
+            if len(words) < 2:
+                return part, None
+            suffix = cls.CITATION_NAME_SUFFIXES.get(words[-1].rstrip(".").lower())
+            if suffix is None:
+                return part, None
+            return part.rstrip(", ")[:-len(words[-1])].rstrip(", "), suffix
+
+        if len(name.replace(",", " ").split()) < 3:
+            return name, None
+        remaining, suffix = pop_suffix(name)
+        if suffix is None and "," in name:
+            before_comma, after_comma = name.split(",", 1)
+            before_comma, suffix = pop_suffix(before_comma)
+            if suffix is not None:
+                remaining = "{},{}".format(before_comma, after_comma)
+        return remaining, suffix
+
     def parse_citation_name(self, name, is_non_hs_user=False):
         """Return properly formatted citation name from metadata."""
 
         CREATOR_NAME_ERROR = "Failed to generate citation - invalid creator name."
+
+        name, suffix = self.split_citation_name_suffix(name)
 
         if "," in name:
             name_parts = name.split(",", 1)  # Split only on first comma
@@ -3190,6 +3215,9 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
             else:
                 last_names = name_parts[-1]
                 first_names = name_parts[:-1]
+
+        if suffix:
+            last_names = "{} {}".format(last_names, suffix)
 
         if first_names:
             initials_list = [i[0] + "." for i in first_names if i]
