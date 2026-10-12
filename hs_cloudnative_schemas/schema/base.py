@@ -198,25 +198,162 @@ class CreativeWork(SchemaBaseModel):
     )
 
 
-class LicenseEnum(str, Enum):
-    @classmethod
-    def __get_pydantic_json_schema__(
-        cls, schema: JsonSchemaValue, handler: GetJsonSchemaHandler
-    ) -> JsonSchemaValue:
-        json_schema = handler(schema)
-        json_schema.update(type="string", title="License Name", description="")
-        return json_schema
+LICENSE_STATEMENT_PREFIX = "This resource is shared under the "
+LICENSE_STATEMENT_SUFFIX = "."
 
+
+class LicenseEnum(str, Enum):
     CC_BY = "Creative Commons Attribution CC BY"
     CC_BY_SA = "Creative Commons Attribution-ShareAlike CC BY-SA"
     CC_BY_ND = "Creative Commons Attribution-NoDerivs CC BY-ND"
     CC_BY_NC_SA = "Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA"
     CC_BY_NC = "Creative Commons Attribution-NoCommercial CC BY-NC"
     CC_BY_NC_ND = "Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND"
+    OTHER = "Other"
+
+    @classmethod
+    def from_statement(cls, statement: str) -> Optional["LicenseEnum"]:
+        """Extract the LicenseEnum value from a rights statement string, e.g.
+        'This resource is shared under the Creative Commons Attribution CC BY.'
+        Returns None if the statement doesn't match a known license.
+        """
+        statement = statement.strip()
+        if not statement.startswith(LICENSE_STATEMENT_PREFIX) or not statement.endswith(LICENSE_STATEMENT_SUFFIX):
+            return None
+        name = statement[len(LICENSE_STATEMENT_PREFIX):-len(LICENSE_STATEMENT_SUFFIX)]
+        try:
+            return cls(name)
+        except ValueError:
+            return None
 
 
-class License(CreativeWork):
-    name: LicenseEnum = Field(description="The name of the license.")
+class LicenseBase(CreativeWork):
+    url: Optional[HttpUrl] = Field(
+        description="A URL to the full text of the license.",
+        default=None,
+        json_schema_extra=remove_none_default,
+    )
+
+
+class CCBYLicense(LicenseBase):
+    description: Literal["Creative Commons Attribution CC BY"] = Field(
+        default=LicenseEnum.CC_BY.value, description="A name of the license."
+    )
+    name: str = Field(
+        default="This resource is shared under the Creative Commons Attribution CC BY.",
+        description="The statement of the license.",
+        json_schema_extra=read_only_schema_extra,
+    )
+    url: HttpUrl = Field(
+        default=HttpUrl("https://creativecommons.org/licenses/by/4.0/"),
+        description="A URL to the full text of the license.",
+        json_schema_extra=read_only_schema_extra,
+    )
+
+
+class CCBYSALicense(LicenseBase):
+    description: Literal["Creative Commons Attribution-ShareAlike CC BY-SA"] = Field(
+        default=LicenseEnum.CC_BY_SA.value, description="A name of the license."
+    )
+    name: str = Field(
+        default="This resource is shared under the Creative Commons Attribution-ShareAlike CC BY-SA.",
+        description="The statement of the license.",
+        json_schema_extra=read_only_schema_extra,
+    )
+    url: HttpUrl = Field(
+        default=HttpUrl("https://creativecommons.org/licenses/by-sa/4.0/"),
+        description="A URL to the full text of the license.",
+        json_schema_extra=read_only_schema_extra,
+    )
+
+
+class CCBYNDLicense(LicenseBase):
+    description: Literal["Creative Commons Attribution-NoDerivs CC BY-ND"] = Field(
+        default=LicenseEnum.CC_BY_ND.value, description="A name of the license."
+    )
+    name: str = Field(
+        default="This resource is shared under the Creative Commons Attribution-NoDerivs CC BY-ND.",
+        description="The statement of the license.",
+        json_schema_extra=read_only_schema_extra,
+    )
+    url: HttpUrl = Field(
+        default=HttpUrl("https://creativecommons.org/licenses/by-nd/4.0/"),
+        description="A URL to the full text of the license.",
+        json_schema_extra=read_only_schema_extra,
+    )
+
+
+class CCBYNCSALicense(LicenseBase):
+    description: Literal["Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA"] = Field(
+        default=LicenseEnum.CC_BY_NC_SA.value, description="A name of the license."
+    )
+    name: str = Field(
+        default="This resource is shared under the "
+        "Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA.",
+        description="The statement of the license.",
+        json_schema_extra=read_only_schema_extra,
+    )
+    url: HttpUrl = Field(
+        default=HttpUrl("https://creativecommons.org/licenses/by-nc-sa/4.0/"),
+        description="A URL to the full text of the license.",
+        json_schema_extra=read_only_schema_extra,
+    )
+
+
+class CCBYNCLicense(LicenseBase):
+    description: Literal["Creative Commons Attribution-NoCommercial CC BY-NC"] = Field(
+        default=LicenseEnum.CC_BY_NC.value, description="A name of the license."
+    )
+    name: str = Field(
+        default="This resource is shared under the Creative Commons Attribution-NoCommercial CC BY-NC.",
+        description="The statement of the license.",
+        json_schema_extra=read_only_schema_extra,
+    )
+    url: HttpUrl = Field(
+        default=HttpUrl("https://creativecommons.org/licenses/by-nc/4.0/"),
+        description="A URL to the full text of the license.",
+        json_schema_extra=read_only_schema_extra,
+    )
+
+
+class CCBYNCNDLicense(LicenseBase):
+    description: Literal["Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND"] = Field(
+        default=LicenseEnum.CC_BY_NC_ND.value, description="A name of the license."
+    )
+    name: str = Field(
+        default="This resource is shared under the "
+        "Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND.",
+        description="The statement of the license.",
+        json_schema_extra=read_only_schema_extra,
+    )
+    url: HttpUrl = Field(
+        default=HttpUrl("https://creativecommons.org/licenses/by-nc-nd/4.0/"),
+        description="A URL to the full text of the license.",
+        json_schema_extra=read_only_schema_extra,
+    )
+
+
+class OtherLicense(LicenseBase):
+    description: Literal["Other"] = Field(
+        default=LicenseEnum.OTHER.value, description="A name of the license."
+    )
+    name: str = Field(description="The statement of the license.")
+    url: Optional[HttpUrl] = Field(
+        default=None,
+        description="A URL to the full text of the license.",
+        json_schema_extra=remove_none_default,
+    )
+
+
+License = Union[
+    CCBYLicense,
+    CCBYSALicense,
+    CCBYNDLicense,
+    CCBYNCSALicense,
+    CCBYNCLicense,
+    CCBYNCNDLicense,
+    OtherLicense,
+]
 
 
 class Person(SchemaBaseModel):
