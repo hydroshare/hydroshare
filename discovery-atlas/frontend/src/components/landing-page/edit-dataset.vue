@@ -505,6 +505,7 @@
                   :add-files="onAddFiles"
                   :delete-file-or-folder="deleteFileOrFolder"
                   :rename-file-or-folder="renameFileOrFolder"
+                  :custom-actions="fileExplorerActions"
                   downloadArchiveHelpText="Download all content as Zipped BagIt Archive"
                   @download="
                     onFileDownload(
@@ -519,6 +520,17 @@
                     <span />
                   </template>
                 </cz-file-explorer>
+
+                <cd-file-url-dialog
+                  v-model="showFileUrlDialog"
+                  :url="fileUrlValue"
+                  :status="data.creativeWorkStatus?.name"
+                />
+                <cd-add-reference-dialog
+                  v-model="showAddReferenceDialog"
+                  :folder-path="referenceFolderPath"
+                  :submit="onAddReference"
+                />
 
                 <HsUppy
                   ref="hsUppyRef"
@@ -928,11 +940,26 @@ import {
   readRootFolder,
 } from "./shared";
 import { isFolder } from "./zip-download";
+import {
+  addReferenceAction,
+  addReferenceContent,
+  fileUrl,
+  getFileUrlAction,
+  isFileOverrideFailure,
+  isTaskSuccessful,
+  requestUnzip,
+  taskFailureMessage,
+  unzipActions,
+  waitForTask,
+} from "./file-actions";
+import { getNotificationsApp } from "./notifications-app";
 import { createCookieS3Client } from "./cookie-s3-client";
 import HsUppy from "./hs-uppy.vue";
 import CdSpatialCoverageMap from "@/components/search-results/cd.spatial-coverage-map.vue";
 import CdReadmeEditor from "./cd.readme-editor.vue";
 import CdSaveButton from "./cd.save-button.vue";
+import CdFileUrlDialog from "./cd.file-url-dialog.vue";
+import CdAddReferenceDialog from "./cd.add-reference-dialog.vue";
 import User from "@/models/user.model";
 import { onBeforeRouteLeave, useRoute, useRouter } from "vue-router";
 import { contentTypeLabels, contentTypeLogos, S3_PROXY_URL } from "@/constants";
@@ -1936,6 +1963,144 @@ function onReadmeChange(payload: {
     if (node) {
       node.uploadedSize = payload.size;
     }
+  }
+}
+
+const showFileUrlDialog = ref(false);
+const fileUrlValue = ref("");
+const showAddReferenceDialog = ref(false);
+const referenceFolderPath = ref("");
+
+const fileExplorerActions = [
+  addReferenceAction((_folder, folderPath) => {
+    referenceFolderPath.value = folderPath;
+    showAddReferenceDialog.value = true;
+  }),
+  ...unzipActions((item, toFolder) => unzipFile(item, toFolder, false)),
+  getFileUrlAction((item) => {
+    fileUrlValue.value = fileUrl(window.location.origin, resourceId.value, item.path || item.name);
+    showFileUrlDialog.value = true;
+  }),
+];
+
+async function refreshFiles() {
+  // @ts-expect-error The key property is generated when the component is initialized
+  rootDirectory.value.children = await readRootFolder(
+    `${resourceId.value}/data/contents/`,
+    s3Client.value,
+    s3Info.value.bucket,
+  );
+  detectReadme();
+}
+
+/**
+ * Unzips on the server as a background task, shown in the navbar bell like
+ * the legacy page, and reloads the tree once it finishes.
+ */
+async function unzipFile(item: IFile, toFolder: boolean, overwrite: boolean) {
+  const zipPath = item.path || item.name;
+  let result;
+  try {
+    const task = await requestUnzip(resourceId.value, zipPath, {
+      toFolder,
+      overwrite,
+      csrfToken: await User.getCSRFToken(),
+    });
+    const notifications = getNotificationsApp();
+    notifications?.registerTask(task);
+    notifications?.show();
+    result = await waitForTask(task);
+  } catch (error: any) {
+    console.error("Unzip failed:", error);
+    Notifications.toast({
+      title: "Error",
+      message: `Failed to unzip ${item.name}: ${error?.message || error}`,
+      type: "error",
+    });
+    return;
+  }
+
+  if (isTaskSuccessful(result)) {
+    await refreshFiles();
+    Notifications.toast({
+      title: "Success",
+      message: `Unzipped ${item.name}.`,
+      type: "success",
+    });
+  } else if (isFileOverrideFailure(result)) {
+    Notifications.openDialog({
+      title: "Confirm whether to override existing files",
+      content: `${taskFailureMessage(result.payload)}. Click Proceed to override the files, otherwise click Cancel.`,
+      confirmText: "Proceed",
+      cancelText: "Cancel",
+      onConfirm: () => unzipFile(item, toFolder, true),
+    });
+  } else if (result.status === "progress") {
+    Notifications.toast({
+      message: `${item.name} is still unzipping. Reload the page later to see the files.`,
+      type: "info",
+    });
+  } else {
+    await refreshFiles();
+    Notifications.toast({
+      title: "Error",
+      message: `Failed to unzip ${item.name}: ${taskFailureMessage(result.payload || "")}`,
+      type: "error",
+    });
+  }
+}
+
+/** Adds a reference URL file; offers to skip validation when the URL cannot be validated. */
+async function onAddReference(name: string, url: string, validateUrl = true): Promise<boolean> {
+  try {
+    const result = await addReferenceContent(
+      resourceId.value,
+      referenceFolderPath.value,
+      name,
+      url,
+      validateUrl,
+      await User.getCSRFToken(),
+    );
+    if (result.ok) {
+      await refreshFiles();
+      Notifications.toast({
+        title: "Success",
+        message: "Reference content added.",
+        type: "success",
+      });
+      return true;
+    }
+
+    if (validateUrl) {
+      Notifications.openDialog({
+        title: "Unable to validate URL",
+        content: `Unable to validate URL link (${result.message}). This may be due to an error in the URL or password or automated bot protection at the hosting site. If you still want to create referenced content using this URL, click Proceed. Otherwise, click Cancel.`,
+        confirmText: "Proceed",
+        cancelText: "Cancel",
+        onConfirm: async () => {
+          if (await onAddReference(name, url, false)) {
+            showAddReferenceDialog.value = false;
+          }
+        },
+      });
+      return false;
+    }
+
+    console.error("Failed to add reference content:", result.message);
+    Notifications.toast({
+      title: "Error",
+      message: "Failed to add reference content.",
+      type: "error",
+    });
+    return false;
+  } catch (error: any) {
+    console.error("Failed to add reference content:", error);
+    Notifications.toast({
+      title: "Error",
+      message: "Failed to add reference content.",
+      type: "error",
+    });
+    return false;
   }
 }
 
