@@ -225,6 +225,7 @@ class Rights(BaseModel):
     url: Optional[HttpUrl] = None
 
     def to_dataset_license(self):
+        # TODO: Pabitra, set description to the CC short name matching statement, or "Other"
         _license = schema.CreativeWork.construct()
         _license.name = self.statement
         _license.url = self.url
