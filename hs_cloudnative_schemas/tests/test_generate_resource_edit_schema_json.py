@@ -17,6 +17,7 @@ def test_build_resource_edit_schema_uses_definitions_not_defs():
     assert schema["properties"]["@context"]["readOnly"] is True
 
 
+
 def test_write_resource_edit_schema_writes_json_file(tmp_path):
     output_path = tmp_path / OUTPUT_FILE.name
 

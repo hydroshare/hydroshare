@@ -10,6 +10,7 @@
     "moduleResolution": "node",
     "paths": {
       "@/*": ["src/*"],
+      "@hs-schemas/*": ["../../hs_cloudnative_schemas/schema/json_schemas/*"],
     },
     "resolveJsonModule": true,
     "types": [
