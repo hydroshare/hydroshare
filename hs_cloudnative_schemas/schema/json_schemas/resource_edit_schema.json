@@ -122,14 +122,18 @@
           "type": "string"
         },
         "name": {
+          "const": "This resource is shared under the Creative Commons Attribution CC BY.",
           "default": "This resource is shared under the Creative Commons Attribution CC BY.",
           "description": "The statement of the license.",
+          "enum": [
+            "This resource is shared under the Creative Commons Attribution CC BY."
+          ],
           "readOnly": true,
           "title": "Name",
           "type": "string"
         },
         "url": {
-          "default": "https://creativecommons.org/licenses/by/4.0/",
+          "default": "http://creativecommons.org/licenses/by/4.0/",
           "description": "A URL to the full text of the license.",
           "errorMessage": {
             "pattern": "must match format \"url\""
@@ -190,14 +194,18 @@
           "type": "string"
         },
         "name": {
+          "const": "This resource is shared under the Creative Commons Attribution-NoCommercial CC BY-NC.",
           "default": "This resource is shared under the Creative Commons Attribution-NoCommercial CC BY-NC.",
           "description": "The statement of the license.",
+          "enum": [
+            "This resource is shared under the Creative Commons Attribution-NoCommercial CC BY-NC."
+          ],
           "readOnly": true,
           "title": "Name",
           "type": "string"
         },
         "url": {
-          "default": "https://creativecommons.org/licenses/by-nc/4.0/",
+          "default": "http://creativecommons.org/licenses/by-nc/4.0/",
           "description": "A URL to the full text of the license.",
           "errorMessage": {
             "pattern": "must match format \"url\""
@@ -258,14 +266,18 @@
           "type": "string"
         },
         "name": {
+          "const": "This resource is shared under the Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND.",
           "default": "This resource is shared under the Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND.",
           "description": "The statement of the license.",
+          "enum": [
+            "This resource is shared under the Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND."
+          ],
           "readOnly": true,
           "title": "Name",
           "type": "string"
         },
         "url": {
-          "default": "https://creativecommons.org/licenses/by-nc-nd/4.0/",
+          "default": "http://creativecommons.org/licenses/by-nc-nd/4.0/",
           "description": "A URL to the full text of the license.",
           "errorMessage": {
             "pattern": "must match format \"url\""
@@ -326,14 +338,18 @@
           "type": "string"
         },
         "name": {
+          "const": "This resource is shared under the Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA.",
           "default": "This resource is shared under the Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA.",
           "description": "The statement of the license.",
+          "enum": [
+            "This resource is shared under the Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA."
+          ],
           "readOnly": true,
           "title": "Name",
           "type": "string"
         },
         "url": {
-          "default": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+          "default": "http://creativecommons.org/licenses/by-nc-sa/4.0/",
           "description": "A URL to the full text of the license.",
           "errorMessage": {
             "pattern": "must match format \"url\""
@@ -394,14 +410,18 @@
           "type": "string"
         },
         "name": {
+          "const": "This resource is shared under the Creative Commons Attribution-NoDerivs CC BY-ND.",
           "default": "This resource is shared under the Creative Commons Attribution-NoDerivs CC BY-ND.",
           "description": "The statement of the license.",
+          "enum": [
+            "This resource is shared under the Creative Commons Attribution-NoDerivs CC BY-ND."
+          ],
           "readOnly": true,
           "title": "Name",
           "type": "string"
         },
         "url": {
-          "default": "https://creativecommons.org/licenses/by-nd/4.0/",
+          "default": "http://creativecommons.org/licenses/by-nd/4.0/",
           "description": "A URL to the full text of the license.",
           "errorMessage": {
             "pattern": "must match format \"url\""
@@ -462,14 +482,18 @@
           "type": "string"
         },
         "name": {
+          "const": "This resource is shared under the Creative Commons Attribution-ShareAlike CC BY-SA.",
           "default": "This resource is shared under the Creative Commons Attribution-ShareAlike CC BY-SA.",
           "description": "The statement of the license.",
+          "enum": [
+            "This resource is shared under the Creative Commons Attribution-ShareAlike CC BY-SA."
+          ],
           "readOnly": true,
           "title": "Name",
           "type": "string"
         },
         "url": {
-          "default": "https://creativecommons.org/licenses/by-sa/4.0/",
+          "default": "http://creativecommons.org/licenses/by-sa/4.0/",
           "description": "A URL to the full text of the license.",
           "errorMessage": {
             "pattern": "must match format \"url\""

@@ -13,12 +13,12 @@ from hs_cloudnative_schemas.schema.base import (
 from hs_cloudnative_schemas.schema.core import CoreMetadataEdit
 
 STANDARD_LICENSE_CLASSES = [
-    (LicenseEnum.CC_BY, CCBYLicense, "https://creativecommons.org/licenses/by/4.0/"),
-    (LicenseEnum.CC_BY_SA, CCBYSALicense, "https://creativecommons.org/licenses/by-sa/4.0/"),
-    (LicenseEnum.CC_BY_ND, CCBYNDLicense, "https://creativecommons.org/licenses/by-nd/4.0/"),
-    (LicenseEnum.CC_BY_NC_SA, CCBYNCSALicense, "https://creativecommons.org/licenses/by-nc-sa/4.0/"),
-    (LicenseEnum.CC_BY_NC, CCBYNCLicense, "https://creativecommons.org/licenses/by-nc/4.0/"),
-    (LicenseEnum.CC_BY_NC_ND, CCBYNCNDLicense, "https://creativecommons.org/licenses/by-nc-nd/4.0/"),
+    (LicenseEnum.CC_BY, CCBYLicense, "http://creativecommons.org/licenses/by/4.0/"),
+    (LicenseEnum.CC_BY_SA, CCBYSALicense, "http://creativecommons.org/licenses/by-sa/4.0/"),
+    (LicenseEnum.CC_BY_ND, CCBYNDLicense, "http://creativecommons.org/licenses/by-nd/4.0/"),
+    (LicenseEnum.CC_BY_NC_SA, CCBYNCSALicense, "http://creativecommons.org/licenses/by-nc-sa/4.0/"),
+    (LicenseEnum.CC_BY_NC, CCBYNCLicense, "http://creativecommons.org/licenses/by-nc/4.0/"),
+    (LicenseEnum.CC_BY_NC_ND, CCBYNCNDLicense, "http://creativecommons.org/licenses/by-nc-nd/4.0/"),
 ]
 
 
@@ -47,13 +47,23 @@ def test_standard_license_class_defaults(license_enum, license_cls, expected_url
 
 @pytest.mark.parametrize("license_enum,license_cls,expected_url", STANDARD_LICENSE_CLASSES)
 def test_standard_license_name_and_url_are_marked_read_only_in_schema(license_enum, license_cls, expected_url):
-    # name/url are UI-read-only (pre-filled, not hand-edited) for standard licenses, so legacy/adapter-produced
-    # values that don't exactly match the canonical text can still load and validate.
+    # name/url are UI-read-only (pre-filled, not hand-edited) for standard licenses.
     schema = license_cls.model_json_schema()
     assert schema["properties"]["name"].get("readOnly") is True
-    assert "const" not in schema["properties"]["name"]
     assert schema["properties"]["url"].get("readOnly") is True
     assert "const" not in schema["properties"]["url"]
+
+
+@pytest.mark.parametrize("license_enum,license_cls,expected_url", STANDARD_LICENSE_CLASSES)
+def test_standard_license_name_is_a_const_discriminator_in_schema(license_enum, license_cls, expected_url):
+    # name carries a const equal to the canonical rights statement so it acts as the anyOf
+    # discriminator for the resource edit form. The S3 license metadata always includes name
+    # (but not description), so JsonForms selects the correct branch from name alone -- without
+    # name as a const, every CC license would resolve to the first branch (CC BY). Legacy data
+    # whose statement doesn't match the canonical text falls through to OtherLicense.
+    canonical_statement = f"This resource is shared under the {license_enum.value}."
+    schema = license_cls.model_json_schema()
+    assert schema["properties"]["name"].get("const") == canonical_statement
 
 
 def test_other_license_requires_name_but_url_is_optional():

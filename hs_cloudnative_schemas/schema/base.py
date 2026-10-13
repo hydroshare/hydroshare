@@ -239,13 +239,15 @@ class CCBYLicense(LicenseBase):
     description: Literal["Creative Commons Attribution CC BY"] = Field(
         default=LicenseEnum.CC_BY.value, description="A name of the license."
     )
-    name: str = Field(
+    name: Literal[
+        "This resource is shared under the Creative Commons Attribution CC BY."
+    ] = Field(
         default="This resource is shared under the Creative Commons Attribution CC BY.",
         description="The statement of the license.",
         json_schema_extra=read_only_schema_extra,
     )
     url: HttpUrl = Field(
-        default=HttpUrl("https://creativecommons.org/licenses/by/4.0/"),
+        default=HttpUrl("http://creativecommons.org/licenses/by/4.0/"),
         description="A URL to the full text of the license.",
         json_schema_extra=read_only_schema_extra,
     )
@@ -255,13 +257,15 @@ class CCBYSALicense(LicenseBase):
     description: Literal["Creative Commons Attribution-ShareAlike CC BY-SA"] = Field(
         default=LicenseEnum.CC_BY_SA.value, description="A name of the license."
     )
-    name: str = Field(
+    name: Literal[
+        "This resource is shared under the Creative Commons Attribution-ShareAlike CC BY-SA."
+    ] = Field(
         default="This resource is shared under the Creative Commons Attribution-ShareAlike CC BY-SA.",
         description="The statement of the license.",
         json_schema_extra=read_only_schema_extra,
     )
     url: HttpUrl = Field(
-        default=HttpUrl("https://creativecommons.org/licenses/by-sa/4.0/"),
+        default=HttpUrl("http://creativecommons.org/licenses/by-sa/4.0/"),
         description="A URL to the full text of the license.",
         json_schema_extra=read_only_schema_extra,
     )
@@ -271,13 +275,15 @@ class CCBYNDLicense(LicenseBase):
     description: Literal["Creative Commons Attribution-NoDerivs CC BY-ND"] = Field(
         default=LicenseEnum.CC_BY_ND.value, description="A name of the license."
     )
-    name: str = Field(
+    name: Literal[
+        "This resource is shared under the Creative Commons Attribution-NoDerivs CC BY-ND."
+    ] = Field(
         default="This resource is shared under the Creative Commons Attribution-NoDerivs CC BY-ND.",
         description="The statement of the license.",
         json_schema_extra=read_only_schema_extra,
     )
     url: HttpUrl = Field(
-        default=HttpUrl("https://creativecommons.org/licenses/by-nd/4.0/"),
+        default=HttpUrl("http://creativecommons.org/licenses/by-nd/4.0/"),
         description="A URL to the full text of the license.",
         json_schema_extra=read_only_schema_extra,
     )
@@ -287,14 +293,17 @@ class CCBYNCSALicense(LicenseBase):
     description: Literal["Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA"] = Field(
         default=LicenseEnum.CC_BY_NC_SA.value, description="A name of the license."
     )
-    name: str = Field(
+    name: Literal[
+        "This resource is shared under the "
+        "Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA."
+    ] = Field(
         default="This resource is shared under the "
         "Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA.",
         description="The statement of the license.",
         json_schema_extra=read_only_schema_extra,
     )
     url: HttpUrl = Field(
-        default=HttpUrl("https://creativecommons.org/licenses/by-nc-sa/4.0/"),
+        default=HttpUrl("http://creativecommons.org/licenses/by-nc-sa/4.0/"),
         description="A URL to the full text of the license.",
         json_schema_extra=read_only_schema_extra,
     )
@@ -304,13 +313,15 @@ class CCBYNCLicense(LicenseBase):
     description: Literal["Creative Commons Attribution-NoCommercial CC BY-NC"] = Field(
         default=LicenseEnum.CC_BY_NC.value, description="A name of the license."
     )
-    name: str = Field(
+    name: Literal[
+        "This resource is shared under the Creative Commons Attribution-NoCommercial CC BY-NC."
+    ] = Field(
         default="This resource is shared under the Creative Commons Attribution-NoCommercial CC BY-NC.",
         description="The statement of the license.",
         json_schema_extra=read_only_schema_extra,
     )
     url: HttpUrl = Field(
-        default=HttpUrl("https://creativecommons.org/licenses/by-nc/4.0/"),
+        default=HttpUrl("http://creativecommons.org/licenses/by-nc/4.0/"),
         description="A URL to the full text of the license.",
         json_schema_extra=read_only_schema_extra,
     )
@@ -320,14 +331,17 @@ class CCBYNCNDLicense(LicenseBase):
     description: Literal["Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND"] = Field(
         default=LicenseEnum.CC_BY_NC_ND.value, description="A name of the license."
     )
-    name: str = Field(
+    name: Literal[
+        "This resource is shared under the "
+        "Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND."
+    ] = Field(
         default="This resource is shared under the "
         "Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND.",
         description="The statement of the license.",
         json_schema_extra=read_only_schema_extra,
     )
     url: HttpUrl = Field(
-        default=HttpUrl("https://creativecommons.org/licenses/by-nc-nd/4.0/"),
+        default=HttpUrl("http://creativecommons.org/licenses/by-nc-nd/4.0/"),
         description="A URL to the full text of the license.",
         json_schema_extra=read_only_schema_extra,
     )
