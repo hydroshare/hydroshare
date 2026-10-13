@@ -599,3 +599,153 @@ def test_admin_request():
     response = client.post("/authorization/", data=request_body)
     assert response.status_code == 200
     assert response.json() == {"result": {"allow": False}}
+
+
+# collection resource actions
+# cccccccccccccccccccccccccccccccc is the resource id for the collection resource.
+# It is set up with the same user/group privileges as the private resource
+# (user1/user5 own it, user4 has edit, user3 has view, edit group has edit, view
+# group has view), but because it is a CollectionResource no file edit/write
+# operation is permitted on it for any non-admin user -- only view access behaves normally.
+COLLECTION_RESOURCE_ID = "cccccccccccccccccccccccccccccccc"
+
+
+def check_collection_view_authorization(request_body, resource_id=COLLECTION_RESOURCE_ID):
+    request_body = request_body.replace(
+        "f211b93642f84c55a0bdd1b12880e32e", resource_id)
+    # user1 is the owner and quota holder
+    response = client.post("/authorization/", data=request_body)
+    assert response.status_code == 200
+    assert response.json() == {"result": {"allow": True}}
+
+    # user2 has no explicit access
+    request_body = request_body.replace("user1", "user2")
+    response = client.post("/authorization/", data=request_body)
+    assert response.status_code == 200
+    assert response.json() == {"result": {"allow": False}}
+
+    # user3 has view access
+    request_body = request_body.replace("user2", "user3")
+    response = client.post("/authorization/", data=request_body)
+    assert response.status_code == 200
+    assert response.json() == {"result": {"allow": True}}
+
+    # user4 has edit access (view is still allowed)
+    request_body = request_body.replace("user3", "user4")
+    response = client.post("/authorization/", data=request_body)
+    assert response.status_code == 200
+    assert response.json() == {"result": {"allow": True}}
+
+    # user5 is an owner
+    request_body = request_body.replace("user4", "user5")
+    response = client.post("/authorization/", data=request_body)
+    assert response.status_code == 200
+    assert response.json() == {"result": {"allow": True}}
+
+    # user6 is a member of view group
+    request_body = request_body.replace("user5", "user6")
+    response = client.post("/authorization/", data=request_body)
+    assert response.status_code == 200
+    assert response.json() == {"result": {"allow": True}}
+
+    # user7 is a member of edit group
+    request_body = request_body.replace("user6", "user7")
+    response = client.post("/authorization/", data=request_body)
+    assert response.status_code == 200
+    assert response.json() == {"result": {"allow": True}}
+
+
+def check_collection_edit_authorization(request_body, resource_id=COLLECTION_RESOURCE_ID):
+    request_body = request_body.replace(
+        "f211b93642f84c55a0bdd1b12880e32e", resource_id)
+    # no file edit/write operation is permitted on a collection resource, so every
+    # user -- including owners and users/groups with edit privilege -- is denied
+
+    # user1 is the owner and quota holder
+    response = client.post("/authorization/", data=request_body)
+    assert response.status_code == 200
+    assert response.json() == {"result": {"allow": False}}
+
+    # user2 has no explicit access
+    request_body = request_body.replace("user1", "user2")
+    response = client.post("/authorization/", data=request_body)
+    assert response.status_code == 200
+    assert response.json() == {"result": {"allow": False}}
+
+    # user3 has view access
+    request_body = request_body.replace("user2", "user3")
+    response = client.post("/authorization/", data=request_body)
+    assert response.status_code == 200
+    assert response.json() == {"result": {"allow": False}}
+
+    # user4 has edit access
+    request_body = request_body.replace("user3", "user4")
+    response = client.post("/authorization/", data=request_body)
+    assert response.status_code == 200
+    assert response.json() == {"result": {"allow": False}}
+
+    # user5 is an owner
+    request_body = request_body.replace("user4", "user5")
+    response = client.post("/authorization/", data=request_body)
+    assert response.status_code == 200
+    assert response.json() == {"result": {"allow": False}}
+
+    # user6 is a member of view group
+    request_body = request_body.replace("user5", "user6")
+    response = client.post("/authorization/", data=request_body)
+    assert response.status_code == 200
+    assert response.json() == {"result": {"allow": False}}
+
+    # user7 is a member of edit group
+    request_body = request_body.replace("user6", "user7")
+    response = client.post("/authorization/", data=request_body)
+    assert response.status_code == 200
+    assert response.json() == {"result": {"allow": False}}
+
+
+@pytest.mark.parametrize(
+    "action_json", ["user1_list_bucket.json",
+                    "user1_list_objects.json", "user1_list_objects_v2.json"]
+)
+def test_collection_view(action_json):
+    with open(f"tests/json_payloads/view_authorization/{action_json}", "r") as file:
+        request_body = file.read()
+    check_collection_view_authorization(request_body)
+
+
+@pytest.mark.parametrize(
+    "action_json",
+    [
+        "user1_put_object.json",
+        "user1_put_object_legal_hold.json",
+        "user1_upload_part.json",
+        "user1_delete_object.json",
+        "user1_delete_objects.json",
+    ],
+)
+def test_collection_edit(action_json):
+    with open(f"tests/json_payloads/edit_authorization/{action_json}", "r") as file:
+        request_body = file.read()
+    check_collection_edit_authorization(request_body)
+
+
+@pytest.mark.parametrize("admin_username", ["cuahsi", "admin"])
+@pytest.mark.parametrize(
+    "action_json",
+    [
+        "user1_put_object.json",
+        "user1_put_object_legal_hold.json",
+        "user1_upload_part.json",
+        "user1_delete_object.json",
+        "user1_delete_objects.json",
+    ],
+)
+def test_collection_edit_admin(action_json, admin_username):
+    # the cuahsi account and superusers (admin) are exempt from the collection edit restriction
+    with open(f"tests/json_payloads/edit_authorization/{action_json}", "r") as file:
+        request_body = file.read()
+    request_body = request_body.replace(
+        "f211b93642f84c55a0bdd1b12880e32e", COLLECTION_RESOURCE_ID).replace("user1", admin_username)
+    response = client.post("/authorization/", data=request_body)
+    assert response.status_code == 200
+    assert response.json() == {"result": {"allow": True}}
