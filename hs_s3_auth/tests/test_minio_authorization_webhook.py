@@ -602,12 +602,12 @@ def test_admin_request():
 
 
 # collection resource actions
-# cccccccccccccccccccccccccccccccc is the resource id for the collection resource.
+# a41ea008cc7a489e8c491150101596d3 is the resource id for the collection resource.
 # It is set up with the same user/group privileges as the private resource
 # (user1/user5 own it, user4 has edit, user3 has view, edit group has edit, view
 # group has view), but because it is a CollectionResource no file edit/write
 # operation is permitted on it for any non-admin user -- only view access behaves normally.
-COLLECTION_RESOURCE_ID = "cccccccccccccccccccccccccccccccc"
+COLLECTION_RESOURCE_ID = "a41ea008cc7a489e8c491150101596d3"
 
 
 def check_collection_view_authorization(request_body, resource_id=COLLECTION_RESOURCE_ID):

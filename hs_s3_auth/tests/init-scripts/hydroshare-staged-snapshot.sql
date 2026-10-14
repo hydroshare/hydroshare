@@ -33781,7 +33781,7 @@ GRANT ALL ON SCHEMA public TO PUBLIC;
 -- access setup but with resource_type = 'CollectionResource'. Used to verify that
 -- file edit/write operations are denied on collection resources even for owners and
 -- users/groups with edit privilege, while view access is unaffected.
--- short_id: cccccccccccccccccccccccccccccccc (page_ptr_id 9001).
+-- short_id: a41ea008cc7a489e8c491150101596d3 (page_ptr_id 9001).
 --
 -- NOTE: ids 9001 and up are reserved for test fixtures. They are inserted explicitly,
 -- so the id sequences of the affected tables are NOT advanced. Tests are read-only
@@ -33794,7 +33794,7 @@ INSERT INTO public.pages_page
      created, updated, status, publish_date, expiry_date, short_url, in_sitemap, _order,
      parent_id, in_menus, titles, content_model, login_required)
 VALUES
-    (9001, '', 1, 'collection resource', 'resource/cccccccccccccccccccccccccccccccc', NULL,
+    (9001, '', 1, 'collection resource', 'resource/a41ea008cc7a489e8c491150101596d3', NULL,
      'collection', TRUE, '2025-06-10 23:15:47.717692+00', '2025-06-11 03:02:45.627118+00', 2,
      '2025-06-10 23:15:47.715096+00', NULL, NULL, TRUE, 9001, NULL, '', 'collection resource',
      'collectionresource', FALSE);
@@ -33806,7 +33806,7 @@ INSERT INTO public.hs_core_genericresource
      download_count, view_count, repaired, files_checked, spam_allowlisted, bag_last_downloaded,
      quota_holder_id, cached_metadata)
 VALUES
-    (9001, 0, 0, 0, 0, 'collection', 'cccccccccccccccccccccccccccccccc', '', 2, 166, 18, 18, 18,
+    (9001, 0, 0, 0, 0, 'collection', 'a41ea008cc7a489e8c491150101596d3', '', 2, 166, 18, 18, 18,
      'CollectionResource', NULL, NULL, NULL, '', '', 0, 0, NULL, NULL, FALSE, NULL, 18, '{}');
 
 INSERT INTO public.hs_access_control_resourceaccess
