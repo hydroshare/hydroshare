@@ -33776,6 +33776,61 @@ GRANT ALL ON SCHEMA public TO PUBLIC;
 
 
 --
+-- Collection resource fixture (added for hs_s3_auth tests).
+-- Clones the private resource (page_ptr_id 17 / f211b93642f84c55a0bdd1b12880e32e)
+-- access setup but with resource_type = 'CollectionResource'. Used to verify that
+-- file edit/write operations are denied on collection resources even for owners and
+-- users/groups with edit privilege, while view access is unaffected.
+-- short_id: a41ea008cc7a489e8c491150101596d3 (page_ptr_id 9001).
+--
+-- NOTE: ids 9001 and up are reserved for test fixtures. They are inserted explicitly,
+-- so the id sequences of the affected tables are NOT advanced. Tests are read-only
+-- against this database; if a test ever inserts rows relying on those sequences,
+-- advance them first (setval) to avoid primary key collisions.
+--
+
+INSERT INTO public.pages_page
+    (id, keywords_string, site_id, title, slug, _meta_title, description, gen_description,
+     created, updated, status, publish_date, expiry_date, short_url, in_sitemap, _order,
+     parent_id, in_menus, titles, content_model, login_required)
+VALUES
+    (9001, '', 1, 'collection resource', 'resource/a41ea008cc7a489e8c491150101596d3', NULL,
+     'collection', TRUE, '2025-06-10 23:15:47.717692+00', '2025-06-11 03:02:45.627118+00', 2,
+     '2025-06-10 23:15:47.715096+00', NULL, NULL, TRUE, 9001, NULL, '', 'collection resource',
+     'collectionresource', FALSE);
+
+INSERT INTO public.hs_core_genericresource
+    (page_ptr_id, comments_count, rating_count, rating_sum, rating_average, content, short_id,
+     doi, object_id, content_type_id, creator_id, last_changed_by_id, user_id, resource_type,
+     file_unpack_message, file_unpack_status, locked_time, extra_metadata, extra_data,
+     download_count, view_count, repaired, files_checked, spam_allowlisted, bag_last_downloaded,
+     quota_holder_id, cached_metadata)
+VALUES
+    (9001, 0, 0, 0, 0, 'collection', 'a41ea008cc7a489e8c491150101596d3', '', 2, 166, 18, 18, 18,
+     'CollectionResource', NULL, NULL, NULL, '', '', 0, 0, NULL, NULL, FALSE, NULL, 18, '{}');
+
+INSERT INTO public.hs_access_control_resourceaccess
+    (id, active, discoverable, public, shareable, published, immutable, resource_id,
+     require_download_agreement, allow_private_sharing, review_pending)
+VALUES
+    (9001, TRUE, FALSE, FALSE, TRUE, FALSE, FALSE, 9001, FALSE, FALSE, FALSE);
+
+INSERT INTO public.hs_access_control_userresourceprivilege
+    (id, privilege, start, grantor_id, resource_id, user_id, exhibit)
+VALUES
+    (9001, 1, '2025-06-11 03:01:03.56259+00', 18, 9001, 18, FALSE),
+    (9002, 3, '2025-06-11 03:01:03.56259+00', 18, 9001, 20, FALSE),
+    (9003, 2, '2025-06-11 03:01:03.56259+00', 18, 9001, 22, FALSE),
+    (9004, 1, '2025-06-11 03:01:03.56259+00', 18, 9001, 23, FALSE);
+
+INSERT INTO public.hs_access_control_groupresourceprivilege
+    (id, privilege, start, grantor_id, group_id, resource_id, exhibit)
+VALUES
+    (9001, 3, '2025-06-11 15:54:17.468587+00', 18, 14, 9001, FALSE),
+    (9002, 2, '2025-06-11 15:55:35.327607+00', 18, 15, 9001, FALSE);
+
+
+--
 -- PostgreSQL database dump complete
 --
 

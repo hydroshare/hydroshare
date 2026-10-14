@@ -149,6 +149,7 @@ def user_has_edit_access(user_id: int, resource_id: str):
     AND hs_access_control_groupaccess.active
     AND hs_access_control_groupresourceprivilege.privilege = 2
     AND NOT hs_access_control_resourceaccess.immutable))
+    AND hs_core_genericresource.resource_type != 'CollectionResource'
     AND hs_core_genericresource.short_id = :resource_id"""
     with engine.connect() as con:
         rs = con.execute(
