@@ -18,6 +18,7 @@ from celery.schedules import crontab
 from celery.signals import task_postrun
 from celery.worker.request import Request
 from django.conf import settings
+from django.core import management
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.core.mail import send_mail
 from django.db.models import F, Q
@@ -162,11 +163,9 @@ def setup_periodic_tasks(sender, **kwargs):
                                  options={'queue': 'periodic'})
         sender.add_periodic_task(crontab(minute=0, hour=6), nightly_cache_file_system_metadata.s(),
                                  options={'queue': 'periodic'})
-        sender.add_periodic_task(crontab(minute=30, hour=6), nightly_periodic_task_check.s(),
+        sender.add_periodic_task(crontab(minute=30, hour=6), task_notification_cleanup.s(),
                                  options={'queue': 'periodic'})
-        sender.add_periodic_task(crontab(minute=30, hour=7), task_notification_cleanup.s(),
-                                 options={'queue': 'periodic'})
-        sender.add_periodic_task(crontab(minute=0, hour=9), ensure_published_resources_have_bags.s(),
+        sender.add_periodic_task(crontab(minute=0, hour=7), clear_django_sessions.s(),
                                  options={'queue': 'periodic'})
 
         # Monthly
@@ -211,6 +210,15 @@ def ensure_published_resources_have_bags():
 
 
 @celery_app.task(ignore_result=True, base=HydroshareTask)
+def clear_django_sessions():
+    """
+    Clear expired Django sessions from the database.
+    """
+    management.call_command('clearsessions')
+    logger.info("Cleared expired Django sessions.")
+
+
+@celery_app.task(ignore_result=True, base=HydroshareTask)
 def check_bucket_names():
     """
     Check to notify when UserProfi`le is missing a bucket name
@@ -247,12 +255,6 @@ def nightly_zips_cleanup():
     istorage = S3Storage()
     if istorage.exists(zips_daily_date):
         istorage.delete(zips_daily_date)
-
-
-@celery_app.task(ignore_result=True, base=HydroshareTask)
-def nightly_periodic_task_check():
-    with open("celery/periodic_tasks_last_executed.txt", mode='w') as file:
-        file.write(timezone.now().strftime('%m/%d/%y %H:%M:%S'))
 
 
 @celery_app.task(ignore_result=True, base=HydroshareTask)
