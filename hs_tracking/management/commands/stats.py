@@ -4,13 +4,15 @@ import sys
 import logging
 import pytz
 import warnings
+from collections import defaultdict
 from calendar import monthrange
 
 from django.contrib.auth.models import User
+from django.contrib.contenttypes.models import ContentType
 from django.core.management.base import BaseCommand
-from django.db.models import Q
+from django.db.models import Count, Q
 from django.utils import timezone
-from hs_core.models import BaseResource, Date
+from hs_core.models import BaseResource, CoreMetaData, Date, Description, Subject
 from hs_core.hydroshare import current_site_url
 from theme.models import UserProfile
 
@@ -181,9 +183,43 @@ class Command(BaseCommand):
 
     def resources_details(self):
         w = csv.writer(sys.stdout)
+        metadata_content_type = ContentType.objects.get_for_model(CoreMetaData)
+        abstracts = dict(
+            Description.objects.filter(content_type=metadata_content_type)
+            .values_list('object_id', 'abstract')
+        )
+        keywords = defaultdict(list)
+        for metadata_id, keyword in Subject.objects.filter(
+            content_type=metadata_content_type
+        ).order_by('object_id', 'id').values_list('object_id', 'value'):
+            keywords[metadata_id].append(keyword)
+        landing_views = dict(
+            hs_tracking.Variable.objects.filter(
+                name='visit', landing=True, resource__isnull=False
+            ).values('resource_id').annotate(
+                count=Count('id')
+            ).values_list('resource_id', 'count')
+        )
+        api_requests = dict(
+            hs_tracking.Variable.objects.filter(
+                name='visit', rest=True, resource__isnull=False
+            ).values('resource_id').annotate(
+                count=Count('id')
+            ).values_list('resource_id', 'count')
+        )
+        downloads = {
+            (resource_id, event_name): count
+            for resource_id, event_name, count in hs_tracking.Variable.objects.filter(
+                name__in=['resource_download', 'download'], resource__isnull=False
+            ).values('resource_id', 'name').annotate(
+                count=Count('id')
+            ).values_list('resource_id', 'name', 'count')
+        }
         fields = [
             'creation date',
             'title',
+            'abstract',
+            'keywords',
             'resource type',
             'size',
             'publication status',
@@ -193,7 +229,11 @@ class Command(BaseCommand):
             'publication date',
             'bag last downloaded date',
             'resource updated date',
-            'last updated by user id'
+            'last updated by user id',
+            'landing page views',
+            'API requests',
+            'resource/bag downloads',
+            'individual file downloads'
         ]
         w.writerow(fields)
         failed_resource_ids = []
@@ -219,6 +259,8 @@ class Command(BaseCommand):
                     r.metadata.dates.get(type="created").
                     start_date.strftime("%m/%d/%Y %H:%M:%S.%f"),
                     r.metadata.title.value,
+                    abstracts.get(r.object_id) or '',
+                    ';'.join(keywords.get(r.object_id, [])),
                     r.resource_type,
                     r.size,
                     r.raccess.sharing_status,
@@ -228,7 +270,11 @@ class Command(BaseCommand):
                     pub_date,
                     last_downloaded,
                     updated_date,
-                    last_changed_by
+                    last_changed_by,
+                    landing_views.get(r.id, 0),
+                    api_requests.get(r.id, 0),
+                    downloads.get((r.id, 'resource_download'), 0),
+                    downloads.get((r.id, 'download'), 0)
                 ]
                 w.writerow([str(v) for v in values])
 
