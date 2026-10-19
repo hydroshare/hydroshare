@@ -11,6 +11,13 @@ import AwsS3 from "@uppy/aws-s3";
 import User from "@/models/user.model";
 import { buildUploadKey } from "./upload-key";
 import {
+  DEFAULT_UPLOAD_LIMITS,
+  formatFileSize,
+  maxUploadSize,
+  uploadHelpText,
+  type UploadLimits,
+} from "./upload-limits";
+import {
   COMPANION_URL,
   GOOGLE_PICKER_CLIENT_ID,
   GOOGLE_PICKER_API_KEY,
@@ -112,12 +119,67 @@ const props = withDefaults(
      * files wouldn't appear when readRootFolder walks `data/contents/`.
      */
     uploadPrefix?: string;
+    limits?: UploadLimits;
+    /** Quota left for new uploads, in bytes; `null` when quota is not enforced. */
+    availableQuota?: number | null;
   }>(),
   {
     s3Host: "http://localhost:9000",
     uploadPrefix: "",
+    limits: () => DEFAULT_UPLOAD_LIMITS,
+    availableQuota: null,
   },
 );
+
+const restrictedSize = computed(() =>
+  maxUploadSize(props.limits, props.availableQuota),
+);
+
+watch(
+  () => [restrictedSize.value, uploadHelpText(props.limits, props.availableQuota)] as const,
+  ([maxFileSize, note]) => {
+    uppyInstance?.setOptions({ restrictions: { maxFileSize } });
+    uppyInstance?.getPlugin("Dashboard")?.setOptions({ note });
+  },
+);
+
+/** Rejects files over the per-batch file count or the remaining quota, counting uploads still in flight. */
+function onBeforeFileAdded(file: any, files: Record<string, any>): boolean {
+  if (Object.hasOwn(files, file.id)) {
+    return false;
+  }
+  const pending = Object.values(files).filter(
+    (f: any) => !f.progress?.uploadComplete,
+  );
+
+  if (!file.isRemote) {
+    const pendingLocal = pending.filter((f: any) => !f.isRemote).length;
+    if (pendingLocal >= props.limits.maxNumberOfFiles) {
+      uppyInstance?.info(
+        `You can upload at most ${props.limits.maxNumberOfFiles} files at a time.`,
+        "error",
+        5000,
+      );
+      return false;
+    }
+  }
+
+  if (props.availableQuota !== null) {
+    const pendingBytes = pending.reduce(
+      (acc: number, f: any) => acc + (f.size || 0),
+      0,
+    );
+    if (pendingBytes + (file.size || 0) > props.availableQuota) {
+      uppyInstance?.info(
+        `${file.name} exceeds the remaining quota of ${formatFileSize(props.availableQuota)}.`,
+        "error",
+        5000,
+      );
+      return false;
+    }
+  }
+  return true;
+}
 
 const emit = defineEmits(["file-uploaded"]);
 
@@ -195,6 +257,8 @@ function initializeUppy() {
     uppyInstance = new Uppy({
       id: "uppy",
       autoProceed: true,
+      restrictions: { maxFileSize: restrictedSize.value },
+      onBeforeFileAdded,
       onBeforeUpload: (files) => {
         const basePrefix = props.uploadPrefix || props.s3Info.prefix || "";
         Object.keys(files).forEach((fileId) => {
@@ -219,7 +283,7 @@ function initializeUppy() {
       target: "#uppy",
       showProgressDetails: true,
       width: "100%",
-      note: `TODO: quota?`,
+      note: uploadHelpText(props.limits, props.availableQuota),
     });
 
     uppyInstance
@@ -247,6 +311,17 @@ function initializeUppy() {
           };
         },
         uploadPartBytes: cookieUploadPartBytes,
+      })
+      .on("upload-progress", (file: any, progress: any) => {
+        // Remote (Google Drive) files report their size only once uploading starts.
+        if (file?.isRemote && progress?.bytesTotal > restrictedSize.value) {
+          uppyInstance?.removeFile(file.id);
+          uppyInstance?.info(
+            `File size ${formatFileSize(progress.bytesTotal)} exceeds the maximum limit of ${formatFileSize(restrictedSize.value)}.`,
+            "error",
+            5000,
+          );
+        }
       })
       .on("upload-success", (file: any) => {
         // The parent owns the file-explorer ref and adds the node to the tree.

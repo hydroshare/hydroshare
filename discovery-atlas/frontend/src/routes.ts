@@ -37,6 +37,7 @@ export const routes: RouteRecordRaw[] = [
     },
     meta: {
       title: "Landing Page",
+      fluidBelowLg: true,
     },
   },
   {
@@ -50,6 +51,7 @@ export const routes: RouteRecordRaw[] = [
     },
     meta: {
       title: "Edit Dataset",
+      fluidBelowLg: true,
     },
   },
   {
