@@ -70,9 +70,6 @@ const isImporting = ref(false);
 const importError = ref("");
 let searchToken = 0;
 let searchDebounce: number | null = null;
-// Parent window's scroll position captured right before we recenter it on
-// the dialog, so we can put the user back where they were once it closes.
-let prevScrollY: number | null = null;
 
 const dialogOpen = computed<boolean>({
   get: () => props.modelValue,
@@ -82,65 +79,13 @@ const dialogOpen = computed<boolean>({
 watch(
   () => props.modelValue,
   (open) => {
-    if (open) {
-      search.value = "";
-      items.value = [];
-      selected.value = null;
-      importError.value = "";
-      // This app runs inside an iframe with scrolling="no" sized to its
-      // full content, so Vuetify's position:fixed dialog lands at
-      // iframe-center — typically far below the parent viewport. Wait for
-      // the dialog to mount, then scroll the parent so iframe-center
-      // aligns with its viewport center. Same fix as cd.manage-access.vue's
-      // alignDialogToParentViewport.
-      try {
-        prevScrollY = window.parent?.scrollY ?? null;
-      } catch {
-        prevScrollY = null;
-      }
-      setTimeout(alignDialogToParentViewport, 80);
-    } else {
-      try {
-        if (prevScrollY !== null) {
-          window.parent?.scrollTo({ top: prevScrollY, behavior: "smooth" });
-        }
-      } catch {
-        // cross-origin access denied — nothing we can do from inside the iframe
-      } finally {
-        prevScrollY = null;
-      }
-    }
+    if (!open) return;
+    search.value = "";
+    items.value = [];
+    selected.value = null;
+    importError.value = "";
   },
 );
-
-function alignDialogToParentViewport() {
-  try {
-    const parentWin = window.parent;
-    if (!parentWin || parentWin === window) return;
-    const iframe = parentWin.document.getElementById(
-      "discovery-app-frame",
-    ) as HTMLIFrameElement | null;
-    if (!iframe) return;
-    const iframeRect = iframe.getBoundingClientRect();
-    const contentHeight = Math.max(
-      iframe.offsetHeight,
-      document.documentElement.scrollHeight,
-    );
-    const dialogYInParent =
-      iframeRect.top + parentWin.scrollY + contentHeight / 2;
-    // Bias the scroll target up by the HydroShare navbar height so the
-    // dialog's top edge isn't clipped by it after the scroll settles.
-    const navbarOffset = 80;
-    const targetScrollY = Math.max(
-      0,
-      dialogYInParent - parentWin.innerHeight / 2 - navbarOffset,
-    );
-    if (Math.abs(parentWin.scrollY - targetScrollY) < 4) return;
-    parentWin.scrollTo({ top: targetScrollY, behavior: "smooth" });
-  } catch {
-    // cross-origin access denied — nothing we can do from inside the iframe
-  }
-}
 
 watch(search, (q) => {
   if (searchDebounce) {
