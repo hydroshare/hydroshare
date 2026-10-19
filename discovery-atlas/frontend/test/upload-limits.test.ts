@@ -1,7 +1,9 @@
 import { describe, it, expect } from "vitest";
 import {
   availableQuota,
+  DEFAULT_UPLOAD_LIMITS,
   formatFileSize,
+  hostUploadLimits,
   maxUploadSize,
   quotaError,
   uploadHelpText,
@@ -13,6 +15,31 @@ const limits = (remainingQuota: number | null): UploadLimits => ({
   maxFileSize: 25 * GB,
   maxNumberOfFiles: 50,
   remainingQuota,
+});
+
+describe("hostUploadLimits", () => {
+  it("reads the limits the host window exposes", () => {
+    const host = { HS_UPLOAD_LIMITS: { maxFileSize: 10 * GB, maxNumberOfFiles: 5 } };
+    expect(hostUploadLimits(host)).toEqual({
+      maxFileSize: 10 * GB,
+      maxNumberOfFiles: 5,
+      remainingQuota: null,
+    });
+  });
+
+  it("falls back to the defaults when the host has no limits", () => {
+    expect(hostUploadLimits({})).toEqual(DEFAULT_UPLOAD_LIMITS);
+    expect(hostUploadLimits(null)).toEqual(DEFAULT_UPLOAD_LIMITS);
+  });
+
+  it("falls back to the defaults when the host is cross-origin", () => {
+    const host = new Proxy({}, {
+      get() {
+        throw new DOMException("Blocked", "SecurityError");
+      },
+    });
+    expect(hostUploadLimits(host)).toEqual(DEFAULT_UPLOAD_LIMITS);
+  });
 });
 
 describe("formatFileSize", () => {

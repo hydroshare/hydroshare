@@ -3026,13 +3026,13 @@ def get_missing_file_type_metadata(request, shortkey):
     return JsonResponse(data)
 
 
-def get_upload_limits(request, shortkey):
-    """Upload limits for a resource and the remaining quota of its quota holder, in bytes."""
+def get_remaining_quota(request, shortkey):
+    """Remaining quota of the resource's quota holder, in bytes."""
     from hs_core.hydroshare.utils import get_remaining_user_quota
 
     try:
         resource, _, _ = authorize(
-            request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE
+            request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE
         )
     except (NotFound, ObjectDoesNotExist):
         return JsonResponse(
@@ -3041,7 +3041,7 @@ def get_upload_limits(request, shortkey):
         )
     except PermissionDenied:
         return JsonResponse(
-            {"status": "error", "message": "You don't have permission to edit this resource"},
+            {"status": "error", "message": "You don't have permission to view this resource"},
             status=403
         )
 
@@ -3049,12 +3049,7 @@ def get_upload_limits(request, shortkey):
     if remaining_quota is not None:
         remaining_quota = int(remaining_quota)
 
-    return JsonResponse({
-        "status": "success",
-        "max_file_size": getattr(settings, 'FILE_UPLOAD_MAX_SIZE', 25 * 1024**3),
-        "max_number_of_files": getattr(settings, 'MAX_NUMBER_OF_FILES_IN_SINGLE_LOCAL_UPLOAD', 50),
-        "remaining_quota": remaining_quota,
-    })
+    return JsonResponse({"status": "success", "remaining_quota": remaining_quota})
 
 
 def get_manage_access_data(request, shortkey):

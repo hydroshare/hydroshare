@@ -947,7 +947,8 @@ import HsUppy from "./hs-uppy.vue";
 import {
   DEFAULT_UPLOAD_LIMITS,
   availableQuota,
-  fetchUploadLimits,
+  fetchRemainingQuota,
+  hostUploadLimits,
   quotaError,
   uploadHelpText,
   type UploadLimits,
@@ -1631,12 +1632,14 @@ function validateUpload(files: File[]) {
 }
 
 async function loadUploadLimits() {
+  const limits = hostUploadLimits(window.parent);
   try {
-    uploadLimits.value = await fetchUploadLimits(resourceId.value);
-    uploadedBytes.value = 0;
+    limits.remainingQuota = await fetchRemainingQuota(resourceId.value);
   } catch (e) {
     console.error(e);
   }
+  uploadLimits.value = limits;
+  uploadedBytes.value = 0;
 }
 const rootDirectory = ref<Partial<IFolder>>({
   name: "root",

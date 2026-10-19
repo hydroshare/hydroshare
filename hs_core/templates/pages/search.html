@@ -23,6 +23,7 @@
   window.HS_RESOURCE_CREATOR_PROFILES = {{ creator_profiles_json|default:"null"|safe }};
   window.HS_RESOURCE_ALERTS = {{ alerts_json|default:"null"|safe }};
   window.HS_BAG_URL = {{ bag_url|default:"null"|safe }};
+  window.HS_UPLOAD_LIMITS = {{ upload_limits_json|default:"null"|safe }};
 
   iframe.addEventListener("load", () => {
     const resizeObserver = new ResizeObserver((entries) => {

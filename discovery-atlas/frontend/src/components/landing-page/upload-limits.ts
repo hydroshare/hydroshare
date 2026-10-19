@@ -11,25 +11,36 @@ export const DEFAULT_UPLOAD_LIMITS: UploadLimits = {
   remainingQuota: null,
 };
 
-export async function fetchUploadLimits(
+/** Static limits the landing page view exposes on the host window as `HS_UPLOAD_LIMITS`. */
+export function hostUploadLimits(host: unknown): UploadLimits {
+  let raw: any;
+  try {
+    raw = (host as any)?.HS_UPLOAD_LIMITS;
+  } catch {
+    // cross-origin host
+  }
+  return {
+    ...DEFAULT_UPLOAD_LIMITS,
+    maxFileSize: Number(raw?.maxFileSize) || DEFAULT_UPLOAD_LIMITS.maxFileSize,
+    maxNumberOfFiles:
+      Number(raw?.maxNumberOfFiles) || DEFAULT_UPLOAD_LIMITS.maxNumberOfFiles,
+  };
+}
+
+/** Remaining quota of the resource's quota holder, or `null` when quota is not enforced. */
+export async function fetchRemainingQuota(
   resourceId: string,
-): Promise<UploadLimits> {
-  const response = await fetch(`/hsapi/_internal/${resourceId}/upload-limits/`, {
+): Promise<number | null> {
+  const response = await fetch(`/hsapi/_internal/${resourceId}/remaining-quota/`, {
     credentials: "include",
   });
   if (!response.ok) {
-    throw new Error(`Failed to load upload limits (${response.status}).`);
+    throw new Error(`Failed to load remaining quota (${response.status}).`);
   }
   const data = await response.json();
-  return {
-    maxFileSize: Number(data.max_file_size) || DEFAULT_UPLOAD_LIMITS.maxFileSize,
-    maxNumberOfFiles:
-      Number(data.max_number_of_files) || DEFAULT_UPLOAD_LIMITS.maxNumberOfFiles,
-    remainingQuota:
-      data.remaining_quota === null || data.remaining_quota === undefined
-        ? null
-        : Math.max(Number(data.remaining_quota) || 0, 0),
-  };
+  return data.remaining_quota === null || data.remaining_quota === undefined
+    ? null
+    : Math.max(Number(data.remaining_quota) || 0, 0);
 }
 
 /** Formats bytes the way Django's `filesizeformat` does (1024 based, one decimal). */
