@@ -1,5 +1,5 @@
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
@@ -94,6 +94,44 @@ class TestCollectFileToCatalog(ParametrizedTestCase):
         collect_file_to_catalog("bucket/res/.hsjsonld/dataset_metadata.json")
         _, replacement_metadata = self.mock_collection.find_one_and_replace.call_args[0]
         self.assertEqual(replacement_metadata["first_creator"], expected_first_creator)
+
+    @parametrize(
+        "key,value,expected",
+        [
+            param("dateCreated", "2026-01-15 10:30:00.000000+00:00",
+                  datetime(2026, 1, 15, 10, 30, tzinfo=timezone.utc), id="legacy_space_separator_with_offset"),
+            param("endDate", "2016-03-06 00:50:50",
+                  datetime(2016, 3, 6, 0, 50, 50), id="legacy_temporal_coverage_no_offset"),
+            param("datePublished", "2016-03-06T00:50:50.652782+00:00",
+                  datetime(2016, 3, 6, 0, 50, 50, 652782, tzinfo=timezone.utc), id="iso_t_separator_with_offset"),
+            param("name", "2016-03-06T00:50:50.652782+00:00",
+                  "2016-03-06T00:50:50.652782+00:00", id="non_date_key_left_as_string"),
+            param("dateModified", "not a date", "not a date", id="unparseable_value_left_as_string"),
+        ],
+    )
+    def test_datetime_parsing_by_key(self, key, value, expected):
+        """Date keys are converted via fromisoformat for legacy and ISO formats; other keys are untouched."""
+        metadata = {**SAMPLE_METADATA, key: value}
+        self.mock_s3.get_object.return_value = _make_s3_response(metadata)
+        collect_file_to_catalog("bucket/res/.hsjsonld/dataset_metadata.json")
+        _, replacement_metadata = self.mock_collection.find_one_and_replace.call_args[0]
+        self.assertEqual(replacement_metadata[key], expected)
+
+    def test_nested_temporal_coverage_dates_parsed(self):
+        """startDate/endDate nested inside temporalCoverage are converted to datetime."""
+        metadata = {
+            **SAMPLE_METADATA,
+            "temporalCoverage": {
+                "startDate": "2016-03-06 00:00:00",
+                "endDate": "2016-03-07T12:00:00.000000+00:00",
+            },
+        }
+        self.mock_s3.get_object.return_value = _make_s3_response(metadata)
+        collect_file_to_catalog("bucket/res/.hsjsonld/dataset_metadata.json")
+        _, replacement_metadata = self.mock_collection.find_one_and_replace.call_args[0]
+        temporal = replacement_metadata["temporalCoverage"]
+        self.assertEqual(temporal["startDate"], datetime(2016, 3, 6))
+        self.assertEqual(temporal["endDate"], datetime(2016, 3, 7, 12, 0, 0, tzinfo=timezone.utc))
 
     def test_replaced_resource_not_indexed(self):
         """Resource with 'replaced by newer version' relation should be skipped."""

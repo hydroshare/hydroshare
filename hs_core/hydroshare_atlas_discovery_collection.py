@@ -1,5 +1,4 @@
 import datetime
-import re
 import json
 
 import boto3
@@ -24,10 +23,14 @@ def _make_s3_client():
 s3 = _make_s3_client()
 
 
-datetime_format_regex = re.compile(r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{6}\+\d{2}:\d{2}$')
-temporal_coverage_datetime_format_regex = re.compile(r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$')
-datetime_format = "%Y-%m-%d %H:%M:%S.%f%z"
-temporal_coverage_datetime_format = "%Y-%m-%d %H:%M:%S"
+# metadata keys whose string values should be converted to datetime objects
+DATETIME_KEYS = {
+    "datePublished",
+    "dateCreated",
+    "dateModified",
+    "startDate",
+    "endDate",
+}
 
 
 class MongoDBClient:
@@ -44,11 +47,11 @@ class MongoDBClient:
 
 def datetime_parser(dct):
     for k, v in dct.items():
-        if isinstance(v, str):
-            if datetime_format_regex.match(v):
-                dct[k] = datetime.datetime.strptime(v, datetime_format)
-            if temporal_coverage_datetime_format_regex.match(v):
-                dct[k] = datetime.datetime.strptime(v, temporal_coverage_datetime_format)
+        if k in DATETIME_KEYS and isinstance(v, str):
+            try:
+                dct[k] = datetime.datetime.fromisoformat(v)
+            except ValueError:
+                pass  # leave unparseable values as strings
     return dct
 
 
