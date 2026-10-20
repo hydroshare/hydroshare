@@ -31,7 +31,7 @@ NOT_USER_EDITABLE_RELATION_TYPES = frozenset({
 
 UserEditableRelationType = PyEnum(
     'UserEditableRelationType',
-    {m.name: m.value for m in HSRelationType if m.name not in NOT_USER_EDITABLE_RELATION_TYPES},
+    {m.name: m.value for m in HSRelationType if m not in NOT_USER_EDITABLE_RELATION_TYPES},
 )
 
 

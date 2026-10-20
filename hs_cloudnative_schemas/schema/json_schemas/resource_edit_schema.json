@@ -1899,12 +1899,8 @@
     },
     "UserEditableRelationType": {
       "enum": [
-        "The content of this resource is part of",
-        "This resource includes",
         "The content of this resource can be executed by",
         "The content of this resource was created by a related App or software program",
-        "This resource updates and replaces a previous version",
-        "This resource has been replaced by a newer version",
         "This resource is described by",
         "This resource conforms to established standard described by",
         "This resource has a related resource in another format",
@@ -1913,7 +1909,6 @@
         "This resource requires",
         "This resource is referenced by",
         "The content of this resource references",
-        "This resource replaces",
         "The content of this resource is derived from",
         "The content of this resource is similar to"
       ],
