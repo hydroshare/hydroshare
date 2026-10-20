@@ -2322,11 +2322,9 @@
     "url",
     "identifier",
     "creator",
-    "dateCreated",
     "keywords",
     "license",
-    "provider",
-    "dateModified"
+    "provider"
   ],
   "title": "CoreMetadataEdit",
   "type": "object"

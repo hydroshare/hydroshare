@@ -259,10 +259,11 @@ class CoreMetadataEdit(CoreMetadata):
         "encoded as URLs, enter URLs here.",
         json_schema_extra={"readOnly": True},
     )
-    dateCreated: datetime = Field(
+    dateCreated: Optional[datetime] = Field(
         title="Date created",
         description="The date on which the resource was created.",
-        json_schema_extra={"readOnly": True},
+        default=None,
+        json_schema_extra=read_only_schema_extra,
     )
     provider: Union[Organization, Provider] = Field(
         description="The repository, service provider, organization, person, or service performer that provides"
@@ -301,10 +302,11 @@ class CoreMetadataEdit(CoreMetadata):
         default=None,
         json_schema_extra=read_only_schema_extra,
     )
-    dateModified: datetime = Field(
+    dateModified: Optional[datetime] = Field(
         title="Date modified",
         description="The date on which the resource was most recently modified or updated.",
-        json_schema_extra={"readOnly": True},
+        default=None,
+        json_schema_extra=read_only_schema_extra,
     )
     hasPart: Optional[Union[LinkedData, HasPart, List[Union[LinkedData, HasPart]]]] = Field(
         title="Has part",
