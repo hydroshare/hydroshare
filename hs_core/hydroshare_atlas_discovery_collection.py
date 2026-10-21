@@ -1,6 +1,7 @@
 import datetime
-import re
+import functools
 import json
+import logging
 
 import boto3
 from pymongo import MongoClient
@@ -24,10 +25,16 @@ def _make_s3_client():
 s3 = _make_s3_client()
 
 
-datetime_format_regex = re.compile(r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{6}\+\d{2}:\d{2}$')
-temporal_coverage_datetime_format_regex = re.compile(r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$')
-datetime_format = "%Y-%m-%d %H:%M:%S.%f%z"
-temporal_coverage_datetime_format = "%Y-%m-%d %H:%M:%S"
+# metadata keys whose string values should be converted to datetime objects
+DATETIME_KEYS = {
+    "datePublished",
+    "dateCreated",
+    "dateModified",
+    "startDate",
+    "endDate",
+}
+
+logger = logging.getLogger(__name__)
 
 
 class MongoDBClient:
@@ -42,20 +49,23 @@ class MongoDBClient:
         return cls._collection
 
 
-def datetime_parser(dct):
+def datetime_parser(dct, object_key=None):
     for k, v in dct.items():
-        if isinstance(v, str):
-            if datetime_format_regex.match(v):
-                dct[k] = datetime.datetime.strptime(v, datetime_format)
-            if temporal_coverage_datetime_format_regex.match(v):
-                dct[k] = datetime.datetime.strptime(v, temporal_coverage_datetime_format)
+        if k in DATETIME_KEYS and isinstance(v, str):
+            try:
+                dct[k] = datetime.datetime.fromisoformat(v)
+            except ValueError:
+                logger.warning(
+                    f"Could not parse {k} value {v!r} as datetime in {object_key}; leaving as string"
+                )
     return dct
 
 
 def collect_file_to_catalog(filepath: str):
     bucket_name, object_key = filepath.split('/', 1)
     response = s3.get_object(Bucket=bucket_name, Key=object_key)
-    metadata_json = json.loads(response['Body'].read(), object_hook=datetime_parser)
+    parser = functools.partial(datetime_parser, object_key=object_key)
+    metadata_json = json.loads(response['Body'].read(), object_hook=parser)
 
     if "relations" in metadata_json:
         for relation in metadata_json['relations']:
