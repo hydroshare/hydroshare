@@ -1,4 +1,5 @@
 """Signal receivers for the hs_core app."""
+from django.apps import apps
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save, pre_delete, post_delete
 from django.dispatch import receiver
@@ -278,7 +279,6 @@ def metadata_element_saved(sender, instance, **kwargs):
                     logger.error(f"Error writing user metadata json file for resource {resource.short_id}: {str(ex)}")
 
 
-@receiver(post_delete)
 def metadata_element_deleted(sender, instance, **kwargs):
     if isinstance(instance, AbstractMetaDataElement):
         if hasattr(instance, 'metadata') and instance.metadata is not None:
@@ -307,3 +307,12 @@ def metadata_element_deleted(sender, instance, **kwargs):
                     resource.write_django_metadata_json_files()
                 except Exception as ex:
                     logger.error(f"Error writing user metadata json file for resource {resource.short_id}: {str(ex)}")
+
+
+# Connect only for AbstractMetaDataElement subclasses rather than registering a sender-less
+# receiver. A sender-less receiver makes Django treat every model as having delete listeners,
+# which disables the fast-delete path and forces QuerySet.delete() to load every matching row into
+# memory. This module is imported from AppConfig.ready(), so all models are registered by now.
+for _model in apps.get_models():
+    if issubclass(_model, AbstractMetaDataElement):
+        post_delete.connect(metadata_element_deleted, sender=_model)
