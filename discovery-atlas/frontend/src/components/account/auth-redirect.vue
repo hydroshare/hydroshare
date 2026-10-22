@@ -8,34 +8,28 @@
   </v-container>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import { APP_URL } from "@/constants";
-import { Component, Vue, toNative } from "vue-facing-decorator";
+import { useRoute } from "vue-router";
 
-@Component({
-  name: "auth-redirect",
-  components: {},
-})
-class AuthRedirect extends Vue {
-  mounted() {
-    // Get a dictionary of parameters in the redirect response URL
-    const dict: any = {};
-    this.$route.hash.split("&").reduce((acc, curr) => {
-      const [key, val] = curr.split("=");
-      acc[key] = val;
-      return acc;
-    }, dict);
+const route = useRoute();
 
-    // window.opener references our original window from where the login popup was opened
-    window.opener.postMessage(
-      { accessToken: dict["#access_token"] || "" },
-      APP_URL // Important security measure: https://developer.mozilla.org/en-US/docs/Web/Security/Same-origin_policy
-    );
-    window.close();
-  }
-}
+onMounted(() => {
+  // Get a dictionary of parameters in the redirect response URL
+  const dict: any = {};
+  route.hash.split("&").reduce((acc, curr) => {
+    const [key, val] = curr.split("=");
+    acc[key] = val;
+    return acc;
+  }, dict);
 
-export default toNative(AuthRedirect);
+  // window.opener references our original window from where the login popup was opened
+  window.opener.postMessage(
+    { accessToken: dict["#access_token"] || "" },
+    APP_URL // Important security measure: https://developer.mozilla.org/en-US/docs/Web/Security/Same-origin_policy
+  );
+  window.close();
+});
 </script>
 
 <style lang="scss" scoped></style>

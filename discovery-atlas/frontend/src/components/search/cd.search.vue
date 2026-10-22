@@ -71,15 +71,7 @@
   </v-combobox>
 </template>
 
-<script lang="ts">
-import {
-  Component,
-  Vue,
-  Prop,
-  Ref,
-  Watch,
-  toNative,
-} from "vue-facing-decorator";
+<script setup lang="ts">
 import { fromEvent, from } from "rxjs";
 import { debounceTime, map, switchMap, tap } from "rxjs/operators";
 import SearchHistory from "@/models/search-history.model";
@@ -89,184 +81,183 @@ import { EnumHistoryTypes, IHint } from "@/types";
 
 const typeaheadDebounceTime = 500;
 
-@Component({
-  name: "cd-search",
-  components: {},
-  emits: ["update:model-value", "hint-selected", "clear"],
-})
-class CdSearch extends Vue {
-  @Prop() modelValue!: string;
-  @Prop({ default: true }) appendSearchButton!: boolean;
-  @Prop({ default: false }) autoFocus!: boolean;
-  /** If `true`, the component will emit  the `update:model-value` event on every keystroke without debounce */
-  @Prop({ default: false }) isEager!: boolean;
-  @Prop({ default: () => ({}) }) inputAttrs: any;
-  @Prop({ default: EnumHistoryTypes.TERM }) targetField!: EnumHistoryTypes;
-  @Ref("searchInput") searchInput!: InstanceType<typeof VTextField>;
+const props = withDefaults(
+  defineProps<{
+    modelValue: string;
+    appendSearchButton?: boolean;
+    autoFocus?: boolean;
+    /** If `true`, the component will emit the `update:model-value` event on every keystroke without debounce */
+    isEager?: boolean;
+    inputAttrs?: any;
+    targetField?: EnumHistoryTypes;
+  }>(),
+  {
+    appendSearchButton: true,
+    autoFocus: false,
+    isEager: false,
+    inputAttrs: () => ({}),
+    targetField: EnumHistoryTypes.TERM,
+  },
+);
 
-  valueInternal = "";
-  previousValueInternal = "";
-  hints: IHint[] = []; // used to reactively bind to template
-  menu = false;
-  isFetchingHints = false;
-  rawDbHints: any[] = [];
-  EnumHistoryTypes = EnumHistoryTypes;
+const emit = defineEmits(["update:model-value", "hint-selected", "clear"]);
 
-  public get typeaheadHints(): IHint[] {
-    if (!this.rawDbHints || !this.valueInternal) {
-      return this.localHints;
-    }
+const searchInput = useTemplateRef<InstanceType<typeof VTextField>>("searchInput");
 
-    return [...this.localHints, ...this.dbHints];
-  }
+const valueInternal = ref<string>("");
+const previousValueInternal = ref("");
+const hints = ref<IHint[]>([]); // used to reactively bind to template
+const menu = ref(false);
+const isFetchingHints = ref(false);
+const rawDbHints = ref<any[]>([]);
 
-  public get localHints(): IHint[] {
-    return SearchHistory.searchHints(
-      this.valueInternal || "",
-      this.targetField,
+const localHints = computed<IHint[]>(() =>
+  SearchHistory.searchHints(valueInternal.value || "", props.targetField),
+);
+
+const dbHints = computed<IHint[]>(() => {
+  const minCharacters = 3;
+  const value = valueInternal.value.toLocaleLowerCase();
+
+  let list = rawDbHints.value
+    .map((h) => h.highlights)
+    .flat()
+    .map((h) => h.texts)
+    .flat()
+    .filter(
+      (t) =>
+        t.type === "hit" &&
+        t.value.length > minCharacters &&
+        t.value.toLowerCase().indexOf(value) >= 0,
+    )
+    .map((t) => t.value.toLowerCase())
+    .filter(
+      (v: string) => v !== value && !localHints.value.some((h) => h.key === v),
     );
+  list = [...new Set(list)].slice(0, 10) as string[]; // get unique ones
+  return list.map((key) => ({ type: "db", key }) as IHint);
+});
+
+const typeaheadHints = computed<IHint[]>(() => {
+  if (!rawDbHints.value || !valueInternal.value) {
+    return localHints.value;
+  }
+  return [...localHints.value, ...dbHints.value];
+});
+
+watch(
+  () => valueInternal.value,
+  () => {
+    if (!valueInternal.value) {
+      hints.value = localHints.value;
+    }
+  },
+);
+
+// @ts-ignore Vuetify component needs `null` instead of empty string initially
+valueInternal.value = props.modelValue || null;
+
+onMounted(async () => {
+  previousValueInternal.value = props.modelValue;
+  try {
+    await _onTypeahead();
+  } catch (e) {}
+  hints.value = typeaheadHints.value;
+
+  // Initially, set focus on the input, but hide menu.
+  if (props.autoFocus) {
+    setTimeout(() => {
+      searchInput.value?.focus();
+      menu.value = false;
+    }, 0);
   }
 
-  public get dbHints(): IHint[] {
-    const minCharacters = 3;
-    const valueInternal = this.valueInternal.toLocaleLowerCase();
-
-    let hints = this.rawDbHints
-      .map((h) => h.highlights)
-      .flat()
-      .map((h) => h.texts)
-      .flat()
-      .filter(
-        (t) =>
-          t.type === "hit" &&
-          t.value.length > minCharacters &&
-          t.value.toLowerCase().indexOf(valueInternal) >= 0,
+  // https://www.learnrxjs.io/learn-rxjs/recipes/type-ahead
+  if (searchInput.value) {
+    fromEvent(searchInput.value?.$el, "input")
+      .pipe(
+        tap(() => {
+          isFetchingHints.value = !!valueInternal.value;
+          // Show hints from local history while the database ones load
+          hints.value = localHints.value;
+          menu.value = true;
+          if (props.isEager) {
+            emit("update:model-value", valueInternal.value);
+          }
+        }),
+        debounceTime(typeaheadDebounceTime),
+        map((e: any) => e.target.value),
+        switchMap(() => from(_onTypeahead())),
       )
-      .map((t) => t.value.toLowerCase())
-      .filter(
-        (v: string) =>
-          v !== valueInternal && !this.localHints.some((h) => h.key === v),
-      );
-    hints = [...new Set(hints)].slice(0, 10) as string[]; // get unique ones
-    hints = hints.map((key) => ({ type: "db", key }) as IHint);
-    return hints;
-  }
-
-  @Watch("valueInternal")
-  onValueInternalChanged() {
-    if (!this.valueInternal) {
-      this.hints = this.localHints;
-    }
-  }
-
-  created() {
-    // @ts-ignore Vuetify component needs `null` instead of empty string initially
-    this.valueInternal = this.modelValue || null;
-  }
-
-  async mounted() {
-    this.previousValueInternal = this.modelValue;
-    try {
-      await this._onTypeahead();
-    } catch (e) {}
-    this.hints = this.typeaheadHints;
-
-    // Initially, set focus on the input, but hide menu.
-    if (this.autoFocus) {
-      setTimeout(() => {
-        this.searchInput?.focus();
-        this.menu = false;
-      }, 0);
-    }
-
-    // https://www.learnrxjs.io/learn-rxjs/recipes/type-ahead
-    if (this.searchInput) {
-      fromEvent(this.searchInput?.$el, "input")
-        .pipe(
-          tap(() => {
-            this.isFetchingHints = !!this.valueInternal;
-            // Show hints from local history while the database ones load
-            this.hints = this.localHints;
-            this.menu = true;
-            if (this.isEager) {
-              this.$emit("update:model-value", this.valueInternal);
-            }
-          }),
-          debounceTime(typeaheadDebounceTime),
-          map((e: any) => e.target.value),
-          switchMap(() => from(this._onTypeahead())),
-        )
-        .subscribe(() => {
-          this._handleTypeahead();
-        });
-    }
-  }
-
-  public onSearch() {
-    this.previousValueInternal = this.valueInternal;
-    this.menu = false;
-    this.$emit("update:model-value", this.valueInternal);
-  }
-
-  public async onHintSelected(event: PointerEvent, hint: IHint) {
-    // Ignore clicks on the action buttons
-    if (
-      // @ts-ignore
-      event.target?.classList.contains("mdi-close")
-    ) {
-      return;
-    }
-
-    this.valueInternal = hint.key;
-    this.isFetchingHints = !!this.valueInternal;
-    this.onSearch();
-    this.$emit("hint-selected", this.valueInternal);
-  }
-
-  public async onHintRight(_event: PointerEvent, hint: IHint) {
-    this.valueInternal = hint.key;
-    this.searchInput?.focus();
-  }
-
-  public deleteHint(hint: IHint) {
-    SearchHistory.deleteHint(hint.key);
-    this.hints = this.typeaheadHints;
-  }
-
-  async _onTypeahead() {
-    if (!this.valueInternal?.trim?.()) {
-      this.isFetchingHints = false;
-      this.hints = this.typeaheadHints;
-      return;
-    }
-
-    try {
-      this.previousValueInternal = this.valueInternal;
-      this.rawDbHints = await Search.typeahead({
-        term: this.valueInternal,
-        field: this.targetField,
+      .subscribe(() => {
+        _handleTypeahead();
       });
-      this.isFetchingHints = false;
-    } catch (e) {
-      console.log(e);
-    }
+  }
+});
+
+function onSearch() {
+  previousValueInternal.value = valueInternal.value;
+  menu.value = false;
+  emit("update:model-value", valueInternal.value);
+}
+
+async function onHintSelected(event: PointerEvent, hint: IHint) {
+  // Ignore clicks on the action buttons
+  if (
+    // @ts-ignore
+    event.target?.classList.contains("mdi-close")
+  ) {
+    return;
   }
 
-  public boldStart(title: string, startStr: string) {
-    if (title.indexOf(startStr) >= 0) {
-      return title.replace(startStr, `<b>${startStr}</b>`);
-    }
-    return title;
+  valueInternal.value = hint.key;
+  isFetchingHints.value = !!valueInternal.value;
+  onSearch();
+  emit("hint-selected", valueInternal.value);
+}
+
+async function onHintRight(_event: PointerEvent, hint: IHint) {
+  valueInternal.value = hint.key;
+  searchInput.value?.focus();
+}
+
+function deleteHint(hint: IHint) {
+  SearchHistory.deleteHint(hint.key);
+  hints.value = typeaheadHints.value;
+}
+
+async function _onTypeahead() {
+  if (!valueInternal.value?.trim?.()) {
+    isFetchingHints.value = false;
+    hints.value = typeaheadHints.value;
+    return;
   }
 
-  _handleTypeahead() {
-    this.hints = this.typeaheadHints;
-    if (this.valueInternal) {
-      this.isFetchingHints = false;
-    }
+  try {
+    previousValueInternal.value = valueInternal.value;
+    rawDbHints.value = await Search.typeahead({
+      term: valueInternal.value,
+      field: props.targetField,
+    });
+    isFetchingHints.value = false;
+  } catch (e) {
+    console.log(e);
   }
 }
-export default toNative(CdSearch);
+
+function boldStart(title: string, startStr: string) {
+  if (title.indexOf(startStr) >= 0) {
+    return title.replace(startStr, `<b>${startStr}</b>`);
+  }
+  return title;
+}
+
+function _handleTypeahead() {
+  hints.value = typeaheadHints.value;
+  if (valueInternal.value) {
+    isFetchingHints.value = false;
+  }
+}
 </script>
 
 <style lang="scss" scoped>

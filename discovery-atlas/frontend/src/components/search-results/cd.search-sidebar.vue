@@ -268,13 +268,7 @@
   </div>
 </template>
 
-<script lang="ts">
-import { Component, Prop, Vue, toNative } from "vue-facing-decorator";
-import {
-  contentTypeLogos,
-  sharingStatusIcons,
-  contentTypeLabels,
-} from "@/constants";
+<script setup lang="ts">
 import CdSearch from "@/components/search/cd.search.vue";
 import SearchResults from "@/models/search-results.model";
 import Search from "@/models/search.model";
@@ -282,56 +276,47 @@ import { EnumHistoryTypes } from "@/types";
 import CdRangeInput from "./cd.range-input.vue";
 import { Filter } from "./filter";
 
-@Component({
-  name: "cd-search-sidebar",
-  components: { CdSearch, CdRangeInput },
-  emits: ["update:model-value"],
-})
-class CdSearchSidebar extends Vue {
-  @Prop() modelValue!: { [key: string]: Filter };
+const props = defineProps<{
+  modelValue: { [key: string]: Filter };
+}>();
 
-  contentTypeLogos = contentTypeLogos;
-  sharingStatusIcons = sharingStatusIcons;
-  contentTypeLabels = contentTypeLabels;
-  enumHistoryTypes = EnumHistoryTypes;
+const emit = defineEmits(["update:model-value"]);
 
-  public get registeredFilters() {
-    return Object.values(this.modelValue);
-  }
+// Re-exposed to the template under its original alias.
+const enumHistoryTypes = EnumHistoryTypes;
 
-  public get panels() {
-    return SearchResults.$state.panels;
-  }
+const registeredFilters = computed(() => Object.values(props.modelValue));
 
-  public set panels(range: number[]) {
+const panels = computed<number[]>({
+  get: () => SearchResults.$state.panels,
+  set: (range: number[]) => {
     SearchResults.commit((state) => {
       state.panels = range;
     });
-  }
+  },
+});
 
-  public get isSomeFilterActive() {
-    return this.registeredFilters.some((f) => f.isActive());
-  }
+const isSomeFilterActive = computed(() =>
+  registeredFilters.value.some((f) => f.isActive()),
+);
 
-  public get isFetchingContentTypes() {
-    return Search.$state.isFetchingContentTypes;
-  }
+const isFetchingContentTypes = computed(
+  () => Search.$state.isFetchingContentTypes,
+);
 
-  public onFilterControlChange(filter: Filter) {
-    filter.isEnabled = true;
-    this.$emit("update:model-value", this.modelValue);
-  }
+function onFilterControlChange(filter: Filter) {
+  filter.isEnabled = true;
+  emit("update:model-value", props.modelValue);
+}
 
-  public clearFilters() {
-    const wasSomeActive = this.isSomeFilterActive;
-    this.registeredFilters.forEach((f) => f.clear());
+function clearFilters() {
+  const wasSomeActive = isSomeFilterActive.value;
+  registeredFilters.value.forEach((f) => f.clear());
 
-    if (wasSomeActive) {
-      this.$emit("update:model-value", this.modelValue);
-    }
+  if (wasSomeActive) {
+    emit("update:model-value", props.modelValue);
   }
 }
-export default toNative(CdSearchSidebar);
 </script>
 
 <style lang="scss" scoped>

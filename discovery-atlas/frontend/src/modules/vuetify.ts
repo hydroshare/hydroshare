@@ -16,6 +16,11 @@ const lightTheme: ThemeDefinition = {
     primary: "#1976d2",
     surface: "FFF",
     navbar: "#cfd8dc",
+    // HydroShare brand teal. Previously hardcoded in seven files (in two
+    // casings) with no token, so nothing could be themed. Use `text-accent`
+    // / `rgb(var(--v-theme-accent))` instead of the literal hex.
+    accent: "#4bb5c1",
+    "accent-darken-1": "#2a7c87",
     // secondary: colors.blueGrey,
     // accent: colors.blue,
     // error: colors.red.accent3,
