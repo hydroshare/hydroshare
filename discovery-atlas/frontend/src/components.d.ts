@@ -15,6 +15,7 @@ declare module 'vue' {
     'Cd.addReferenceDialog': typeof import('./components/landing-page/cd.add-reference-dialog.vue')['default']
     'Cd.authorProfile': typeof import('./components/landing-page/cd.author-profile.vue')['default']
     'Cd.fileUrlDialog': typeof import('./components/landing-page/cd.file-url-dialog.vue')['default']
+    'Cd.findHydroshareUser': typeof import('./components/landing-page/cd.find-hydroshare-user.vue')['default']
     'Cd.footer': typeof import('./components/base/cd.footer.vue')['default']
     'Cd.manageAccess': typeof import('./components/landing-page/cd.manage-access.vue')['default']
     'Cd.ownerProfile': typeof import('./components/landing-page/cd.owner-profile.vue')['default']
