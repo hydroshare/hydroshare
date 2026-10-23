@@ -1435,30 +1435,39 @@ const additionalPropertyOptions = {
   },
 };
 
-// license is anyOf[CreativeWork, url-string]. Same per-branch indexing as
-// spatialCoverage: a single detail object was applied to BOTH branches, so
-// the "Custom License" tab rendered "No applicable renderer found" three
-// times (name/url/description don't resolve against a plain string) and
-// there was no way to enter a custom license URL.
-// `dropdown: true` swaps the tab strip for a select, which is what fits the
-// 22rem sidebar.
+// license is anyOf[six CC licenses, OtherLicense], in schema order.
+const LICENSE_LABELS = [
+  "Creative Commons Attribution CC BY",
+  "Creative Commons Attribution-ShareAlike CC BY-SA",
+  "Creative Commons Attribution-NoDerivs CC BY-ND",
+  "Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA",
+  "Creative Commons Attribution-NoCommercial CC BY-NC",
+  "Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND",
+  "Other",
+];
+
 const licenseOptions = {
   dropdown: true,
-  detail: {
-    0: {
-      type: "VerticalLayout",
-      options: { label: "Standard license" },
-      elements: [
-        { type: "Control", scope: "#/properties/name" },
-        { type: "Control", scope: "#/properties/url" },
-      ],
-    },
-    1: {
-      type: "Control",
-      scope: "#",
-      options: { label: "Custom license URL" },
-    },
-  },
+  flat: true,
+  title: "License",
+  detail: Object.fromEntries(
+    LICENSE_LABELS.map((label, i) => [
+      i,
+      {
+        type: "VerticalLayout",
+        options: { label },
+        elements: [
+          {
+            type: "Control",
+            scope: "#/properties/name",
+            label: "Statement",
+            options: compactTextarea,
+          },
+          { type: "Control", scope: "#/properties/url", label: "URL" },
+        ],
+      },
+    ]),
+  ),
 };
 
 // Same resource-type-icon mapping the landing page uses, so the visual
