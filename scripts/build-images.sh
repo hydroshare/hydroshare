@@ -2,13 +2,33 @@
 
 set -e
 
-if [ -z "$1" ]; then
-    echo "Usage: $0 <image-tag>"
+usage() {
+    echo "Usage: $0 <env> <image-tag> <image-name> [image-name ...]"
+    echo "Valid envs: prod beta"
+    echo "Valid images: hydroshare discover-frontend hsextract hs-s3-proxy hs-s3-auth all"
+}
+
+if [ "$#" -lt 3 ]; then
+    usage
     exit 1
 fi
 
-IMAGE_TAG="$1"
-BASE_REPOSITORY="us-central1-docker.pkg.dev/hydroshare-403701/hydroshare"
+ENV="$1"
+IMAGE_TAG="$2"
+
+case "${ENV}" in
+    prod)
+        BASE_REPOSITORY="us-central1-docker.pkg.dev/hydroshare-403701/hydroshare"
+        ;;
+    beta)
+        BASE_REPOSITORY="us-central1-docker.pkg.dev/hydroshare-sandbox/hydroshare"
+        ;;
+    *)
+        echo "Unknown env: ${ENV}"
+        usage
+        exit 1
+        ;;
+esac
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
 
@@ -50,13 +70,7 @@ build_image() {
     esac
 }
 
-if [ "$#" -lt 2 ]; then
-    echo "Usage: $0 <image-tag> <image-name> [image-name ...]"
-    echo "Valid images: hydroshare discover-frontend hsextract hs-s3-proxy hs-s3-auth all"
-    exit 1
-fi
-
-for image in "${@:2}"; do
+for image in "${@:3}"; do
     build_image "$image"
 done
 wait
