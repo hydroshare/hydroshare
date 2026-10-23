@@ -10,7 +10,7 @@ from calendar import monthrange
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.core.management.base import BaseCommand
-from django.db.models import Count, Q
+from django.db.models import Q
 from django.utils import timezone
 from hs_core.models import BaseResource, CoreMetaData, Date, Description, Subject
 from hs_core.hydroshare import current_site_url
@@ -73,6 +73,12 @@ class Command(BaseCommand):
             dest="resources_details",
             action="store_true",
             help="current resource list with sizes",
+        )
+        parser.add_argument(
+            "--limit",
+            type=int,
+            default=None,
+            help="maximum number of resources to include with --resources-details",
         )
         parser.add_argument(
             "--monthly-users-by-type",
@@ -181,7 +187,7 @@ class Command(BaseCommand):
             ]
             w.writerow([str(v) for v in values])
 
-    def resources_details(self):
+    def resources_details(self, limit=None):
         w = csv.writer(sys.stdout)
         metadata_content_type = ContentType.objects.get_for_model(CoreMetaData)
         abstracts = dict(
@@ -193,28 +199,6 @@ class Command(BaseCommand):
             content_type=metadata_content_type
         ).order_by('object_id', 'id').values_list('object_id', 'value'):
             keywords[metadata_id].append(keyword)
-        landing_views = dict(
-            hs_tracking.Variable.objects.filter(
-                name='visit', landing=True, resource__isnull=False
-            ).values('resource_id').annotate(
-                count=Count('id')
-            ).values_list('resource_id', 'count')
-        )
-        api_requests = dict(
-            hs_tracking.Variable.objects.filter(
-                name='visit', rest=True, resource__isnull=False
-            ).values('resource_id').annotate(
-                count=Count('id')
-            ).values_list('resource_id', 'count')
-        )
-        downloads = {
-            (resource_id, event_name): count
-            for resource_id, event_name, count in hs_tracking.Variable.objects.filter(
-                name__in=['resource_download', 'download'], resource__isnull=False
-            ).values('resource_id', 'name').annotate(
-                count=Count('id')
-            ).values_list('resource_id', 'name', 'count')
-        }
         fields = [
             'creation date',
             'title',
@@ -230,14 +214,15 @@ class Command(BaseCommand):
             'bag last downloaded date',
             'resource updated date',
             'last updated by user id',
-            'landing page views',
-            'API requests',
-            'resource/bag downloads',
-            'individual file downloads'
+            'resource page view_count (displayed)',
+            'resource download_count (displayed)',
         ]
         w.writerow(fields)
         failed_resource_ids = []
-        for r in BaseResource.objects.all():
+        resources = BaseResource.objects.all()
+        if limit is not None:
+            resources = resources[:limit]
+        for r in resources:
             try:
                 pub_date = r.metadata.dates.get(type='published')\
                     .start_date.strftime("%m/%d/%Y %H:%M:%S.%f")
@@ -271,10 +256,8 @@ class Command(BaseCommand):
                     last_downloaded,
                     updated_date,
                     last_changed_by,
-                    landing_views.get(r.id, 0),
-                    api_requests.get(r.id, 0),
-                    downloads.get((r.id, 'resource_download'), 0),
-                    downloads.get((r.id, 'download'), 0)
+                    r.view_count,
+                    r.download_count,
                 ]
                 w.writerow([str(v) for v in values])
 
@@ -449,6 +432,6 @@ class Command(BaseCommand):
                 month_start = month_end.replace(day=1)
                 self.monthly_users_by_type(month_start, month_end)
         if options["resources_details"]:
-            self.resources_details()
+            self.resources_details(limit=options["limit"])
         if options["yesterdays_variables"]:
             self.yesterdays_variables(lookback=int(options['lookback-days']))
