@@ -12,6 +12,7 @@ from hsextract.utils.s3 import (
     get_public_endpoint_url,
     iter_find,
     load_metadata,
+    metadata_exists,
     write_file_manifest,
     write_metadata,
 )
@@ -69,6 +70,22 @@ def _warn_on_overridden_keys(user_json: dict, system_json: dict) -> None:
 def write_resource_jsonld_metadata(md: BaseMetadataObject) -> bool:
     # read the system metadata file
     system_json = load_metadata(md.system_metadata_path, md.zone)
+    if not system_json:
+        # load_metadata returns {} on any error, so confirm the file is actually missing before skipping;
+        # metadata_exists raises on transient errors so the task retries instead of silently skipping.
+        if metadata_exists(md.system_metadata_path, md.zone):
+            raise RuntimeError(f"Could not load {md.system_metadata_path}")
+
+        # system_metadata.json is missing when the resource has moved to another bucket (e.g. by a quota holder
+        # change), or when Django has not written it yet or failed to.
+        # Writing here would leave an orphan dataset_metadata.json in the old bucket, or a dataset_metadata.json
+        # without system fields; either clobbers the discovery doc. Django's next system_metadata.json write
+        # triggers regeneration.
+        logger.info(
+            f"Skipping write of {md.resource_metadata_jsonld_path}: {md.system_metadata_path} not found "
+            f"(resource moved out of this bucket, or system metadata not yet written by Django)"
+        )
+        return
 
     # read the user resource metadata file
     user_json = load_metadata(md.user_metadata_path, md.zone)
