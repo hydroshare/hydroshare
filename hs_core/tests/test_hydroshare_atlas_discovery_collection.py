@@ -226,6 +226,14 @@ class TestZoneClients(SimpleTestCase):
         self.default_client.head_object.assert_not_called()
         self.zone_clients["ciroh"].head_object.assert_called_once_with(Bucket="ciroh", Key=key)
 
+    def test_find_live_returns_published_bucket_after_resource_bucket_move(self):
+        """A published copy is found when the resource-bucket copy is being deleted."""
+        self.zone_clients["ciroh"].head_object.side_effect = _client_error("404")
+        key = "res1/.hsjsonld/dataset_metadata.json"
+        self.assertEqual(find_live_metadata_file(key, exclude_bucket="resource"), f"published/{key}")
+        self.default_client.head_object.assert_not_called()
+        self.zone_clients["published"].head_object.assert_called_once_with(Bucket="published", Key=key)
+
     def test_find_live_returns_none_when_no_other_bucket_has_object(self):
         """No other bucket has the object; should return None."""
         self.zone_clients["published"].head_object.side_effect = _client_error("404")
