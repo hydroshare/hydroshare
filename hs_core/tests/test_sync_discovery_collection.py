@@ -41,6 +41,14 @@ class TestSyncDiscoveryCollectionDelete(TestCase):
         self.collect.assert_called_once_with(f"ciroh/{OBJECT_PATH}")
         self.delete.assert_not_called()
 
+    def test_published_copy_after_resource_bucket_delete_recollects(self):
+        self.find_live.return_value = f"published/{OBJECT_PATH}"
+        self._set_resource(discoverable=True)
+        self._run_delete()
+        self.find_live.assert_called_once_with(OBJECT_PATH, exclude_bucket="resource")
+        self.collect.assert_called_once_with(f"published/{OBJECT_PATH}")
+        self.delete.assert_not_called()
+
     def test_no_live_copy_deletes(self):
         self.find_live.return_value = None
         self._run_delete()
