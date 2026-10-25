@@ -1,7 +1,12 @@
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
+from hydroshare.hydrocelery import app as hydroshare_celery_app
 from hs_event_s3.tasks import sync_discovery_collection
+
+# Importing hs_event_s3.tasks creates a second Celery app that becomes the current app for the whole test run,
+# which detaches Django's shared tasks from the eager-mode config set by the test runner. Restore the hydroshare app.
+hydroshare_celery_app.set_current()
 
 TASKS = "hs_event_s3.tasks"
 OBJECT_PATH = "res1/.hsjsonld/dataset_metadata.json"
