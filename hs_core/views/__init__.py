@@ -3026,6 +3026,32 @@ def get_missing_file_type_metadata(request, shortkey):
     return JsonResponse(data)
 
 
+def get_remaining_quota(request, shortkey):
+    """Remaining quota of the resource's quota holder, in bytes."""
+    from hs_core.hydroshare.utils import get_remaining_user_quota
+
+    try:
+        resource, _, _ = authorize(
+            request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE
+        )
+    except (NotFound, ObjectDoesNotExist):
+        return JsonResponse(
+            {"status": "error", "message": f"No resource was found for id:{shortkey}"},
+            status=404
+        )
+    except PermissionDenied:
+        return JsonResponse(
+            {"status": "error", "message": "You don't have permission to view this resource"},
+            status=403
+        )
+
+    remaining_quota = get_remaining_user_quota(resource.quota_holder, "B")
+    if remaining_quota is not None:
+        remaining_quota = int(remaining_quota)
+
+    return JsonResponse({"status": "success", "remaining_quota": remaining_quota})
+
+
 def get_manage_access_data(request, shortkey):
     """
     API endpoint to fetch manage access modal data on demand.

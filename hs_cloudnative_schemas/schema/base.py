@@ -1,6 +1,6 @@
 import re
 from datetime import datetime
-from enum import Enum
+from enum import Enum, Enum as PyEnum
 from typing import Any, List, Optional, Union, Literal, Annotated
 
 from pydantic import (
@@ -17,6 +17,22 @@ from pydantic import (
     WithJsonSchema,
 )
 from pydantic.json_schema import JsonSchemaValue
+
+from hsmodels.schemas.enums import RelationType as HSRelationType
+
+# Keep this local so hs_extract does not need the full hs_core dependency tree.
+NOT_USER_EDITABLE_RELATION_TYPES = frozenset({
+    HSRelationType.isVersionOf,
+    HSRelationType.isReplacedBy,
+    HSRelationType.isPartOf,
+    HSRelationType.hasPart,
+    HSRelationType.replaces,
+})
+
+UserEditableRelationType = PyEnum(
+    'UserEditableRelationType',
+    {m.name: m.value for m in HSRelationType if m not in NOT_USER_EDITABLE_RELATION_TYPES},
+)
 
 
 orcid_pattern = "\\b\\d{4}-\\d{4}-\\d{4}-\\d{3}[0-9X]\\b"
@@ -66,6 +82,19 @@ def modify_json_schema(schema: dict[str, Any]) -> None:
             "(\\/.*)?$"
         )
         schema["errorMessage"] = {"pattern": 'must match format "url"'}
+
+    # Hoist a lone $ref out of a single-item allOf/anyOf/oneOf wrapper.
+    for key in ("allOf", "anyOf", "oneOf"):
+        subs = schema.get(key)
+        if (
+            isinstance(subs, list)
+            and len(subs) == 1
+            and isinstance(subs[0], dict)
+            and list(subs[0].keys()) == ["$ref"]
+        ):
+            schema["$ref"] = subs[0]["$ref"]
+            del schema[key]
+            break
 
     for prop in schema.get("properties", {}).values():
         if isinstance(prop, dict):
@@ -169,6 +198,178 @@ class CreativeWork(SchemaBaseModel):
     )
 
 
+LICENSE_STATEMENT_PREFIX = "This resource is shared under the "
+LICENSE_STATEMENT_SUFFIX = "."
+
+
+class LicenseEnum(str, Enum):
+    CC_BY = "Creative Commons Attribution CC BY"
+    CC_BY_SA = "Creative Commons Attribution-ShareAlike CC BY-SA"
+    CC_BY_ND = "Creative Commons Attribution-NoDerivs CC BY-ND"
+    CC_BY_NC_SA = "Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA"
+    CC_BY_NC = "Creative Commons Attribution-NoCommercial CC BY-NC"
+    CC_BY_NC_ND = "Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND"
+    OTHER = "Other"
+
+    @classmethod
+    def from_statement(cls, statement: str) -> Optional["LicenseEnum"]:
+        """Extract the LicenseEnum value from a rights statement string, e.g.
+        'This resource is shared under the Creative Commons Attribution CC BY.'
+        Returns None if the statement doesn't match a known license.
+        """
+        statement = statement.strip()
+        if not statement.startswith(LICENSE_STATEMENT_PREFIX) or not statement.endswith(LICENSE_STATEMENT_SUFFIX):
+            return None
+        name = statement[len(LICENSE_STATEMENT_PREFIX):-len(LICENSE_STATEMENT_SUFFIX)]
+        try:
+            return cls(name)
+        except ValueError:
+            return None
+
+
+class LicenseBase(CreativeWork):
+    url: Optional[HttpUrl] = Field(
+        description="A URL to the full text of the license.",
+        default=None,
+        json_schema_extra=remove_none_default,
+    )
+
+
+class CCBYLicense(LicenseBase):
+    description: Literal["Creative Commons Attribution CC BY"] = Field(
+        default=LicenseEnum.CC_BY.value, description="A name of the license."
+    )
+    name: Literal[
+        "This resource is shared under the Creative Commons Attribution CC BY."
+    ] = Field(
+        default="This resource is shared under the Creative Commons Attribution CC BY.",
+        description="The statement of the license.",
+        json_schema_extra=read_only_schema_extra,
+    )
+    url: HttpUrl = Field(
+        default=HttpUrl("http://creativecommons.org/licenses/by/4.0/"),
+        description="A URL to the full text of the license.",
+        json_schema_extra=read_only_schema_extra,
+    )
+
+
+class CCBYSALicense(LicenseBase):
+    description: Literal["Creative Commons Attribution-ShareAlike CC BY-SA"] = Field(
+        default=LicenseEnum.CC_BY_SA.value, description="A name of the license."
+    )
+    name: Literal[
+        "This resource is shared under the Creative Commons Attribution-ShareAlike CC BY-SA."
+    ] = Field(
+        default="This resource is shared under the Creative Commons Attribution-ShareAlike CC BY-SA.",
+        description="The statement of the license.",
+        json_schema_extra=read_only_schema_extra,
+    )
+    url: HttpUrl = Field(
+        default=HttpUrl("http://creativecommons.org/licenses/by-sa/4.0/"),
+        description="A URL to the full text of the license.",
+        json_schema_extra=read_only_schema_extra,
+    )
+
+
+class CCBYNDLicense(LicenseBase):
+    description: Literal["Creative Commons Attribution-NoDerivs CC BY-ND"] = Field(
+        default=LicenseEnum.CC_BY_ND.value, description="A name of the license."
+    )
+    name: Literal[
+        "This resource is shared under the Creative Commons Attribution-NoDerivs CC BY-ND."
+    ] = Field(
+        default="This resource is shared under the Creative Commons Attribution-NoDerivs CC BY-ND.",
+        description="The statement of the license.",
+        json_schema_extra=read_only_schema_extra,
+    )
+    url: HttpUrl = Field(
+        default=HttpUrl("http://creativecommons.org/licenses/by-nd/4.0/"),
+        description="A URL to the full text of the license.",
+        json_schema_extra=read_only_schema_extra,
+    )
+
+
+class CCBYNCSALicense(LicenseBase):
+    description: Literal["Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA"] = Field(
+        default=LicenseEnum.CC_BY_NC_SA.value, description="A name of the license."
+    )
+    name: Literal[
+        "This resource is shared under the "
+        "Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA."
+    ] = Field(
+        default="This resource is shared under the "
+        "Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA.",
+        description="The statement of the license.",
+        json_schema_extra=read_only_schema_extra,
+    )
+    url: HttpUrl = Field(
+        default=HttpUrl("http://creativecommons.org/licenses/by-nc-sa/4.0/"),
+        description="A URL to the full text of the license.",
+        json_schema_extra=read_only_schema_extra,
+    )
+
+
+class CCBYNCLicense(LicenseBase):
+    description: Literal["Creative Commons Attribution-NoCommercial CC BY-NC"] = Field(
+        default=LicenseEnum.CC_BY_NC.value, description="A name of the license."
+    )
+    name: Literal[
+        "This resource is shared under the Creative Commons Attribution-NoCommercial CC BY-NC."
+    ] = Field(
+        default="This resource is shared under the Creative Commons Attribution-NoCommercial CC BY-NC.",
+        description="The statement of the license.",
+        json_schema_extra=read_only_schema_extra,
+    )
+    url: HttpUrl = Field(
+        default=HttpUrl("http://creativecommons.org/licenses/by-nc/4.0/"),
+        description="A URL to the full text of the license.",
+        json_schema_extra=read_only_schema_extra,
+    )
+
+
+class CCBYNCNDLicense(LicenseBase):
+    description: Literal["Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND"] = Field(
+        default=LicenseEnum.CC_BY_NC_ND.value, description="A name of the license."
+    )
+    name: Literal[
+        "This resource is shared under the "
+        "Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND."
+    ] = Field(
+        default="This resource is shared under the "
+        "Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND.",
+        description="The statement of the license.",
+        json_schema_extra=read_only_schema_extra,
+    )
+    url: HttpUrl = Field(
+        default=HttpUrl("http://creativecommons.org/licenses/by-nc-nd/4.0/"),
+        description="A URL to the full text of the license.",
+        json_schema_extra=read_only_schema_extra,
+    )
+
+
+class OtherLicense(LicenseBase):
+    description: Literal["Other"] = Field(
+        default=LicenseEnum.OTHER.value, description="A name of the license."
+    )
+    name: str = Field(description="The statement of the license.")
+    url: Optional[HttpUrl] = Field(
+        default=None,
+        description="A URL to the full text of the license.",
+        json_schema_extra=remove_none_default,
+    )
+
+
+License = Union[
+    CCBYLicense,
+    CCBYSALicense,
+    CCBYNDLicense,
+    CCBYNCSALicense,
+    CCBYNCLicense,
+    CCBYNCNDLicense,
+    OtherLicense,
+]
+
+
 class Person(SchemaBaseModel):
     model_config = ConfigDict(
         **SchemaBaseModel.model_config,
@@ -220,6 +421,33 @@ class Affiliation(Organization):
     )
 
 
+class PersonIdentifierPropertyID(str, Enum):
+    ORCID = "ORCID"
+    ResearchGateID = "ResearchGateID"
+    ResearcherID = "ResearcherID"
+    GoogleScholarID = "GoogleScholarID"
+    HydroShareID = "HydroShareID"
+
+
+class PersonIdentifier(SchemaBaseModel):
+    model_config = ConfigDict(
+        **{**SchemaBaseModel.model_config, "extra": "forbid"},
+        populate_by_name=True,  # Ensures aliases work during model initialization
+        title="PersonIdentifier",
+    )
+
+    type: Literal["PropertyValue"] = Field(
+        alias="@type",  # type: ignore
+        default="PropertyValue",
+        description="A property-value pair.",
+    )
+    propertyID: PersonIdentifierPropertyID = Field(
+        title="Property ID",
+        description="The type of identifier, e.g. ORCID or HydroShareID.",
+    )
+    value: HttpUrl = Field(description="The identifier value, expressed as a URL.")
+
+
 class Provider(Person):
     identifier: Optional[str] = Field(
         description="ORCID identifier for the person.",
@@ -239,10 +467,11 @@ class Provider(Person):
 
 
 class Creator(Person):
-    identifier: Optional[str] = Field(
-        description="ORCID identifier for creator.",
+    identifier: Optional[List[PersonIdentifier]] = Field(
+        title="Identifiers",
+        description="Unique identifiers for the creator, e.g. ORCID or HydroShare user profile.",
         default=None,
-        json_schema_extra=identifier_schema_extra,
+        json_schema_extra=remove_none_default,
     )
     email: Optional[EmailStr] = Field(
         description="A string containing an email address for the creator.",
@@ -257,10 +486,11 @@ class Creator(Person):
 
 
 class Contributor(Person):
-    identifier: Optional[str] = Field(
-        description="ORCID identifier for contributor.",
+    identifier: Optional[List[PersonIdentifier]] = Field(
+        title="Identifiers",
+        description="Unique identifiers for the contributor, e.g. ORCID or HydroShare user profile.",
         default=None,
-        json_schema_extra=identifier_schema_extra,
+        json_schema_extra=remove_none_default,
     )
     email: Optional[EmailStr] = Field(
         description="A string containing an email address for the contributor.",
@@ -374,6 +604,10 @@ class IsPartOf(CreativeWork):
 
 
 class Relation(CreativeWork):
+    name: Optional[UserEditableRelationType] = Field(  # type: ignore[assignment]
+        default=None,
+        json_schema_extra=remove_none_default,
+    )
     url: Optional[HttpUrl] = Field(
         title="URL",
         description="The URL address to the data resource.",
@@ -545,8 +779,7 @@ class Grant(SchemaBaseModel):
 class TemporalCoverage(SchemaBaseModel):
     startDate: datetime = Field(
         title="Start date",
-        description="A date/time object containing the instant corresponding to the commencement of the time "
-        "interval (ISO8601 formatted date - YYYY-MM-DDTHH:MM).",
+        description="The start of the time period the resource covers.",
         json_schema_extra={
             "formatMaximum": {"$data": "1/endDate"},
             "errorMessage": {
@@ -556,9 +789,7 @@ class TemporalCoverage(SchemaBaseModel):
     )
     endDate: Optional[datetime] = Field(
         title="End date",
-        description="A date/time object containing the instant corresponding to the termination of the time "
-        "interval (ISO8601 formatted date - YYYY-MM-DDTHH:MM). If the ending date is left off, "
-        "that means the temporal coverage is ongoing.",
+        description="The end of the time period the resource covers. Leave blank if it is ongoing.",
         default=None,
         json_schema_extra=end_date_schema_extra,
     )
@@ -697,6 +928,29 @@ class PropertyValue(SchemaBaseModel):
     measurementTechnique: Optional[str] = Field(
         title="Measurement technique",
         description="A technique or technology used in a measurement.",
+        default=None,
+        json_schema_extra=remove_none_default,
+    )
+
+
+class AdditionalPropertyValue(SchemaBaseModel):
+    model_config = ConfigDict(
+        **SchemaBaseModel.model_config,
+        populate_by_name=True,  # Ensures aliases work during model initialization
+        title="PropertyValue",
+    )
+
+    type: Literal["PropertyValue"] = Field(
+        alias="@type",  # type: ignore
+        default="PropertyValue",
+        description="A property-value pair.",
+    )
+    name: str = Field(description="The name of the property.")
+
+    value: str = Field(description="The value of the property.")
+
+    description: Optional[str] = Field(
+        description="A description of the property.",
         default=None,
         json_schema_extra=remove_none_default,
     )

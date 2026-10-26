@@ -561,7 +561,9 @@ function updateSelectionMenuContext() {
 
     //  ------------- A file is included in the selection -------------
     if (selected.hasClass("fb-file")) {
-        const logicalFileType = $(selected).find(".fb-logical-file-type").attr("data-logical-file-type").trim();
+        // read the type off the selected files; folders carry the span without the attribute
+        const logicalFileType = (selected.filter(".fb-file").find(".fb-logical-file-type")
+            .attr("data-logical-file-type") || "").trim();
         uiActionStates.open.disabled = true;
         uiActionStates.open.fileMenu.hidden = true;
 

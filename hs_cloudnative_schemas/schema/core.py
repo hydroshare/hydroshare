@@ -9,7 +9,8 @@ from pydantic import (
 )
 
 from .base import (
-    CreativeWork,
+    AdditionalPropertyValue,
+    License,
     LinkedData,
     SchemaBaseModel,
     Creator,
@@ -34,7 +35,6 @@ from .base import (
     IsPartOf,
     Relation,
     MediaType,
-    PropertyValue,
     read_only_schema_extra,
     remove_none_default,
 )
@@ -101,7 +101,7 @@ class CoreMetadata(SchemaBaseModel):
         min_length=1,
         description="Keywords or tags used to describe the dataset, delimited by commas.",
     )
-    license: Union[CreativeWork, HttpUrl] = Field(
+    license: License = Field(
         description="A license document that applies to the resource."
     )
     provider: Union[Organization, Provider] = Field(
@@ -198,7 +198,7 @@ class CoreMetadata(SchemaBaseModel):
         description="All other types of relations",
         default=[],
     )
-    additionalProperty: Optional[List[PropertyValue]] = Field(
+    additionalProperty: Optional[List[AdditionalPropertyValue]] = Field(
         title="Additional properties",
         default=[],
         description="Additional properties of the place.",
@@ -259,10 +259,11 @@ class CoreMetadataEdit(CoreMetadata):
         "encoded as URLs, enter URLs here.",
         json_schema_extra={"readOnly": True},
     )
-    dateCreated: datetime = Field(
+    dateCreated: Optional[datetime] = Field(
         title="Date created",
         description="The date on which the resource was created.",
-        json_schema_extra={"readOnly": True},
+        default=None,
+        json_schema_extra=read_only_schema_extra,
     )
     provider: Union[Organization, Provider] = Field(
         description="The repository, service provider, organization, person, or service performer that provides"
@@ -294,17 +295,18 @@ class CoreMetadataEdit(CoreMetadata):
         default=None,
         json_schema_extra=read_only_schema_extra,
     )
-    creativeWorkStatus: Optional[Union[Draft, Incomplete, Obsolete, Published, Public, Discoverable]] = Field(
+    creativeWorkStatus: Optional[Union[Draft, Incomplete, Obsolete, Published, Public, Private, Discoverable]] = Field(
         title="Resource status",
         description="The status of this resource in terms of its stage in a lifecycle. "
         "Example terms include Incomplete, Draft, Published, and Obsolete.",
         default=None,
         json_schema_extra=read_only_schema_extra,
     )
-    dateModified: datetime = Field(
+    dateModified: Optional[datetime] = Field(
         title="Date modified",
         description="The date on which the resource was most recently modified or updated.",
-        json_schema_extra={"readOnly": True},
+        default=None,
+        json_schema_extra=read_only_schema_extra,
     )
     hasPart: Optional[Union[LinkedData, HasPart, List[Union[LinkedData, HasPart]]]] = Field(
         title="Has part",
