@@ -405,6 +405,11 @@ class Command(BaseCommand):
         return formatted_str
 
     def handle(self, *args, **options):
+        # check for start_date and end_date as args
+        # cant have start/end in addition to lookback
+        if 'lookback-days' in options:
+            if 'start_date' in options or 'end_date' in options:
+                print("Lookback days option will be ignored")
         start_date = options.get("start_date", timezone.datetime(2016, 1, 1, tzinfo=pytz.UTC).strftime('%Y-%m-%d'))
         end_date = options.get("end_date", timezone.datetime.now().replace(hour=0,
                                                                            minute=0,

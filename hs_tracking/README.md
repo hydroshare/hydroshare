@@ -39,8 +39,6 @@ Verify that the development server is running by navigating to:
 
 Invoke the resource-details CSV export. It includes the displayed resource view and download counts, but excludes human-classified tracking counts because that classification is unreliable.
 
-CSV output begins with the column header. Export errors are written to stderr, separately from the CSV.
-
 `docker exec  hydroshare python manage.py stats --resources-details > resource-details.log 2> resource-details.err &`
 
 Watch the log populate (this could take a while)
@@ -68,6 +66,7 @@ Invoke the activity-details log dump
 Watch the log populate (this could take a while)
 
 `tail -f activity.log`
+
 
 
 
