@@ -3,7 +3,7 @@ from unittest import mock
 from unittest_parametrize import ParametrizedTestCase, parametrize, param
 
 from hs_cloudnative_schemas.schema import base as schema
-from hs_core.hydroshare_schemaorg_adapter import Contributor, Creator, HydroshareMetadataAdapter, Relation
+from hs_core.hydroshare_schemaorg_adapter import HydroshareMetadataAdapter, Relation, Rights, Creator, Contributor
 
 
 IS_PART_OF_VALUE = "The content of this resource is part of"
@@ -151,6 +151,41 @@ class TestPersonIdentifierConversion(unittest.TestCase):
 
         self.assertFalse(hasattr(result, "identifier") and result.identifier)
         _mock_site_url.assert_not_called()
+
+
+class TestRightsToDatasetLicense(ParametrizedTestCase):
+    """Tests for Rights.to_dataset_license() — wrapping a rights statement in a CreativeWork."""
+
+    @parametrize(
+        "statement",
+        [
+            param(
+                "This resource is shared under the Creative Commons Attribution CC BY.",
+                id="cc_by",
+            ),
+            param(
+                "This resource is shared under the Creative Commons Attribution-ShareAlike CC BY-SA.",
+                id="cc_by_sa",
+            ),
+            param(
+                "All rights reserved.",
+                id="custom_statement",
+            ),
+        ],
+    )
+    def test_statement_yields_creative_work(self, statement):
+        rights = Rights(statement=statement, url="https://creativecommons.org/licenses/by/4.0/")
+        result = rights.to_dataset_license()
+        self.assertIsInstance(result, schema.CreativeWork)
+        self.assertEqual(result.name, statement)
+        self.assertEqual(str(result.url), "https://creativecommons.org/licenses/by/4.0/")
+
+    def test_missing_statement_yields_creative_work_with_no_name(self):
+        rights = Rights(statement=None, url=None)
+        result = rights.to_dataset_license()
+        self.assertIsInstance(result, schema.CreativeWork)
+        self.assertIsNone(result.name)
+        self.assertIsNone(result.url)
 
 
 class TestToCatalogRecordRelationPartitioning(unittest.TestCase):

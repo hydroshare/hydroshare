@@ -1,6 +1,42 @@
 {
   "additionalProperties": true,
   "definitions": {
+    "AdditionalPropertyValue": {
+      "additionalProperties": true,
+      "properties": {
+        "@type": {
+          "const": "PropertyValue",
+          "default": "PropertyValue",
+          "description": "A property-value pair.",
+          "enum": [
+            "PropertyValue"
+          ],
+          "title": "@Type",
+          "type": "string"
+        },
+        "description": {
+          "description": "A description of the property.",
+          "title": "Description",
+          "type": "string"
+        },
+        "name": {
+          "description": "The name of the property.",
+          "title": "Name",
+          "type": "string"
+        },
+        "value": {
+          "description": "The value of the property.",
+          "title": "Value",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "value"
+      ],
+      "title": "PropertyValue",
+      "type": "object"
+    },
     "Affiliation": {
       "additionalProperties": true,
       "properties": {
@@ -39,6 +75,438 @@
         "name"
       ],
       "title": "Affiliation",
+      "type": "object"
+    },
+    "CCBYLicense": {
+      "additionalProperties": true,
+      "properties": {
+        "@type": {
+          "const": "CreativeWork",
+          "default": "CreativeWork",
+          "description": "Submission type can include various forms of content, such as datasets, software source code, digital documents, etc.",
+          "enum": [
+            "CreativeWork"
+          ],
+          "title": "@Type",
+          "type": "string"
+        },
+        "associatedMedia": {
+          "description": "A media object that encodes this CreativeWork. This property is a synonym for encoding.",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/LinkedData"
+              },
+              {
+                "$ref": "#/definitions/MediaObject"
+              },
+              {
+                "$ref": "#/definitions/DataDownload"
+              },
+              {
+                "$ref": "#/definitions/VideoObject"
+              }
+            ]
+          },
+          "title": "Resource content",
+          "type": "array"
+        },
+        "description": {
+          "const": "Creative Commons Attribution CC BY",
+          "default": "Creative Commons Attribution CC BY",
+          "description": "A name of the license.",
+          "enum": [
+            "Creative Commons Attribution CC BY"
+          ],
+          "title": "Description",
+          "type": "string"
+        },
+        "name": {
+          "const": "This resource is shared under the Creative Commons Attribution CC BY.",
+          "default": "This resource is shared under the Creative Commons Attribution CC BY.",
+          "description": "The statement of the license.",
+          "enum": [
+            "This resource is shared under the Creative Commons Attribution CC BY."
+          ],
+          "readOnly": true,
+          "title": "Name",
+          "type": "string"
+        },
+        "url": {
+          "default": "http://creativecommons.org/licenses/by/4.0/",
+          "description": "A URL to the full text of the license.",
+          "errorMessage": {
+            "pattern": "must match format \"url\""
+          },
+          "maxLength": 2083,
+          "minLength": 1,
+          "pattern": "^(http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|https:\\/\\/)?[a-z0-9]+([\\-\\.]{1}[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/.*)?$",
+          "readOnly": true,
+          "title": "Url",
+          "type": "string"
+        }
+      },
+      "title": "CCBYLicense",
+      "type": "object"
+    },
+    "CCBYNCLicense": {
+      "additionalProperties": true,
+      "properties": {
+        "@type": {
+          "const": "CreativeWork",
+          "default": "CreativeWork",
+          "description": "Submission type can include various forms of content, such as datasets, software source code, digital documents, etc.",
+          "enum": [
+            "CreativeWork"
+          ],
+          "title": "@Type",
+          "type": "string"
+        },
+        "associatedMedia": {
+          "description": "A media object that encodes this CreativeWork. This property is a synonym for encoding.",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/LinkedData"
+              },
+              {
+                "$ref": "#/definitions/MediaObject"
+              },
+              {
+                "$ref": "#/definitions/DataDownload"
+              },
+              {
+                "$ref": "#/definitions/VideoObject"
+              }
+            ]
+          },
+          "title": "Resource content",
+          "type": "array"
+        },
+        "description": {
+          "const": "Creative Commons Attribution-NoCommercial CC BY-NC",
+          "default": "Creative Commons Attribution-NoCommercial CC BY-NC",
+          "description": "A name of the license.",
+          "enum": [
+            "Creative Commons Attribution-NoCommercial CC BY-NC"
+          ],
+          "title": "Description",
+          "type": "string"
+        },
+        "name": {
+          "const": "This resource is shared under the Creative Commons Attribution-NoCommercial CC BY-NC.",
+          "default": "This resource is shared under the Creative Commons Attribution-NoCommercial CC BY-NC.",
+          "description": "The statement of the license.",
+          "enum": [
+            "This resource is shared under the Creative Commons Attribution-NoCommercial CC BY-NC."
+          ],
+          "readOnly": true,
+          "title": "Name",
+          "type": "string"
+        },
+        "url": {
+          "default": "http://creativecommons.org/licenses/by-nc/4.0/",
+          "description": "A URL to the full text of the license.",
+          "errorMessage": {
+            "pattern": "must match format \"url\""
+          },
+          "maxLength": 2083,
+          "minLength": 1,
+          "pattern": "^(http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|https:\\/\\/)?[a-z0-9]+([\\-\\.]{1}[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/.*)?$",
+          "readOnly": true,
+          "title": "Url",
+          "type": "string"
+        }
+      },
+      "title": "CCBYNCLicense",
+      "type": "object"
+    },
+    "CCBYNCNDLicense": {
+      "additionalProperties": true,
+      "properties": {
+        "@type": {
+          "const": "CreativeWork",
+          "default": "CreativeWork",
+          "description": "Submission type can include various forms of content, such as datasets, software source code, digital documents, etc.",
+          "enum": [
+            "CreativeWork"
+          ],
+          "title": "@Type",
+          "type": "string"
+        },
+        "associatedMedia": {
+          "description": "A media object that encodes this CreativeWork. This property is a synonym for encoding.",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/LinkedData"
+              },
+              {
+                "$ref": "#/definitions/MediaObject"
+              },
+              {
+                "$ref": "#/definitions/DataDownload"
+              },
+              {
+                "$ref": "#/definitions/VideoObject"
+              }
+            ]
+          },
+          "title": "Resource content",
+          "type": "array"
+        },
+        "description": {
+          "const": "Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND",
+          "default": "Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND",
+          "description": "A name of the license.",
+          "enum": [
+            "Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND"
+          ],
+          "title": "Description",
+          "type": "string"
+        },
+        "name": {
+          "const": "This resource is shared under the Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND.",
+          "default": "This resource is shared under the Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND.",
+          "description": "The statement of the license.",
+          "enum": [
+            "This resource is shared under the Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND."
+          ],
+          "readOnly": true,
+          "title": "Name",
+          "type": "string"
+        },
+        "url": {
+          "default": "http://creativecommons.org/licenses/by-nc-nd/4.0/",
+          "description": "A URL to the full text of the license.",
+          "errorMessage": {
+            "pattern": "must match format \"url\""
+          },
+          "maxLength": 2083,
+          "minLength": 1,
+          "pattern": "^(http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|https:\\/\\/)?[a-z0-9]+([\\-\\.]{1}[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/.*)?$",
+          "readOnly": true,
+          "title": "Url",
+          "type": "string"
+        }
+      },
+      "title": "CCBYNCNDLicense",
+      "type": "object"
+    },
+    "CCBYNCSALicense": {
+      "additionalProperties": true,
+      "properties": {
+        "@type": {
+          "const": "CreativeWork",
+          "default": "CreativeWork",
+          "description": "Submission type can include various forms of content, such as datasets, software source code, digital documents, etc.",
+          "enum": [
+            "CreativeWork"
+          ],
+          "title": "@Type",
+          "type": "string"
+        },
+        "associatedMedia": {
+          "description": "A media object that encodes this CreativeWork. This property is a synonym for encoding.",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/LinkedData"
+              },
+              {
+                "$ref": "#/definitions/MediaObject"
+              },
+              {
+                "$ref": "#/definitions/DataDownload"
+              },
+              {
+                "$ref": "#/definitions/VideoObject"
+              }
+            ]
+          },
+          "title": "Resource content",
+          "type": "array"
+        },
+        "description": {
+          "const": "Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA",
+          "default": "Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA",
+          "description": "A name of the license.",
+          "enum": [
+            "Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA"
+          ],
+          "title": "Description",
+          "type": "string"
+        },
+        "name": {
+          "const": "This resource is shared under the Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA.",
+          "default": "This resource is shared under the Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA.",
+          "description": "The statement of the license.",
+          "enum": [
+            "This resource is shared under the Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA."
+          ],
+          "readOnly": true,
+          "title": "Name",
+          "type": "string"
+        },
+        "url": {
+          "default": "http://creativecommons.org/licenses/by-nc-sa/4.0/",
+          "description": "A URL to the full text of the license.",
+          "errorMessage": {
+            "pattern": "must match format \"url\""
+          },
+          "maxLength": 2083,
+          "minLength": 1,
+          "pattern": "^(http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|https:\\/\\/)?[a-z0-9]+([\\-\\.]{1}[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/.*)?$",
+          "readOnly": true,
+          "title": "Url",
+          "type": "string"
+        }
+      },
+      "title": "CCBYNCSALicense",
+      "type": "object"
+    },
+    "CCBYNDLicense": {
+      "additionalProperties": true,
+      "properties": {
+        "@type": {
+          "const": "CreativeWork",
+          "default": "CreativeWork",
+          "description": "Submission type can include various forms of content, such as datasets, software source code, digital documents, etc.",
+          "enum": [
+            "CreativeWork"
+          ],
+          "title": "@Type",
+          "type": "string"
+        },
+        "associatedMedia": {
+          "description": "A media object that encodes this CreativeWork. This property is a synonym for encoding.",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/LinkedData"
+              },
+              {
+                "$ref": "#/definitions/MediaObject"
+              },
+              {
+                "$ref": "#/definitions/DataDownload"
+              },
+              {
+                "$ref": "#/definitions/VideoObject"
+              }
+            ]
+          },
+          "title": "Resource content",
+          "type": "array"
+        },
+        "description": {
+          "const": "Creative Commons Attribution-NoDerivs CC BY-ND",
+          "default": "Creative Commons Attribution-NoDerivs CC BY-ND",
+          "description": "A name of the license.",
+          "enum": [
+            "Creative Commons Attribution-NoDerivs CC BY-ND"
+          ],
+          "title": "Description",
+          "type": "string"
+        },
+        "name": {
+          "const": "This resource is shared under the Creative Commons Attribution-NoDerivs CC BY-ND.",
+          "default": "This resource is shared under the Creative Commons Attribution-NoDerivs CC BY-ND.",
+          "description": "The statement of the license.",
+          "enum": [
+            "This resource is shared under the Creative Commons Attribution-NoDerivs CC BY-ND."
+          ],
+          "readOnly": true,
+          "title": "Name",
+          "type": "string"
+        },
+        "url": {
+          "default": "http://creativecommons.org/licenses/by-nd/4.0/",
+          "description": "A URL to the full text of the license.",
+          "errorMessage": {
+            "pattern": "must match format \"url\""
+          },
+          "maxLength": 2083,
+          "minLength": 1,
+          "pattern": "^(http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|https:\\/\\/)?[a-z0-9]+([\\-\\.]{1}[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/.*)?$",
+          "readOnly": true,
+          "title": "Url",
+          "type": "string"
+        }
+      },
+      "title": "CCBYNDLicense",
+      "type": "object"
+    },
+    "CCBYSALicense": {
+      "additionalProperties": true,
+      "properties": {
+        "@type": {
+          "const": "CreativeWork",
+          "default": "CreativeWork",
+          "description": "Submission type can include various forms of content, such as datasets, software source code, digital documents, etc.",
+          "enum": [
+            "CreativeWork"
+          ],
+          "title": "@Type",
+          "type": "string"
+        },
+        "associatedMedia": {
+          "description": "A media object that encodes this CreativeWork. This property is a synonym for encoding.",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/LinkedData"
+              },
+              {
+                "$ref": "#/definitions/MediaObject"
+              },
+              {
+                "$ref": "#/definitions/DataDownload"
+              },
+              {
+                "$ref": "#/definitions/VideoObject"
+              }
+            ]
+          },
+          "title": "Resource content",
+          "type": "array"
+        },
+        "description": {
+          "const": "Creative Commons Attribution-ShareAlike CC BY-SA",
+          "default": "Creative Commons Attribution-ShareAlike CC BY-SA",
+          "description": "A name of the license.",
+          "enum": [
+            "Creative Commons Attribution-ShareAlike CC BY-SA"
+          ],
+          "title": "Description",
+          "type": "string"
+        },
+        "name": {
+          "const": "This resource is shared under the Creative Commons Attribution-ShareAlike CC BY-SA.",
+          "default": "This resource is shared under the Creative Commons Attribution-ShareAlike CC BY-SA.",
+          "description": "The statement of the license.",
+          "enum": [
+            "This resource is shared under the Creative Commons Attribution-ShareAlike CC BY-SA."
+          ],
+          "readOnly": true,
+          "title": "Name",
+          "type": "string"
+        },
+        "url": {
+          "default": "http://creativecommons.org/licenses/by-sa/4.0/",
+          "description": "A URL to the full text of the license.",
+          "errorMessage": {
+            "pattern": "must match format \"url\""
+          },
+          "maxLength": 2083,
+          "minLength": 1,
+          "pattern": "^(http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|https:\\/\\/)?[a-z0-9]+([\\-\\.]{1}[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/.*)?$",
+          "readOnly": true,
+          "title": "Url",
+          "type": "string"
+        }
+      },
+      "title": "CCBYSALicense",
       "type": "object"
     },
     "Contributor": {
@@ -82,65 +550,6 @@
         "name"
       ],
       "title": "Contributor",
-      "type": "object"
-    },
-    "CreativeWork": {
-      "additionalProperties": true,
-      "properties": {
-        "@type": {
-          "const": "CreativeWork",
-          "default": "CreativeWork",
-          "description": "Submission type can include various forms of content, such as datasets, software source code, digital documents, etc.",
-          "enum": [
-            "CreativeWork"
-          ],
-          "title": "@Type",
-          "type": "string"
-        },
-        "associatedMedia": {
-          "description": "A media object that encodes this CreativeWork. This property is a synonym for encoding.",
-          "items": {
-            "anyOf": [
-              {
-                "$ref": "#/definitions/LinkedData"
-              },
-              {
-                "$ref": "#/definitions/MediaObject"
-              },
-              {
-                "$ref": "#/definitions/DataDownload"
-              },
-              {
-                "$ref": "#/definitions/VideoObject"
-              }
-            ]
-          },
-          "title": "Resource content",
-          "type": "array"
-        },
-        "description": {
-          "description": "The description of the creative work.",
-          "title": "Description",
-          "type": "string"
-        },
-        "name": {
-          "description": "Submission's name or title",
-          "title": "Name or title",
-          "type": "string"
-        },
-        "url": {
-          "description": "A URL to the creative work.",
-          "errorMessage": {
-            "pattern": "must match format \"url\""
-          },
-          "maxLength": 2083,
-          "minLength": 1,
-          "pattern": "^(http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|https:\\/\\/)?[a-z0-9]+([\\-\\.]{1}[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/.*)?$",
-          "title": "URL",
-          "type": "string"
-        }
-      },
-      "title": "CreativeWork",
       "type": "object"
     },
     "Creator": {
@@ -894,6 +1303,73 @@
       "title": "Organization",
       "type": "object"
     },
+    "OtherLicense": {
+      "additionalProperties": true,
+      "properties": {
+        "@type": {
+          "const": "CreativeWork",
+          "default": "CreativeWork",
+          "description": "Submission type can include various forms of content, such as datasets, software source code, digital documents, etc.",
+          "enum": [
+            "CreativeWork"
+          ],
+          "title": "@Type",
+          "type": "string"
+        },
+        "associatedMedia": {
+          "description": "A media object that encodes this CreativeWork. This property is a synonym for encoding.",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/LinkedData"
+              },
+              {
+                "$ref": "#/definitions/MediaObject"
+              },
+              {
+                "$ref": "#/definitions/DataDownload"
+              },
+              {
+                "$ref": "#/definitions/VideoObject"
+              }
+            ]
+          },
+          "title": "Resource content",
+          "type": "array"
+        },
+        "description": {
+          "const": "Other",
+          "default": "Other",
+          "description": "A name of the license.",
+          "enum": [
+            "Other"
+          ],
+          "title": "Description",
+          "type": "string"
+        },
+        "name": {
+          "description": "The statement of the license.",
+          "title": "Name",
+          "type": "string"
+        },
+        "url": {
+          "description": "A URL to the full text of the license.",
+          "errorMessage": {
+            "pattern": "must match format \"url\""
+          },
+          "maxLength": 2083,
+          "minLength": 1,
+          "pattern": "^(http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|https:\\/\\/)?[a-z0-9]+([\\-\\.]{1}[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/.*)?$",
+          "title": "Url",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "OtherLicense",
+      "type": "object"
+    },
     "PersonIdentifier": {
       "additionalProperties": false,
       "properties": {
@@ -1525,7 +2001,7 @@
       "default": [],
       "description": "Additional properties of the place.",
       "items": {
-        "$ref": "#/definitions/PropertyValue"
+        "$ref": "#/definitions/AdditionalPropertyValue"
       },
       "title": "Additional properties",
       "type": "array"
@@ -1741,17 +2217,25 @@
     "license": {
       "anyOf": [
         {
-          "$ref": "#/definitions/CreativeWork"
+          "$ref": "#/definitions/CCBYLicense"
         },
         {
-          "errorMessage": {
-            "pattern": "must match format \"url\""
-          },
-          "maxLength": 2083,
-          "minLength": 1,
-          "pattern": "^(http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|https:\\/\\/)?[a-z0-9]+([\\-\\.]{1}[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/.*)?$",
-          "title": "Custom License",
-          "type": "string"
+          "$ref": "#/definitions/CCBYSALicense"
+        },
+        {
+          "$ref": "#/definitions/CCBYNDLicense"
+        },
+        {
+          "$ref": "#/definitions/CCBYNCSALicense"
+        },
+        {
+          "$ref": "#/definitions/CCBYNCLicense"
+        },
+        {
+          "$ref": "#/definitions/CCBYNCNDLicense"
+        },
+        {
+          "$ref": "#/definitions/OtherLicense"
         }
       ],
       "description": "A license document that applies to the resource.",
@@ -1833,11 +2317,9 @@
     "url",
     "identifier",
     "creator",
-    "dateCreated",
     "keywords",
     "license",
-    "provider",
-    "dateModified"
+    "provider"
   ],
   "title": "CoreMetadataEdit",
   "type": "object"
