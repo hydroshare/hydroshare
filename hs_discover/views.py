@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.shortcuts import render
 from django.views.generic import TemplateView
 
@@ -119,5 +120,9 @@ class AtlasLandingView(TemplateView):
             "creator_profiles_json": json.dumps(creator_profiles),
             "alerts_json": json.dumps(alerts),
             "bag_url": json.dumps(resource.bag_url),
+            "upload_limits_json": json.dumps({
+                "maxFileSize": getattr(settings, 'FILE_UPLOAD_MAX_SIZE', 25 * 1024**3),
+                "maxNumberOfFiles": getattr(settings, 'MAX_NUMBER_OF_FILES_IN_SINGLE_LOCAL_UPLOAD', 50),
+            }),
         }
         return render(request, 'pages/search.html', context)

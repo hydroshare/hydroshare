@@ -283,6 +283,11 @@ urlpatterns = [
         views.get_manage_access_data,
         name="get_manage_access_data",
     ),
+    re_path(
+        r"^_internal/(?P<shortkey>[0-9a-f-]+)/remaining-quota/$",
+        views.get_remaining_quota,
+        name="get_remaining_quota",
+    ),
     path(
         "_internal/get_tasks_by_user/",
         views.get_tasks_by_user,

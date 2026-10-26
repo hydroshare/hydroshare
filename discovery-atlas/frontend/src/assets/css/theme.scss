@@ -34,6 +34,14 @@ body {
   }
 }
 
+// Single-column layouts use the full width up to the 2-column breakpoint (lg).
+@media (min-width: 768px) and (max-width: 1279px) {
+  #main-container.main-container--fluid-md {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
 @media (min-width: 1440px) {
   #main-container {
     width: 1440px;
