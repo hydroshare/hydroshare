@@ -123,7 +123,7 @@ def write_content_type_jsonld_metadata(md: BaseMetadataObject) -> bool:
     user_json = load_metadata(md.content_type_md_user_path, md.zone)
     if not content_type_metadata and not user_json:
         # need to delete the content type jsonld metadata file if it exists
-        delete_metadata(md.content_type_md_jsonld_path)
+        delete_metadata(md.content_type_md_jsonld_path, md.zone)
         return
     # generate content type isPartOf relationships
     is_part_of = [
@@ -188,6 +188,25 @@ def workflow_metadata_extraction(file_object_path: str, file_size: int, file_upd
         write_resource_jsonld_metadata(md)
     except Exception as ex:
         print(f"Error writing resource jsonld metadata: {str(ex)}")
+
+
+def refresh_or_extract_copied_file(file_object_path: str, file_size: int, zone: str) -> None:
+    """Handle a server-side copy of a data file.
+
+    When the extracted metadata was copied along with the file (e.g. a quota holder change moving the resource
+    to another bucket), only the jsonld is regenerated so its bucket-qualified URLs point at the new location.
+    Otherwise (e.g. a rename, which copies only the data file) the file is extracted as a new upload.
+    """
+    md = determine_metadata_object(file_object_path, True, zone)
+    if md.content_type == ContentType.UNKNOWN:
+        return
+    if metadata_exists(md.content_type_md_path, md.zone):
+        write_content_type_jsonld_metadata(md)
+        # The resource jsonld is not regenerated here: it currently depends only on system/user metadata, which are
+        # copied (and trigger regeneration) before the data files. If hasPart/associatedMedia generation is
+        # re-enabled in write_resource_jsonld_metadata, call write_resource_jsonld_metadata(md) here as well.
+    else:
+        workflow_metadata_extraction(file_object_path, file_size, True, zone)
 
 
 def refresh_resource_metadata(bucket: str, resource_id: str, zone: str) -> None:

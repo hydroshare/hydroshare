@@ -55,7 +55,7 @@ def process_s3_event(self, action: str, bucket: str, object_path: str, username:
         logger.info("Ignoring event from admin account cuahsi")
         return
 
-    file_created = action in ("s3:PutObject", "s3:CompleteMultipartUpload")
+    file_created = action in ("s3:PutObject", "s3:CompleteMultipartUpload", "s3:CopyObject")
 
     try:
         if file_created:
@@ -94,7 +94,7 @@ def sync_discovery_collection(self, action: str, bucket: str, object_path: str, 
     resource_id = parts[0]
     # Reconstruct the full MinIO key the catalog functions expect: {bucket}/{object_path}
     key = f"{bucket}/{object_path}"
-    file_created = action in ("s3:PutObject", "s3:CompleteMultipartUpload")
+    file_created = action in ("s3:PutObject", "s3:CompleteMultipartUpload", "s3:CopyObject")
 
     logger.info(
         f"Processing discovery collection event: action={action}, key={key}"

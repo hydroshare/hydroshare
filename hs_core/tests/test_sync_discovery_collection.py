@@ -78,3 +78,29 @@ class TestSyncDiscoveryCollectionDelete(TestCase):
         retry.assert_called_once_with(exc=error)
         self.delete.assert_not_called()
         self.collect.assert_not_called()
+
+
+class TestSyncDiscoveryCollectionCopy(TestCase):
+    """Copy events for dataset_metadata.json, e.g. into the new bucket during a cross-zone move."""
+
+    def setUp(self):
+        self.collect = patch(f"{TASKS}.collect_file_to_catalog").start()
+        self.delete = patch(f"{TASKS}.delete_file_from_catalog").start()
+        self.resource_objects = patch(f"{TASKS}.BaseResource.objects").start()
+        self.addCleanup(patch.stopall)
+
+    def _run_copy(self, discoverable):
+        self.resource_objects.get.return_value.raccess.discoverable = discoverable
+        sync_discovery_collection.run(action="s3:CopyObject", bucket="ciroh", object_path=OBJECT_PATH)
+
+    def test_copy_discoverable_collects_destination(self):
+        self._run_copy(discoverable=True)
+        self.resource_objects.get.assert_called_once_with(short_id="res1")
+        self.collect.assert_called_once_with(f"ciroh/{OBJECT_PATH}")
+        self.delete.assert_not_called()
+
+    def test_copy_not_discoverable_deletes(self):
+        self._run_copy(discoverable=False)
+        self.resource_objects.get.assert_called_once_with(short_id="res1")
+        self.delete.assert_called_once_with(f"ciroh/{OBJECT_PATH}")
+        self.collect.assert_not_called()
