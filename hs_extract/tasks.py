@@ -19,6 +19,7 @@ def extract_metadata(self, action: str, bucket: str, object_path: str, file_size
     # Reconstruct the full key as used throughout hsextract (bucket/object_path)
     key = f"{bucket}/{object_path}"
     file_updated = not action.startswith("s3:ObjectRemoved") and not action.startswith("s3:DeleteObject")
+    copied = action == "s3:CopyObject"
 
     logger.info(
         "extract_metadata: key=%s, file_updated=%s, file_size=%s, zone=%s",
@@ -29,13 +30,13 @@ def extract_metadata(self, action: str, bucket: str, object_path: str, file_size
     )
 
     try:
-        _handle_extract_event(key, file_size, file_updated, zone)
+        _handle_extract_event(key, file_size, file_updated, zone, copied=copied)
     except Exception as exc:
         logger.error(f"extract_metadata failed for key={key}: {exc}", exc_info=True)
         raise self.retry(exc=exc, countdown=2 ** self.request.retries)
 
 
-def _handle_extract_event(key: str, file_size: int, file_updated: bool, zone: str) -> None:
+def _handle_extract_event(key: str, file_size: int, file_updated: bool, zone: str, copied: bool = False) -> None:
     """Core extraction logic ported from hsextract/main.py handle_minio_event."""
     # Late imports so Celery can start without the full environment if needed
     from hsextract.content_types.models import ContentType
@@ -44,6 +45,7 @@ def _handle_extract_event(key: str, file_size: int, file_updated: bool, zone: st
         determine_metadata_object_from_user_metadata,
     )
     from hs_extract.hsextract.main import (
+        refresh_or_extract_copied_file,
         refresh_resource_metadata,
         workflow_metadata_extraction,
         write_content_type_jsonld_metadata,
@@ -84,4 +86,7 @@ def _handle_extract_event(key: str, file_size: int, file_updated: bool, zone: st
         return
 
     # Default: data/contents or other directories
+    if copied:
+        refresh_or_extract_copied_file(key, file_size, zone)
+        return
     workflow_metadata_extraction(key, file_size, file_updated, zone)

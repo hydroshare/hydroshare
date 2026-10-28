@@ -9,7 +9,7 @@ from urllib.parse import unquote_plus, urlencode
 
 from hs_core.exceptions import QuotaException
 from .utils import bucket_and_zone
-from .settings import get_zone_config
+from .settings import get_zone_config, get_resource_s3_zones_config
 
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.deconstruct import deconstructible
@@ -30,6 +30,14 @@ except ImportError as e:
 
 
 logger = logging.getLogger(__name__)
+
+
+def _zone_for_bucket(bucket, default):
+    """Return the zone that owns bucket, or default when no configured zone uses it."""
+    for zone, zone_config in get_resource_s3_zones_config().resource_s3_zones_config.items():
+        if zone_config.bucket_name == bucket:
+            return zone
+    return default
 
 
 @deconstructible
@@ -162,7 +170,7 @@ class S3Storage(s3.S3Storage):
 
         def before_parameter_build(params, model, context, **kwargs):
             operation = getattr(model, "name", "")
-            if operation not in ("PutObject", "DeleteObject", "CompleteMultipartUpload"):
+            if operation not in ("PutObject", "DeleteObject", "CompleteMultipartUpload", "CopyObject"):
                 return
             context["_hs_bucket"] = params.get("Bucket")
             context["_hs_key"] = params.get("Key")
@@ -171,7 +179,12 @@ class S3Storage(s3.S3Storage):
                 "PutObject": "s3:PutObject",
                 "DeleteObject": "s3:DeleteObjects",
                 "CompleteMultipartUpload": "s3:CompleteMultipartUpload",
+                "CopyObject": "s3:CopyObject",
             }.get(operation)
+            if operation == "CopyObject":
+                # a cross-bucket copy (e.g. quota holder change) is issued with the source-zone client,
+                # so report the zone of the destination bucket
+                context["_hs_zone"] = _zone_for_bucket(params.get("Bucket"), zone)
             if operation == "DeleteObject":
                 context["_hs_file_size"] = 0
             elif operation == "PutObject":
@@ -189,7 +202,7 @@ class S3Storage(s3.S3Storage):
                 return
             if status_code not in (200, 204):
                 return
-            if action == "s3:CompleteMultipartUpload":
+            if action in ("s3:CompleteMultipartUpload", "s3:CopyObject"):
                 file_size = _complete_multipart_file_size(bucket, object_path)
             elif action == "s3:DeleteObjects":
                 file_size = 0
@@ -221,9 +234,11 @@ class S3Storage(s3.S3Storage):
         events.register("before-parameter-build.s3.PutObject", before_parameter_build)
         events.register("before-parameter-build.s3.DeleteObject", before_parameter_build)
         events.register("before-parameter-build.s3.CompleteMultipartUpload", before_parameter_build)
+        events.register("before-parameter-build.s3.CopyObject", before_parameter_build)
         events.register("after-call.s3.PutObject", after_call)
         events.register("after-call.s3.DeleteObject", after_call)
         events.register("after-call.s3.CompleteMultipartUpload", after_call)
+        events.register("after-call.s3.CopyObject", after_call)
         events.register("after-call.s3.ListObjects", decode_list_objects)
 
     def _dispatch_s3_mutation_hook(self, action, bucket, object_path, zone, file_size=0):
