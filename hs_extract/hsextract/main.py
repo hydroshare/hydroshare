@@ -191,11 +191,12 @@ def workflow_metadata_extraction(file_object_path: str, file_size: int, file_upd
 
 
 def refresh_or_extract_copied_file(file_object_path: str, file_size: int, zone: str) -> None:
-    """Handle a server-side copy of a data file.
+    """Handle a server-side copy of a data file that kept its path within the resource.
 
     When the extracted metadata was copied along with the file (e.g. a quota holder change moving the resource
     to another bucket), only the jsonld is regenerated so its bucket-qualified URLs point at the new location.
-    Otherwise (e.g. a rename, which copies only the data file) the file is extracted as a new upload.
+    Otherwise (e.g. a resource copy, which copies only the data files) the file is extracted as a new upload.
+    Renames/moves never get here; they are always extracted as a new upload.
     """
     md = determine_metadata_object(file_object_path, True, zone)
     if md.content_type == ContentType.UNKNOWN:

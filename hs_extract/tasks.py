@@ -19,7 +19,7 @@ def extract_metadata(self, action: str, bucket: str, object_path: str, file_size
     # Reconstruct the full key as used throughout hsextract (bucket/object_path)
     key = f"{bucket}/{object_path}"
     file_updated = not action.startswith("s3:ObjectRemoved") and not action.startswith("s3:DeleteObject")
-    copied = action == "s3:CopyObject"
+    copied = action == "s3:CopyObject" and _copy_preserves_resource_path(kwargs.get("copy_source"), object_path)
 
     logger.info(
         "extract_metadata: key=%s, file_updated=%s, file_size=%s, zone=%s",
@@ -34,6 +34,20 @@ def extract_metadata(self, action: str, bucket: str, object_path: str, file_size
     except Exception as exc:
         logger.error(f"extract_metadata failed for key={key}: {exc}", exc_info=True)
         raise self.retry(exc=exc, countdown=2 ** self.request.retries)
+
+
+def _copy_preserves_resource_path(copy_source: str, object_path: str) -> bool:
+    """Return True when a copy keeps the file's path within the resource (e.g. a whole resource moved to another
+    bucket), so its sidecar metadata was copied along with it.
+
+    A rename/move changes the path and may land on an existing file whose stale sidecar is still in place, so it
+    has to be extracted like a new upload.
+    """
+    if not copy_source:
+        return False
+    src_parts = copy_source.split("/", 2)
+    dst_parts = object_path.split("/", 1)
+    return len(src_parts) == 3 and len(dst_parts) == 2 and src_parts[2] == dst_parts[1]
 
 
 def _handle_extract_event(key: str, file_size: int, file_updated: bool, zone: str, copied: bool = False) -> None:

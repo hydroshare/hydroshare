@@ -5,7 +5,7 @@ import boto3
 from celery import current_app as celery_app
 from datetime import datetime
 from datetime import timedelta
-from urllib.parse import unquote_plus, urlencode
+from urllib.parse import unquote, unquote_plus, urlencode
 
 from hs_core.exceptions import QuotaException
 from .utils import bucket_and_zone
@@ -38,6 +38,17 @@ def _zone_for_bucket(bucket, default):
         if zone_config.bucket_name == bucket:
             return zone
     return default
+
+
+def _copy_source_path(copy_source):
+    """Return the CopySource param of a CopyObject call (dict or "bucket/key" string) as "bucket/key"."""
+    if isinstance(copy_source, dict):
+        bucket = copy_source.get("Bucket")
+        key = copy_source.get("Key")
+        return f"{bucket}/{key}" if bucket and key else None
+    if isinstance(copy_source, str):
+        return unquote(copy_source.split("?versionId=", 1)[0].lstrip("/")) or None
+    return None
 
 
 @deconstructible
@@ -185,6 +196,8 @@ class S3Storage(s3.S3Storage):
                 # a cross-bucket copy (e.g. quota holder change) is issued with the source-zone client,
                 # so report the zone of the destination bucket
                 context["_hs_zone"] = _zone_for_bucket(params.get("Bucket"), zone)
+                # lets extraction tell a whole resource move (same path within the resource) from a rename
+                context["_hs_copy_source"] = _copy_source_path(params.get("CopySource"))
             if operation == "DeleteObject":
                 context["_hs_file_size"] = 0
             elif operation == "PutObject":
@@ -213,6 +226,7 @@ class S3Storage(s3.S3Storage):
                 object_path=object_path,
                 zone=zone,
                 file_size=file_size,
+                copy_source=context.get("_hs_copy_source"),
             )
 
         def decode_list_objects(parsed, context, **kwargs):
@@ -241,7 +255,7 @@ class S3Storage(s3.S3Storage):
         events.register("after-call.s3.CopyObject", after_call)
         events.register("after-call.s3.ListObjects", decode_list_objects)
 
-    def _dispatch_s3_mutation_hook(self, action, bucket, object_path, zone, file_size=0):
+    def _dispatch_s3_mutation_hook(self, action, bucket, object_path, zone, file_size=0, copy_source=None):
         username = setting("S3_AUTH_EVENT_USERNAME", "cuahsi")
 
         payload = {
@@ -253,6 +267,8 @@ class S3Storage(s3.S3Storage):
             "user_id": None,
             "file_size": int(file_size or 0),
         }
+        if copy_source:
+            payload["copy_source"] = copy_source
 
         try:
             celery_app.send_task(
