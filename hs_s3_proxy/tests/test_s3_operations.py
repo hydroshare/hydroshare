@@ -667,6 +667,30 @@ class TestEventService:
             except Exception:
                 pass
 
+    def test_copy_object_calls_event_service(
+        self, s3_client, test_bucket, unique_prefix,
+    ):
+        """A client CopyObject is a PUT with x-amz-copy-source, so the proxy reports it as s3:PutObject for the
+        destination key and the copy gets a full metadata extraction like an upload."""
+        src_key = f"{unique_prefix}/event-copy-src.txt"
+        dst_key = f"{unique_prefix}/event-copy-dst.txt"
+        s3_client.put_object(Bucket=test_bucket, Key=src_key, Body=b"event copy")
+
+        commands = self._capture_redis_commands_during(
+            lambda: s3_client.copy_object(
+                Bucket=test_bucket, Key=dst_key, CopySource={"Bucket": test_bucket, "Key": src_key},
+            )
+        )
+        try:
+            assert s3_client.get_object(Bucket=test_bucket, Key=dst_key)["Body"].read() == b"event copy"
+            for task_name in ("hs_event_s3.tasks.process_s3_event", "hs_extract.tasks.extract_metadata"):
+                pushes = [cmd for cmd in commands if "LPUSH" in cmd and task_name in cmd and dst_key in cmd]
+                assert len(pushes) >= 1
+                assert all("s3:PutObject" in cmd for cmd in pushes)
+        finally:
+            for key in (src_key, dst_key):
+                s3_client.delete_object(Bucket=test_bucket, Key=key)
+
     def test_session_put_object_calls_event_service(
         self, session_s3_client, test_bucket, unique_prefix,
     ):
