@@ -37,7 +37,7 @@ def test_copy_with_extracted_metadata_only_refreshes_jsonld():
 
 
 def test_copy_without_extracted_metadata_runs_full_extraction():
-    """A rename copies only the data file, so the copy is extracted like a new upload."""
+    """A resource copy copies only the data files, so the copy is extracted like a new upload."""
     md = _md(ContentType.NETCDF)
     _, _, write_jsonld, workflow = _run(md, sidecar_exists=False)
     workflow.assert_called_once_with(KEY, 100, True, "ciroh")
@@ -45,6 +45,7 @@ def test_copy_without_extracted_metadata_runs_full_extraction():
 
 
 def test_copy_of_unknown_content_type_does_nothing():
+    """A copy of a file with unknown content type does not trigger any extraction or jsonld refresh."""
     md = _md(ContentType.UNKNOWN)
     _, exists, write_jsonld, workflow = _run(md, sidecar_exists=True)
     exists.assert_not_called()
@@ -52,23 +53,46 @@ def test_copy_of_unknown_content_type_does_nothing():
     workflow.assert_not_called()
 
 
-def _run_task(action):
+def _run_task(action, **kwargs):
     from hs_extract.tasks import extract_metadata
 
     with patch("hs_extract.hsextract.main.refresh_or_extract_copied_file") as refresh_or_extract, \
             patch("hs_extract.hsextract.main.workflow_metadata_extraction") as workflow:
         extract_metadata.run(action=action, bucket="ciroh", object_path="res1/data/contents/file.nc",
-                             file_size=100, zone="ciroh")
+                             file_size=100, zone="ciroh", **kwargs)
     return refresh_or_extract, workflow
 
 
-def test_task_routes_copy_object_to_copy_handler():
-    refresh_or_extract, workflow = _run_task("s3:CopyObject")
+def test_task_routes_copy_to_another_bucket_to_copy_handler():
+    """A quota holder move copies each object to the same key in the new bucket."""
+    refresh_or_extract, workflow = _run_task("s3:CopyObject", copy_source="resource/res1/data/contents/file.nc")
     refresh_or_extract.assert_called_once_with(KEY, 100, "ciroh")
     workflow.assert_not_called()
 
 
+def test_task_routes_copy_to_another_resource_to_copy_handler():
+    """A whole resource copied to a new resource id keeps each file's path within the resource."""
+    refresh_or_extract, workflow = _run_task("s3:CopyObject", copy_source="ciroh/res0/data/contents/file.nc")
+    refresh_or_extract.assert_called_once_with(KEY, 100, "ciroh")
+    workflow.assert_not_called()
+
+
+def test_task_routes_rename_copy_to_extraction():
+    """A rename/move may land on an existing file whose sidecar is still in place, so it must be re-extracted."""
+    refresh_or_extract, workflow = _run_task("s3:CopyObject", copy_source="ciroh/res1/data/contents/old.nc")
+    workflow.assert_called_once_with(KEY, 100, True, "ciroh")
+    refresh_or_extract.assert_not_called()
+
+
+def test_task_routes_copy_without_source_to_extraction():
+    """A copy event without a source (e.g. queued before copy_source was added) triggers extraction."""
+    refresh_or_extract, workflow = _run_task("s3:CopyObject")
+    workflow.assert_called_once_with(KEY, 100, True, "ciroh")
+    refresh_or_extract.assert_not_called()
+
+
 def test_task_routes_put_object_to_extraction():
+    """A direct put object triggers extraction."""
     refresh_or_extract, workflow = _run_task("s3:PutObject")
     workflow.assert_called_once_with(KEY, 100, True, "ciroh")
     refresh_or_extract.assert_not_called()
