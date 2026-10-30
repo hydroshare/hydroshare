@@ -401,7 +401,6 @@ import { EnumFilterTypes, Filter } from "./filter";
 import { DataTableHeader } from "vuetify";
 import { Reactive } from "vue";
 import CdSearchSidebar from "./cd.search-sidebar.vue";
-import { APP_ORIGIN } from "@/constants";
 
 interface SortOption {
   key: string;
@@ -763,7 +762,9 @@ class CdSearchResults extends Vue {
       }
     })
 
-    window.parent.postMessage({ childParams: paramsCopy }, APP_ORIGIN);
+    // The iframe is served from the same host as its parent, so the parent's
+    // origin is this window's origin. This works for both www and bare domains.
+    window.parent.postMessage({ childParams: paramsCopy }, window.location.origin);
   }
 
   public onIntersect(_isIntersecting: boolean, entries: any[], _observer: any) {
