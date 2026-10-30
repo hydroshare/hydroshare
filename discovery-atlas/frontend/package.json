@@ -33,7 +33,7 @@
     "vue-cookies": "^1.8.6",
     "vue-demi": "^0.14.10",
     "vue-facing-decorator": "^4.0.1",
-    "vue-i18n": "^11.3.0",
+    "vue-i18n": "^11.4.16",
     "vue-router": "^5.0.3",
     "vue-timeago3": "^2.3.2",
     "vuetify": "3.11.7",
