@@ -1,8 +1,10 @@
 import json
+import logging
 from datetime import datetime, timezone
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
+from hsmodels.schemas.enums import RelationType
 from unittest_parametrize import ParametrizedTestCase, parametrize, param
 
 from hs_core.hydroshare_atlas_discovery_collection import (
@@ -27,6 +29,22 @@ def _make_s3_response(metadata: dict) -> dict:
     body = MagicMock()
     body.read.return_value = json.dumps(metadata).encode()
     return {"Body": body}
+
+
+REPLACED_BY = RelationType.isReplacedBy.value
+REPLACES = RelationType.isVersionOf.value
+
+
+def _s3_objects(objects: dict):
+    """Return a get_object side effect serving the given {object key: metadata} mapping."""
+    def get_object(Bucket, Key):
+        return _make_s3_response(objects[Key])
+    return get_object
+
+
+def _relation(name: str, resource_id: str) -> dict:
+    return {"name": name, "description": "citation",
+            "url": f"https://www.hydroshare.org/resource/{resource_id}/"}
 
 
 class TestCollectFileToCatalog(ParametrizedTestCase):
@@ -133,17 +151,69 @@ class TestCollectFileToCatalog(ParametrizedTestCase):
         self.assertEqual(temporal["startDate"], datetime(2016, 3, 6))
         self.assertEqual(temporal["endDate"], datetime(2016, 3, 7, 12, 0, 0, tzinfo=timezone.utc))
 
-    def test_replaced_resource_not_indexed(self):
-        """Resource with 'replaced by newer version' relation should be skipped."""
-        metadata = {
-            **SAMPLE_METADATA,
-            "relations": [
-                {"name": "This resource has been replaced by a newer version", "value": "https://example.com"}
-            ],
-        }
-        self.mock_s3.get_object.return_value = _make_s3_response(metadata)
-        collect_file_to_catalog("bucket/res/.hsjsonld/dataset_metadata.json")
+    @parametrize(
+        "status",
+        [
+            param("Public", id="public"),
+            param("Published", id="published"),
+            param("Discoverable", id="discoverable"),
+        ],
+    )
+    def test_replaced_resource_removed_when_newer_version_visible(self, status):
+        """A replaced resource is removed from the collection, not re-indexed, if its newer version is in the collection and visible."""
+        old_version = {**SAMPLE_METADATA, "relation": [_relation(REPLACED_BY, "new-version")]}
+        self.mock_s3.get_object.side_effect = _s3_objects({
+            "old-version/.hsjsonld/dataset_metadata.json": old_version,
+        })
+        self.mock_collection.find_one.return_value = {"creativeWorkStatus": {"name": status}}
+        collect_file_to_catalog("bucket/old-version/.hsjsonld/dataset_metadata.json")
         self.mock_collection.find_one_and_replace.assert_not_called()
+        self.mock_collection.delete_one.assert_called_once_with(
+            {"_s3_filepath": "old-version/.hsjsonld/dataset_metadata.json"}
+        )
+
+    def test_replaced_resource_indexed_when_newer_version_private(self):
+        """A replaced resource stays in the collection while its newer version is private."""
+        old_version = {**SAMPLE_METADATA, "relation": [_relation(REPLACED_BY, "new-version")]}
+        self.mock_s3.get_object.side_effect = _s3_objects({
+            "old-version/.hsjsonld/dataset_metadata.json": old_version,
+        })
+        self.mock_collection.find_one.return_value = {"creativeWorkStatus": {"name": "Private"}}
+        collect_file_to_catalog("bucket/old-version/.hsjsonld/dataset_metadata.json")
+        self.mock_collection.find_one_and_replace.assert_called_once()
+
+    def test_replaced_resource_indexed_when_newer_version_not_in_collection(self):
+        """A replaced resource stays in the collection while its newer version is not in the collection."""
+        old_version = {**SAMPLE_METADATA, "relation": [_relation(REPLACED_BY, "new-version")]}
+        self.mock_s3.get_object.side_effect = _s3_objects({
+            "old-version/.hsjsonld/dataset_metadata.json": old_version,
+        })
+        self.mock_collection.find_one.return_value = None
+        collect_file_to_catalog("bucket/old-version/.hsjsonld/dataset_metadata.json")
+        self.mock_collection.find_one_and_replace.assert_called_once()
+
+    def test_replaces_relation_removes_previous_version_when_visible(self):
+        """A public newer version removes the resource it replaces from the collection."""
+        new_version = {**SAMPLE_METADATA, "relation": [_relation(REPLACES, "old-version")],
+                       "creativeWorkStatus": {"name": "Public"}}
+        self.mock_s3.get_object.side_effect = _s3_objects({
+            "new-version/.hsjsonld/dataset_metadata.json": new_version,
+        })
+        collect_file_to_catalog("bucket/new-version/.hsjsonld/dataset_metadata.json")
+        self.mock_collection.find_one_and_replace.assert_called_once()
+        self.mock_collection.delete_one.assert_called_once_with(
+            {"_s3_filepath": "old-version/.hsjsonld/dataset_metadata.json"}
+        )
+
+    def test_replaces_relation_keeps_previous_version_when_private(self):
+        """A private newer version leaves the resource it replaces in the collection."""
+        new_version = {**SAMPLE_METADATA, "relation": [_relation(REPLACES, "old-version")],
+                       "creativeWorkStatus": {"name": "Private"}}
+        self.mock_s3.get_object.side_effect = _s3_objects({
+            "new-version/.hsjsonld/dataset_metadata.json": new_version,
+        })
+        collect_file_to_catalog("bucket/new-version/.hsjsonld/dataset_metadata.json")
+        self.mock_collection.delete_one.assert_not_called()
 
 
 class TestDeleteFileFromCatalog(TestCase):
@@ -167,3 +237,15 @@ class TestDeleteFileFromCatalog(TestCase):
         self.mock_collection.delete_one.assert_called_once_with(
             {"_s3_filepath": "abc123/.hsjsonld/dataset_metadata.json"}
         )
+
+    def test_delete_logs_call_and_result(self):
+        """Each delete call logs its invocation and the number of documents removed."""
+        self.mock_collection.delete_one.return_value.deleted_count = 1
+        # test settings disable logging globally; re-enable it for this assertion only
+        previous_disable_level = logging.root.manager.disable
+        logging.disable(logging.NOTSET)
+        self.addCleanup(logging.disable, previous_disable_level)
+        with self.assertLogs("hs_core.hydroshare_atlas_discovery_collection", level="INFO") as logs:
+            delete_file_from_catalog("userbucket/abc123/.hsjsonld/dataset_metadata.json")
+        self.assertTrue(any("delete_file_from_catalog called for" in m for m in logs.output))
+        self.assertTrue(any("removed 1 document(s)" in m for m in logs.output))
