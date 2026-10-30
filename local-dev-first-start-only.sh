@@ -138,8 +138,8 @@ make down-discover
 echo " - make up-discover"
 make up-discover
 
-echo "  - docker compose -f ${DOCKER_COMPOSER_YAML_FILE} up -d ${REBUILD_IMAGE}"
-docker compose -f $DOCKER_COMPOSER_YAML_FILE up -d $REBUILD_IMAGE
+echo "  - docker compose -f ${DOCKER_COMPOSER_YAML_FILE} up -d postgis pgbouncer redis minio mongodb companion hydroshare hs_extract hs-s3-auth hs-s3-proxy nginx"
+docker compose -f $DOCKER_COMPOSER_YAML_FILE up -d postgis pgbouncer redis minio mongodb companion hydroshare hs_extract hs-s3-auth hs-s3-proxy nginx
 
 echo
 echo '########################################################################################################################'
@@ -168,6 +168,7 @@ do
     break
   fi
 done
+echo " ready."
 
 echo " - docker exec -u postgres postgis psql -c \"REVOKE CONNECT ON DATABASE postgres FROM public;\""
 echo
@@ -290,9 +291,10 @@ docker exec hydroshare python manage.py collectstatic -v0 --noinput
 
 
 echo
-echo "  - docker restart hydroshare defaultworker"
+echo "  - docker restart hydroshare and bring up defaultworker and hs_event_s3"
 echo
-docker restart hydroshare defaultworker hydroshare-hs_event_s3-1
+docker compose -f $DOCKER_COMPOSER_YAML_FILE up -d --no-recreate defaultworker hs_event_s3
+docker restart hydroshare
 
 # Parse arguments
 SEED_DEV_RESOURCES=false
