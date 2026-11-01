@@ -1,6 +1,11 @@
+import hashlib
+import io
+import socket
 import uuid
 from unittest.mock import patch
+from urllib.parse import urlsplit
 
+from boto3.s3.transfer import TransferConfig
 from botocore.exceptions import ClientError
 from django.conf import settings
 from django.contrib.auth.models import Group
@@ -8,7 +13,7 @@ from django.test import TestCase
 
 from hs_access_control.models import PrivilegeCodes
 from hs_core import hydroshare
-from hs_core.testing import MockS3TestCaseMixin
+from hs_core.testing import MockS3TestCaseMixin, override_zone_config
 
 EVENT_TASK = "hs_event_s3.tasks.process_s3_event"
 DISCOVERY_TASK = "hs_event_s3.tasks.sync_discovery_collection"
@@ -19,10 +24,15 @@ DST_ZONE = "ciroh"
 SRC_BUCKET = settings.RESOURCE_S3_ZONES_CONFIG[SRC_ZONE]["bucket_name"]
 DST_BUCKET = settings.RESOURCE_S3_ZONES_CONFIG[DST_ZONE]["bucket_name"]
 METADATA_BODY = b'{"name": "copy object test"}'
+MiB = 1024 * 1024
+# S3 minimum part size; with an ~11 MiB object, boto3 client.copy() issues several UploadPartCopy calls
+MULTIPART_THRESHOLD = 5 * MiB
+LARGE_BODY = bytes(range(256)) * (11 * MiB // 256)
 
 
-class TestS3CopyObjectMutationHook(MockS3TestCaseMixin, TestCase):
-    """Server-side copies (e.g. a quota holder change across zones) must emit S3 events like uploads do."""
+class S3CopyHookTestBase(MockS3TestCaseMixin, TestCase):
+    """Resource in the source zone with a dataset_metadata.json, an owner in the destination zone, and celery
+    send_task patched to capture the S3 mutation events."""
 
     def setUp(self):
         super().setUp()
@@ -54,7 +64,8 @@ class TestS3CopyObjectMutationHook(MockS3TestCaseMixin, TestCase):
         self.owner.uaccess.share_resource_with_user(self.res, self.ciroh_owner, PrivilegeCodes.OWNER)
 
         # source-zone client, as used by S3Storage.new_quota_holder for the cross-bucket copy
-        self.client = self.res.get_s3_storage().connection(SRC_ZONE).meta.client
+        self.storage = self.res.get_s3_storage()
+        self.client = self.storage.connection(SRC_ZONE).meta.client
         self.metadata_key = f"{self.res.short_id}/.hsjsonld/dataset_metadata.json"
         self.client.put_object(Bucket=SRC_BUCKET, Key=self.metadata_key, Body=METADATA_BODY)
         self.celery_app.reset_mock()
@@ -74,6 +85,10 @@ class TestS3CopyObjectMutationHook(MockS3TestCaseMixin, TestCase):
 
     def _copy_to_dst(self, key):
         self.client.copy_object(Bucket=DST_BUCKET, Key=key, CopySource={"Bucket": SRC_BUCKET, "Key": key})
+
+
+class TestS3CopyObjectMutationHook(S3CopyHookTestBase):
+    """Server-side copies (e.g. a quota holder change across zones) must emit S3 events like uploads do."""
 
     def test_copy_of_dataset_metadata_dispatches_discovery_sync_for_destination(self):
         self._copy_to_dst(self.metadata_key)
@@ -169,3 +184,214 @@ class TestS3CopyObjectMutationHook(MockS3TestCaseMixin, TestCase):
         self.assertEqual(copy_events[0]["object_path"], self.metadata_key)
         self.assertEqual(copy_events[0]["zone"], DST_ZONE)
         self.assertEqual(copy_events[0]["copy_source"], f"{SRC_BUCKET}/{self.metadata_key}")
+
+
+class TestS3MultipartCopyMutationHook(S3CopyHookTestBase):
+    """A copy into a "managed_copy" zone (AWS) may run as a multipart UploadPartCopy instead of a CopyObject; its
+    completion must be reported exactly like the single CopyObject it replaces. A "copy_object" zone (GCS, which
+    does not implement UploadPartCopy) must never issue UploadPartCopy."""
+
+    def setUp(self):
+        super().setUp()
+        self.data_key = f"{self.res.short_id}/data/contents/large_file.bin"
+        self.operation_counts = {}
+        events = self.client.meta.events
+        for operation in ("CopyObject", "UploadPartCopy", "CompleteMultipartUpload"):
+            handler = self._make_counter(operation)
+            events.register(f"before-call.s3.{operation}", handler)
+            self.addCleanup(events.unregister, f"before-call.s3.{operation}", handler)
+
+    def _make_counter(self, operation):
+        def count(**kwargs):
+            self.operation_counts[operation] = self.operation_counts.get(operation, 0) + 1
+        return count
+
+    def _put_large_file(self):
+        self.client.put_object(Bucket=SRC_BUCKET, Key=self.data_key, Body=LARGE_BODY)
+        self.celery_app.reset_mock()
+
+    def _copy(self, key):
+        self.storage._copy_object(key, key, SRC_BUCKET, SRC_ZONE, DST_BUCKET, DST_ZONE)
+
+    def _dst_md5(self, key):
+        body = self.client.get_object(Bucket=DST_BUCKET, Key=key)["Body"].read()
+        return hashlib.md5(body).hexdigest()
+
+    def test_managed_multipart_copy_reports_copy_object(self):
+        override_zone_config(self, DST_ZONE, copy_method="managed_copy", multipart_copy_threshold=MULTIPART_THRESHOLD)
+        self._put_large_file()
+
+        self._copy(self.data_key)
+
+        self.assertGreater(self.operation_counts.get("UploadPartCopy", 0), 1)
+        self.assertEqual(self.operation_counts.get("CopyObject", 0), 0)
+        self.assertEqual(self._dst_md5(self.data_key), hashlib.md5(LARGE_BODY).hexdigest())
+        events = self._sent(EVENT_TASK)
+        self.assertEqual(len(events), 1)
+        extract_events = self._sent(EXTRACT_TASK)
+        self.assertEqual(len(extract_events), 1)
+        event = extract_events[0]
+        self.assertEqual(event["action"], "s3:CopyObject")
+        self.assertEqual(event["bucket"], DST_BUCKET)
+        self.assertEqual(event["object_path"], self.data_key)
+        self.assertEqual(event["zone"], DST_ZONE)
+        self.assertEqual(event["file_size"], len(LARGE_BODY))
+        self.assertEqual(event["copy_source"], f"{SRC_BUCKET}/{self.data_key}")
+
+    def test_managed_copy_below_threshold_uses_copy_object(self):
+        override_zone_config(self, DST_ZONE, copy_method="managed_copy", multipart_copy_threshold=MULTIPART_THRESHOLD)
+
+        self._copy(self.metadata_key)
+
+        self.assertEqual(self.operation_counts.get("UploadPartCopy", 0), 0)
+        self.assertEqual(self.operation_counts.get("CopyObject", 0), 1)
+        discovery_events = self._sent(DISCOVERY_TASK)
+        self.assertEqual(len(discovery_events), 1)
+        self.assertEqual(discovery_events[0]["action"], "s3:CopyObject")
+        self.assertEqual(discovery_events[0]["zone"], DST_ZONE)
+        self.assertEqual(discovery_events[0]["copy_source"], f"{SRC_BUCKET}/{self.metadata_key}")
+
+    def test_copy_object_zone_never_issues_upload_part_copy(self):
+        # default copy_method, as configured for GCS zones
+        self._put_large_file()
+
+        self._copy(self.data_key)
+
+        self.assertEqual(self.operation_counts.get("UploadPartCopy", 0), 0)
+        self.assertEqual(self.operation_counts.get("CopyObject", 0), 1)
+        self.assertEqual(self._dst_md5(self.data_key), hashlib.md5(LARGE_BODY).hexdigest())
+        extract_events = self._sent(EXTRACT_TASK)
+        self.assertEqual(len(extract_events), 1)
+        self.assertEqual(extract_events[0]["action"], "s3:CopyObject")
+
+    def test_multipart_upload_is_not_reported_as_copy(self):
+        self.client.upload_fileobj(io.BytesIO(LARGE_BODY), SRC_BUCKET, self.data_key,
+                                   Config=TransferConfig(multipart_threshold=MULTIPART_THRESHOLD))
+
+        self.assertGreater(self.operation_counts.get("CompleteMultipartUpload", 0), 0)
+        events = self._sent(EVENT_TASK)
+        self.assertEqual(len(events), 1)
+        self.assertEqual(events[0]["action"], "s3:CompleteMultipartUpload")
+        self.assertEqual(events[0]["zone"], SRC_ZONE)
+        self.assertEqual(events[0]["file_size"], len(LARGE_BODY))
+        self.assertNotIn("copy_source", events[0])
+
+    def test_aborted_multipart_copy_dispatches_nothing(self):
+        self._put_large_file()
+        upload_id = self.client.create_multipart_upload(Bucket=DST_BUCKET, Key=self.data_key)["UploadId"]
+        self.client.upload_part_copy(Bucket=DST_BUCKET, Key=self.data_key, UploadId=upload_id, PartNumber=1,
+                                     CopySource={"Bucket": SRC_BUCKET, "Key": self.data_key})
+        self.client.abort_multipart_upload(Bucket=DST_BUCKET, Key=self.data_key, UploadId=upload_id)
+
+        self.celery_app.send_task.assert_not_called()
+
+    def test_quota_holder_change_with_managed_multipart_copy(self):
+        override_zone_config(self, DST_ZONE, copy_method="managed_copy", multipart_copy_threshold=MULTIPART_THRESHOLD)
+        self._put_large_file()
+
+        self.res.set_quota_holder(self.owner, self.ciroh_owner)
+
+        self.assertEqual(self.client.list_objects_v2(Bucket=SRC_BUCKET, Prefix=f"{self.res.short_id}/")
+                         .get("KeyCount"), 0)
+        self.assertEqual(self._dst_md5(self.data_key), hashlib.md5(LARGE_BODY).hexdigest())
+        copy_events = {e["object_path"]: e for e in self._sent(EVENT_TASK) if e["action"] == "s3:CopyObject"}
+        for key in (self.metadata_key, self.data_key):
+            self.assertEqual(copy_events[key]["bucket"], DST_BUCKET)
+            self.assertEqual(copy_events[key]["zone"], DST_ZONE)
+            self.assertEqual(copy_events[key]["copy_source"], f"{SRC_BUCKET}/{key}")
+        self.assertEqual([e["object_path"] for e in self._sent(DISCOVERY_TASK) if e["action"] == "s3:CopyObject"],
+                         [self.metadata_key])
+        extract_copies = [e["object_path"] for e in self._sent(EXTRACT_TASK) if e["action"] == "s3:CopyObject"]
+        self.assertIn(self.data_key, extract_copies)
+        self.assertEqual([e for e in self._sent(EVENT_TASK) if e["action"] == "s3:CompleteMultipartUpload"], [])
+
+    def test_zones_on_different_endpoints_stream_the_copy(self):
+        # same MinIO server, but reached by IP instead of hostname, so the zones look like separate providers
+        endpoint = urlsplit(settings.RESOURCE_S3_ZONES_CONFIG[DST_ZONE]["aws_s3_endpoint_url"])
+        endpoint = endpoint._replace(netloc="%s:%s" % (socket.gethostbyname(endpoint.hostname), endpoint.port)).geturl()
+        override_zone_config(self, DST_ZONE, aws_s3_endpoint_url=endpoint, copy_method="managed_copy",
+                             multipart_copy_threshold=MULTIPART_THRESHOLD)
+        self._put_large_file()
+
+        self._copy(self.data_key)
+
+        self.assertEqual(self.operation_counts.get("CopyObject", 0), 0)
+        self.assertEqual(self.operation_counts.get("UploadPartCopy", 0), 0)
+        self.assertEqual(self._dst_md5(self.data_key), hashlib.md5(LARGE_BODY).hexdigest())
+        events = self._sent(EVENT_TASK)
+        self.assertEqual(len(events), 1)
+        # written by the destination-zone client as a plain upload, not a copy
+        self.assertIn(events[0]["action"], ("s3:PutObject", "s3:CompleteMultipartUpload"))
+        self.assertEqual(events[0]["bucket"], DST_BUCKET)
+        self.assertEqual(events[0]["zone"], DST_ZONE)
+        self.assertNotIn("copy_source", events[0])
+
+    def test_copy_object_size_cap_falls_back_to_managed_copy(self):
+        # a "copy_object" zone (the default) whose backend rejects CopyObject as too large (the AWS 5GB cap)
+        # must fall back to a managed multipart copy instead of failing
+        override_zone_config(self, DST_ZONE, multipart_copy_threshold=MULTIPART_THRESHOLD)
+        self._put_large_file()
+        size_cap_error = ClientError(
+            {"Error": {"Code": "InvalidRequest",
+                       "Message": "The specified copy source is larger than the maximum allowable size "
+                                  "for a copy source: 5368709120"}},
+            "CopyObject",
+        )
+
+        with patch.object(self.client, "copy_object", side_effect=size_cap_error) as mock_copy_object:
+            self._copy(self.data_key)
+
+        mock_copy_object.assert_called_once()
+        self.assertGreater(self.operation_counts.get("UploadPartCopy", 0), 1)
+        self.assertEqual(self._dst_md5(self.data_key), hashlib.md5(LARGE_BODY).hexdigest())
+        extract_events = self._sent(EXTRACT_TASK)
+        self.assertEqual(len(extract_events), 1)
+        self.assertEqual(extract_events[0]["action"], "s3:CopyObject")
+        self.assertEqual(extract_events[0]["copy_source"], f"{SRC_BUCKET}/{self.data_key}")
+
+    def test_copy_object_other_errors_do_not_fall_back(self):
+        # errors other than the size cap (permissions, quota, ...) must keep failing fast
+        override_zone_config(self, DST_ZONE, multipart_copy_threshold=MULTIPART_THRESHOLD)
+        self._put_large_file()
+        error = ClientError({"Error": {"Code": "AccessDenied", "Message": "Access Denied"}}, "CopyObject")
+
+        with patch.object(self.client, "copy_object", side_effect=error):
+            with self.assertRaises(ClientError):
+                self._copy(self.data_key)
+
+        self.assertEqual(self.operation_counts.get("UploadPartCopy", 0), 0)
+
+    def test_size_cap_fallback_caps_multipart_threshold(self):
+        # a threshold configured above the CopyObject cap must not turn the fallback into another CopyObject
+        override_zone_config(self, DST_ZONE, multipart_copy_threshold=100 * 1024 * MiB)
+        self._put_large_file()
+        size_cap_error = ClientError(
+            {"Error": {"Code": "InvalidRequest",
+                       "Message": "The specified copy source is larger than the maximum allowable size "
+                                  "for a copy source: 5368709120"}},
+            "CopyObject",
+        )
+
+        # stand in a small cap for AWS's 5GiB so an ~11 MiB object is "too large"
+        with patch("django_s3.storage.COPY_OBJECT_MAX_SIZE", MULTIPART_THRESHOLD), \
+                patch.object(self.client, "copy_object", side_effect=size_cap_error) as mock_copy_object:
+            self._copy(self.data_key)
+
+        mock_copy_object.assert_called_once()
+        self.assertGreater(self.operation_counts.get("UploadPartCopy", 0), 1)
+        self.assertEqual(self._dst_md5(self.data_key), hashlib.md5(LARGE_BODY).hexdigest())
+
+    def test_size_cap_message_with_other_error_code_does_not_fall_back(self):
+        override_zone_config(self, DST_ZONE, multipart_copy_threshold=MULTIPART_THRESHOLD)
+        self._put_large_file()
+        error = ClientError(
+            {"Error": {"Code": "AccessDenied",
+                       "Message": "maximum allowable size for a copy source"}},
+            "CopyObject",
+        )
+
+        with patch.object(self.client, "copy_object", side_effect=error):
+            with self.assertRaises(ClientError):
+                self._copy(self.data_key)
+
+        self.assertEqual(self.operation_counts.get("UploadPartCopy", 0), 0)

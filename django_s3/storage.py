@@ -12,6 +12,7 @@ from smart_open import open
 
 from hs_core.exceptions import QuotaException
 from . import models as m
+from .settings import get_zone_config
 from .utils import (
     bucket_and_zone,
     is_metadata_xml_file,
@@ -28,11 +29,14 @@ from .s3_backend import S3Storage
 from django.core.exceptions import ImproperlyConfigured
 
 try:
+    from boto3.s3.transfer import TransferConfig
     from botocore.exceptions import ClientError
 except ImportError as e:
     raise ImproperlyConfigured("Could not load Boto3's S3 bindings. %s" % e)
 
 folder_delimiter = "|||||||"
+# largest copy source AWS accepts in a single CopyObject (5GiB)
+COPY_OBJECT_MAX_SIZE = 5 * 1024 ** 3
 logger = logging.getLogger(__name__)
 
 
@@ -432,18 +436,7 @@ class S3Storage(S3Storage):
         bucket = self.connection(src_zone).Bucket(src_bucket)
         files_to_delete = []
         for file in bucket.objects.filter(Prefix=resource_id):
-            try:
-                self.connection(src_zone).meta.client.copy_object(
-                    Bucket=dst_bucket,
-                    Key=file.key,
-                    CopySource={"Bucket": src_bucket, "Key": file.key},
-                )
-            except ClientError as e:
-                if "XMinioAdminBucketQuotaExceeded" in str(e):
-                    raise QuotaException(
-                        "Bucket quota exceeded. Please contact your system administrator."
-                    )
-                raise e
+            self._copy_object(file.key, file.key, src_bucket, src_zone, dst_bucket, dest_zone)
             files_to_delete.append(file.key)
 
         for src_file_path in files_to_delete:
@@ -458,19 +451,77 @@ class S3Storage(S3Storage):
         dst_bucket,
         dest_zone,
     ):
-        """
-        Copy an object from src_path to dest_path.
+        """Copy an object from src_path to dest_path."""
+        self._copy_object(src_path, dest_path, src_bucket, src_zone, dst_bucket, dest_zone)
 
-        When source and destination are in the same zone, this uses server-side copy_object.
-        When zones differ, it falls back to streaming upload_fileobj to support cross-endpoint copies.
+    @staticmethod
+    def _same_endpoint(src_zone, dest_zone):
+        """True when both zones are served by the same endpoint with the same credentials, so the source-zone
+        client can copy server side into the destination bucket."""
+        if src_zone == dest_zone:
+            return True
+        src_config = get_zone_config(src_zone)
+        dest_config = get_zone_config(dest_zone)
+        return (src_config.aws_s3_endpoint_url.rstrip("/") == dest_config.aws_s3_endpoint_url.rstrip("/")
+                and src_config.aws_access_key_id == dest_config.aws_access_key_id)
+
+    @staticmethod
+    def _managed_copy(client, copy_source, dst_bucket, dest_path, multipart_threshold):
+        """Copy server side via boto3 client.copy(), which switches to multipart UploadPartCopy for objects of
+        multipart_threshold bytes or more."""
+        client.copy(
+            copy_source,
+            dst_bucket,
+            dest_path,
+            SourceClient=client,
+            Config=TransferConfig(multipart_threshold=multipart_threshold),
+        )
+
+    @staticmethod
+    def _is_copy_size_cap_error(error):
+        """True when CopyObject was rejected for exceeding the AWS 5GB copy source cap."""
+        details = error.response.get("Error", {})
+        return (details.get("Code") == "InvalidRequest"
+                and "maximum allowable size for a copy source" in details.get("Message", ""))
+
+    def _copy_object(self, src_path, dest_path, src_bucket, src_zone, dst_bucket, dest_zone):
         """
+        Copy an object from src_bucket/src_path to dst_bucket/dest_path.
+
+        Zones on the same endpoint copy server side, using the destination zone's copy_method:
+        "copy_object" issues a single CopyObject (GCS has no 5GB cap and does not implement UploadPartCopy);
+        "managed_copy" uses boto3 client.copy(), which switches to multipart UploadPartCopy at
+        multipart_copy_threshold (AWS caps CopyObject at 5GB). AWS-backed zones should be configured to
+        set "copy_method" to "managed_copy"; if one is left at "copy_object" and a copy is rejected
+        with AWS's size-cap error, it is retried as a managed multipart copy as a safety net
+        (other S3-compatible stores may word that error differently).
+        Zones on different endpoints (e.g. GCS <-> AWS) cannot copy server side, so the object is streamed
+        from the source to the destination.
+        """
+        copy_source = {"Bucket": src_bucket, "Key": src_path}
         try:
-            if src_zone == dest_zone:
-                self.connection(src_zone).meta.client.copy_object(
-                    Bucket=dst_bucket,
-                    Key=dest_path,
-                    CopySource={"Bucket": src_bucket, "Key": src_path},
-                )
+            if self._same_endpoint(src_zone, dest_zone):
+                client = self.connection(src_zone).meta.client
+                dest_config = get_zone_config(dest_zone)
+                if dest_config.copy_method == "managed_copy":
+                    self._managed_copy(client, copy_source, dst_bucket, dest_path,
+                                       dest_config.multipart_copy_threshold)
+                else:
+                    try:
+                        client.copy_object(Bucket=dst_bucket, Key=dest_path, CopySource=copy_source)
+                    except ClientError as e:
+                        if not self._is_copy_size_cap_error(e):
+                            raise
+                        # AWS caps CopyObject at 5GB; GCS has no cap, so this error only occurs on AWS-like
+                        # backends, which implement UploadPartCopy. Fall back to a managed multipart copy, with
+                        # the threshold capped so the retry cannot be a single CopyObject that fails again.
+                        logger.warning(
+                            "CopyObject size cap hit copying into zone '%s', retrying with a managed multipart "
+                            "copy. Set copy_method='managed_copy' in the zone config to skip the failed attempt.",
+                            dest_zone,
+                        )
+                        self._managed_copy(client, copy_source, dst_bucket, dest_path,
+                                           min(dest_config.multipart_copy_threshold, COPY_OBJECT_MAX_SIZE))
             else:
                 src_obj = self.connection(src_zone).Object(src_bucket, src_path)
                 dst_bucket_obj = self.connection(dest_zone).Bucket(dst_bucket)

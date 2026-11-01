@@ -179,6 +179,21 @@ class S3Storage(s3.S3Storage):
                 )
                 return 0
 
+        # UploadId -> copy source of in-progress multipart copies (boto3 client.copy() above its threshold issues
+        # UploadPartCopy + CompleteMultipartUpload instead of CopyObject). Shared across calls and s3transfer
+        # worker threads, but only a single dict set/pop is ever done on it, which is atomic.
+        pending_copies = {}
+
+        def track_multipart_copy(params, model, context, **kwargs):
+            operation = getattr(model, "name", "")
+            upload_id = params.get("UploadId")
+            if not upload_id:
+                return
+            if operation == "UploadPartCopy":
+                pending_copies[upload_id] = _copy_source_path(params.get("CopySource"))
+            elif operation == "AbortMultipartUpload":
+                pending_copies.pop(upload_id, None)
+
         def before_parameter_build(params, model, context, **kwargs):
             operation = getattr(model, "name", "")
             if operation not in ("PutObject", "DeleteObject", "CompleteMultipartUpload", "CopyObject"):
@@ -192,12 +207,19 @@ class S3Storage(s3.S3Storage):
                 "CompleteMultipartUpload": "s3:CompleteMultipartUpload",
                 "CopyObject": "s3:CopyObject",
             }.get(operation)
-            if operation == "CopyObject":
+            if operation == "CompleteMultipartUpload":
+                copy_source = pending_copies.pop(params.get("UploadId"), None)
+                if copy_source:
+                    # completes a multipart copy: report it like the single CopyObject it replaces
+                    context["_hs_action"] = "s3:CopyObject"
+                    context["_hs_copy_source"] = copy_source
+            elif operation == "CopyObject":
+                # lets extraction tell a whole resource move (same path within the resource) from a rename
+                context["_hs_copy_source"] = _copy_source_path(params.get("CopySource"))
+            if operation in ("CopyObject", "CompleteMultipartUpload"):
                 # a cross-bucket copy (e.g. quota holder change) is issued with the source-zone client,
                 # so report the zone of the destination bucket
                 context["_hs_zone"] = _zone_for_bucket(params.get("Bucket"), zone)
-                # lets extraction tell a whole resource move (same path within the resource) from a rename
-                context["_hs_copy_source"] = _copy_source_path(params.get("CopySource"))
             if operation == "DeleteObject":
                 context["_hs_file_size"] = 0
             elif operation == "PutObject":
@@ -249,6 +271,8 @@ class S3Storage(s3.S3Storage):
         events.register("before-parameter-build.s3.DeleteObject", before_parameter_build)
         events.register("before-parameter-build.s3.CompleteMultipartUpload", before_parameter_build)
         events.register("before-parameter-build.s3.CopyObject", before_parameter_build)
+        events.register("before-parameter-build.s3.UploadPartCopy", track_multipart_copy)
+        events.register("before-parameter-build.s3.AbortMultipartUpload", track_multipart_copy)
         events.register("after-call.s3.PutObject", after_call)
         events.register("after-call.s3.DeleteObject", after_call)
         events.register("after-call.s3.CompleteMultipartUpload", after_call)

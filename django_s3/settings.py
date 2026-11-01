@@ -1,7 +1,7 @@
 from functools import lru_cache
 
 from pydantic import BaseModel
-from typing import Dict
+from typing import Dict, Literal
 from django.conf import settings as django_settings
 
 
@@ -11,6 +11,13 @@ class ZoneConfig(BaseModel):
     aws_s3_endpoint_url: str
     aws_s3_endpoint_url_public: str
     bucket_name: str
+    # Server-side copy into this zone. "copy_object" issues a single CopyObject (GCS: no 5GB cap there, and
+    # UploadPartCopy is not implemented). "managed_copy" uses boto3's client.copy(), which switches to a multipart
+    # UploadPartCopy at multipart_copy_threshold. Set "managed_copy" when adding an AWS-backed zone, where
+    # CopyObject caps at 5GB. As a safety net, a "copy_object" copy rejected with AWS's size-cap error is retried
+    # as a managed copy (costing one failed request).
+    copy_method: Literal["copy_object", "managed_copy"] = "copy_object"
+    multipart_copy_threshold: int = 5 * 1024 ** 3
 
 
 class ZonesConfig(BaseModel):

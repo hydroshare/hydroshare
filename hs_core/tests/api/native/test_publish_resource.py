@@ -18,7 +18,7 @@ from django_s3.utils import bucket_and_zone
 from hs_access_control.models.privilege import UserResourcePrivilege, PrivilegeCodes
 from hs_core import hydroshare
 from hs_core.models import BaseResource
-from hs_core.testing import MockS3TestCaseMixin
+from hs_core.testing import MockS3TestCaseMixin, override_zone_config
 from hs_core.views.utils import get_default_admin_user, get_default_support_user
 from django.core.exceptions import ValidationError, PermissionDenied
 from theme.backends import without_login_date_token_generator
@@ -179,6 +179,15 @@ class TestPublishResource(MockS3TestCaseMixin, TestCase):
     def test_publish_resource_moves_files_to_published_bucket(self):
         """Publishing makes the publisher user the quota holder, which moves the resource's S3 objects
         from the default 'resource' bucket to the 'published' bucket."""
+        self._assert_publish_moves_files_to_published_bucket()
+
+    def test_publish_resource_moves_files_to_published_bucket_with_managed_copy(self):
+        """Same move into a published zone configured for boto3 managed copy (as an AWS zone would be). A 1 byte
+        multipart threshold makes every non-empty file go through UploadPartCopy + CompleteMultipartUpload."""
+        override_zone_config(self, 'published', copy_method='managed_copy', multipart_copy_threshold=1)
+        self._assert_publish_moves_files_to_published_bucket()
+
+    def _assert_publish_moves_files_to_published_bucket(self):
         res_id = self.complete_res.short_id
         istorage = self.complete_res.get_s3_storage()
         res_bucket = settings.RESOURCE_S3_ZONES_CONFIG['hydroshare']['bucket_name']
