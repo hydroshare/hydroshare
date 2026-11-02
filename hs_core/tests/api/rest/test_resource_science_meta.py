@@ -5,6 +5,9 @@ from hs_core.hydroshare import resource
 from hs_core.hydroshare.utils import resource_post_create_actions
 from .base import HSRESTTestCase
 
+TOOL_ICON_URL = ("https://storage.googleapis.com/hydroshare-403701-prod-cloud-native-static-media"
+                 "/static/img/logo-sm.png")
+
 
 class TestResourceScienceMetadata(HSRESTTestCase):
 
@@ -440,7 +443,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
                 "sharing_status": ["Public", "Discoverable"]
             },
             "toolicon": {
-                "value": "https://storage.googleapis.com/hydroshare-prod-static-media/static/img/logo-sm.png"
+                "value": TOOL_ICON_URL
             },
             "apphomepageurl": {
                 "value": "https://mywebapp.com"
@@ -502,7 +505,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
                 "sharing_status": ["Public", "Discoverable"]
             },
             "toolicon": {
-                "value": "https://storage.googleapis.com/hydroshare-prod-static-media/static/img/logo-sm.png"
+                "value": TOOL_ICON_URL
             },
             "apphomepageurl": {
                 "value": "https://mywebapp.com"
