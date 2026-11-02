@@ -875,17 +875,27 @@ table.info-table > tbody > tr > td {
 
 .res-header-with-aside {
     display: flex;
-    flex-wrap: wrap;
     gap: 15px;
     align-items: flex-start;
 }
 
 .res-header-with-aside .res-header-main {
-    flex: 1 1 auto;
+    flex: 1 1 0;
+    min-width: 0;
 }
 
 .res-header-with-aside .res-header-aside {
-    flex: 0 1 260px;
+    flex: 0 0 240px;
+}
+
+@media (max-width: 991px) {
+    .res-header-with-aside {
+        flex-wrap: wrap;
+    }
+
+    .res-header-with-aside .res-header-aside {
+        flex-basis: 100%;
+    }
 }
 
 #curation-assistance-banner {

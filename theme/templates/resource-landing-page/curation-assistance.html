@@ -18,13 +18,13 @@
     (function () {
         const banner = document.getElementById("curation-assistance-banner");
 
-        // Point the tail at the publish button when it sits above the banner
+        // Point the tail at the publish button when it sits just above the banner
         function placeTail() {
             const publish = document.querySelector("#publish .icon-button");
             const b = banner.getBoundingClientRect();
             const p = publish && publish.getBoundingClientRect();
             const x = p && p.left + p.width / 2 - b.left;
-            const fits = p && p.width && p.bottom <= b.top && x >= 15 && x <= b.width - 15;
+            const fits = p && p.width && p.bottom <= b.top && b.top - p.bottom < 60 && x >= 15 && x <= b.width - 15;
             banner.classList.toggle("has-tail", !!fits);
             if (fits) banner.style.setProperty("--tail-left", x + "px");
         }
