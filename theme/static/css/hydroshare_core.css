@@ -1774,6 +1774,13 @@ a.tag:hover {
 	.collapse.in {
 		display: block !important;
 	}
+
+	/* Bootstrap 3 sets overflow: visible !important on .navbar-collapse.collapse from 768px up,
+	   but the fixed navbar still caps it at max-height: 340px, so the last items
+	   (Profile / Sign Out) spill out of the bar. Scroll inside the menu instead. */
+	.navbar-collapse.collapse.in {
+		overflow-y: auto !important;
+	}
 }
 
 @media (max-width: 768px) {
