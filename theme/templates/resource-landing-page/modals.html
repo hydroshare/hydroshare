@@ -1384,6 +1384,8 @@
 </div>
 
 {% if not resource_edit_mode and not is_replaced_by %}
+    {% include "resource-landing-page/curation-assistance-modal.html" %}
+
     {% if page.perms.change or self_access_level == 'owner' and cm.raccess.published %}
         {% if page.perms.delete or cm.raccess.published %}
             <div class="modal fade" id="new-version-resource-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">

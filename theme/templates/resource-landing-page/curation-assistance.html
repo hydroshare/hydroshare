@@ -1,0 +1,34 @@
+<div id="curation-assistance-banner" class="alert alert-info alert-dismissible" role="alert">
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+    <div class="curation-heading">
+        <i class="fa fa-info-circle" aria-hidden="true"></i>
+        <strong>Planning to publish this resource?</strong>
+    </div>
+    <p>
+        Publishing assigns a permanent DOI so your data can be cited.
+        <a href="https://help.hydroshare.org/publishing-in-hydroshare/" target="_blank" rel="noopener">Learn about publishing</a>
+    </p>
+    <p>Want guidance on best practices first? Our team offers free curation help.</p>
+    <button type="button" id="btn-curation-assistance" class="btn btn-primary btn-sm btn-block"
+            data-toggle="modal" data-target="#curation-assistance-dialog">
+        Request data curation assistance
+    </button>
+</div>
+<script>
+    (function () {
+        const banner = document.getElementById("curation-assistance-banner");
+
+        // Point the tail at the publish button when it sits above the banner
+        function placeTail() {
+            const publish = document.querySelector("#publish .icon-button");
+            const b = banner.getBoundingClientRect();
+            const p = publish && publish.getBoundingClientRect();
+            const x = p && p.left + p.width / 2 - b.left;
+            const fits = p && p.width && p.bottom <= b.top && x >= 15 && x <= b.width - 15;
+            banner.classList.toggle("has-tail", !!fits);
+            if (fits) banner.style.setProperty("--tail-left", x + "px");
+        }
+        window.addEventListener("load", placeTail);
+        window.addEventListener("resize", placeTail);
+    })();
+</script>

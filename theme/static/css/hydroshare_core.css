@@ -873,6 +873,66 @@ table.info-table > tbody > tr > td {
     padding-bottom: 8px;
 }
 
+.res-header-with-aside {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    align-items: flex-start;
+}
+
+.res-header-with-aside .res-header-main {
+    flex: 1 1 auto;
+}
+
+.res-header-with-aside .res-header-aside {
+    flex: 0 1 260px;
+}
+
+#curation-assistance-banner {
+    position: relative;
+    margin-bottom: 15px;
+}
+
+#curation-assistance-banner .curation-heading {
+    display: flex;
+    gap: 6px;
+    align-items: baseline;
+    margin-bottom: 6px;
+}
+
+#curation-assistance-banner p {
+    margin-bottom: 8px;
+}
+
+#curation-assistance-banner p:last-of-type {
+    margin-bottom: 12px;
+}
+
+#curation-assistance-banner a:not(.btn) {
+    white-space: nowrap;
+}
+
+#curation-assistance-banner.has-tail::before,
+#curation-assistance-banner.has-tail::after {
+    content: "";
+    position: absolute;
+    left: var(--tail-left);
+    border: solid transparent;
+    transform: translateX(-50%);
+}
+
+#curation-assistance-banner.has-tail::before {
+    bottom: 100%;
+    border-width: 0 11px 11px;
+    border-bottom-color: #bce8f1;
+}
+
+#curation-assistance-banner.has-tail::after {
+    bottom: calc(100% - 1px);
+    border-width: 0 10px 10px;
+    border-bottom-color: #d9edf7;
+}
+
 .res-header .agg-multidimensional_content {
     background-color: #9625aa;
 }
