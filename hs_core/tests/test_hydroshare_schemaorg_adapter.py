@@ -152,6 +152,25 @@ class TestPersonIdentifierConversion(unittest.TestCase):
         self.assertFalse(hasattr(result, "identifier") and result.identifier)
         _mock_site_url.assert_not_called()
 
+    def test_named_creator_with_homepage_gets_person_url(self):
+        creator = Creator(name="Jane Smith", homepage="https://example.com/jane")
+        result = creator.to_dataset_creator()
+
+        self.assertEqual(str(result.url), "https://example.com/jane")
+
+    def test_named_contributor_without_homepage_has_no_person_url(self):
+        contributor = Contributor(name="John Doe")
+        result = contributor.to_dataset_contributor()
+
+        self.assertFalse(getattr(result, "url", None))
+
+    def test_org_only_party_homepage_stays_on_organization(self):
+        creator = Creator(organization="Acme Hydrology", homepage="https://acme.example.com")
+        result = creator.to_dataset_creator()
+
+        self.assertEqual(result.name, "Acme Hydrology")
+        self.assertEqual(str(result.url), "https://acme.example.com/")
+
 
 class TestToCatalogRecordRelationPartitioning(unittest.TestCase):
     """Tests that relations are routed to the correct fields and are not duplicated."""

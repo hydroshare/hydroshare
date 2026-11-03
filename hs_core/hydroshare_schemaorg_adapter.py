@@ -75,6 +75,8 @@ class BasePerson(BaseModel):
                 identifiers = self._to_person_identifiers()
                 if identifiers:
                     person.identifier = identifiers
+                if self.homepage:
+                    person.url = self.homepage
         else:
             person = schema.Organization.construct()
             person.name = self.organization
