@@ -1,7 +1,6 @@
 import type { RouteLocationRaw } from "vue-router";
 import { Notifications } from "@cznethub/cznet-vue-core";
 import { Model } from "@vuex-orm/core";
-import axios from "axios";
 
 import { Subject } from "rxjs";
 import { API_BASE, APP_URL } from "@/constants";
@@ -99,50 +98,5 @@ export default class User extends Model {
       signal: this.controller.signal, // Used to remove the listener
     });
     console.info(`[User]: Listening to login window...`);
-  }
-
-  static async checkAuthorization() {
-    try {
-      const response = await axios.get("/api", {
-        params: { access_token: User.$state.orcidAccessToken },
-      });
-
-      if (response.status !== 200) {
-        // Something went wrong, authorization may be invalid
-        User.commit((state) => {
-          state.isLoggedIn = false;
-        });
-      }
-    } catch (e: any) {
-      // console.log(e.response.status)
-      User.commit((state) => {
-        state.isLoggedIn = false;
-      });
-    }
-  }
-
-  static async logOut() {
-    try {
-      await axios.get("/api/logout");
-      this._logOut();
-    } catch (e) {
-      // We don't care about the response status. We at least log the user out in the frontend.
-      this._logOut();
-    }
-  }
-
-  private static async _logOut() {
-    await User.commit((state) => {
-      state.isLoggedIn = false;
-      state.orcidAccessToken = "";
-    });
-
-    Notifications.toast({
-      message: "You have logged out!",
-      type: "info",
-    });
-
-    // if (useRouter().currentRoute.meta?.hasLoggedInGuard)
-    //   useRouter().push({ path: '/' })
   }
 }
