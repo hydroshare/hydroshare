@@ -195,7 +195,10 @@ def collect_file_to_catalog(filepath: str):
         return
     if _get_resource_from_discovery(previous_version_id):
         previous_key = METADATA_OBJECT_KEY_TEMPLATE.format(resource_id=previous_version_id)
-        logger.info(f"{resource_id} is visible and replaces {previous_version_id}; removing previous version from collection")
+        logger.info(
+            f"{resource_id} is visible and replaces {previous_version_id}; "
+            "removing previous version from collection"
+        )
         delete_file_from_catalog(f"{bucket_name}/{previous_key}")
 
 
