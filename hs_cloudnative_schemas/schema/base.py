@@ -272,6 +272,12 @@ class Creator(Person):
         default=None,
         json_schema_extra=remove_none_default,
     )
+    url: Optional[HttpUrl] = Field(
+        title="URL",
+        description="A URL to the homepage of the creator.",
+        default=None,
+        json_schema_extra=remove_none_default,
+    )
     email: Optional[EmailStr] = Field(
         description="A string containing an email address for the creator.",
         default=None,
@@ -288,6 +294,12 @@ class Contributor(Person):
     identifier: Optional[List[PersonIdentifier]] = Field(
         title="Identifiers",
         description="Unique identifiers for the contributor, e.g. ORCID or HydroShare user profile.",
+        default=None,
+        json_schema_extra=remove_none_default,
+    )
+    url: Optional[HttpUrl] = Field(
+        title="URL",
+        description="A URL to the homepage of the contributor.",
         default=None,
         json_schema_extra=remove_none_default,
     )
