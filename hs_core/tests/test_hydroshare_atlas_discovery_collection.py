@@ -168,7 +168,10 @@ class TestCollectFileToCatalog(ParametrizedTestCase):
         ],
     )
     def test_replaced_resource_removed_when_newer_version_visible(self, status):
-        """A replaced resource is removed from the collection, not re-indexed, if its newer version is in the collection and visible."""
+        """
+        A replaced resource is removed from the collection, not re-indexed, if its newer
+        version is in the collection and visible.
+        """
         old_version = {**SAMPLE_METADATA, "relation": [_relation(REPLACED_BY, "new-version")]}
         self.mock_s3.get_object.side_effect = _s3_objects({
             "old-version/.hsjsonld/dataset_metadata.json": old_version,
