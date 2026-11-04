@@ -367,6 +367,10 @@ class _ResourceUserMetadata(BaseModel):
             return None
         return [schema.PropertyValue(name=key, value=value) for key, value in self.additional_metadata.items()]
 
+    def to_dataset_keywords(self) -> list[str] | None:
+        if self.subjects:
+            return self.subjects
+
     def to_dataset_license(self):
         if self.rights:
             return self.rights.to_dataset_license()
