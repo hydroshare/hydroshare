@@ -39,13 +39,13 @@ class ScientificDataset(CoreMetadata):
     context: HttpUrl = Field(
         alias="@context",  # type: ignore
         default=HttpUrl(
-            "https://hydroshare.org/schema"
-        ),  # TODO: This is a placeholder for now.
+            "https://schema.org/"
+        ),
         description="Specifies the vocabulary employed for understanding the structured data markup.",
     )
-    type: Literal["ScientificDataset"] = Field(
+    type: Literal["Dataset"] = Field(
         alias="@type",  # type: ignore
-        default="ScientificDataset",
+        default="Dataset",
         description="A body of structured information describing some topic(s) of interest.",
     )
 
@@ -92,7 +92,7 @@ class ScientificDataset(CoreMetadata):
     additionalType: Optional[AdditionalType] = Field(
         default=None,
         title="Additional Type",
-        description="Additional descriptive types associated with the ScientificDataset. This is typically used by "
+        description="Additional descriptive types associated with the dataset. This is typically used by "
         "applications to provide specialized funcationality for categories for content."
     )
 
