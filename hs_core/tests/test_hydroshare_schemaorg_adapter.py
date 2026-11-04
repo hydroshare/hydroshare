@@ -16,6 +16,8 @@ MINIMAL_METADATA = {
     "title": "Test Resource",
 }
 
+RESOURCE_ID = "bbbb0000000000000000000000000003"
+
 
 class TestRelationToDatasetRelation(ParametrizedTestCase):
     """Tests for Relation.to_dataset_relation() — URL/description parsing and schema object type."""
@@ -173,6 +175,42 @@ class TestPersonIdentifierConversion(unittest.TestCase):
         self.assertEqual(str(result.url), "https://acme.example.com/")
 
 
+class TestToCatalogRecordUrl(ParametrizedTestCase):
+    """Tests that dataset.url is the DOI for published resources and the HydroShare resource URL otherwise."""
+
+    SHORT_ID = "bbbb0000000000000000000000000003"
+    LOCAL_URL = f"http://localhost:8000/resource/{SHORT_ID}"
+
+    @parametrize(
+        "sharing_status,expected_url",
+        [
+            param("published", f"https://doi.org/10.4211/hs.{SHORT_ID}", id="published_uses_doi"),
+            param("public", f"https://www.hydroshare.org/resource/{SHORT_ID}", id="public_uses_hydroshare_url"),
+            param("private", f"https://www.hydroshare.org/resource/{SHORT_ID}", id="private_uses_hydroshare_url"),
+            param("discoverable", f"https://www.hydroshare.org/resource/{SHORT_ID}", id="discoverable_uses_hydroshare_url"),
+            param(None, f"https://www.hydroshare.org/resource/{SHORT_ID}", id="no_sharing_status_uses_hydroshare_url"),
+        ],
+    )
+    def test_url_by_sharing_status(self, sharing_status, expected_url):
+        metadata = {
+            **MINIMAL_METADATA,
+            "url": self.LOCAL_URL,
+            "identifier": self.LOCAL_URL,
+            "sharing_status": sharing_status,
+        }
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=self.SHORT_ID)
+        self.assertEqual(str(dataset.url), expected_url)
+
+    def test_url_uses_resource_id_not_metadata_url(self):
+        metadata = {
+            **MINIMAL_METADATA,
+            "url": "http://localhost:8000/resource/someotherid",
+            "sharing_status": "published",
+        }
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=self.SHORT_ID)
+        self.assertEqual(str(dataset.url), f"https://doi.org/10.4211/hs.{self.SHORT_ID}")
+
+
 class TestToCatalogRecordRelationPartitioning(unittest.TestCase):
     """Tests that relations are routed to the correct fields and are not duplicated."""
 
@@ -181,7 +219,7 @@ class TestToCatalogRecordRelationPartitioning(unittest.TestCase):
             **MINIMAL_METADATA,
             "relations": [{"type": IS_PART_OF_VALUE, "value": "A collection, https://www.hydroshare.org/resource/abc"}],
         }
-        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata)
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=RESOURCE_ID)
         self.assertEqual(len(dataset.isPartOf), 1)
         self.assertEqual(len(dataset.hasPart), 0)
         self.assertEqual(len(dataset.relation), 0)
@@ -194,7 +232,7 @@ class TestToCatalogRecordRelationPartitioning(unittest.TestCase):
                 "value": "A child resource, https://www.hydroshare.org/resource/def"
             }],
         }
-        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata)
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=RESOURCE_ID)
         self.assertEqual(len(dataset.hasPart), 1)
         self.assertEqual(len(dataset.isPartOf), 0)
         self.assertEqual(len(dataset.relation), 0)
@@ -204,7 +242,7 @@ class TestToCatalogRecordRelationPartitioning(unittest.TestCase):
             **MINIMAL_METADATA,
             "relations": [{"type": REFERENCES_VALUE, "value": "A paper, https://doi.org/10.1234/abc"}],
         }
-        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata)
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=RESOURCE_ID)
         self.assertEqual(len(dataset.relation), 1)
         self.assertEqual(len(dataset.isPartOf), 0)
         self.assertEqual(len(dataset.hasPart), 0)
@@ -218,7 +256,7 @@ class TestToCatalogRecordRelationPartitioning(unittest.TestCase):
                 {"type": REFERENCES_VALUE, "value": "A paper, https://doi.org/10.1234/abc"},
             ],
         }
-        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata)
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=RESOURCE_ID)
         self.assertEqual(len(dataset.isPartOf), 1)
         self.assertEqual(len(dataset.hasPart), 1)
         self.assertEqual(len(dataset.relation), 1)
@@ -232,7 +270,7 @@ class TestToCatalogRecordAdditionalMetadata(unittest.TestCase):
             **MINIMAL_METADATA,
             "additional_metadata": {"site": "Logan River", "depth": "2 m"},
         }
-        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata)
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=RESOURCE_ID)
         self.assertEqual(len(dataset.additionalProperty), 2)
         for prop in dataset.additionalProperty:
             self.assertIsInstance(prop, schema.PropertyValue)
@@ -243,16 +281,16 @@ class TestToCatalogRecordAdditionalMetadata(unittest.TestCase):
 
     def test_empty_additional_metadata_yields_no_additional_property(self):
         metadata = {**MINIMAL_METADATA, "additional_metadata": {}}
-        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata)
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=RESOURCE_ID)
         self.assertIsNone(dataset.additionalProperty)
 
     def test_missing_additional_metadata_yields_no_additional_property(self):
-        dataset = HydroshareMetadataAdapter.to_catalog_record(MINIMAL_METADATA)
+        dataset = HydroshareMetadataAdapter.to_catalog_record(MINIMAL_METADATA, resource_id=RESOURCE_ID)
         self.assertIsNone(dataset.additionalProperty)
 
     def test_additional_metadata_key_not_in_dumped_record(self):
         metadata = {**MINIMAL_METADATA, "additional_metadata": {"site": "Logan River"}}
-        dumped = HydroshareMetadataAdapter.to_catalog_record(metadata).model_dump(by_alias=True)
+        dumped = HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=RESOURCE_ID).model_dump(by_alias=True)
         self.assertNotIn("additional_metadata", dumped)
         self.assertEqual(dumped["additionalProperty"][0]["@type"], "PropertyValue")
         self.assertEqual(dumped["additionalProperty"][0]["name"], "site")
@@ -293,7 +331,7 @@ NON_COMPLIANT_KEYS = {"sharing_status", "review_started"}
 
 def _generate_user_metadata(metadata):
     """Serialize the adapter output the same way hs_core.models.write_user_metadata_json_file does."""
-    dataset = HydroshareMetadataAdapter.to_catalog_record(dict(metadata))
+    dataset = HydroshareMetadataAdapter.to_catalog_record(dict(metadata), resource_id=RESOURCE_ID)
     dumped = dataset.model_dump(exclude={'dateCreated', 'dateModified', 'datePublished'}, by_alias=True)
     return json.loads(json.dumps(dumped, default=str))
 
@@ -334,7 +372,7 @@ class TestToCatalogRecordKeywords(unittest.TestCase):
             **MINIMAL_METADATA,
             "subjects": ["subject1", "subject2"]
         }
-        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata)
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=RESOURCE_ID)
         self.assertEqual(dataset.keywords, ["subject1", "subject2"])
 
     def test_no_subjects_results_in_no_keywords(self):
@@ -342,7 +380,7 @@ class TestToCatalogRecordKeywords(unittest.TestCase):
             **MINIMAL_METADATA,
             "subjects": None
         }
-        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata)
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=RESOURCE_ID)
         self.assertIsNone(dataset.keywords)
 
 
@@ -360,7 +398,7 @@ class TestToCatalogSpatialCoverage(unittest.TestCase):
                 "westlimit": 15.0
             }
         }
-        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata)
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=RESOURCE_ID)
         self.assertEqual(dataset.spatialCoverage.geo.box, "5.0 15.0 10.0 20.0")
         self.assertEqual(dataset.spatialCoverage.name, "Test Box")
 
@@ -373,7 +411,7 @@ class TestToCatalogSpatialCoverage(unittest.TestCase):
                 "east": 20.0
             }
         }
-        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata)
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=RESOURCE_ID)
         self.assertEqual(dataset.spatialCoverage.geo.latitude, 10.0)
         self.assertEqual(dataset.spatialCoverage.geo.longitude, 20.0)
         self.assertEqual(dataset.spatialCoverage.name, "Test Point")
