@@ -427,8 +427,8 @@ class LanguageEnum(str, Enum):
         json_schema.update(type="string", title="Language", description="")
         return json_schema
 
-    eng = "eng"
-    esp = "esp"
+    eng = "en"
+    spa = "es"
 
 
 class InLanguageStr(str):

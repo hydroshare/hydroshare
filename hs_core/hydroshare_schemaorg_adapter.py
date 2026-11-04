@@ -304,11 +304,16 @@ class _ResourceUserMetadata(BaseModel):
             return status_defined_terms[self.sharing_status]()
 
     def _to_dataset_language(self):
+        """Map a HydroShare ISO 639-2 language code to a schema.org language value.
+
+        LanguageEnum member names match HydroShare codes, so the lookup is by name.
+        Codes without a matching member are kept as-is.
+        """
         if self.language is None:
             return None
         try:
-            return schema.LanguageEnum(self.language)
-        except ValueError:
+            return schema.LanguageEnum[self.language]
+        except KeyError:
             return schema.InLanguageStr(self.language)
 
     @staticmethod

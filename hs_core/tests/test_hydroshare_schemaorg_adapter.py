@@ -178,6 +178,31 @@ class TestToCatalogRecordRelationPartitioning(unittest.TestCase):
         self.assertEqual(len(dataset.hasPart), 1)
         self.assertEqual(len(dataset.relation), 1)
 
+class TestToCatalogRecordLanguage(unittest.TestCase):
+    """Tests that HydroShare language codes map to schema.org inLanguage values."""
+
+    def test_english_maps_to_en(self):
+        metadata = {**MINIMAL_METADATA, "language": "eng"}
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=RESOURCE_ID)
+        self.assertEqual(dataset.inLanguage, "en")
+
+    def test_spanish_maps_to_es(self):
+        metadata = {**MINIMAL_METADATA, "language": "spa"}
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=RESOURCE_ID)
+        self.assertEqual(dataset.inLanguage, "es")
+
+    def test_unknown_language_kept_as_other(self):
+        metadata = {**MINIMAL_METADATA, "language": "fra"}
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=RESOURCE_ID)
+        self.assertIsInstance(dataset.inLanguage, schema.InLanguageStr)
+        self.assertEqual(dataset.inLanguage, "fra")
+
+    def test_no_language_results_in_none(self):
+        metadata = {**MINIMAL_METADATA, "language": None}
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=RESOURCE_ID)
+        self.assertIsNone(dataset.inLanguage)
+
+
 class TestToCatalogRecordKeywords(unittest.TestCase):
     """Tests that keywords are correctly extracted from subjects."""
 
