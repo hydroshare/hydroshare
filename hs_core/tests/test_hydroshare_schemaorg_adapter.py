@@ -158,3 +158,36 @@ class TestToCatalogRecordKeywords(unittest.TestCase):
         }
         dataset = HydroshareMetadataAdapter.to_catalog_record(metadata)
         self.assertIsNone(dataset.keywords)
+
+
+class TestToCatalogSpatialCoverage(unittest.TestCase):
+    """Tests that spatial coverage is correctly extracted from metadata."""
+
+    def test_spatial_coverage_box(self):
+        metadata = {
+            **MINIMAL_METADATA,
+            "spatial_coverage": {
+                "name": "Test Box",
+                "northlimit": 10.0,
+                "eastlimit": 20.0,
+                "southlimit": 5.0,
+                "westlimit": 15.0
+            }
+        }
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata)
+        self.assertEqual(dataset.spatialCoverage.geo.box, "5.0 15.0 10.0 20.0")
+        self.assertEqual(dataset.spatialCoverage.name, "Test Box")
+
+    def test_spatial_coverage_point(self):
+        metadata = {
+            **MINIMAL_METADATA,
+            "spatial_coverage": {
+                "name": "Test Point",
+                "north": 10.0,
+                "east": 20.0
+            }
+        }
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata)
+        self.assertEqual(dataset.spatialCoverage.geo.latitude, 10.0)
+        self.assertEqual(dataset.spatialCoverage.geo.longitude, 20.0)
+        self.assertEqual(dataset.spatialCoverage.name, "Test Point")

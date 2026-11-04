@@ -97,12 +97,12 @@ class SpatialCoverageBox(BaseModel):
     westlimit: float
 
     def to_dataset_spatial_coverage(self):
-        place = schema.Place.construct()
+        place = schema.Place.model_construct()
         if self.name:
             place.name = self.name
 
-        place.geo = schema.GeoShape.construct()
-        place.geo.box = f"{self.northlimit} {self.eastlimit} {self.southlimit} {self.westlimit}"
+        place.geo = schema.GeoShape.model_construct()
+        place.geo.box = f"{self.southlimit} {self.westlimit} {self.northlimit} {self.eastlimit}"
         return place
 
 
@@ -112,10 +112,10 @@ class SpatialCoveragePoint(BaseModel):
     east: float
 
     def to_dataset_spatial_coverage(self):
-        place = schema.Place.construct()
+        place = schema.Place.model_construct()
         if self.name:
             place.name = self.name
-        place.geo = schema.GeoCoordinates.construct()
+        place.geo = schema.GeoCoordinates.model_construct()
         place.geo.latitude = self.north
         place.geo.longitude = self.east
         return place
@@ -211,6 +211,7 @@ class _ResourceUserMetadata(BaseModel):
     language: Optional[str] = None
     rights: Optional[Rights] = None
     awards: List[Award] = []
+    # Pydantic selects the Box or Point class based on which fields are present in the input
     spatial_coverage: Optional[Union[SpatialCoverageBox, SpatialCoveragePoint]] = None
     period_coverage: Optional[TemporalCoverage] = None
     relations: List[Relation] = []
