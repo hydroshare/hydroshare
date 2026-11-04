@@ -139,3 +139,22 @@ class TestToCatalogRecordRelationPartitioning(unittest.TestCase):
         self.assertEqual(len(dataset.isPartOf), 1)
         self.assertEqual(len(dataset.hasPart), 1)
         self.assertEqual(len(dataset.relation), 1)
+
+class TestToCatalogRecordKeywords(unittest.TestCase):
+    """Tests that keywords are correctly extracted from subjects."""
+
+    def test_keywords_from_subjects(self):
+        metadata = {
+            **MINIMAL_METADATA,
+            "subjects": ["subject1", "subject2"]
+        }
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata)
+        self.assertEqual(dataset.keywords, ["subject1", "subject2"])
+
+    def test_no_subjects_results_in_no_keywords(self):
+        metadata = {
+            **MINIMAL_METADATA,
+            "subjects": None
+        }
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata)
+        self.assertIsNone(dataset.keywords)

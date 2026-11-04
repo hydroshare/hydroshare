@@ -274,10 +274,9 @@ class _ResourceUserMetadata(BaseModel):
             return self.period_coverage.to_dataset_temporal_coverage()
         return None
 
-    def to_dataset_keywords(self):
+    def to_dataset_keywords(self) -> list[str] | None:
         if self.subjects:
             return self.subjects
-        return ["HydroShare"]
 
     def to_dataset_license(self):
         if self.rights:
