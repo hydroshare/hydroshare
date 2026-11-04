@@ -324,3 +324,23 @@ class TestToCatalogRecordSchemaOrgCompliance(ParametrizedTestCase):
         output = _generate_user_metadata({**REALISTIC_METADATA, "sharing_status": sharing_status})
         self.assertNotIn("sharing_status", output)
         self.assertEqual(output["creativeWorkStatus"]["name"], expected_name)
+
+
+class TestToCatalogRecordKeywords(unittest.TestCase):
+    """Tests that keywords are correctly extracted from subjects."""
+
+    def test_keywords_from_subjects(self):
+        metadata = {
+            **MINIMAL_METADATA,
+            "subjects": ["subject1", "subject2"]
+        }
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata)
+        self.assertEqual(dataset.keywords, ["subject1", "subject2"])
+
+    def test_no_subjects_results_in_no_keywords(self):
+        metadata = {
+            **MINIMAL_METADATA,
+            "subjects": None
+        }
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata)
+        self.assertIsNone(dataset.keywords)
