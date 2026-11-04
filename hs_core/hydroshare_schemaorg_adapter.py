@@ -186,12 +186,16 @@ class Rights(BaseModel):
 
 class HydroshareMetadataAdapter:
     @staticmethod
-    def to_catalog_record(metadata: dict):
-        """Converts hydroshare resource metadata to a catalog dataset record"""
+    def to_catalog_record(metadata: dict, resource_id: str):
+        """Converts hydroshare resource metadata to a catalog dataset record
+
+        :param metadata: hydroshare user metadata dict
+        :param resource_id: the resource short_id
+        """
         hs_metadata_model = _ResourceUserMetadata(**metadata)
         if metadata["type"] == "CompositeResource":
-            return hs_metadata_model.to_catalog_dataset()
-        return hs_metadata_model.to_catalog_dataset()
+            return hs_metadata_model.to_catalog_dataset(resource_id)
+        return hs_metadata_model.to_catalog_dataset(resource_id)
 
 
 class _ResourceUserMetadata(BaseModel):
@@ -275,6 +279,12 @@ class _ResourceUserMetadata(BaseModel):
             return self.period_coverage.to_dataset_temporal_coverage()
         return None
 
+    def to_dataset_url(self, resource_id: str) -> str:
+        """Return the DOI URL for published resources and the HydroShare resource URL otherwise."""
+        if self.sharing_status == "published":
+            return f"https://doi.org/10.4211/hs.{resource_id}"
+        return f"https://www.hydroshare.org/resource/{resource_id}"
+
     def to_dataset_keywords(self) -> list[str] | None:
         if self.subjects:
             return self.subjects
@@ -313,14 +323,14 @@ class _ResourceUserMetadata(BaseModel):
             additional_type = None
         return additional_type
 
-    def to_catalog_dataset(self):
+    def to_catalog_dataset(self, resource_id: str):
         dataset = ScientificDataset.model_construct(**self.extra_columns)
         is_part_of, has_part, other_relations = self._partition_relations_by_type()
         dataset.additionalType = self.to_additional_type(self.type) if self.type else None
         dataset.provider = self.to_dataset_provider()
         dataset.name = self.title
         dataset.description = self.abstract
-        dataset.url = self.url
+        dataset.url = self.to_dataset_url(resource_id)
         dataset.identifier = [str(self.identifier)] if self.identifier else None
         dataset.creator = self.to_dataset_creators()
         dataset.contributor = self.to_dataset_contributors()
