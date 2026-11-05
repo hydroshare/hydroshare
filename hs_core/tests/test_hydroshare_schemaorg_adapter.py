@@ -1,5 +1,6 @@
 import unittest
 from unittest_parametrize import ParametrizedTestCase, parametrize, param
+from pydantic import ValidationError
 
 from hs_cloudnative_schemas.schema import base as schema
 from hs_core.hydroshare_schemaorg_adapter import HydroshareMetadataAdapter, Relation
@@ -201,6 +202,36 @@ class TestToCatalogRecordLanguage(unittest.TestCase):
         metadata = {**MINIMAL_METADATA, "language": None}
         dataset = HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=RESOURCE_ID)
         self.assertIsNone(dataset.inLanguage)
+
+
+class TestToCatalogRecordTemporalCoverage(unittest.TestCase):
+    """Tests that period coverage maps to a schema.org text interval of dates."""
+
+    def test_timestamps_map_to_date_interval(self):
+        metadata = {
+            **MINIMAL_METADATA,
+            "period_coverage": {"start": "2018-10-01T00:00:00", "end": "2022-09-30T00:00:00"},
+        }
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=RESOURCE_ID)
+        self.assertEqual(dataset.temporalCoverage, "2018-10-01/2022-09-30")
+
+    def test_date_only_input_maps_to_date_interval(self):
+        metadata = {
+            **MINIMAL_METADATA,
+            "period_coverage": {"start": "2018-10-01", "end": "2022-09-30"},
+        }
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=RESOURCE_ID)
+        self.assertEqual(dataset.temporalCoverage, "2018-10-01/2022-09-30")
+
+    def test_no_period_coverage_results_in_none(self):
+        metadata = {**MINIMAL_METADATA, "period_coverage": None}
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=RESOURCE_ID)
+        self.assertIsNone(dataset.temporalCoverage)
+
+    def test_missing_end_is_rejected(self):
+        metadata = {**MINIMAL_METADATA, "period_coverage": {"start": "2018-10-01"}}
+        with self.assertRaises(ValidationError):
+            HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=RESOURCE_ID)
 
 
 class TestToCatalogRecordKeywords(unittest.TestCase):

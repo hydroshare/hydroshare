@@ -80,13 +80,9 @@ class TemporalCoverage(BaseModel):
     start: datetime
     end: datetime
 
-    def to_dataset_temporal_coverage(self):
-        temp_cov = schema.TemporalCoverage.construct()
-        if self.start:
-            temp_cov.startDate = self.start
-            if self.end:
-                temp_cov.endDate = self.end
-        return temp_cov
+    def to_dataset_temporal_coverage(self) -> str:
+        """Return the schema.org text interval with dates only (any time component is dropped)."""
+        return f"{self.start.date().isoformat()}/{self.end.date().isoformat()}"
 
 
 class SpatialCoverageBox(BaseModel):

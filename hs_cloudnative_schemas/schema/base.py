@@ -542,28 +542,6 @@ class Grant(SchemaBaseModel):
     )
 
 
-class TemporalCoverage(SchemaBaseModel):
-    startDate: datetime = Field(
-        title="Start date",
-        description="A date/time object containing the instant corresponding to the commencement of the time "
-        "interval (ISO8601 formatted date - YYYY-MM-DDTHH:MM).",
-        json_schema_extra={
-            "formatMaximum": {"$data": "1/endDate"},
-            "errorMessage": {
-                "formatMaximum": "must be lesser than or equal to End date"
-            },
-        },
-    )
-    endDate: Optional[datetime] = Field(
-        title="End date",
-        description="A date/time object containing the instant corresponding to the termination of the time "
-        "interval (ISO8601 formatted date - YYYY-MM-DDTHH:MM). If the ending date is left off, "
-        "that means the temporal coverage is ongoing.",
-        default=None,
-        json_schema_extra=end_date_schema_extra,
-    )
-
-
 class GeoCoordinates(SchemaBaseModel):
     type: Literal["GeoCoordinates"] = Field(
         alias="@type",  # type: ignore
