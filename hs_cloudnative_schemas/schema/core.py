@@ -51,8 +51,8 @@ class CoreMetadata(SchemaBaseModel):
     context: HttpUrl = Field(
         alias="@context",  # type: ignore
         default=HttpUrl(
-            "https://hydroshare.org/schema"
-        ),  # TODO: This is a placeholder for now.
+            "https://schema.org/"
+        ),
         description="Specifies the vocabulary employed for understanding the structured data markup.",
     )
     type: str = Field(

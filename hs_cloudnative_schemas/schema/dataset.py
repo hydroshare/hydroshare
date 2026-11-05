@@ -36,13 +36,6 @@ class ScientificDataset(CoreMetadata):
     optional. It generally follows the design of the Schema.org Dataset class.
     """
 
-    context: HttpUrl = Field(
-        alias="@context",  # type: ignore
-        default=HttpUrl(
-            "https://schema.org/"
-        ),
-        description="Specifies the vocabulary employed for understanding the structured data markup.",
-    )
     type: Literal["Dataset"] = Field(
         alias="@type",  # type: ignore
         default="Dataset",
