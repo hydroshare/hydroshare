@@ -28,7 +28,6 @@ from .base import (
     Private,
     Discoverable,
     Grant,
-    TemporalCoverage,
     Place,
     HasPart,
     IsPartOf,
@@ -167,10 +166,13 @@ class CoreMetadata(SchemaBaseModel):
         "for creation of the resource.",
         default=[],
     )
-    temporalCoverage: Optional[TemporalCoverage] = Field(
+    temporalCoverage: Optional[str] = Field(
         title="Temporal coverage",
-        description="The time period that applies to all of the content within the resource.",
+        description="The time interval of the dataset as a schema.org text interval: start and end dates in "
+        "ISO8601 date format separated by a slash (YYYY-MM-DD/YYYY-MM-DD).",
         default=None,
+        pattern=r"^\d{4}-\d{2}-\d{2}/\d{4}-\d{2}-\d{2}$",
+        examples=["2018-10-01/2022-09-30"],
         json_schema_extra=remove_none_default,
     )
     spatialCoverage: Optional[Place] = Field(
