@@ -1,3 +1,4 @@
+import gzip
 import json
 
 import httpx
@@ -52,11 +53,12 @@ async def test_proxy_request_rewrites_alias_to_bucket_name(monkeypatch):
 
     captured = {}
 
-    async def fake_request(method, url, headers=None, content=None, follow_redirects=None):
-        captured["url"] = url
-        return httpx.Response(200, request=httpx.Request(method, url))
+    async def fake_send(request, follow_redirects=None, stream=False):
+        captured["url"] = str(request.url)
+        captured["headers"] = request.headers
+        return httpx.Response(200, request=request)
 
-    monkeypatch.setattr(proxy._client, "request", fake_request)
+    monkeypatch.setattr(proxy._client, "send", fake_send)
 
     await proxy.proxy_request(
         method="GET", path="/hydroshare-resource/some/object.txt",
@@ -64,3 +66,47 @@ async def test_proxy_request_rewrites_alias_to_bucket_name(monkeypatch):
     )
 
     assert captured["url"] == "http://minio:9000/resource/some/object.txt"
+
+
+@pytest.mark.asyncio
+async def test_range_response_streams_raw_bytes(monkeypatch):
+    monkeypatch.setenv(
+        "S3_ZONE_CONFIG",
+        json.dumps({
+            "hydroshare": {
+                "bucket_name": "resource",
+                "aws_s3_endpoint_url": "http://minio:9000",
+            }
+        }),
+    )
+    proxy = S3ProxyClient()
+    body = gzip.compress(b"range bytes")
+    request_headers = {}
+
+    async def fake_send(request, follow_redirects=None, stream=False):
+        request_headers.update(request.headers)
+        return httpx.Response(
+            206,
+            headers={
+                "Content-Range": f"bytes 0-{len(body) - 1}/{len(body) * 2}",
+                "Content-Length": str(len(body)),
+                "Content-Encoding": "gzip",
+            },
+            stream=httpx.ByteStream(body),
+            request=request,
+        )
+
+    monkeypatch.setattr(proxy._client, "send", fake_send)
+    response = await proxy.proxy_request(
+        method="GET",
+        path="/resource/object.bin",
+        headers={"range": f"bytes=0-{len(body) - 1}"},
+        query_params={},
+    )
+
+    streamed_body = b"".join([chunk async for chunk in response.body_iterator])
+    assert response.status_code == 206
+    assert response.headers["content-range"] == f"bytes 0-{len(body) - 1}/{len(body) * 2}"
+    assert "content-length" not in response.headers
+    assert request_headers["accept-encoding"] == "identity"
+    assert streamed_body == body
