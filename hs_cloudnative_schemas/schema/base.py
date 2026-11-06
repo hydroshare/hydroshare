@@ -200,6 +200,13 @@ class Organization(SchemaBaseModel):
         alias="@type",  # type: ignore
         default="Organization",
     )
+    id: Optional[HttpUrl] = Field(
+        alias="@id",
+        title="ID",
+        description="A unique identifier (IRI) for the organization.",
+        default=None,
+        json_schema_extra=remove_none_default,
+    )
     name: str = Field(description="Name of the provider organization or repository.")
     url: Optional[HttpUrl] = Field(
         title="URL",

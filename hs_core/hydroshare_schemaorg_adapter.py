@@ -314,7 +314,9 @@ class _ResourceUserMetadata(BaseModel):
 
     @staticmethod
     def to_dataset_provider():
-        return schema.Organization.model_validate({"name": "HydroShare", "url": "https://www.hydroshare.org/"})
+        return schema.Organization.model_validate(
+            {"@id": "https://hydroshare.org/", "name": "HydroShare", "url": "https://hydroshare.org/"}
+        )
 
     @staticmethod
     def to_additional_type(type: str):

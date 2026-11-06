@@ -234,6 +234,17 @@ class TestToCatalogRecordTemporalCoverage(unittest.TestCase):
             HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=RESOURCE_ID)
 
 
+class TestToCatalogRecordProvider(unittest.TestCase):
+    """Tests that the HydroShare provider carries a schema.org @id and homepage url."""
+
+    def test_provider_has_id_and_url(self):
+        dataset = HydroshareMetadataAdapter.to_catalog_record(MINIMAL_METADATA, resource_id=RESOURCE_ID)
+        provider = dataset.model_dump(mode="json", by_alias=True, exclude_none=True)["provider"]
+        self.assertEqual(provider["@id"], "https://hydroshare.org/")
+        self.assertEqual(provider["url"], "https://hydroshare.org/")
+        self.assertEqual(provider["name"], "HydroShare")
+
+
 class TestToCatalogRecordKeywords(unittest.TestCase):
     """Tests that keywords are correctly extracted from subjects."""
 
