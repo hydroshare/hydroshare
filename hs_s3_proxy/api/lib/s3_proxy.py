@@ -10,7 +10,7 @@ import httpx
 from botocore.auth import S3SigV4Auth
 from botocore.awsrequest import AWSRequest
 from botocore.credentials import Credentials
-from fastapi import Response
+from fastapi import Response, StreamingResponse
 
 logger = logging.getLogger("hs_s3_proxy")
 
@@ -221,6 +221,7 @@ class S3ProxyClient:
             url = f"{url}?{urlencode(backend_params, quote_via=quote)}"
 
         outbound_headers = self._filter_headers(headers)
+        outbound_headers["accept-encoding"] = "identity"
         outbound_body = body or b""
 
         if zone_backend.signer:
@@ -231,17 +232,29 @@ class S3ProxyClient:
         logger.info(f"Proxying {method} request to {url}")
 
         try:
-            response = await self._client.request(
+            request = self._client.build_request(
                 method=method, url=url, headers=outbound_headers,
-                content=outbound_body if outbound_body else None, follow_redirects=False,
+                content=outbound_body if outbound_body else None,
             )
+            response = await self._client.send(request, follow_redirects=False, stream=True)
             response_headers = self._filter_response_headers(dict(response.headers))
             if method.upper() == "HEAD":
                 upstream_length = response.headers.get("content-length")
                 if upstream_length is not None:
                     response_headers["content-length"] = upstream_length
-            return Response(content=response.content, status_code=response.status_code,
-                            headers=response_headers)
+                await response.aclose()
+                return Response(status_code=response.status_code, headers=response_headers)
+
+            async def stream_response():
+                try:
+                    async for chunk in response.aiter_raw():
+                        yield chunk
+                finally:
+                    await response.aclose()
+
+            return StreamingResponse(
+                stream_response(), status_code=response.status_code, headers=response_headers
+            )
 
         except httpx.TimeoutException:
             logger.error("Timeout proxying request")
