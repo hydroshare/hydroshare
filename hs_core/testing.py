@@ -1,18 +1,43 @@
 """Test cases and utilities for hs_core module. See also ./tests folder."""
 
 from dateutil import parser
+import copy
 import tempfile
 import os
 
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.contrib.messages.storage.fallback import FallbackStorage
 from django.core.files.uploadedfile import UploadedFile
-from django.test import TestCase, RequestFactory
+from django.conf import settings
+from django.test import TestCase, RequestFactory, override_settings
+
+from django_s3 import settings as s3_settings
 
 from hs_core.hydroshare import add_file_to_resource, add_resource_files
 from hs_core.views.utils import create_folder, move_or_rename_file_or_folder, zip_folder, \
     unzip_file, remove_folder
 from hs_core.tasks import FileOverrideException
+
+
+def _clear_zone_config_caches():
+    for cached in (s3_settings.get_resource_s3_zones_config, s3_settings.get_zone_config,
+                   s3_settings.get_default_zone_config, s3_settings.get_default_zone_name):
+        cached.cache_clear()
+
+
+def override_zone_config(test_case, zone, **fields):
+    """Override fields of one zone in RESOURCE_S3_ZONES_CONFIG (e.g. copy_method) for the rest of a test.
+
+    The django_s3 zone config getters are lru_cached, so the caches are cleared on entry and again after the
+    override is undone (cleanups run last-in first-out).
+    """
+    zones = copy.deepcopy(settings.RESOURCE_S3_ZONES_CONFIG)
+    zones[zone].update(fields)
+    override = override_settings(RESOURCE_S3_ZONES_CONFIG=zones)
+    test_case.addCleanup(_clear_zone_config_caches)
+    override.enable()
+    test_case.addCleanup(override.disable)
+    _clear_zone_config_caches()
 
 
 class MockS3TestCaseMixin(object):

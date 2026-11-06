@@ -12,6 +12,7 @@ from hsextract.utils.s3 import (
     get_public_endpoint_url,
     iter_find,
     load_metadata,
+    metadata_exists,
     write_file_manifest,
     write_metadata,
 )
@@ -69,6 +70,22 @@ def _warn_on_overridden_keys(user_json: dict, system_json: dict) -> None:
 def write_resource_jsonld_metadata(md: BaseMetadataObject) -> bool:
     # read the system metadata file
     system_json = load_metadata(md.system_metadata_path, md.zone)
+    if not system_json:
+        # load_metadata returns {} on any error, so confirm the file is actually missing before skipping;
+        # metadata_exists raises on transient errors so the task retries instead of silently skipping.
+        if metadata_exists(md.system_metadata_path, md.zone):
+            raise RuntimeError(f"Could not load {md.system_metadata_path}")
+
+        # system_metadata.json is missing when the resource has moved to another bucket (e.g. by a quota holder
+        # change), or when Django has not written it yet or failed to.
+        # Writing here would leave an orphan dataset_metadata.json in the old bucket, or a dataset_metadata.json
+        # without system fields; either clobbers the discovery doc. Django's next system_metadata.json write
+        # triggers regeneration.
+        logger.info(
+            f"Skipping write of {md.resource_metadata_jsonld_path}: {md.system_metadata_path} not found "
+            f"(resource moved out of this bucket, or system metadata not yet written by Django)"
+        )
+        return
 
     # read the user resource metadata file
     user_json = load_metadata(md.user_metadata_path, md.zone)
@@ -106,7 +123,7 @@ def write_content_type_jsonld_metadata(md: BaseMetadataObject) -> bool:
     user_json = load_metadata(md.content_type_md_user_path, md.zone)
     if not content_type_metadata and not user_json:
         # need to delete the content type jsonld metadata file if it exists
-        delete_metadata(md.content_type_md_jsonld_path)
+        delete_metadata(md.content_type_md_jsonld_path, md.zone)
         return
     # generate content type isPartOf relationships
     is_part_of = [
@@ -171,6 +188,26 @@ def workflow_metadata_extraction(file_object_path: str, file_size: int, file_upd
         write_resource_jsonld_metadata(md)
     except Exception as ex:
         print(f"Error writing resource jsonld metadata: {str(ex)}")
+
+
+def refresh_or_extract_copied_file(file_object_path: str, file_size: int, zone: str) -> None:
+    """Handle a server-side copy of a data file that kept its path within the resource.
+
+    When the extracted metadata was copied along with the file (e.g. a quota holder change moving the resource
+    to another bucket), only the jsonld is regenerated so its bucket-qualified URLs point at the new location.
+    Otherwise (e.g. a resource copy, which copies only the data files) the file is extracted as a new upload.
+    Renames/moves never get here; they are always extracted as a new upload.
+    """
+    md = determine_metadata_object(file_object_path, True, zone)
+    if md.content_type == ContentType.UNKNOWN:
+        return
+    if metadata_exists(md.content_type_md_path, md.zone):
+        write_content_type_jsonld_metadata(md)
+        # The resource jsonld is not regenerated here: it currently depends only on system/user metadata, which are
+        # copied (and trigger regeneration) before the data files. If hasPart/associatedMedia generation is
+        # re-enabled in write_resource_jsonld_metadata, call write_resource_jsonld_metadata(md) here as well.
+    else:
+        workflow_metadata_extraction(file_object_path, file_size, True, zone)
 
 
 def refresh_resource_metadata(bucket: str, resource_id: str, zone: str) -> None:

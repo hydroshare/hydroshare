@@ -492,6 +492,12 @@ S3_AUTH_EVENT_USERNAME = os.environ.get("HS_S3_AUTH_EVENT_USERNAME", "cuahsi")
 # Force boto/botocore presigned URLs to SigV4 so proxy-side signature
 # verification and authorization work consistently.
 AWS_S3_SIGNATURE_VERSION = "s3v4"
+# Optional per-zone keys (see django_s3/settings.py ZoneConfig):
+#   "copy_method": "copy_object" (default; single CopyObject, required for GCS) or "managed_copy" (boto3 client.copy(),
+#                  multipart UploadPartCopy above the threshold). Set "managed_copy" when adding an AWS-backed zone,
+#                  where CopyObject caps at 5GB. Safety net only: a "copy_object" copy rejected with AWS's size-cap
+#                  error is retried as a managed copy, at the cost of one failed request.
+#   "multipart_copy_threshold": bytes above which "managed_copy" switches to multipart (default 5GiB)
 RESOURCE_S3_ZONES_CONFIG = {
     "hydroshare": {
         "bucket_name": "resource",

@@ -5,11 +5,11 @@ import boto3
 from celery import current_app as celery_app
 from datetime import datetime
 from datetime import timedelta
-from urllib.parse import unquote_plus, urlencode
+from urllib.parse import unquote, unquote_plus, urlencode
 
 from hs_core.exceptions import QuotaException
 from .utils import bucket_and_zone
-from .settings import get_zone_config
+from .settings import get_zone_config, get_resource_s3_zones_config
 
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.deconstruct import deconstructible
@@ -30,6 +30,25 @@ except ImportError as e:
 
 
 logger = logging.getLogger(__name__)
+
+
+def _zone_for_bucket(bucket, default):
+    """Return the zone that owns bucket, or default when no configured zone uses it."""
+    for zone, zone_config in get_resource_s3_zones_config().resource_s3_zones_config.items():
+        if zone_config.bucket_name == bucket:
+            return zone
+    return default
+
+
+def _copy_source_path(copy_source):
+    """Return the CopySource param of a CopyObject call (dict or "bucket/key" string) as "bucket/key"."""
+    if isinstance(copy_source, dict):
+        bucket = copy_source.get("Bucket")
+        key = copy_source.get("Key")
+        return f"{bucket}/{key}" if bucket and key else None
+    if isinstance(copy_source, str):
+        return unquote(copy_source.split("?versionId=", 1)[0].lstrip("/")) or None
+    return None
 
 
 @deconstructible
@@ -160,9 +179,24 @@ class S3Storage(s3.S3Storage):
                 )
                 return 0
 
+        # UploadId -> copy source of in-progress multipart copies (boto3 client.copy() above its threshold issues
+        # UploadPartCopy + CompleteMultipartUpload instead of CopyObject). Shared across calls and s3transfer
+        # worker threads, but only a single dict set/pop is ever done on it, which is atomic.
+        pending_copies = {}
+
+        def track_multipart_copy(params, model, context, **kwargs):
+            operation = getattr(model, "name", "")
+            upload_id = params.get("UploadId")
+            if not upload_id:
+                return
+            if operation == "UploadPartCopy":
+                pending_copies[upload_id] = _copy_source_path(params.get("CopySource"))
+            elif operation == "AbortMultipartUpload":
+                pending_copies.pop(upload_id, None)
+
         def before_parameter_build(params, model, context, **kwargs):
             operation = getattr(model, "name", "")
-            if operation not in ("PutObject", "DeleteObject", "CompleteMultipartUpload"):
+            if operation not in ("PutObject", "DeleteObject", "CompleteMultipartUpload", "CopyObject"):
                 return
             context["_hs_bucket"] = params.get("Bucket")
             context["_hs_key"] = params.get("Key")
@@ -171,7 +205,21 @@ class S3Storage(s3.S3Storage):
                 "PutObject": "s3:PutObject",
                 "DeleteObject": "s3:DeleteObjects",
                 "CompleteMultipartUpload": "s3:CompleteMultipartUpload",
+                "CopyObject": "s3:CopyObject",
             }.get(operation)
+            if operation == "CompleteMultipartUpload":
+                copy_source = pending_copies.pop(params.get("UploadId"), None)
+                if copy_source:
+                    # completes a multipart copy: report it like the single CopyObject it replaces
+                    context["_hs_action"] = "s3:CopyObject"
+                    context["_hs_copy_source"] = copy_source
+            elif operation == "CopyObject":
+                # lets extraction tell a whole resource move (same path within the resource) from a rename
+                context["_hs_copy_source"] = _copy_source_path(params.get("CopySource"))
+            if operation in ("CopyObject", "CompleteMultipartUpload"):
+                # a cross-bucket copy (e.g. quota holder change) is issued with the source-zone client,
+                # so report the zone of the destination bucket
+                context["_hs_zone"] = _zone_for_bucket(params.get("Bucket"), zone)
             if operation == "DeleteObject":
                 context["_hs_file_size"] = 0
             elif operation == "PutObject":
@@ -189,7 +237,7 @@ class S3Storage(s3.S3Storage):
                 return
             if status_code not in (200, 204):
                 return
-            if action == "s3:CompleteMultipartUpload":
+            if action in ("s3:CompleteMultipartUpload", "s3:CopyObject"):
                 file_size = _complete_multipart_file_size(bucket, object_path)
             elif action == "s3:DeleteObjects":
                 file_size = 0
@@ -200,6 +248,7 @@ class S3Storage(s3.S3Storage):
                 object_path=object_path,
                 zone=zone,
                 file_size=file_size,
+                copy_source=context.get("_hs_copy_source"),
             )
 
         def decode_list_objects(parsed, context, **kwargs):
@@ -221,12 +270,16 @@ class S3Storage(s3.S3Storage):
         events.register("before-parameter-build.s3.PutObject", before_parameter_build)
         events.register("before-parameter-build.s3.DeleteObject", before_parameter_build)
         events.register("before-parameter-build.s3.CompleteMultipartUpload", before_parameter_build)
+        events.register("before-parameter-build.s3.CopyObject", before_parameter_build)
+        events.register("before-parameter-build.s3.UploadPartCopy", track_multipart_copy)
+        events.register("before-parameter-build.s3.AbortMultipartUpload", track_multipart_copy)
         events.register("after-call.s3.PutObject", after_call)
         events.register("after-call.s3.DeleteObject", after_call)
         events.register("after-call.s3.CompleteMultipartUpload", after_call)
+        events.register("after-call.s3.CopyObject", after_call)
         events.register("after-call.s3.ListObjects", decode_list_objects)
 
-    def _dispatch_s3_mutation_hook(self, action, bucket, object_path, zone, file_size=0):
+    def _dispatch_s3_mutation_hook(self, action, bucket, object_path, zone, file_size=0, copy_source=None):
         username = setting("S3_AUTH_EVENT_USERNAME", "cuahsi")
 
         payload = {
@@ -238,6 +291,8 @@ class S3Storage(s3.S3Storage):
             "user_id": None,
             "file_size": int(file_size or 0),
         }
+        if copy_source:
+            payload["copy_source"] = copy_source
 
         try:
             celery_app.send_task(
