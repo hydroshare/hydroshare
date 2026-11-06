@@ -394,7 +394,6 @@ services:
   #     VITE_APP_NAME: "Discover"
   #     VITE_APP_API_URL: "http://localhost/hsapi/discovery-atlas"
   #     VITE_APP_BASE: "/discover/"
-  #     VITE_APP_ORIGIN: "http://localhost"
   #   depends_on:
   #     mongodb:
   #       condition: service_healthy
