@@ -418,6 +418,7 @@ def page_permissions_page_processor(request, page):
         "is_replaced_by": is_replaced_by,
         "is_version_of": is_version_of,
         "show_manage_access": show_manage_access,
+        "show_curation_assistance": is_owner and not is_replaced_by and cm.can_request_curation_assistance,
         "last_changed_by": last_changed_by,
         "remaining_quota": remaining_quota,
         "file_upload_max_size": file_upload_max_size,
@@ -5208,6 +5209,11 @@ class BaseResource(Page, AbstractResource):
             return False
 
         return self.can_be_public_or_discoverable
+
+    @property
+    def can_request_curation_assistance(self):
+        """Determine whether owners can request pre-publication data curation assistance."""
+        return not self.raccess.published_or_review_pending
 
     @classmethod
     def get_supported_upload_file_types(cls):
