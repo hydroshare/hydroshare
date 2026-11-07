@@ -185,6 +185,19 @@ class S3Storage(s3.S3Storage):
         pending_copies = {}
 
         def track_multipart_copy(params, model, context, **kwargs):
+            """Remember which in-progress multipart uploads are really copies, keyed by UploadId.
+
+            Registered for UploadPartCopy and AbortMultipartUpload. A server-side copy goes through boto3's
+            client.copy() when the destination zone has copy_method="managed_copy", or when a "copy_object" zone's
+            CopyObject is rejected with AWS's 5GB size-cap error. Above its threshold, client.copy() issues
+            CreateMultipartUpload + UploadPartCopy (per part) + CompleteMultipartUpload instead of one CopyObject.
+            Only the final CompleteMultipartUpload is reported as an S3 event, and it carries no CopySource, so on
+            its own it looks like an ordinary upload. Recording the copy source here lets before_parameter_build
+            report that completion as an s3:CopyObject with its source, like a single-request copy. hs_extract
+            relies on that: when a copy keeps the file's path within the resource (e.g. a quota holder move to
+            another bucket), it refreshes the sidecar metadata that was copied along instead of re-extracting the
+            file as a new upload. An aborted copy is dropped so its entry is not kept.
+            """
             operation = getattr(model, "name", "")
             upload_id = params.get("UploadId")
             if not upload_id:
