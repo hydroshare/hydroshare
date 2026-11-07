@@ -4,7 +4,6 @@ import json
 import logging
 
 import boto3
-from botocore.exceptions import ClientError
 from pymongo import MongoClient
 from django.conf import settings
 
@@ -124,24 +123,3 @@ def collect_file_to_catalog(filepath: str):
 def delete_file_from_catalog(filepath: str):
     _, object_key = filepath.split('/', 1)
     MongoDBClient.get_discovery_collection().delete_one({"_s3_filepath": object_key})
-
-
-def find_live_metadata_file(object_key: str, exclude_bucket: str):
-    """Return "{bucket}/{object_key}" for the first other zone bucket that still holds object_key, else None.
-
-    Discovery docs are keyed by object_key alone, so when a resource moves between zone buckets
-    (e.g. quota holder change) the delete of the old copy must not remove the doc of the new copy.
-    Errors other than not-found are raised so callers retry rather than wrongly deleting the doc.
-    """
-    for zone_config in settings.RESOURCE_S3_ZONES_CONFIG.values():
-        bucket_name = zone_config.get("bucket_name")
-        if not bucket_name or bucket_name == exclude_bucket:
-            continue
-        try:
-            _s3_client_for_bucket(bucket_name).head_object(Bucket=bucket_name, Key=object_key)
-        except ClientError as e:
-            if e.response.get("Error", {}).get("Code") in ("404", "NoSuchKey", "NotFound"):
-                continue
-            raise
-        return f"{bucket_name}/{object_key}"
-    return None

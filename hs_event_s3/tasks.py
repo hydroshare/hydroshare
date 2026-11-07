@@ -12,15 +12,18 @@ from hs_core.hydroshare.resource import delete_resource_file  # noqa: E402
 from hs_core.hydroshare_atlas_discovery_collection import (  # noqa: E402
     collect_file_to_catalog,
     delete_file_from_catalog,
-    find_live_metadata_file,
 )
 from hs_core.views.utils import link_s3_file_to_django  # noqa: E402
+from django_s3.storage import S3Storage  # noqa: E402
 from django.contrib.auth.models import User  # noqa: E402
 from theme.models import UserQuota  # noqa: E402
 
 from hs_event_s3.celery_app import celery_app  # noqa: E402
 
 logger = logging.getLogger("hs_event_s3")
+
+# One instance per worker process, so its per-zone boto3 connections are reused across tasks.
+_storage = S3Storage()
 
 
 def _link_s3_file_to_resource(resource, short_path: str):
@@ -110,7 +113,8 @@ def sync_discovery_collection(self, action: str, bucket: str, object_path: str, 
         else:
             # The doc is keyed by object_path only, so a delete from the old bucket during a
             # cross-zone move (e.g. quota holder change) must not remove the doc of the new copy.
-            live_key = find_live_metadata_file(object_path, exclude_bucket=bucket)
+            # Errors other than not-found propagate, so the task retries rather than wrongly deleting the doc.
+            live_key = _storage.find_object_in_other_zone_buckets(object_path, exclude_bucket=bucket)
             if live_key is None:
                 logger.info(f"No live copy of {object_path} in other buckets, deleting discovery doc")
                 delete_file_from_catalog(key)

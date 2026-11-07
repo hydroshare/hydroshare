@@ -421,6 +421,26 @@ class S3Storage(s3.S3Storage):
             # Some other error was encountered. Re-raise it.
             raise
 
+    def find_object_in_other_zone_buckets(self, object_key, exclude_bucket):
+        """Return "{bucket}/{object_key}" for the first configured zone bucket other than exclude_bucket that
+        holds object_key, else None.
+
+        Each bucket is checked with its own zone's connection. Errors other than not-found are raised, so a
+        caller can't mistake an access or server error for the object being absent.
+        """
+        for zone, zone_config in get_resource_s3_zones_config().resource_s3_zones_config.items():
+            bucket_name = zone_config.bucket_name
+            if not bucket_name or bucket_name == exclude_bucket:
+                continue
+            try:
+                self.connection(zone).meta.client.head_object(Bucket=bucket_name, Key=object_key)
+            except ClientError as err:
+                if err.response.get("Error", {}).get("Code") in ("404", "NoSuchKey", "NotFound"):
+                    continue
+                raise
+            return f"{bucket_name}/{object_key}"
+        return None
+
     def _directory_empty(self, name):
         """
         Check if a directory is empty. This is a workaround folders with files marked for deletion but not deleted yet

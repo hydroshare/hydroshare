@@ -18,7 +18,7 @@ class TestSyncDiscoveryCollectionDelete(TestCase):
     def setUp(self):
         self.collect = patch(f"{TASKS}.collect_file_to_catalog").start()
         self.delete = patch(f"{TASKS}.delete_file_from_catalog").start()
-        self.find_live = patch(f"{TASKS}.find_live_metadata_file").start()
+        self.find_live = patch(f"{TASKS}._storage").start().find_object_in_other_zone_buckets
         self.resource_objects = patch(f"{TASKS}.BaseResource.objects").start()
         self.addCleanup(patch.stopall)
 

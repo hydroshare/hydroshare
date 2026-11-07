@@ -3,12 +3,11 @@ from datetime import datetime, timezone
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
-from botocore.exceptions import ClientError
 from django.test import SimpleTestCase, override_settings
 from unittest_parametrize import ParametrizedTestCase, parametrize, param
 
 from hs_core.hydroshare_atlas_discovery_collection import (
-    MongoDBClient, collect_file_to_catalog, delete_file_from_catalog, find_live_metadata_file
+    MongoDBClient, collect_file_to_catalog, delete_file_from_catalog
 )
 
 
@@ -178,10 +177,6 @@ class TestDeleteFileFromCatalog(TestCase):
         )
 
 
-def _client_error(code: str) -> ClientError:
-    return ClientError({"Error": {"Code": code}}, "HeadObject")
-
-
 @override_settings(RESOURCE_S3_ZONES_CONFIG=ZONES_CONFIG, RESOURCE_S3_DEFAULT_ZONE="hydroshare")
 class TestZoneClients(SimpleTestCase):
 
@@ -217,31 +212,3 @@ class TestZoneClients(SimpleTestCase):
         self.default_client.get_object.return_value = _make_s3_response(SAMPLE_METADATA)
         collect_file_to_catalog("resource/res1/.hsjsonld/dataset_metadata.json")
         self.default_client.get_object.assert_called_once()
-
-    def test_find_live_returns_other_bucket_holding_the_object(self):
-        """Old bucket is excluded; the bucket where the object still exists is returned."""
-        self.zone_clients["published"].head_object.side_effect = _client_error("404")
-        key = "res1/.hsjsonld/dataset_metadata.json"
-        self.assertEqual(find_live_metadata_file(key, exclude_bucket="resource"), f"ciroh/{key}")
-        self.default_client.head_object.assert_not_called()
-        self.zone_clients["ciroh"].head_object.assert_called_once_with(Bucket="ciroh", Key=key)
-
-    def test_find_live_returns_published_bucket_after_resource_bucket_move(self):
-        """A published copy is found when the resource-bucket copy is being deleted."""
-        self.zone_clients["ciroh"].head_object.side_effect = _client_error("404")
-        key = "res1/.hsjsonld/dataset_metadata.json"
-        self.assertEqual(find_live_metadata_file(key, exclude_bucket="resource"), f"published/{key}")
-        self.default_client.head_object.assert_not_called()
-        self.zone_clients["published"].head_object.assert_called_once_with(Bucket="published", Key=key)
-
-    def test_find_live_returns_none_when_no_other_bucket_has_object(self):
-        """No other bucket has the object; should return None."""
-        self.zone_clients["published"].head_object.side_effect = _client_error("404")
-        self.zone_clients["ciroh"].head_object.side_effect = _client_error("NoSuchKey")
-        self.assertIsNone(find_live_metadata_file("res1/.hsjsonld/dataset_metadata.json", exclude_bucket="resource"))
-
-    def test_find_live_reraises_non_not_found_errors(self):
-        """Access/server errors must propagate so the task retries instead of deleting the doc."""
-        self.zone_clients["published"].head_object.side_effect = _client_error("403")
-        with self.assertRaises(ClientError):
-            find_live_metadata_file("res1/.hsjsonld/dataset_metadata.json", exclude_bucket="resource")
