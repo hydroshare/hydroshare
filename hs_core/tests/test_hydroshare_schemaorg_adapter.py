@@ -1,3 +1,4 @@
+import json
 import unittest
 from unittest_parametrize import ParametrizedTestCase, parametrize, param
 
@@ -174,3 +175,71 @@ class TestToCatalogRecordAdditionalMetadata(unittest.TestCase):
         self.assertEqual(dumped["additionalProperty"][0]["@type"], "PropertyValue")
         self.assertEqual(dumped["additionalProperty"][0]["name"], "site")
         self.assertEqual(dumped["additionalProperty"][0]["value"], "Logan River")
+
+
+# Input shaped like what write_user_metadata_json_file() passes to the adapter: the hsmodels
+# ResourceMetadata keys plus the extra keys injected in hs_core/models.py.
+REALISTIC_METADATA = {
+    "type": "CompositeResource",
+    "title": "Test Resource",
+    "abstract": "An abstract",
+    "url": "https://www.hydroshare.org/resource/abc123/",
+    "identifier": "https://www.hydroshare.org/resource/abc123/",
+    "creators": [{"name": "Doe, Jane"}],
+    "contributors": [],
+    "created": "2026-01-01T00:00:00+00:00",
+    "modified": "2026-01-02T00:00:00+00:00",
+    "subjects": ["water"],
+    "language": "eng",
+    "rights": {
+        "statement": "CC BY",
+        "url": "http://creativecommons.org/licenses/by/4.0/",
+    },
+    "awards": [],
+    "relations": [{"type": REFERENCES_VALUE, "value": "A paper, https://doi.org/10.1234/abc"}],
+    "citation": "Doe, J. (2026). Test Resource, HydroShare",
+    "additional_metadata": {"key": "value"},
+    "publisher": None,
+    "review_started": "2026-01-03T00:00:00+00:00",
+    "sharing_status": "public",
+    "viewCount": 42,
+    "content_types": ["CompositeResource"],
+}
+
+# Keys that must never appear in the generated schema.org metadata
+NON_COMPLIANT_KEYS = {"sharing_status", "viewCount", "review_started"}
+
+
+def _generate_user_metadata(metadata):
+    """Serialize the adapter output the same way hs_core.models.write_user_metadata_json_file does."""
+    dataset = HydroshareMetadataAdapter.to_catalog_record(dict(metadata))
+    dumped = dataset.model_dump(exclude={'dateCreated', 'dateModified', 'datePublished'}, by_alias=True)
+    return json.loads(json.dumps(dumped, default=str))
+
+
+class TestToCatalogRecordSchemaOrgCompliance(ParametrizedTestCase):
+    """Tests that non schema.org compliant fields are not included in the generated metadata."""
+
+    def test_non_compliant_keys_are_not_emitted(self):
+        for metadata in (REALISTIC_METADATA, MINIMAL_METADATA):
+            output = _generate_user_metadata(metadata)
+            self.assertEqual(NON_COMPLIANT_KEYS & output.keys(), set())
+
+    def test_creative_work_status_is_none_without_sharing_status(self):
+        """No default status is invented when the input has no sharing_status."""
+        output = _generate_user_metadata(MINIMAL_METADATA)
+        self.assertIsNone(output["creativeWorkStatus"])
+
+    @parametrize(
+        "sharing_status,expected_name",
+        [
+            param("public", "Public", id="public"),
+            param("private", "Private", id="private"),
+            param("published", "Published", id="published"),
+            param("discoverable", "Discoverable", id="discoverable"),
+        ],
+    )
+    def test_sharing_status_maps_to_creative_work_status(self, sharing_status, expected_name):
+        output = _generate_user_metadata({**REALISTIC_METADATA, "sharing_status": sharing_status})
+        self.assertNotIn("sharing_status", output)
+        self.assertEqual(output["creativeWorkStatus"]["name"], expected_name)

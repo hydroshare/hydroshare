@@ -215,9 +215,15 @@ class _ResourceUserMetadata(BaseModel):
     period_coverage: Optional[TemporalCoverage] = None
     relations: List[Relation] = []
     citation: Optional[str] = None
-    associatedMedia: List[Any] = []
+    # input-only: used to derive the schema.org creativeWorkStatus; not emitted as-is
     sharing_status: Optional[Literal["private", "public", "published", "discoverable"]] = None
     additional_metadata: Dict[str, str] = {}
+    # The fields below are declared only so that they are NOT passed through to the ScientificDataset
+    # via extra_columns -- they are not schema.org compliant and must not appear in the output.
+    # viewCount is system metadata (written to system_metadata.json); review_started is publication
+    # workflow state.
+    viewCount: Optional[int] = None
+    review_started: Optional[datetime] = None
 
     @model_validator(mode="before")
     @classmethod
@@ -249,9 +255,6 @@ class _ResourceUserMetadata(BaseModel):
         for award in self.awards:
             grants.append(award.to_dataset_grant())
         return grants
-
-    def to_dataset_associated_media(self):
-        return self.associatedMedia
 
     def _partition_relations_by_type(self):
         is_part_of, has_part, other = [], [], []
@@ -335,7 +338,6 @@ class _ResourceUserMetadata(BaseModel):
         dataset.funding = self.to_dataset_funding()
         dataset.spatialCoverage = self.to_dataset_spatial_coverage()
         dataset.temporalCoverage = self.to_dataset_period_coverage()
-        dataset.associatedMedia = self.to_dataset_associated_media()
         dataset.isPartOf = is_part_of
         dataset.hasPart = has_part
         dataset.relation = other_relations
