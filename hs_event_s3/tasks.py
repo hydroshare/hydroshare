@@ -10,8 +10,8 @@ django.setup()
 from hs_core.models import BaseResource  # noqa: E402
 from hs_core.hydroshare.resource import delete_resource_file  # noqa: E402
 from hs_core.hydroshare_atlas_discovery_collection import (  # noqa: E402
-    collect_file_to_catalog,
     delete_file_from_catalog,
+    sync_resource_in_catalog,
 )
 from hs_core.views.utils import link_s3_file_to_django  # noqa: E402
 from django_s3.storage import S3Storage  # noqa: E402
@@ -106,10 +106,7 @@ def sync_discovery_collection(self, action: str, bucket: str, object_path: str, 
     try:
         if file_created:
             res = BaseResource.objects.get(short_id=resource_id)
-            if res.raccess.discoverable:
-                collect_file_to_catalog(key)
-            else:
-                delete_file_from_catalog(key)
+            sync_resource_in_catalog(key, res.raccess.discoverable)
         else:
             # The doc is keyed by object_path only, so a delete from the old bucket during a
             # cross-zone move (e.g. quota holder change) must not remove the doc of the new copy.
