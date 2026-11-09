@@ -134,6 +134,47 @@ class TestToCatalogRecordUrl(ParametrizedTestCase):
         self.assertEqual(str(dataset.url), f"https://doi.org/10.4211/hs.{self.SHORT_ID}")
 
 
+class TestToCatalogRecordIdentifier(unittest.TestCase):
+    """Tests the identifier list: HydroShare URL, DOI for published resources, and other metadata identifiers."""
+
+    def test_published_has_doi_then_hydroshare_url(self):
+        metadata = {**MINIMAL_METADATA, "sharing_status": "published"}
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=RESOURCE_ID)
+        self.assertEqual(dataset.identifier, [
+            {
+                "@id": f"https://doi.org/10.4211/hs.{RESOURCE_ID}",
+                "@type": "PropertyValue",
+                "propertyID": "https://registry.identifiers.org/registry/doi",
+                "url": f"https://doi.org/10.4211/hs.{RESOURCE_ID}",
+                "value": f"doi:10.4211/hs.{RESOURCE_ID}",
+            },
+            f"{current_site_url()}/resource/{RESOURCE_ID}",
+        ])
+
+    def test_non_published_has_only_hydroshare_url(self):
+        metadata = {**MINIMAL_METADATA, "sharing_status": "public"}
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=RESOURCE_ID)
+        self.assertEqual(dataset.identifier, [f"{current_site_url()}/resource/{RESOURCE_ID}"])
+
+    def test_other_identifiers_preserved_and_hydroshare_identifier_excluded(self):
+        metadata = {
+            **MINIMAL_METADATA,
+            "sharing_status": "published",
+            "identifiers": [
+                {"name": "hydroShareIdentifier", "url": "http://localhost:8000/resource/x"},
+                {"name": "doi", "url": "https://doi.org/10.1/old"},
+                {"name": "Other", "url": "https://example.org/other"},
+            ],
+        }
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=RESOURCE_ID)
+        self.assertEqual(dataset.identifier[-1], {
+            "@type": "PropertyValue",
+            "propertyID": "Other",
+            "value": "https://example.org/other",
+        })
+        self.assertEqual(len(dataset.identifier), 3)
+
+
 class TestToCatalogRecordRelationPartitioning(unittest.TestCase):
     """Tests that relations are routed to the correct fields and are not duplicated."""
 

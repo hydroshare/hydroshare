@@ -629,6 +629,42 @@ class GeoShape(SchemaBaseModel):
         return v
 
 
+class Identifier(SchemaBaseModel):
+    """
+    A PropertyValue-shaped identifier for a resource, e.g. a DOI.
+    """
+    model_config = ConfigDict(
+        **SchemaBaseModel.model_config,
+        populate_by_name=True,  # Ensures aliases work during model initialization
+        title="Identifier",
+    )
+
+    type: Literal["PropertyValue"] = Field(
+        alias="@type",  # type: ignore
+        default="PropertyValue",
+        description="A property-value pair.",
+    )
+    id: Optional[str] = Field(
+        alias="@id",  # type: ignore
+        default=None,
+        description="The unique identifier (IRI) of this identifier entry.",
+        json_schema_extra=remove_none_default,
+    )
+    propertyID: Optional[str] = Field(
+        title="Property ID",
+        description="The ID of the identifier scheme, e.g. a registry.identifiers.org URI.",
+        default=None,
+        json_schema_extra=remove_none_default,
+    )
+    value: str = Field(description="The identifier value, e.g. doi:10.4211/hs.<resource_id>.")
+    url: Optional[HttpUrl] = Field(
+        default=None,
+        title="URL",
+        description="A URL that resolves to the identified resource.",
+        json_schema_extra=remove_none_default,
+    )
+
+
 class PropertyValue(SchemaBaseModel):
     model_config = ConfigDict(
         **SchemaBaseModel.model_config,

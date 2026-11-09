@@ -17,6 +17,7 @@ from .base import (
     Provider,
     LinkedData,
     MediaType,
+    Identifier,
 )
 
 from .datavariable import Dimension, DataVariable
@@ -111,7 +112,7 @@ class ScientificDataset(CoreMetadata):
         "of the resource can be accessed. If there is no landing page,"
         " provide the URL of the content.",
     )
-    identifier: Optional[List[str]] = Field(
+    identifier: Optional[List[Union[str, Identifier]]] = Field(
         default=None,
         title="Identifiers",
         description="Any kind of identifier for the resource. Identifiers may be DOIs or unique strings "

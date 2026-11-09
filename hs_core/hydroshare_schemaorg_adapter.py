@@ -203,6 +203,7 @@ class _ResourceUserMetadata(BaseModel):
     abstract: Optional[str] = None
     url: Optional[HttpUrl] = None
     identifier: Optional[HttpUrl] = None
+    identifiers: List[dict] = []
     creators: List[Creator] = []
     contributors: List[Contributor] = []
     created: Optional[datetime] = None
@@ -282,6 +283,28 @@ class _ResourceUserMetadata(BaseModel):
             return f"https://doi.org/10.4211/hs.{resource_id}"
         return f"{current_site_url()}/resource/{resource_id}"
 
+    def to_dataset_identifier(self, resource_id: str) -> list:
+        """Return the HydroShare URL, plus the DOI for published resources, plus other metadata identifiers."""
+        hs_resource_url = f"{current_site_url()}/resource/{resource_id}"
+        identifier_list = [hs_resource_url]
+        excluded_names = {"hydroShareIdentifier"}
+        if self.sharing_status == "published":
+            doi_url = f"https://doi.org/10.4211/hs.{resource_id}"
+            identifier_list.insert(0, {
+                "@id": doi_url,
+                "@type": "PropertyValue",
+                "propertyID": "https://registry.identifiers.org/registry/doi",
+                "url": doi_url,
+                "value": f"doi:10.4211/hs.{resource_id}",
+            })
+            excluded_names.add("doi")
+        identifier_list.extend(
+            {"@type": "PropertyValue", "propertyID": identifier.get("name"), "value": identifier.get("url")}
+            for identifier in self.identifiers
+            if identifier.get("name") not in excluded_names
+        )
+        return identifier_list
+
     def to_dataset_keywords(self) -> list[str] | None:
         if self.subjects:
             return self.subjects
@@ -335,7 +358,7 @@ class _ResourceUserMetadata(BaseModel):
         dataset.name = self.title
         dataset.description = self.abstract
         dataset.url = self.to_dataset_url(resource_id)
-        dataset.identifier = [str(self.identifier)] if self.identifier else None
+        dataset.identifier = self.to_dataset_identifier(resource_id)
         dataset.creator = self.to_dataset_creators()
         dataset.contributor = self.to_dataset_contributors()
         dataset.keywords = self.to_dataset_keywords()
