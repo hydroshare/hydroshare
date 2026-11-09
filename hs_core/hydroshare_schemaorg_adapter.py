@@ -277,6 +277,17 @@ class _ResourceUserMetadata(BaseModel):
             return self.period_coverage.to_dataset_temporal_coverage()
         return None
 
+    def to_dataset_publisher(self):
+        """Return the CUAHSI publisher organization for published resources, None otherwise."""
+        if self.sharing_status != "published":
+            return None
+        return schema.PublisherOrganization.model_validate({
+            "@type": "Organization",
+            "@id": "https://ror.org/04s2bx355",
+            "name": "Consortium of Universities for the Advancement of Hydrologic Science, Inc. (CUAHSI)",
+            "url": "https://www.cuahsi.org",
+        })
+
     def to_dataset_url(self, resource_id: str) -> str:
         """Return the DOI URL for published resources and the current environment's resource URL otherwise."""
         if self.sharing_status == "published":
@@ -358,6 +369,7 @@ class _ResourceUserMetadata(BaseModel):
         dataset.name = self.title
         dataset.description = self.abstract
         dataset.url = self.to_dataset_url(resource_id)
+        dataset.publisher = self.to_dataset_publisher()
         dataset.identifier = self.to_dataset_identifier(resource_id)
         dataset.creator = self.to_dataset_creators()
         dataset.contributor = self.to_dataset_contributors()
