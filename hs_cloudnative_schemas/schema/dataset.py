@@ -1,14 +1,10 @@
 from .core import CoreMetadata
 from enum import Enum
-from typing import Optional, List, Union, Literal
-from pydantic import Field, HttpUrl
+from typing import ClassVar, Optional, List, Union, Literal
+from pydantic import Field, HttpUrl, model_serializer
 from datetime import datetime
 
 from .base import (
-    Public,
-    Published,
-    Discoverable,
-    Private,
     PropertyValue,
     Organization,
     DataCatalog,
@@ -58,7 +54,7 @@ class ScientificDataset(CoreMetadata):
         description="Dimensions defined in the multi-dimensional dataset.",
     )
 
-    # redefine associatedMedia from "Core" as a required field
+    # redefine associatedMedia from "Core" to also accept a single (non-list) value
     associatedMedia: Union[LinkedData, MediaType, List[Union[LinkedData, MediaType]]] = Field(
         title="Resource content",
         description="A media object that encodes this CreativeWork. This property is a synonym for encoding.",
@@ -146,7 +142,22 @@ class ScientificDataset(CoreMetadata):
         description="The repository, service provider, organization, person, or service performer that provides"
         " access to the resource.",
     )
-    sharing_status: Optional[Union[Public, Published, Private, Discoverable]] = Field(
-        default=None,
-        description="The Sharing status of the resource. This is a controlled vocabulary term from CUAHSI HydroShare",
-    )
+
+    # Fields that are dropped from serialized output when they hold no value (None or []).
+    _OMIT_WHEN_EMPTY: ClassVar[tuple] = ("coordinates", "sourceOrganization", "associatedMedia")
+
+    @model_serializer(mode="wrap")
+    def _omit_when_empty(self, handler):
+        """Drop fields listed in _OMIT_WHEN_EMPTY from the serialized output when they are empty.
+
+        These fields are populated only for some content types (e.g., NetCDF coordinates) and
+        are otherwise always null/empty in the generated schema.org metadata. The defaults are kept
+        (rather than removed) so that validated construction, e.g. ScientificDataset(...) in the
+        hs_extract raster/feature extractors, does not fail with 'Field required'.
+        """
+        data = handler(self)
+        if isinstance(data, dict):
+            for field_name in self._OMIT_WHEN_EMPTY:
+                if field_name in data and data[field_name] in (None, []):
+                    del data[field_name]
+        return data

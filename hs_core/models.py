@@ -2372,8 +2372,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
         user_metadata_path = f"{self.short_id}/.hsmetadata/user_metadata.json"
         hs_json = self.metadata.get_json().model_dump_json(indent=2)
         hs_json = json.loads(hs_json)  # validate json
+        # sharing_status is used by the adapter to derive the schema.org creativeWorkStatus
         hs_json['sharing_status'] = self.raccess.sharing_status
-        hs_json['viewCount'] = self.view_count
         # TODO find a better way to call the composite resource aggregation types property
         hs_json['content_types'] = [self.resource_type]
         if self.resource_type == 'CompositeResource':
@@ -2391,14 +2391,29 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
             istorage.saveFile(temp_file.name, user_metadata_path)
 
     def write_system_metadata_json_file(self):
-        """Write system metadata JSON file to resource .hsmetadata directory in S3"""
+        """Write system metadata JSON file to resource .hsmetadata directory in S3
+
+        hs_extract merges this file into the resource's dataset_metadata.json,
+        so every key below ends up in the published JSON-LD and the Discover (MongoDB) catalog.
+        """
         published_date = self.metadata.dates.filter(type='published').first()
         json_dict = {
+            # NOT schema.org compliant - no schema.org property 'resource_id'
             "resource_id": self.short_id,
+            # NOT schema.org compliant - no schema.org property 'doi'
             "doi": self.doi,
+            # schema.org compliant - https://schema.org/dateCreated
             "dateCreated": self.created.isoformat(),
+            # schema.org compliant - https://schema.org/dateModified
             "dateModified": self.updated.isoformat(),
+            # schema.org compliant - https://schema.org/datePublished
             "datePublished": published_date.start_date.isoformat() if published_date else None,
+            # NOT schema.org compliant - no schema.org property 'viewCount'. Used by Discover for "Most Viewed"
+            # sorting (hs_rest_api/discovery_atlas.py)
+            "viewCount": self.view_count,
+            # NOT schema.org compliant - no schema.org property 'status'. public/discoverable/published are
+            # collapsed into the single schema.org 'creativeWorkStatus' in user metadata; 'shareable' has no
+            # schema.org equivalent. Discover filters on 'creativeWorkStatus', not on this key.
             "status": {
                 "public": self.raccess.public,
                 "discoverable": self.raccess.discoverable,

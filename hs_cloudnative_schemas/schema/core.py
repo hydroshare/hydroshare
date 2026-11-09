@@ -193,6 +193,7 @@ class CoreMetadata(SchemaBaseModel):
         "part of - e.g., a related collection.",
         default=[],
     )
+    # Not a schema.org property
     relation: Optional[List[Relation]] = Field(
         title="Relation",
         description="All other types of relations",
