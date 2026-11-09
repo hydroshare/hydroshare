@@ -3,6 +3,7 @@ from unittest_parametrize import ParametrizedTestCase, parametrize, param
 from pydantic import ValidationError
 
 from hs_cloudnative_schemas.schema import base as schema
+from hs_core.hydroshare.utils import current_site_url
 from hs_core.hydroshare_schemaorg_adapter import HydroshareMetadataAdapter, Relation
 
 
@@ -100,16 +101,20 @@ class TestToCatalogRecordUrl(ParametrizedTestCase):
     LOCAL_URL = f"http://localhost:8000/resource/{SHORT_ID}"
 
     @parametrize(
-        "sharing_status,expected_url",
+        "sharing_status,is_doi",
         [
-            param("published", f"https://doi.org/10.4211/hs.{SHORT_ID}", id="published_uses_doi"),
-            param("public", f"https://www.hydroshare.org/resource/{SHORT_ID}", id="public_uses_hydroshare_url"),
-            param("private", f"https://www.hydroshare.org/resource/{SHORT_ID}", id="private_uses_hydroshare_url"),
-            param("discoverable", f"https://www.hydroshare.org/resource/{SHORT_ID}", id="discoverable_uses_hydroshare_url"),
-            param(None, f"https://www.hydroshare.org/resource/{SHORT_ID}", id="no_sharing_status_uses_hydroshare_url"),
+            param("published", True, id="published_uses_doi"),
+            param("public", False, id="public_uses_site_url"),
+            param("private", False, id="private_uses_site_url"),
+            param("discoverable", False, id="discoverable_uses_site_url"),
+            param(None, False, id="no_sharing_status_uses_site_url"),
         ],
     )
-    def test_url_by_sharing_status(self, sharing_status, expected_url):
+    def test_url_by_sharing_status(self, sharing_status, is_doi):
+        expected_url = (
+            f"https://doi.org/10.4211/hs.{self.SHORT_ID}" if is_doi
+            else f"{current_site_url()}/resource/{self.SHORT_ID}"
+        )
         metadata = {
             **MINIMAL_METADATA,
             "url": self.LOCAL_URL,
