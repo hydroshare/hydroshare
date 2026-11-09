@@ -113,8 +113,9 @@ export default defineConfig(({ mode }) => {
       strictPort: true,
       hmr: {
         host: 'localhost',
+        protocol: 'wss',
         port: 5004, // Same as dev server
-        clientPort: 80, // Browser connects through nginx on port 80
+        clientPort: 443, // Browser connects through nginx over HTTPS on port 443
       },
     },
   };
