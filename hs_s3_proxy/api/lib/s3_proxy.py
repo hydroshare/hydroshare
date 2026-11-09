@@ -10,7 +10,8 @@ import httpx
 from botocore.auth import S3SigV4Auth
 from botocore.awsrequest import AWSRequest
 from botocore.credentials import Credentials
-from fastapi import Response, StreamingResponse
+from fastapi import Response
+from fastapi.responses import StreamingResponse
 
 logger = logging.getLogger("hs_s3_proxy")
 
