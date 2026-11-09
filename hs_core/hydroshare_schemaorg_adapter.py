@@ -368,10 +368,10 @@ class _ResourceUserMetadata(BaseModel):
         return [schema.PropertyValue(name=key, value=value) for key, value in self.additional_metadata.items()]
 
     def to_dataset_url(self, resource_id: str) -> str:
-        """Return the DOI URL for published resources and the HydroShare resource URL otherwise."""
+        """Return the DOI URL for published resources and the current environment's resource URL otherwise."""
         if self.sharing_status == "published":
             return f"https://doi.org/10.4211/hs.{resource_id}"
-        return f"https://www.hydroshare.org/resource/{resource_id}"
+        return f"{current_site_url()}/resource/{resource_id}"
 
     def to_dataset_keywords(self) -> list[str] | None:
         if self.subjects:
