@@ -8,9 +8,10 @@ from pymongo import MongoClient
 from django.conf import settings
 
 
-def _make_s3_client():
+@functools.lru_cache(maxsize=None)
+def _make_s3_client(zone=None):
     zone_config = settings.RESOURCE_S3_ZONES_CONFIG.get(
-        settings.RESOURCE_S3_DEFAULT_ZONE, {}
+        zone or settings.RESOURCE_S3_DEFAULT_ZONE, {}
     )
     kwargs = {}
     if zone_config.get("aws_s3_endpoint_url"):
@@ -23,6 +24,18 @@ def _make_s3_client():
 
 
 s3 = _make_s3_client()
+
+
+def _s3_client_for_bucket(bucket_name: str):
+    """Return an S3 client using the credentials/endpoint of the zone that owns bucket_name.
+
+    Zones may live on different endpoints/projects, so a non-default zone bucket must not be
+    read with the default-zone client. Unknown buckets fall back to the default-zone client.
+    """
+    for zone, zone_config in settings.RESOURCE_S3_ZONES_CONFIG.items():
+        if zone_config.get("bucket_name") == bucket_name and zone != settings.RESOURCE_S3_DEFAULT_ZONE:
+            return _make_s3_client(zone)
+    return s3
 
 
 # metadata keys whose string values should be converted to datetime objects
@@ -63,7 +76,7 @@ def datetime_parser(dct, object_key=None):
 
 def collect_file_to_catalog(filepath: str):
     bucket_name, object_key = filepath.split('/', 1)
-    response = s3.get_object(Bucket=bucket_name, Key=object_key)
+    response = _s3_client_for_bucket(bucket_name).get_object(Bucket=bucket_name, Key=object_key)
     parser = functools.partial(datetime_parser, object_key=object_key)
     metadata_json = json.loads(response['Body'].read(), object_hook=parser)
 
@@ -110,17 +123,3 @@ def collect_file_to_catalog(filepath: str):
 def delete_file_from_catalog(filepath: str):
     _, object_key = filepath.split('/', 1)
     MongoDBClient.get_discovery_collection().delete_one({"_s3_filepath": object_key})
-
-
-def handle_s3_mutation(action: str, bucket: str, object_path: str, status_code: int):
-    """Sync Atlas discovery docs when dataset metadata jsonld is written/deleted."""
-    if status_code not in (200, 204):
-        return
-    if not object_path.endswith('/.hsjsonld/dataset_metadata.json'):
-        return
-
-    key = f"{bucket}/{object_path}"
-    if action in ("s3:PutObject", "s3:CompleteMultipartUpload"):
-        collect_file_to_catalog(key)
-    elif action in ("s3:DeleteObject", "s3:DeleteObjects"):
-        delete_file_from_catalog(key)

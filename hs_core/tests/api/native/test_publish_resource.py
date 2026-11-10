@@ -14,10 +14,11 @@ from django.urls import reverse
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 
+from django_s3.utils import bucket_and_zone
 from hs_access_control.models.privilege import UserResourcePrivilege, PrivilegeCodes
 from hs_core import hydroshare
 from hs_core.models import BaseResource
-from hs_core.testing import MockS3TestCaseMixin
+from hs_core.testing import MockS3TestCaseMixin, override_zone_config
 from hs_core.views.utils import get_default_admin_user, get_default_support_user
 from django.core.exceptions import ValidationError, PermissionDenied
 from theme.backends import without_login_date_token_generator
@@ -81,8 +82,9 @@ class TestPublishResource(MockS3TestCaseMixin, TestCase):
             last_name='user2_LastName',
             superuser=False,
         )
-        self.user_published.quotas.first().zone = 'published'
-        self.user_published.quotas.first().save()
+        publisher_quota = self.user_published.quotas.first()
+        publisher_quota.zone = 'published'
+        publisher_quota.save()
 
         # create a resource
         self.res = hydroshare.create_resource(
@@ -173,6 +175,47 @@ class TestPublishResource(MockS3TestCaseMixin, TestCase):
         istorage = self.pub_res.get_s3_storage()
         bag_path = self.pub_res.bag_path
         self.assertTrue(istorage.exists(bag_path))
+
+    def test_publish_resource_moves_files_to_published_bucket(self):
+        """Publishing makes the publisher user the quota holder, which moves the resource's S3 objects
+        from the default 'resource' bucket to the 'published' bucket."""
+        self._assert_publish_moves_files_to_published_bucket()
+
+    def test_publish_resource_moves_files_to_published_bucket_with_managed_copy(self):
+        """Same move into a published zone configured for boto3 managed copy (as an AWS zone would be). A 1 byte
+        multipart threshold makes every non-empty file go through UploadPartCopy + CompleteMultipartUpload."""
+        override_zone_config(self, 'published', copy_method='managed_copy', multipart_copy_threshold=1)
+        self._assert_publish_moves_files_to_published_bucket()
+
+    def _assert_publish_moves_files_to_published_bucket(self):
+        res_id = self.complete_res.short_id
+        istorage = self.complete_res.get_s3_storage()
+        res_bucket = settings.RESOURCE_S3_ZONES_CONFIG['hydroshare']['bucket_name']
+        pub_bucket = settings.RESOURCE_S3_ZONES_CONFIG['published']['bucket_name']
+
+        def object_keys(zone, bucket):
+            return {obj.key for obj in istorage.connection(zone).Bucket(bucket).objects.filter(Prefix=res_id)}
+
+        # before publishing, the resource files live only in the default bucket
+        self.assertEqual(bucket_and_zone(res_id), (res_bucket, 'hydroshare'))
+        keys_before = object_keys('hydroshare', res_bucket)
+        self.assertTrue(keys_before)
+        self.assertFalse(object_keys('published', pub_bucket))
+
+        admin_user = get_default_admin_user()
+        hydroshare.submit_resource_for_review(pk=res_id, user=self.user)
+        hydroshare.publish_resource(user=admin_user, pk=res_id)
+        pub_res = hydroshare.get_resource_by_shortkey(res_id)
+
+        self.assertEqual(pub_res.quota_holder, self.user_published)
+        self.assertEqual(bucket_and_zone(res_id), (pub_bucket, 'published'))
+
+        # all original objects are now in the published bucket and none are left in the default bucket
+        self.assertFalse(object_keys('hydroshare', res_bucket))
+        self.assertTrue(keys_before.issubset(object_keys('published', pub_bucket)))
+        # resource files remain accessible through storage after the move
+        for res_file in pub_res.files.all():
+            self.assertTrue(istorage.exists(res_file.storage_path))
 
     def test_publish_via_email_link(self):
         """

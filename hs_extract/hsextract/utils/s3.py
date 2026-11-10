@@ -10,6 +10,7 @@ from typing import Iterator, Protocol, TYPE_CHECKING
 import boto3
 import requests
 from botocore.config import Config
+from botocore.exceptions import ClientError
 from hs_cloudnative_schemas.schema.base import LinkedData, MediaObject
 if TYPE_CHECKING:
     from hsextract.content_types.models import ContentType
@@ -426,6 +427,19 @@ def load_metadata(metadata_path, zone: str):
         print(f"Metadata file not found {metadata_path}: {str(e)}")
     print(f"Loaded metadata: {metadata_json} from {metadata_path}")
     return metadata_json
+
+
+def metadata_exists(metadata_path: str, zone: str) -> bool:
+    """Return False only when the object is not found; any other error (timeout, 5xx, 403) is raised."""
+    bucket, key = _split_s3_path(metadata_path)
+    client = _get_s3_client(zone)
+    try:
+        client.head_object(Bucket=bucket, Key=key)
+    except ClientError as e:
+        if e.response.get("Error", {}).get("Code") in ("404", "NoSuchKey", "NotFound"):
+            return False
+        raise
+    return True
 
 
 def iter_find(path: str, zone: str) -> Iterator[str]:

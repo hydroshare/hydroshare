@@ -3,11 +3,19 @@ from datetime import datetime, timezone
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
+from django.test import SimpleTestCase, override_settings
 from unittest_parametrize import ParametrizedTestCase, parametrize, param
 
 from hs_core.hydroshare_atlas_discovery_collection import (
     MongoDBClient, collect_file_to_catalog, delete_file_from_catalog
 )
+
+
+ZONES_CONFIG = {
+    "hydroshare": {"bucket_name": "resource"},
+    "published": {"bucket_name": "published"},
+    "ciroh": {"bucket_name": "ciroh"},
+}
 
 
 SAMPLE_METADATA = {
@@ -167,3 +175,40 @@ class TestDeleteFileFromCatalog(TestCase):
         self.mock_collection.delete_one.assert_called_once_with(
             {"_s3_filepath": "abc123/.hsjsonld/dataset_metadata.json"}
         )
+
+
+@override_settings(RESOURCE_S3_ZONES_CONFIG=ZONES_CONFIG, RESOURCE_S3_DEFAULT_ZONE="hydroshare")
+class TestZoneClients(SimpleTestCase):
+
+    def setUp(self):
+        self.default_client = MagicMock(name="default")
+        self.zone_clients = {"published": MagicMock(name="published"), "ciroh": MagicMock(name="ciroh")}
+        self.s3_patcher = patch("hs_core.hydroshare_atlas_discovery_collection.s3", self.default_client)
+        self.make_client_patcher = patch(
+            "hs_core.hydroshare_atlas_discovery_collection._make_s3_client",
+            side_effect=lambda zone=None: self.zone_clients[zone],
+        )
+        self.collection_patcher = patch.object(MongoDBClient, "get_discovery_collection", return_value=MagicMock())
+        self.s3_patcher.start()
+        self.make_client_patcher.start()
+        self.collection_patcher.start()
+
+    def tearDown(self):
+        self.s3_patcher.stop()
+        self.make_client_patcher.stop()
+        self.collection_patcher.stop()
+
+    def test_collect_reads_non_default_zone_bucket_with_its_zone_client(self):
+        """A ciroh bucket object is read with the ciroh zone client, not the default-zone client."""
+        self.zone_clients["ciroh"].get_object.return_value = _make_s3_response(SAMPLE_METADATA)
+        collect_file_to_catalog("ciroh/res1/.hsjsonld/dataset_metadata.json")
+        self.zone_clients["ciroh"].get_object.assert_called_once_with(
+            Bucket="ciroh", Key="res1/.hsjsonld/dataset_metadata.json"
+        )
+        self.default_client.get_object.assert_not_called()
+
+    def test_collect_reads_default_zone_bucket_with_default_client(self):
+        """A default-zone bucket object is read with the default client."""
+        self.default_client.get_object.return_value = _make_s3_response(SAMPLE_METADATA)
+        collect_file_to_catalog("resource/res1/.hsjsonld/dataset_metadata.json")
+        self.default_client.get_object.assert_called_once()

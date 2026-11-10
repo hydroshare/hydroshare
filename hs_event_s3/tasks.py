@@ -14,12 +14,16 @@ from hs_core.hydroshare_atlas_discovery_collection import (  # noqa: E402
     delete_file_from_catalog,
 )
 from hs_core.views.utils import link_s3_file_to_django  # noqa: E402
+from django_s3.storage import S3Storage  # noqa: E402
 from django.contrib.auth.models import User  # noqa: E402
 from theme.models import UserQuota  # noqa: E402
 
 from hs_event_s3.celery_app import celery_app  # noqa: E402
 
 logger = logging.getLogger("hs_event_s3")
+
+# One instance per worker process, so its per-zone boto3 connections are reused across tasks.
+_storage = S3Storage()
 
 
 def _link_s3_file_to_resource(resource, short_path: str):
@@ -54,7 +58,7 @@ def process_s3_event(self, action: str, bucket: str, object_path: str, username:
         logger.info("Ignoring event from admin account cuahsi")
         return
 
-    file_created = action in ("s3:PutObject", "s3:CompleteMultipartUpload")
+    file_created = action in ("s3:PutObject", "s3:CompleteMultipartUpload", "s3:CopyObject")
 
     try:
         if file_created:
@@ -93,7 +97,7 @@ def sync_discovery_collection(self, action: str, bucket: str, object_path: str, 
     resource_id = parts[0]
     # Reconstruct the full MinIO key the catalog functions expect: {bucket}/{object_path}
     key = f"{bucket}/{object_path}"
-    file_created = action in ("s3:PutObject", "s3:CompleteMultipartUpload")
+    file_created = action in ("s3:PutObject", "s3:CompleteMultipartUpload", "s3:CopyObject")
 
     logger.info(
         f"Processing discovery collection event: action={action}, key={key}"
@@ -107,7 +111,22 @@ def sync_discovery_collection(self, action: str, bucket: str, object_path: str, 
             else:
                 delete_file_from_catalog(key)
         else:
-            delete_file_from_catalog(key)
+            # The doc is keyed by object_path only, so a delete from the old bucket during a
+            # cross-zone move (e.g. quota holder change) must not remove the doc of the new copy.
+            # Errors other than not-found propagate, so the task retries rather than wrongly deleting the doc.
+            live_key = _storage.find_object_in_other_zone_buckets(object_path, exclude_bucket=bucket)
+            if live_key is None:
+                logger.info(f"No live copy of {object_path} in other buckets, deleting discovery doc")
+                delete_file_from_catalog(key)
+            else:
+                res = BaseResource.objects.filter(short_id=resource_id).first()
+                if res is not None and res.raccess.discoverable:
+                    logger.info(f"Stale-location delete for {key}, live copy at {live_key}, re-collecting")
+                    collect_file_to_catalog(live_key)
+                else:
+                    logger.info(f"Stale-location delete for {key}, live copy at {live_key} is not "
+                                f"discoverable, deleting discovery doc")
+                    delete_file_from_catalog(key)
     except Exception as exc:
         logger.error(f"Error syncing discovery catalog for {key}: {exc}", exc_info=True)
         raise self.retry(exc=exc)
