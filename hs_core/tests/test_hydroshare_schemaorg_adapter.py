@@ -139,3 +139,38 @@ class TestToCatalogRecordRelationPartitioning(unittest.TestCase):
         self.assertEqual(len(dataset.isPartOf), 1)
         self.assertEqual(len(dataset.hasPart), 1)
         self.assertEqual(len(dataset.relation), 1)
+
+
+class TestToCatalogRecordAdditionalMetadata(unittest.TestCase):
+    """Tests that hsmodels additional_metadata maps to schema.org additionalProperty."""
+
+    def test_additional_metadata_maps_to_additional_property(self):
+        metadata = {
+            **MINIMAL_METADATA,
+            "additional_metadata": {"site": "Logan River", "depth": "2 m"},
+        }
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata)
+        self.assertEqual(len(dataset.additionalProperty), 2)
+        for prop in dataset.additionalProperty:
+            self.assertIsInstance(prop, schema.PropertyValue)
+        self.assertEqual(
+            {p.name: p.value for p in dataset.additionalProperty},
+            {"site": "Logan River", "depth": "2 m"},
+        )
+
+    def test_empty_additional_metadata_yields_no_additional_property(self):
+        metadata = {**MINIMAL_METADATA, "additional_metadata": {}}
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata)
+        self.assertIsNone(dataset.additionalProperty)
+
+    def test_missing_additional_metadata_yields_no_additional_property(self):
+        dataset = HydroshareMetadataAdapter.to_catalog_record(MINIMAL_METADATA)
+        self.assertIsNone(dataset.additionalProperty)
+
+    def test_additional_metadata_key_not_in_dumped_record(self):
+        metadata = {**MINIMAL_METADATA, "additional_metadata": {"site": "Logan River"}}
+        dumped = HydroshareMetadataAdapter.to_catalog_record(metadata).model_dump(by_alias=True)
+        self.assertNotIn("additional_metadata", dumped)
+        self.assertEqual(dumped["additionalProperty"][0]["@type"], "PropertyValue")
+        self.assertEqual(dumped["additionalProperty"][0]["name"], "site")
+        self.assertEqual(dumped["additionalProperty"][0]["value"], "Logan River")

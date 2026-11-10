@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, List, Optional, Union, Literal
+from typing import Any, Dict, List, Optional, Union, Literal
 
 from pydantic import BaseModel, HttpUrl, ConfigDict, model_validator
 from hsmodels.schemas.enums import RelationType
@@ -217,6 +217,7 @@ class _ResourceUserMetadata(BaseModel):
     citation: Optional[str] = None
     associatedMedia: List[Any] = []
     sharing_status: Optional[Literal["private", "public", "published", "discoverable"]] = None
+    additional_metadata: Dict[str, str] = {}
 
     @model_validator(mode="before")
     @classmethod
@@ -279,6 +280,11 @@ class _ResourceUserMetadata(BaseModel):
             return self.subjects
         return ["HydroShare"]
 
+    def to_dataset_additional_property(self):
+        if not self.additional_metadata:
+            return None
+        return [schema.PropertyValue(name=key, value=value) for key, value in self.additional_metadata.items()]
+
     def to_dataset_license(self):
         if self.rights:
             return self.rights.to_dataset_license()
@@ -334,6 +340,7 @@ class _ResourceUserMetadata(BaseModel):
         dataset.hasPart = has_part
         dataset.relation = other_relations
         dataset.license = self.to_dataset_license()
+        dataset.additionalProperty = self.to_dataset_additional_property()
         dataset.citation = [self.citation]
         dataset.creativeWorkStatus = self.to_dataset_creative_work_status()
         return dataset
