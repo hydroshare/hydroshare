@@ -1,6 +1,9 @@
+import logging
+from urllib.parse import urlsplit
+
 from django.utils.deprecation import MiddlewareMixin
 
-from .models import Session
+from .models import Session, Variable
 from . import utils
 import re
 
@@ -9,6 +12,8 @@ BAG_RE = re.compile('bags/([0-9a-f]{32})\.zip')  # parser for resource id # noqa
 LANDING_RE = re.compile('resource/([0-9a-f]{32})/$')  # reference to resource home page
 REST_RE = re.compile('/hsapi/')  # reference to REST or internal
 INTERNAL_RE = re.compile('/hsapi/_internal/')  # reference to an internal page
+
+logger = logging.getLogger(__name__)
 
 
 def get_resource_id_from_url(path):
@@ -57,11 +62,6 @@ class Tracking(MiddlewareMixin):
         if request.path.startswith('/heartbeat/'):
             return response
 
-        # filter out web crawlers
-        is_human = getattr(request, 'is_human', False)
-        if not is_human:
-            return response
-
         # filter out everything that is not an OK response
         if response.status_code != 200:
             return response
@@ -71,18 +71,33 @@ class Tracking(MiddlewareMixin):
 
         # get user info that will be recorded in the visit log
         session = Session.objects.for_request(request)
-        usertype = utils.get_user_type(session)
-        email_tld = utils.get_user_email_tld(session)
-        ip = utils.get_client_ip(request)
+        fields = utils.get_std_log_fields(request, session)
+
+        # Identify referring sites without retaining URL paths or query parameters.
+        referrer_host = None
+        referrer = request.headers.get('referer')
+        if referrer:
+            try:
+                parsed_referrer = urlsplit(referrer)
+                if parsed_referrer.scheme in ('http', 'https') and parsed_referrer.hostname:
+                    referrer_host = parsed_referrer.hostname
+                else:
+                    logger.warning("Ignoring Referer header without an HTTP(S) hostname")
+            except ValueError:
+                logger.warning("Ignoring malformed Referer header")
 
         # build the message string (key:value pairs)
-        msg = '|'.join([str(item) for item in
-                        ['user_ip=%s' % ip,
-                         'http_method=%s' % request.method,
-                         'http_code=%s' % response.status_code,
-                         'user_type=%s' % usertype,
-                         'user_email_domain=%s' % email_tld,
-                         'request_url=%s' % request.path]])
+        msg = Variable.format_kwargs(
+            user_ip=fields['user_ip'],
+            http_method=request.method,
+            http_code=response.status_code,
+            user_type=fields['user_type'],
+            user_email_domain=fields['user_email_domain'],
+            request_url=request.path,
+            is_human=fields['is_human'],
+            user_agent=fields['user_agent'],
+            referrer_host=referrer_host,
+        )
 
         resource_id = get_resource_id_from_url(request.path)
         rest = get_rest_from_url(request.path)

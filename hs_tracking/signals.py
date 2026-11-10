@@ -79,11 +79,6 @@ def capture_download(**kwargs):
     if 'request' not in list(kwargs.keys()):
         return
 
-    # exit early if not human (necessary b/c this action does not require log in)
-    is_human = getattr(kwargs['request'], 'is_human', False)
-    if not is_human:
-        return
-
     fields, session = get_common_download_fields(**kwargs)
     fields['file_size'] = kwargs['file_size']
     fields['filename'] = kwargs['download_file_name']
@@ -102,11 +97,6 @@ def capture_resource_download(**kwargs):
 
     # exit early if the request is not passed in as a kwarg
     if 'request' not in list(kwargs.keys()):
-        return
-
-    # exit early if not human (necessary b/c this action does not require log in)
-    is_human = getattr(kwargs['request'], 'is_human', False)
-    if not is_human:
         return
 
     fields, session = get_common_download_fields(**kwargs)
