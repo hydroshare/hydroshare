@@ -222,13 +222,15 @@ class S3ProxyClient:
             url = f"{url}?{urlencode(backend_params, quote_via=quote)}"
 
         outbound_headers = self._filter_headers(headers)
-        outbound_headers["accept-encoding"] = "identity"
         outbound_body = body or b""
 
         if zone_backend.signer:
             aws_req = AWSRequest(method=method, url=url, data=outbound_body, headers=outbound_headers)
             zone_backend.signer.add_auth(aws_req)
             outbound_headers = dict(aws_req.headers)
+
+        # GCS frontends may append gzip(gfe), so this transport header must not be signed.
+        outbound_headers["accept-encoding"] = "identity"
 
         logger.info(f"Proxying {method} request to {url}")
 
@@ -239,6 +241,11 @@ class S3ProxyClient:
             )
             response = await self._client.send(request, follow_redirects=False, stream=True)
             response_headers = self._filter_response_headers(dict(response.headers))
+            if response.status_code == 206:
+                response_headers = {
+                    name: value for name, value in response_headers.items()
+                    if not name.lower().startswith("x-amz-checksum-")
+                }
             if method.upper() == "HEAD":
                 upstream_length = response.headers.get("content-length")
                 if upstream_length is not None:
