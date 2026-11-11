@@ -324,3 +324,61 @@ class TestToCatalogRecordSchemaOrgCompliance(ParametrizedTestCase):
         output = _generate_user_metadata({**REALISTIC_METADATA, "sharing_status": sharing_status})
         self.assertNotIn("sharing_status", output)
         self.assertEqual(output["creativeWorkStatus"]["name"], expected_name)
+
+
+class TestToCatalogRecordAdditionalType(unittest.TestCase):
+    """additionalType is a list of resolvable HydroShare term URLs for the resource and content types."""
+
+    TERMS = "https://www.hydroshare.org/terms/"
+
+    def test_content_types_map_to_term_urls(self):
+        metadata = {
+            **MINIMAL_METADATA,
+            "content_types": ["NetCDFLogicalFile", "CompositeResource", "GeoRasterLogicalFile"],
+        }
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata)
+        self.assertEqual(
+            [str(u) for u in dataset.additionalType],
+            [
+                f"{self.TERMS}CompositeResource",
+                f"{self.TERMS}GeographicRasterAggregation",
+                f"{self.TERMS}MultidimensionalAggregation",
+            ],
+        )
+
+    def test_duplicates_and_unknown_types_are_dropped(self):
+        metadata = {
+            **MINIMAL_METADATA,
+            "content_types": ["CompositeResource", "CompositeResource", "NoSuchLogicalFile"],
+        }
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata)
+        self.assertEqual([str(u) for u in dataset.additionalType], [f"{self.TERMS}CompositeResource"])
+
+    def test_resource_type_always_first_even_if_missing_from_content_types(self):
+        metadata = {**MINIMAL_METADATA, "content_types": ["TimeSeriesLogicalFile", "GeoRasterLogicalFile"]}
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata)
+        self.assertEqual(
+            [str(u) for u in dataset.additionalType],
+            [
+                f"{self.TERMS}CompositeResource",
+                f"{self.TERMS}GeographicRasterAggregation",
+                f"{self.TERMS}TimeSeriesAggregation",
+            ],
+        )
+
+    def test_falls_back_to_resource_type(self):
+        dataset = HydroshareMetadataAdapter.to_catalog_record(MINIMAL_METADATA)
+        self.assertEqual([str(u) for u in dataset.additionalType], [f"{self.TERMS}CompositeResource"])
+
+    def test_unknown_resource_type_yields_none(self):
+        dataset = HydroshareMetadataAdapter.to_catalog_record({"type": "Other", "title": "t"})
+        self.assertIsNone(dataset.additionalType)
+
+    def test_dumped_record_has_list_of_strings_and_keeps_content_types(self):
+        metadata = {**MINIMAL_METADATA, "content_types": ["CompositeResource", "GenericLogicalFile"]}
+        dumped = HydroshareMetadataAdapter.to_catalog_record(metadata).model_dump(by_alias=True)
+        self.assertEqual(
+            [str(u) for u in dumped["additionalType"]],
+            [f"{self.TERMS}CompositeResource", f"{self.TERMS}SingleFileAggregation"],
+        )
+        self.assertEqual(dumped["content_types"], ["CompositeResource", "GenericLogicalFile"])
