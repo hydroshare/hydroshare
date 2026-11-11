@@ -11,6 +11,7 @@ from botocore.auth import S3SigV4Auth
 from botocore.awsrequest import AWSRequest
 from botocore.credentials import Credentials
 from fastapi import Response
+from fastapi.responses import StreamingResponse
 
 logger = logging.getLogger("hs_s3_proxy")
 
@@ -228,20 +229,40 @@ class S3ProxyClient:
             zone_backend.signer.add_auth(aws_req)
             outbound_headers = dict(aws_req.headers)
 
+        # GCS frontends may append gzip(gfe), so this transport header must not be signed.
+        outbound_headers["accept-encoding"] = "identity"
+
         logger.info(f"Proxying {method} request to {url}")
 
         try:
-            response = await self._client.request(
+            request = self._client.build_request(
                 method=method, url=url, headers=outbound_headers,
-                content=outbound_body if outbound_body else None, follow_redirects=False,
+                content=outbound_body if outbound_body else None,
             )
+            response = await self._client.send(request, follow_redirects=False, stream=True)
             response_headers = self._filter_response_headers(dict(response.headers))
+            if response.status_code == 206:
+                response_headers = {
+                    name: value for name, value in response_headers.items()
+                    if not name.lower().startswith("x-amz-checksum-")
+                }
             if method.upper() == "HEAD":
                 upstream_length = response.headers.get("content-length")
                 if upstream_length is not None:
                     response_headers["content-length"] = upstream_length
-            return Response(content=response.content, status_code=response.status_code,
-                            headers=response_headers)
+                await response.aclose()
+                return Response(status_code=response.status_code, headers=response_headers)
+
+            async def stream_response():
+                try:
+                    async for chunk in response.aiter_raw():
+                        yield chunk
+                finally:
+                    await response.aclose()
+
+            return StreamingResponse(
+                stream_response(), status_code=response.status_code, headers=response_headers
+            )
 
         except httpx.TimeoutException:
             logger.error("Timeout proxying request")
