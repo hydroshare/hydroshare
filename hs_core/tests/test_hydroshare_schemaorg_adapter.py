@@ -121,7 +121,7 @@ class TestPersonIdentifierConversion(unittest.TestCase):
     def test_unsupported_identifier_key_is_skipped(self):
         creator = Creator(
             name="Jane Smith",
-            identifiers={"HydroShareID": "https://www.hydroshare.org/user/123/", "Unknown": "https://example.com"},
+            identifiers={"ORCID": "https://orcid.org/0000-0001-2345-6789", "Unknown": "https://example.com"},
         )
         result = creator.to_dataset_creator()
 
@@ -129,7 +129,7 @@ class TestPersonIdentifierConversion(unittest.TestCase):
         # mechanism, not from Party.identifiers) so it round-trips; "Unknown"
         # isn't a PersonIdentifierPropertyID member and is dropped.
         self.assertEqual(len(result.identifier), 1)
-        self.assertEqual(result.identifier[0].propertyID, "HydroShareID")
+        self.assertEqual(result.identifier[0].propertyID, "ORCID")
 
     @mock.patch("hs_core.hydroshare.utils.current_site_url", return_value="https://www.hydroshare.org")
     def test_linked_hydroshare_user_gets_hydroshareid_identifier(self, _mock_site_url):
