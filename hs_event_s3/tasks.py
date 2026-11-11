@@ -119,7 +119,7 @@ def sync_discovery_collection(self, action: str, bucket: str, object_path: str, 
                 res = BaseResource.objects.filter(short_id=resource_id).first()
                 if res is not None and res.raccess.discoverable:
                     logger.info(f"Stale-location delete for {key}, live copy at {live_key}, re-collecting")
-                    collect_file_to_catalog(live_key)
+                    sync_resource_in_catalog(live_key, res.raccess.discoverable)
                 else:
                     logger.info(f"Stale-location delete for {key}, live copy at {live_key} is not "
                                 f"discoverable, deleting discovery doc")

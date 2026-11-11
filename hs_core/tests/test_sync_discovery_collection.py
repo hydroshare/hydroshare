@@ -16,7 +16,7 @@ class TestSyncDiscoveryCollectionDelete(TestCase):
     """Delete events for dataset_metadata.json, e.g. from the old bucket during a cross-zone move."""
 
     def setUp(self):
-        self.collect = patch(f"{TASKS}.collect_file_to_catalog").start()
+        self.sync = patch(f"{TASKS}.sync_resource_in_catalog").start()
         self.delete = patch(f"{TASKS}.delete_file_from_catalog").start()
         self.find_live = patch(f"{TASKS}._storage").start().find_object_in_other_zone_buckets
         self.resource_objects = patch(f"{TASKS}.BaseResource.objects").start()
@@ -38,7 +38,7 @@ class TestSyncDiscoveryCollectionDelete(TestCase):
         self._set_resource(discoverable=True)
         self._run_delete()
         self.find_live.assert_called_once_with(OBJECT_PATH, exclude_bucket="resource")
-        self.collect.assert_called_once_with(f"ciroh/{OBJECT_PATH}")
+        self.sync.assert_called_once_with(f"ciroh/{OBJECT_PATH}", True)
         self.delete.assert_not_called()
 
     def test_published_copy_after_resource_bucket_delete_recollects(self):
@@ -46,28 +46,28 @@ class TestSyncDiscoveryCollectionDelete(TestCase):
         self._set_resource(discoverable=True)
         self._run_delete()
         self.find_live.assert_called_once_with(OBJECT_PATH, exclude_bucket="resource")
-        self.collect.assert_called_once_with(f"published/{OBJECT_PATH}")
+        self.sync.assert_called_once_with(f"published/{OBJECT_PATH}", True)
         self.delete.assert_not_called()
 
     def test_no_live_copy_deletes(self):
         self.find_live.return_value = None
         self._run_delete()
         self.delete.assert_called_once_with(f"resource/{OBJECT_PATH}")
-        self.collect.assert_not_called()
+        self.sync.assert_not_called()
 
     def test_live_copy_not_discoverable_deletes(self):
         self.find_live.return_value = f"ciroh/{OBJECT_PATH}"
         self._set_resource(discoverable=False)
         self._run_delete()
         self.delete.assert_called_once_with(f"resource/{OBJECT_PATH}")
-        self.collect.assert_not_called()
+        self.sync.assert_not_called()
 
     def test_live_copy_resource_missing_deletes(self):
         self.find_live.return_value = f"ciroh/{OBJECT_PATH}"
         self._set_resource(discoverable=None)
         self._run_delete()
         self.delete.assert_called_once_with(f"resource/{OBJECT_PATH}")
-        self.collect.assert_not_called()
+        self.sync.assert_not_called()
 
     def test_lookup_error_retries_without_deleting(self):
         error = RuntimeError("head_object failed")
@@ -77,14 +77,14 @@ class TestSyncDiscoveryCollectionDelete(TestCase):
                 self._run_delete()
         retry.assert_called_once_with(exc=error)
         self.delete.assert_not_called()
-        self.collect.assert_not_called()
+        self.sync.assert_not_called()
 
 
 class TestSyncDiscoveryCollectionCopy(TestCase):
     """Copy events for dataset_metadata.json, e.g. into the new bucket during a cross-zone move."""
 
     def setUp(self):
-        self.collect = patch(f"{TASKS}.collect_file_to_catalog").start()
+        self.sync = patch(f"{TASKS}.sync_resource_in_catalog").start()
         self.delete = patch(f"{TASKS}.delete_file_from_catalog").start()
         self.resource_objects = patch(f"{TASKS}.BaseResource.objects").start()
         self.addCleanup(patch.stopall)
@@ -93,14 +93,15 @@ class TestSyncDiscoveryCollectionCopy(TestCase):
         self.resource_objects.get.return_value.raccess.discoverable = discoverable
         sync_discovery_collection.run(action="s3:CopyObject", bucket="ciroh", object_path=OBJECT_PATH)
 
-    def test_copy_discoverable_collects_destination(self):
+    def test_copy_discoverable_syncs_destination(self):
         self._run_copy(discoverable=True)
         self.resource_objects.get.assert_called_once_with(short_id="res1")
-        self.collect.assert_called_once_with(f"ciroh/{OBJECT_PATH}")
+        self.sync.assert_called_once_with(f"ciroh/{OBJECT_PATH}", True)
         self.delete.assert_not_called()
 
-    def test_copy_not_discoverable_deletes(self):
+    def test_copy_not_discoverable_syncs_destination(self):
+        """Removing a non-discoverable resource, and any version restore, is left to sync_resource_in_catalog."""
         self._run_copy(discoverable=False)
         self.resource_objects.get.assert_called_once_with(short_id="res1")
-        self.delete.assert_called_once_with(f"ciroh/{OBJECT_PATH}")
-        self.collect.assert_not_called()
+        self.sync.assert_called_once_with(f"ciroh/{OBJECT_PATH}", False)
+        self.delete.assert_not_called()
