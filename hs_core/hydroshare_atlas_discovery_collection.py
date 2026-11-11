@@ -2,10 +2,13 @@ import datetime
 import functools
 import json
 import logging
+from urllib.parse import urlparse
 
 import boto3
+from botocore.exceptions import ClientError
 from pymongo import MongoClient
 from django.conf import settings
+from hsmodels.schemas.enums import RelationType
 
 
 @functools.lru_cache(maxsize=None)
@@ -38,6 +41,9 @@ def _s3_client_for_bucket(bucket_name: str):
     return s3
 
 
+# S3 object key template for a resource's dataset metadata; fill with str.format(resource_id=...)
+METADATA_OBJECT_KEY_TEMPLATE = "{resource_id}/.hsjsonld/dataset_metadata.json"
+
 # metadata keys whose string values should be converted to datetime objects
 DATETIME_KEYS = {
     "datePublished",
@@ -48,6 +54,11 @@ DATETIME_KEYS = {
 }
 
 logger = logging.getLogger(__name__)
+
+# relation names and sharing statuses used to decide which versions belong in the catalog
+REPLACED_BY_RELATION_NAME = RelationType.isReplacedBy.value
+REPLACES_RELATION_NAME = RelationType.isVersionOf.value
+VISIBLE_SHARING_STATUSES = {"Public", "Published", "Discoverable"}
 
 
 class MongoDBClient:
@@ -74,19 +85,95 @@ def datetime_parser(dct, object_key=None):
     return dct
 
 
-def collect_file_to_catalog(filepath: str):
-    bucket_name, object_key = filepath.split('/', 1)
+def _resource_id_from_url(url):
+    """Return the resource id from a HydroShare resource URL such as https://host/resource/<id>/."""
+    parts = [part for part in urlparse(str(url or "")).path.split('/') if part]
+    if len(parts) >= 2 and parts[-2] == 'resource':
+        return parts[-1]
+    return None
+
+
+def _get_related_resources_by_name(metadata_json: dict, relation_name: str) -> list:
+    """Return the resource ids referenced by relations with the given name."""
+    resource_ids = []
+    for relation in metadata_json.get('relation', []):
+        if relation.get('name') != relation_name:
+            continue
+        resource_id = _resource_id_from_url(relation.get('url'))
+        if resource_id:
+            resource_ids.append(resource_id)
+        else:
+            logger.warning(f"Could not parse resource id from relation {relation!r}")
+    return resource_ids
+
+
+def _is_visible_status(metadata_json: dict) -> bool:
+    """True when the resource is public, published, or discoverable."""
+    status = metadata_json.get('creativeWorkStatus')
+    return isinstance(status, dict) and status.get('name') in VISIBLE_SHARING_STATUSES
+
+
+def _next_version_id(metadata_json: dict) -> str | None:
+    """Return the id of the next version (the resource that replaces this one), or None."""
+    next_ids = _get_related_resources_by_name(metadata_json, REPLACED_BY_RELATION_NAME)
+    if len(next_ids) > 1:
+        logger.warning(f"Expected one next version, found {len(next_ids)}: {next_ids}")
+    return next_ids[0] if next_ids else None
+
+
+def _previous_version_id(metadata_json: dict) -> str | None:
+    """Return the id of the previous version (the resource this one replaces), or None."""
+    previous_ids = _get_related_resources_by_name(metadata_json, REPLACES_RELATION_NAME)
+    if len(previous_ids) > 1:
+        logger.warning(f"Expected one previous version, found {len(previous_ids)}: {previous_ids}")
+    return previous_ids[0] if previous_ids else None
+
+
+def _load_metadata(bucket_name: str, object_key: str) -> dict:
+    """Read dataset metadata JSON from S3, converting date fields to datetimes. Raises on failure."""
     response = _s3_client_for_bucket(bucket_name).get_object(Bucket=bucket_name, Key=object_key)
     parser = functools.partial(datetime_parser, object_key=object_key)
-    metadata_json = json.loads(response['Body'].read(), object_hook=parser)
+    return json.loads(response['Body'].read(), object_hook=parser)
 
-    if "relations" in metadata_json:
-        for relation in metadata_json['relations']:
-            if "name" in relation:
-                if relation["name"] == "This resource has been replaced by a newer version":
-                    # skip adding replaced resources to the catalog
-                    return
 
+def _load_resource_metadata(bucket_name: str, resource_id: str) -> dict | None:
+    """Read a resource's metadata from S3, or return None if it doesn't exists."""
+    object_key = METADATA_OBJECT_KEY_TEMPLATE.format(resource_id=resource_id)
+    try:
+        return _load_metadata(bucket_name, object_key)
+    except ClientError as error:
+        if error.response.get('Error', {}).get('Code') != 'NoSuchKey':
+            raise
+        logger.warning(f"Metadata for version {resource_id} is missing from {bucket_name}, ignoring it")
+        return None
+
+
+def _load_adjacent_version(bucket_name: str, version_id: str | None) -> list:
+    """Return [(id, metadata)] for an adjacent version, or [] if there is none or its metadata is missing."""
+    if version_id is None:
+        return []
+    metadata = _load_resource_metadata(bucket_name, version_id)
+    return [] if metadata is None else [(version_id, metadata)]
+
+
+def _adjacent_versions(bucket_name: str, resource_id: str, metadata_json: dict) -> list:
+    """Return (id, metadata) pairs for this resource and its previous and next versions, oldest first."""
+    return (
+        _load_adjacent_version(bucket_name, _previous_version_id(metadata_json))
+        + [(resource_id, metadata_json)]
+        + _load_adjacent_version(bucket_name, _next_version_id(metadata_json))
+    )
+
+
+def collect_file_to_catalog(filepath: str):
+    """Index one dataset metadata file in the discovery collection, without considering other versions."""
+    logger.info(f"Adding file to Discovery: {filepath}")
+    bucket_name, object_key = filepath.split('/', 1)
+    _index_metadata(object_key, _load_metadata(bucket_name, object_key))
+
+
+def _index_metadata(object_key: str, metadata_json: dict):
+    resource_id = object_key.split('/', 1)[0]
     metadata_json['_s3_filepath'] = object_key
     metadata_json['first_creator'] = (
         metadata_json['creator'][0]
@@ -118,8 +205,39 @@ def collect_file_to_catalog(filepath: str):
         metadata_json,
         upsert=True
     )
+    logger.info(f"Indexed resource {resource_id} in discovery collection")
 
 
 def delete_file_from_catalog(filepath: str):
+    logger.info(f"delete_file_from_catalog called for {filepath}")
     _, object_key = filepath.split('/', 1)
-    MongoDBClient.get_discovery_collection().delete_one({"_s3_filepath": object_key})
+    result = MongoDBClient.get_discovery_collection().delete_one({"_s3_filepath": object_key})
+    logger.info(f"delete_file_from_catalog removed {result.deleted_count} document(s) for {object_key}")
+
+
+def sync_resource_in_catalog(filepath: str, discoverable: bool):
+    """Bring the Discovery collection up to date with a resource whose metadata changed.
+
+    Of the resource and its adjacent versions, only the newest visible one belongs in the collection.
+    The changed resource's visibility is the given flag; other versions use the status in their metadata.
+    """
+    bucket_name, object_key = filepath.split('/', 1)
+    resource_id = object_key.split('/', 1)[0]
+    metadata_json = _load_metadata(bucket_name, object_key)
+    versions = _adjacent_versions(bucket_name, resource_id, metadata_json)
+
+    catalog_version_id = None
+    for version_id, metadata in versions:
+        if version_id == resource_id:
+            visible = discoverable
+        else:
+            visible = _is_visible_status(metadata)
+        if visible:
+            catalog_version_id = version_id
+
+    for version_id, metadata in versions:
+        version_key = METADATA_OBJECT_KEY_TEMPLATE.format(resource_id=version_id)
+        if version_id == catalog_version_id:
+            _index_metadata(version_key, metadata)
+        else:
+            delete_file_from_catalog(f"{bucket_name}/{version_key}")

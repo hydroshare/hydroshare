@@ -4,10 +4,12 @@ from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
 from django.test import SimpleTestCase, override_settings
+from botocore.exceptions import ClientError
+from hsmodels.schemas.enums import RelationType
 from unittest_parametrize import ParametrizedTestCase, parametrize, param
 
 from hs_core.hydroshare_atlas_discovery_collection import (
-    MongoDBClient, collect_file_to_catalog, delete_file_from_catalog
+    MongoDBClient, collect_file_to_catalog, delete_file_from_catalog, sync_resource_in_catalog
 )
 
 
@@ -35,6 +37,22 @@ def _make_s3_response(metadata: dict) -> dict:
     body = MagicMock()
     body.read.return_value = json.dumps(metadata).encode()
     return {"Body": body}
+
+
+REPLACED_BY = RelationType.isReplacedBy.value
+REPLACES = RelationType.isVersionOf.value
+
+
+def _s3_objects(objects: dict):
+    """Return a get_object side effect serving the given {object key: metadata} mapping."""
+    def get_object(Bucket, Key):
+        return _make_s3_response(objects[Key])
+    return get_object
+
+
+def _relation(name: str, resource_id: str) -> dict:
+    return {"name": name, "description": "citation",
+            "url": f"https://www.hydroshare.org/resource/{resource_id}/"}
 
 
 class TestCollectFileToCatalog(ParametrizedTestCase):
@@ -141,17 +159,122 @@ class TestCollectFileToCatalog(ParametrizedTestCase):
         self.assertEqual(temporal["startDate"], datetime(2016, 3, 6))
         self.assertEqual(temporal["endDate"], datetime(2016, 3, 7, 12, 0, 0, tzinfo=timezone.utc))
 
-    def test_replaced_resource_not_indexed(self):
-        """Resource with 'replaced by newer version' relation should be skipped."""
-        metadata = {
-            **SAMPLE_METADATA,
-            "relations": [
-                {"name": "This resource has been replaced by a newer version", "value": "https://example.com"}
-            ],
-        }
-        self.mock_s3.get_object.return_value = _make_s3_response(metadata)
-        collect_file_to_catalog("bucket/res/.hsjsonld/dataset_metadata.json")
-        self.mock_collection.find_one_and_replace.assert_not_called()
+
+class TestSyncResourceInCatalog(ParametrizedTestCase):
+
+    def setUp(self):
+        self.mock_s3 = MagicMock()
+        self.mock_collection = MagicMock()
+        patcher_s3 = patch("hs_core.hydroshare_atlas_discovery_collection.s3", self.mock_s3)
+        patcher_collection = patch.object(
+            MongoDBClient, "get_discovery_collection", return_value=self.mock_collection
+        )
+        patcher_s3.start()
+        patcher_collection.start()
+        self.addCleanup(patcher_s3.stop)
+        self.addCleanup(patcher_collection.stop)
+
+    @staticmethod
+    def _key(resource_id: str) -> str:
+        return f"{resource_id}/.hsjsonld/dataset_metadata.json"
+
+    def _serve_versions(self, *versions):
+        """Serve a chain of (resource id, status) pairs, oldest first, linked by version relations."""
+        objects = {}
+        for index, (resource_id, status) in enumerate(versions):
+            relations = []
+            if index > 0:
+                relations.append(_relation(REPLACES, versions[index - 1][0]))
+            if index < len(versions) - 1:
+                relations.append(_relation(REPLACED_BY, versions[index + 1][0]))
+            objects[self._key(resource_id)] = {
+                **SAMPLE_METADATA, "creativeWorkStatus": {"name": status}, "relation": relations,
+            }
+        self.mock_s3.get_object.side_effect = _s3_objects(objects)
+
+    def _sync(self, resource_id: str, discoverable: bool):
+        sync_resource_in_catalog(f"bucket/{self._key(resource_id)}", discoverable)
+
+    def _indexed(self) -> list:
+        return [call[0][0]["_s3_filepath"] for call in self.mock_collection.find_one_and_replace.call_args_list]
+
+    def _deleted(self) -> list:
+        return [call[0][0]["_s3_filepath"] for call in self.mock_collection.delete_one.call_args_list]
+
+    def test_resource_without_versions_is_indexed(self):
+        self.mock_s3.get_object.side_effect = _s3_objects({
+            self._key("v1"): {**SAMPLE_METADATA, "creativeWorkStatus": {"name": "Public"}},
+        })
+        self._sync("v1", True)
+        self.assertEqual(self._indexed(), [self._key("v1")])
+        self.assertEqual(self._deleted(), [])
+
+    def test_resource_without_versions_is_removed_when_not_discoverable(self):
+        self.mock_s3.get_object.side_effect = _s3_objects({
+            self._key("v1"): {**SAMPLE_METADATA, "creativeWorkStatus": {"name": "Private"}},
+        })
+        self._sync("v1", False)
+        self.assertEqual(self._indexed(), [])
+        self.assertEqual(self._deleted(), [self._key("v1")])
+
+    def test_new_visible_version_replaces_previous_version(self):
+        self._serve_versions(("v1", "Public"), ("v2", "Public"))
+        self._sync("v2", True)
+        self.assertEqual(self._indexed(), [self._key("v2")])
+        self.assertEqual(self._deleted(), [self._key("v1")])
+
+    @parametrize(
+        "status",
+        [
+            param("Public", id="public"),
+            param("Published", id="published"),
+            param("Discoverable", id="discoverable"),
+        ],
+    )
+    def test_visible_next_version_replaces_this_version(self, status):
+        self._serve_versions(("v1", "Public"), ("v2", "Public"), ("v3", status))
+        self._sync("v2", True)
+        self.assertEqual(self._indexed(), [self._key("v3")])
+        self.assertCountEqual(self._deleted(), [self._key("v1"), self._key("v2")])
+
+    def test_private_next_version_leaves_this_version_in_catalog(self):
+        self._serve_versions(("v1", "Public"), ("v2", "Public"), ("v3", "Private"))
+        self._sync("v2", True)
+        self.assertEqual(self._indexed(), [self._key("v2")])
+        self.assertCountEqual(self._deleted(), [self._key("v1"), self._key("v3")])
+
+    def test_private_resource_restores_visible_previous_version(self):
+        self._serve_versions(("v1", "Public"), ("v2", "Private"))
+        self._sync("v2", False)
+        self.assertEqual(self._indexed(), [self._key("v1")])
+        self.assertEqual(self._deleted(), [self._key("v2")])
+
+    def test_private_resource_does_not_restore_private_previous_version(self):
+        self._serve_versions(("v1", "Private"), ("v2", "Private"))
+        self._sync("v2", False)
+        self.assertEqual(self._indexed(), [])
+        self.assertCountEqual(self._deleted(), [self._key("v1"), self._key("v2")])
+
+    def test_replaced_private_resource_does_not_restore_previous_version(self):
+        """The visible next version stays the only catalog entry, so the previous version is not restored."""
+        self._serve_versions(("v1", "Public"), ("v2", "Private"), ("v3", "Public"))
+        self._sync("v2", False)
+        self.assertEqual(self._indexed(), [self._key("v3")])
+        self.assertCountEqual(self._deleted(), [self._key("v1"), self._key("v2")])
+
+    def test_missing_version_metadata_is_ignored(self):
+        self._serve_versions(("v1", "Public"), ("v2", "Public"))
+        served = self.mock_s3.get_object.side_effect
+
+        def get_object(Bucket, Key):
+            if Key == self._key("v1"):
+                raise ClientError({"Error": {"Code": "NoSuchKey"}}, "GetObject")
+            return served(Bucket=Bucket, Key=Key)
+        self.mock_s3.get_object.side_effect = get_object
+
+        self._sync("v2", True)
+        self.assertEqual(self._indexed(), [self._key("v2")])
+        self.assertEqual(self._deleted(), [])
 
 
 class TestDeleteFileFromCatalog(TestCase):
