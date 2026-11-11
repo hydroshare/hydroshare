@@ -17,6 +17,7 @@ from .base import (
     Provider,
     LinkedData,
     MediaType,
+    Identifier,
 )
 
 from .datavariable import Dimension, DataVariable
@@ -36,16 +37,9 @@ class ScientificDataset(CoreMetadata):
     optional. It generally follows the design of the Schema.org Dataset class.
     """
 
-    context: HttpUrl = Field(
-        alias="@context",  # type: ignore
-        default=HttpUrl(
-            "https://hydroshare.org/schema"
-        ),  # TODO: This is a placeholder for now.
-        description="Specifies the vocabulary employed for understanding the structured data markup.",
-    )
-    type: Literal["ScientificDataset"] = Field(
+    type: Literal["Dataset"] = Field(
         alias="@type",  # type: ignore
-        default="ScientificDataset",
+        default="Dataset",
         description="A body of structured information describing some topic(s) of interest.",
     )
 
@@ -92,7 +86,7 @@ class ScientificDataset(CoreMetadata):
     additionalType: Optional[AdditionalType] = Field(
         default=None,
         title="Additional Type",
-        description="Additional descriptive types associated with the ScientificDataset. This is typically used by "
+        description="Additional descriptive types associated with the dataset. This is typically used by "
         "applications to provide specialized funcationality for categories for content."
     )
 
@@ -118,7 +112,7 @@ class ScientificDataset(CoreMetadata):
         "of the resource can be accessed. If there is no landing page,"
         " provide the URL of the content.",
     )
-    identifier: Optional[List[str]] = Field(
+    identifier: Optional[List[Union[str, Identifier]]] = Field(
         default=None,
         title="Identifiers",
         description="Any kind of identifier for the resource. Identifiers may be DOIs or unique strings "

@@ -200,6 +200,13 @@ class Organization(SchemaBaseModel):
         alias="@type",  # type: ignore
         default="Organization",
     )
+    id: Optional[HttpUrl] = Field(
+        alias="@id",
+        title="ID",
+        description="A unique identifier (IRI) for the organization.",
+        default=None,
+        json_schema_extra=remove_none_default,
+    )
     name: str = Field(description="Name of the provider organization or repository.")
     url: Optional[HttpUrl] = Field(
         title="URL",
@@ -427,8 +434,8 @@ class LanguageEnum(str, Enum):
         json_schema.update(type="string", title="Language", description="")
         return json_schema
 
-    eng = "eng"
-    esp = "esp"
+    eng = "en"
+    spa = "es"
 
 
 class InLanguageStr(str):
@@ -542,28 +549,6 @@ class Grant(SchemaBaseModel):
     )
 
 
-class TemporalCoverage(SchemaBaseModel):
-    startDate: datetime = Field(
-        title="Start date",
-        description="A date/time object containing the instant corresponding to the commencement of the time "
-        "interval (ISO8601 formatted date - YYYY-MM-DDTHH:MM).",
-        json_schema_extra={
-            "formatMaximum": {"$data": "1/endDate"},
-            "errorMessage": {
-                "formatMaximum": "must be lesser than or equal to End date"
-            },
-        },
-    )
-    endDate: Optional[datetime] = Field(
-        title="End date",
-        description="A date/time object containing the instant corresponding to the termination of the time "
-        "interval (ISO8601 formatted date - YYYY-MM-DDTHH:MM). If the ending date is left off, "
-        "that means the temporal coverage is ongoing.",
-        default=None,
-        json_schema_extra=end_date_schema_extra,
-    )
-
-
 class GeoCoordinates(SchemaBaseModel):
     type: Literal["GeoCoordinates"] = Field(
         alias="@type",  # type: ignore
@@ -642,6 +627,42 @@ class GeoShape(SchemaBaseModel):
                 )
 
         return v
+
+
+class Identifier(SchemaBaseModel):
+    """
+    A PropertyValue-shaped identifier for a resource, e.g. a DOI.
+    """
+    model_config = ConfigDict(
+        **SchemaBaseModel.model_config,
+        populate_by_name=True,  # Ensures aliases work during model initialization
+        title="Identifier",
+    )
+
+    type: Literal["PropertyValue"] = Field(
+        alias="@type",  # type: ignore
+        default="PropertyValue",
+        description="A property-value pair.",
+    )
+    id: Optional[str] = Field(
+        alias="@id",  # type: ignore
+        default=None,
+        description="The unique identifier (IRI) of this identifier entry.",
+        json_schema_extra=remove_none_default,
+    )
+    propertyID: Optional[str] = Field(
+        title="Property ID",
+        description="The ID of the identifier scheme, e.g. a registry.identifiers.org URI.",
+        default=None,
+        json_schema_extra=remove_none_default,
+    )
+    value: str = Field(description="The identifier value, e.g. doi:10.4211/hs.<resource_id>.")
+    url: Optional[HttpUrl] = Field(
+        default=None,
+        title="URL",
+        description="A URL that resolves to the identified resource.",
+        json_schema_extra=remove_none_default,
+    )
 
 
 class PropertyValue(SchemaBaseModel):

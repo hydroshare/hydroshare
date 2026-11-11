@@ -6,6 +6,7 @@ from hsmodels.schemas.enums import RelationType
 
 from hs_cloudnative_schemas.schema import base as schema
 from hs_cloudnative_schemas.schema.dataset import ScientificDataset, AdditionalType
+from hs_core.hydroshare.utils import current_site_url
 
 
 class BasePerson(BaseModel):
@@ -80,13 +81,9 @@ class TemporalCoverage(BaseModel):
     start: datetime
     end: datetime
 
-    def to_dataset_temporal_coverage(self):
-        temp_cov = schema.TemporalCoverage.construct()
-        if self.start:
-            temp_cov.startDate = self.start
-            if self.end:
-                temp_cov.endDate = self.end
-        return temp_cov
+    def to_dataset_temporal_coverage(self) -> str:
+        """Return the schema.org text interval with dates only (any time component is dropped)."""
+        return f"{self.start.date().isoformat()}/{self.end.date().isoformat()}"
 
 
 class SpatialCoverageBox(BaseModel):
@@ -97,12 +94,12 @@ class SpatialCoverageBox(BaseModel):
     westlimit: float
 
     def to_dataset_spatial_coverage(self):
-        place = schema.Place.construct()
+        place = schema.Place.model_construct()
         if self.name:
             place.name = self.name
 
-        place.geo = schema.GeoShape.construct()
-        place.geo.box = f"{self.northlimit} {self.eastlimit} {self.southlimit} {self.westlimit}"
+        place.geo = schema.GeoShape.model_construct()
+        place.geo.box = f"{self.southlimit} {self.westlimit} {self.northlimit} {self.eastlimit}"
         return place
 
 
@@ -112,10 +109,10 @@ class SpatialCoveragePoint(BaseModel):
     east: float
 
     def to_dataset_spatial_coverage(self):
-        place = schema.Place.construct()
+        place = schema.Place.model_construct()
         if self.name:
             place.name = self.name
-        place.geo = schema.GeoCoordinates.construct()
+        place.geo = schema.GeoCoordinates.model_construct()
         place.geo.latitude = self.north
         place.geo.longitude = self.east
         return place
@@ -186,12 +183,16 @@ class Rights(BaseModel):
 
 class HydroshareMetadataAdapter:
     @staticmethod
-    def to_catalog_record(metadata: dict):
-        """Converts hydroshare resource metadata to a catalog dataset record"""
+    def to_catalog_record(metadata: dict, resource_id: str):
+        """Converts hydroshare resource metadata to a catalog dataset record
+
+        :param metadata: hydroshare user metadata dict
+        :param resource_id: the resource short_id
+        """
         hs_metadata_model = _ResourceUserMetadata(**metadata)
         if metadata["type"] == "CompositeResource":
-            return hs_metadata_model.to_catalog_dataset()
-        return hs_metadata_model.to_catalog_dataset()
+            return hs_metadata_model.to_catalog_dataset(resource_id)
+        return hs_metadata_model.to_catalog_dataset(resource_id)
 
 
 class _ResourceUserMetadata(BaseModel):
@@ -202,6 +203,7 @@ class _ResourceUserMetadata(BaseModel):
     abstract: Optional[str] = None
     url: Optional[HttpUrl] = None
     identifier: Optional[HttpUrl] = None
+    identifiers: List[dict] = []
     creators: List[Creator] = []
     contributors: List[Contributor] = []
     created: Optional[datetime] = None
@@ -211,6 +213,7 @@ class _ResourceUserMetadata(BaseModel):
     language: Optional[str] = None
     rights: Optional[Rights] = None
     awards: List[Award] = []
+    # Pydantic selects the Box or Point class based on which fields are present in the input
     spatial_coverage: Optional[Union[SpatialCoverageBox, SpatialCoveragePoint]] = None
     period_coverage: Optional[TemporalCoverage] = None
     relations: List[Relation] = []
@@ -274,10 +277,48 @@ class _ResourceUserMetadata(BaseModel):
             return self.period_coverage.to_dataset_temporal_coverage()
         return None
 
-    def to_dataset_keywords(self):
+    def to_dataset_publisher(self):
+        """Return the CUAHSI publisher organization for published resources, None otherwise."""
+        if self.sharing_status != "published":
+            return None
+        return schema.PublisherOrganization.model_validate({
+            "@type": "Organization",
+            "@id": "https://ror.org/04s2bx355",
+            "name": "Consortium of Universities for the Advancement of Hydrologic Science, Inc. (CUAHSI)",
+            "url": "https://www.cuahsi.org",
+        })
+
+    def to_dataset_url(self, resource_id: str) -> str:
+        """Return the DOI URL for published resources and the current environment's resource URL otherwise."""
+        if self.sharing_status == "published":
+            return f"https://doi.org/10.4211/hs.{resource_id}"
+        return f"{current_site_url()}/resource/{resource_id}"
+
+    def to_dataset_identifier(self, resource_id: str) -> list:
+        """Return the HydroShare URL, plus the DOI for published resources, plus other metadata identifiers."""
+        hs_resource_url = f"{current_site_url()}/resource/{resource_id}"
+        identifier_list = [hs_resource_url]
+        excluded_names = {"hydroShareIdentifier"}
+        if self.sharing_status == "published":
+            doi_url = f"https://doi.org/10.4211/hs.{resource_id}"
+            identifier_list.insert(0, {
+                "@id": doi_url,
+                "@type": "PropertyValue",
+                "propertyID": "https://registry.identifiers.org/registry/doi",
+                "url": doi_url,
+                "value": f"doi:10.4211/hs.{resource_id}",
+            })
+            excluded_names.add("doi")
+        identifier_list.extend(
+            {"@type": "PropertyValue", "propertyID": identifier.get("name"), "value": identifier.get("url")}
+            for identifier in self.identifiers
+            if identifier.get("name") not in excluded_names
+        )
+        return identifier_list
+
+    def to_dataset_keywords(self) -> list[str] | None:
         if self.subjects:
             return self.subjects
-        return ["HydroShare"]
 
     def to_dataset_license(self):
         if self.rights:
@@ -294,16 +335,23 @@ class _ResourceUserMetadata(BaseModel):
             return status_defined_terms[self.sharing_status]()
 
     def _to_dataset_language(self):
+        """Map a HydroShare ISO 639-2 language code to a schema.org language value.
+
+        LanguageEnum member names match HydroShare codes, so the lookup is by name.
+        Codes without a matching member are kept as-is.
+        """
         if self.language is None:
             return None
         try:
-            return schema.LanguageEnum(self.language)
-        except ValueError:
+            return schema.LanguageEnum[self.language]
+        except KeyError:
             return schema.InLanguageStr(self.language)
 
     @staticmethod
     def to_dataset_provider():
-        return schema.Organization.model_validate({"name": "HydroShare", "url": "https://www.hydroshare.org/"})
+        return schema.Organization.model_validate(
+            {"@id": "https://hydroshare.org/", "name": "HydroShare", "url": "https://hydroshare.org/"}
+        )
 
     @staticmethod
     def to_additional_type(type: str):
@@ -313,15 +361,16 @@ class _ResourceUserMetadata(BaseModel):
             additional_type = None
         return additional_type
 
-    def to_catalog_dataset(self):
+    def to_catalog_dataset(self, resource_id: str):
         dataset = ScientificDataset.model_construct(**self.extra_columns)
         is_part_of, has_part, other_relations = self._partition_relations_by_type()
         dataset.additionalType = self.to_additional_type(self.type) if self.type else None
         dataset.provider = self.to_dataset_provider()
         dataset.name = self.title
         dataset.description = self.abstract
-        dataset.url = self.url
-        dataset.identifier = [str(self.identifier)] if self.identifier else None
+        dataset.url = self.to_dataset_url(resource_id)
+        dataset.publisher = self.to_dataset_publisher()
+        dataset.identifier = self.to_dataset_identifier(resource_id)
         dataset.creator = self.to_dataset_creators()
         dataset.contributor = self.to_dataset_contributors()
         dataset.keywords = self.to_dataset_keywords()
