@@ -175,6 +175,22 @@ class TestToCatalogRecordIdentifier(unittest.TestCase):
         self.assertEqual(len(dataset.identifier), 3)
 
 
+class TestToCatalogRecordSubjectOf(unittest.TestCase):
+    """Tests the subjectOf reference to the resource's Dublin Core XML metadata document."""
+
+    def test_subject_of_references_dublin_core_xml(self):
+        metadata = {**MINIMAL_METADATA}
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=RESOURCE_ID)
+        self.assertEqual(len(dataset.subjectOf), 1)
+        subject_of = dataset.subjectOf[0]
+        self.assertIsInstance(subject_of, schema.SubjectOf)
+        self.assertEqual(subject_of.type, "DataDownload")
+        self.assertEqual(subject_of.name, "resourcemetadata.xml")
+        self.assertEqual(subject_of.description, "Dublin Core Metadata Document Describing the Dataset")
+        self.assertEqual(str(subject_of.url), f"{current_site_url()}/hsapi/resource/{RESOURCE_ID}/scimeta/")
+        self.assertEqual(subject_of.encodingFormat, "application/rdf+xml")
+
+
 class TestToCatalogRecordPublisher(ParametrizedTestCase):
     """Tests that publisher is the CUAHSI Organization for published resources and None otherwise."""
 

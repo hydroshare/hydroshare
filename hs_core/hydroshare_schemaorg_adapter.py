@@ -277,6 +277,17 @@ class _ResourceUserMetadata(BaseModel):
             return self.period_coverage.to_dataset_temporal_coverage()
         return None
 
+    def to_dataset_subject_of(self, resource_id: str) -> list:
+        """Return a reference to the resource's Dublin Core XML metadata document."""
+        subject_of = schema.SubjectOf.model_construct(
+            type="DataDownload",
+            name="resourcemetadata.xml",
+            description="Dublin Core Metadata Document Describing the Dataset",
+            url=f"{current_site_url()}/hsapi/resource/{resource_id}/scimeta/",
+            encodingFormat="application/rdf+xml",
+        )
+        return [subject_of]
+
     def to_dataset_publisher(self):
         """Return the CUAHSI publisher organization for published resources, None otherwise."""
         if self.sharing_status != "published":
@@ -371,6 +382,7 @@ class _ResourceUserMetadata(BaseModel):
         dataset.url = self.to_dataset_url(resource_id)
         dataset.publisher = self.to_dataset_publisher()
         dataset.identifier = self.to_dataset_identifier(resource_id)
+        dataset.subjectOf = self.to_dataset_subject_of(resource_id)
         dataset.creator = self.to_dataset_creators()
         dataset.contributor = self.to_dataset_contributors()
         dataset.keywords = self.to_dataset_keywords()
