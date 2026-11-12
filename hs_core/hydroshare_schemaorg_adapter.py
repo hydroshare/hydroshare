@@ -218,11 +218,9 @@ class _ResourceUserMetadata(BaseModel):
     # input-only: used to derive the schema.org creativeWorkStatus; not emitted as-is
     sharing_status: Optional[Literal["private", "public", "published", "discoverable"]] = None
     additional_metadata: Dict[str, str] = {}
-    # The fields below are declared only so that they are NOT passed through to the ScientificDataset
-    # via extra_columns -- they are not schema.org compliant and must not appear in the output.
-    # viewCount is system metadata (written to system_metadata.json); review_started is publication
-    # workflow state.
-    viewCount: Optional[int] = None
+    # Declared only so that it is NOT passed through to the ScientificDataset via extra_columns --
+    # review_started (emitted by hsmodels ResourceMetadata) is publication workflow state, not
+    # schema.org compliant, and must not appear in the output.
     review_started: Optional[datetime] = None
 
     @model_validator(mode="before")

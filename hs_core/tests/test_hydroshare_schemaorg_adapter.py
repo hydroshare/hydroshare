@@ -202,12 +202,11 @@ REALISTIC_METADATA = {
     "publisher": None,
     "review_started": "2026-01-03T00:00:00+00:00",
     "sharing_status": "public",
-    "viewCount": 42,
     "content_types": ["CompositeResource"],
 }
 
 # Keys that must never appear in the generated schema.org metadata
-NON_COMPLIANT_KEYS = {"sharing_status", "viewCount", "review_started"}
+NON_COMPLIANT_KEYS = {"sharing_status", "review_started"}
 
 
 def _generate_user_metadata(metadata):

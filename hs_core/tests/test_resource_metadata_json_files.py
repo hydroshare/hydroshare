@@ -9,12 +9,12 @@ from hs_core.testing import MockS3TestCaseMixin
 
 # Keys that must not appear in user_metadata.json -- the schema.org metadata generated from the
 # ScientificDataset model
-NON_COMPLIANT_KEYS = ("sharing_status", "viewCount", "review_started")
+NON_COMPLIANT_KEYS = ("sharing_status", "review_started")
 OMIT_WHEN_EMPTY_KEYS = ("coordinates", "sourceOrganization", "associatedMedia")
 
 
 class TestResourceMetadataJsonFiles(MockS3TestCaseMixin, TestCase):
-    """Tests the user/system metadata json files written to S3 for a resource (#6553)."""
+    """Tests the user/system metadata json files written to S3 for a resource."""
 
     def setUp(self):
         super().setUp()
