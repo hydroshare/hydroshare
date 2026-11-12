@@ -134,6 +134,30 @@ class TestToCatalogRecordUrl(ParametrizedTestCase):
         self.assertEqual(str(dataset.url), f"https://doi.org/10.4211/hs.{self.SHORT_ID}")
 
 
+class TestToCatalogRecordId(ParametrizedTestCase):
+    """Tests that @id mirrors dataset.url: the DOI for published resources, the HydroShare URL otherwise."""
+
+    @parametrize(
+        "sharing_status,is_doi",
+        [
+            param("published", True, id="published_uses_doi"),
+            param("public", False, id="public_uses_site_url"),
+            param("private", False, id="private_uses_site_url"),
+            param("discoverable", False, id="discoverable_uses_site_url"),
+            param(None, False, id="no_sharing_status_uses_site_url"),
+        ],
+    )
+    def test_id_matches_url(self, sharing_status, is_doi):
+        expected_id = (
+            f"https://doi.org/10.4211/hs.{RESOURCE_ID}" if is_doi
+            else f"{current_site_url()}/resource/{RESOURCE_ID}"
+        )
+        metadata = {**MINIMAL_METADATA, "sharing_status": sharing_status}
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=RESOURCE_ID)
+        self.assertEqual(str(dataset.id), expected_id)
+        self.assertEqual(str(dataset.id), str(dataset.url))
+
+
 class TestToCatalogRecordIdentifier(unittest.TestCase):
     """Tests the identifier list: HydroShare URL, DOI for published resources, and other metadata identifiers."""
 

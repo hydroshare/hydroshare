@@ -390,6 +390,7 @@ class _ResourceUserMetadata(BaseModel):
         dataset.name = self.title
         dataset.description = self.abstract
         dataset.url = self.to_dataset_url(resource_id)
+        dataset.id = self.to_dataset_url(resource_id)
         dataset.publisher = self.to_dataset_publisher()
         dataset.identifier = self.to_dataset_identifier(resource_id)
         dataset.subjectOf = self.to_dataset_subject_of(resource_id)

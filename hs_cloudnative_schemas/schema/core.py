@@ -137,6 +137,14 @@ class CoreMetadata(SchemaBaseModel):
         "describing the resource.",
         default=[],
     )
+    id: Optional[HttpUrl] = Field(
+        alias="@id",
+        title="ID",
+        description="A unique identifier for the resource - the DOI URL once the resource has been "
+        "published, or its HydroShare landing page URL otherwise.",
+        default=None,
+        json_schema_extra=remove_none_default,
+    )
     version: Optional[str] = Field(
         description="A text string indicating the version of the resource.",
         default=None,
