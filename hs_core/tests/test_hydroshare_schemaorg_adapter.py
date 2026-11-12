@@ -181,6 +181,35 @@ class TestToCatalogRecordSameAs(ParametrizedTestCase):
         self.assertIsNone(dataset.sameAs)
 
 
+class TestToCatalogRecordIsAccessibleForFree(ParametrizedTestCase):
+    """Tests that isAccessibleForFree is True for public and published resources, None otherwise."""
+
+    @parametrize(
+        "sharing_status",
+        [
+            param("public", id="public"),
+            param("published", id="published"),
+        ],
+    )
+    def test_public_and_published_are_accessible_for_free(self, sharing_status):
+        metadata = {**MINIMAL_METADATA, "sharing_status": sharing_status}
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=RESOURCE_ID)
+        self.assertIs(dataset.isAccessibleForFree, True)
+
+    @parametrize(
+        "sharing_status",
+        [
+            param("private", id="private"),
+            param("discoverable", id="discoverable"),
+            param(None, id="no_sharing_status"),
+        ],
+    )
+    def test_other_statuses_have_no_is_accessible_for_free(self, sharing_status):
+        metadata = {**MINIMAL_METADATA, "sharing_status": sharing_status}
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=RESOURCE_ID)
+        self.assertIsNone(dataset.isAccessibleForFree)
+
+
 class TestToCatalogRecordIdentifier(unittest.TestCase):
     """Tests the identifier list: HydroShare URL, DOI for published resources, and other metadata identifiers."""
 

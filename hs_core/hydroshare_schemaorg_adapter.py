@@ -295,6 +295,12 @@ class _ResourceUserMetadata(BaseModel):
             return f"{current_site_url()}/resource/{resource_id}"
         return None
 
+    def to_dataset_is_accessible_for_free(self) -> Optional[bool]:
+        """Return True for public and published resources, None otherwise."""
+        if self.sharing_status in ("public", "published"):
+            return True
+        return None
+
     def to_dataset_publisher(self):
         """Return the CUAHSI publisher organization for published resources, None otherwise."""
         if self.sharing_status != "published":
@@ -399,6 +405,7 @@ class _ResourceUserMetadata(BaseModel):
         dataset.url = self.to_dataset_url(resource_id)
         dataset.id = self.to_dataset_url(resource_id)
         dataset.sameAs = self.to_dataset_same_as(resource_id)
+        dataset.isAccessibleForFree = self.to_dataset_is_accessible_for_free()
         dataset.publisher = self.to_dataset_publisher()
         dataset.identifier = self.to_dataset_identifier(resource_id)
         dataset.subjectOf = self.to_dataset_subject_of(resource_id)
