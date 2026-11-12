@@ -1,6 +1,3 @@
-import logging
-from urllib.parse import urlsplit
-
 from django.utils.deprecation import MiddlewareMixin
 
 from .models import Session, Variable
@@ -12,8 +9,6 @@ BAG_RE = re.compile('bags/([0-9a-f]{32})\.zip')  # parser for resource id # noqa
 LANDING_RE = re.compile('resource/([0-9a-f]{32})/$')  # reference to resource home page
 REST_RE = re.compile('/hsapi/')  # reference to REST or internal
 INTERNAL_RE = re.compile('/hsapi/_internal/')  # reference to an internal page
-
-logger = logging.getLogger(__name__)
 
 
 def get_resource_id_from_url(path):
@@ -73,19 +68,6 @@ class Tracking(MiddlewareMixin):
         session = Session.objects.for_request(request)
         fields = utils.get_std_log_fields(request, session)
 
-        # Identify referring sites without retaining URL paths or query parameters.
-        referrer_host = None
-        referrer = request.headers.get('referer')
-        if referrer:
-            try:
-                parsed_referrer = urlsplit(referrer)
-                if parsed_referrer.scheme in ('http', 'https') and parsed_referrer.hostname:
-                    referrer_host = parsed_referrer.hostname
-                else:
-                    logger.warning("Ignoring Referer header without an HTTP(S) hostname")
-            except ValueError:
-                logger.warning("Ignoring malformed Referer header")
-
         # build the message string (key:value pairs)
         msg = Variable.format_kwargs(
             user_ip=fields['user_ip'],
@@ -96,7 +78,6 @@ class Tracking(MiddlewareMixin):
             request_url=request.path,
             is_human=fields['is_human'],
             user_agent=fields['user_agent'],
-            referrer_host=referrer_host,
         )
 
         resource_id = get_resource_id_from_url(request.path)

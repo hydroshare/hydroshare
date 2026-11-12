@@ -130,37 +130,3 @@ class ActivityTrackingTests(SimpleTestCase):
         capture_download(resource=self.resource)
         capture_resource_download(resource=self.resource)
         self.session.record.assert_not_called()
-
-    def test_visits_record_only_referrer_hostname(self):
-        middleware = Tracking(lambda request: HttpResponse())
-        cases = [
-            ('https://ChatGPT.com/c/example?token=secret#section', 'chatgpt.com'),
-            ('https://www.hydroshare.org:443/search/?q=water', 'www.hydroshare.org'),
-            ('http://example.org/', 'example.org'),
-            (None, 'None'),
-            ('', 'None'),
-        ]
-        for referrer, expected in cases:
-            with self.subTest(referrer=referrer):
-                self.session.record.reset_mock()
-                headers = {'HTTP_REFERER': referrer} if referrer is not None else {}
-                request = self.factory.get('/search/', **headers)
-                request.user = AnonymousUser()
-                middleware.process_response(request, HttpResponse())
-                self.session.record.assert_called_once()
-                fields = self.recorded_fields()
-                self.assertEqual(fields['referrer_host'], expected)
-                self.assertNotIn('secret', self.session.record.call_args.kwargs['value'])
-
-    def test_invalid_referrer_does_not_prevent_visit_tracking(self):
-        middleware = Tracking(lambda request: HttpResponse())
-        for referrer in ['https://[invalid/', '/relative/path', 'not a URL', 'file:///tmp/file']:
-            with self.subTest(referrer=referrer):
-                self.session.record.reset_mock()
-                request = self.factory.get('/search/', HTTP_REFERER=referrer)
-                request.user = AnonymousUser()
-                with patch('hs_tracking.middleware.logger.warning') as warning:
-                    middleware.process_response(request, HttpResponse())
-                warning.assert_called_once()
-                self.session.record.assert_called_once()
-                self.assertEqual(self.recorded_fields()['referrer_host'], 'None')
