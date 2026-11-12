@@ -4,13 +4,15 @@ import sys
 import logging
 import pytz
 import warnings
+from collections import defaultdict
 from calendar import monthrange
 
 from django.contrib.auth.models import User
+from django.contrib.contenttypes.models import ContentType
 from django.core.management.base import BaseCommand
 from django.db.models import Q
 from django.utils import timezone
-from hs_core.models import BaseResource, Date
+from hs_core.models import BaseResource, CoreMetaData, Date, Description, Subject
 from hs_core.hydroshare import current_site_url
 from theme.models import UserProfile
 
@@ -71,6 +73,12 @@ class Command(BaseCommand):
             dest="resources_details",
             action="store_true",
             help="current resource list with sizes",
+        )
+        parser.add_argument(
+            "--limit",
+            type=int,
+            default=None,
+            help="maximum number of resources to include with --resources-details",
         )
         parser.add_argument(
             "--monthly-users-by-type",
@@ -179,11 +187,23 @@ class Command(BaseCommand):
             ]
             w.writerow([str(v) for v in values])
 
-    def resources_details(self):
+    def resources_details(self, limit=None):
         w = csv.writer(sys.stdout)
+        metadata_content_type = ContentType.objects.get_for_model(CoreMetaData)
+        abstracts = dict(
+            Description.objects.filter(content_type=metadata_content_type)
+            .values_list('object_id', 'abstract')
+        )
+        keywords = defaultdict(list)
+        for metadata_id, keyword in Subject.objects.filter(
+            content_type=metadata_content_type
+        ).order_by('object_id', 'id').values_list('object_id', 'value'):
+            keywords[metadata_id].append(keyword)
         fields = [
             'creation date',
             'title',
+            'abstract',
+            'keywords',
             'resource type',
             'size',
             'publication status',
@@ -193,11 +213,16 @@ class Command(BaseCommand):
             'publication date',
             'bag last downloaded date',
             'resource updated date',
-            'last updated by user id'
+            'last updated by user id',
+            'resource page view_count (displayed)',
+            'resource download_count (displayed)',
         ]
         w.writerow(fields)
         failed_resource_ids = []
-        for r in BaseResource.objects.all():
+        resources = BaseResource.objects.all()
+        if limit is not None:
+            resources = resources[:limit]
+        for r in resources:
             try:
                 pub_date = r.metadata.dates.get(type='published')\
                     .start_date.strftime("%m/%d/%Y %H:%M:%S.%f")
@@ -219,6 +244,8 @@ class Command(BaseCommand):
                     r.metadata.dates.get(type="created").
                     start_date.strftime("%m/%d/%Y %H:%M:%S.%f"),
                     r.metadata.title.value,
+                    abstracts.get(r.object_id) or '',
+                    ';'.join(keywords.get(r.object_id, [])),
                     r.resource_type,
                     r.size,
                     r.raccess.sharing_status,
@@ -228,7 +255,9 @@ class Command(BaseCommand):
                     pub_date,
                     last_downloaded,
                     updated_date,
-                    last_changed_by
+                    last_changed_by,
+                    r.view_count,
+                    r.download_count,
                 ]
                 w.writerow([str(v) for v in values])
 
@@ -403,6 +432,6 @@ class Command(BaseCommand):
                 month_start = month_end.replace(day=1)
                 self.monthly_users_by_type(month_start, month_end)
         if options["resources_details"]:
-            self.resources_details()
+            self.resources_details(limit=options["limit"])
         if options["yesterdays_variables"]:
             self.yesterdays_variables(lookback=int(options['lookback-days']))
