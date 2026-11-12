@@ -153,6 +153,13 @@ class CoreMetadata(SchemaBaseModel):
         default=None,
         json_schema_extra=remove_none_default,
     )
+    isAccessibleForFree: Optional[bool] = Field(
+        title="Accessible for free",
+        description="Indicates that the resource is accessible at no cost. True for public and published "
+        "resources.",
+        default=None,
+        json_schema_extra=remove_none_default,
+    )
     version: Optional[str] = Field(
         description="A text string indicating the version of the resource.",
         default=None,
