@@ -277,6 +277,30 @@ class _ResourceUserMetadata(BaseModel):
             return self.period_coverage.to_dataset_temporal_coverage()
         return None
 
+    def to_dataset_subject_of(self, resource_id: str) -> list:
+        """Return a reference to the resource's Dublin Core XML metadata document."""
+        subject_of = schema.SubjectOf.model_construct(
+            type="DataDownload",
+            name="resourcemetadata.xml",
+            description="Dublin Core Metadata Document Describing the Dataset",
+            url=f"{current_site_url()}/hsapi/resource/{resource_id}/scimeta/",
+            encodingFormat="application/rdf+xml",
+        )
+        return [subject_of]
+
+    def to_dataset_same_as(self, resource_id: str) -> Optional[str]:
+        """Return the HydroShare resource URL for published resources, whose @id/url is the DOI URL
+        instead, None otherwise."""
+        if self.sharing_status == "published":
+            return f"{current_site_url()}/resource/{resource_id}"
+        return None
+
+    def to_dataset_is_accessible_for_free(self) -> Optional[bool]:
+        """Return True for public and published resources, None otherwise."""
+        if self.sharing_status in ("public", "published"):
+            return True
+        return None
+
     def to_dataset_publisher(self):
         """Return the CUAHSI publisher organization for published resources, None otherwise."""
         if self.sharing_status != "published":
@@ -315,6 +339,16 @@ class _ResourceUserMetadata(BaseModel):
             if identifier.get("name") not in excluded_names
         )
         return identifier_list
+
+    def to_dataset_included_in_data_catalog(self):
+        """Return the HydroShare DataCatalog reference when the resource is discoverable (i.e., its
+        sharing status is public, published, or discoverable), None otherwise."""
+        if self.sharing_status not in ("public", "published", "discoverable"):
+            return None
+        return schema.DataCatalog.model_construct(
+            name="HydroShare",
+            url="https://hydroshare.org/search/",
+        )
 
     def to_dataset_keywords(self) -> list[str] | None:
         if self.subjects:
@@ -369,8 +403,13 @@ class _ResourceUserMetadata(BaseModel):
         dataset.name = self.title
         dataset.description = self.abstract
         dataset.url = self.to_dataset_url(resource_id)
+        dataset.id = self.to_dataset_url(resource_id)
+        dataset.sameAs = self.to_dataset_same_as(resource_id)
+        dataset.isAccessibleForFree = self.to_dataset_is_accessible_for_free()
         dataset.publisher = self.to_dataset_publisher()
         dataset.identifier = self.to_dataset_identifier(resource_id)
+        dataset.subjectOf = self.to_dataset_subject_of(resource_id)
+        dataset.includedInDataCatalog = self.to_dataset_included_in_data_catalog()
         dataset.creator = self.to_dataset_creators()
         dataset.contributor = self.to_dataset_contributors()
         dataset.keywords = self.to_dataset_keywords()
