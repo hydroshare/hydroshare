@@ -191,9 +191,39 @@ class TestToCatalogRecordSubjectOf(unittest.TestCase):
         self.assertEqual(subject_of.encodingFormat, "application/rdf+xml")
 
 
+class TestToCatalogRecordIncludedInDataCatalog(ParametrizedTestCase):
+    """Tests that includedInDataCatalog is the HydroShare DataCatalog when discoverable, None otherwise."""
+
+    @parametrize(
+        "sharing_status",
+        [
+            param("public", id="public"),
+            param("published", id="published"),
+            param("discoverable", id="discoverable"),
+        ],
+    )
+    def test_discoverable_states_have_hydroshare_data_catalog(self, sharing_status):
+        metadata = {**MINIMAL_METADATA, "sharing_status": sharing_status}
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=RESOURCE_ID)
+        self.assertIsInstance(dataset.includedInDataCatalog, schema.DataCatalog)
+        self.assertEqual(dataset.includedInDataCatalog.name, "HydroShare")
+        self.assertEqual(str(dataset.includedInDataCatalog.url), "https://hydroshare.org/search/")
+
+    @parametrize(
+        "sharing_status",
+        [
+            param("private", id="private"),
+            param(None, id="no_sharing_status"),
+        ],
+    )
+    def test_non_discoverable_states_have_no_data_catalog(self, sharing_status):
+        metadata = {**MINIMAL_METADATA, "sharing_status": sharing_status}
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=RESOURCE_ID)
+        self.assertIsNone(dataset.includedInDataCatalog)
+
+
 class TestToCatalogRecordPublisher(ParametrizedTestCase):
     """Tests that publisher is the CUAHSI Organization for published resources and None otherwise."""
-
     def test_published_has_cuahsi_organization(self):
         metadata = {**MINIMAL_METADATA, "sharing_status": "published"}
         dataset = HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=RESOURCE_ID)

@@ -327,6 +327,16 @@ class _ResourceUserMetadata(BaseModel):
         )
         return identifier_list
 
+    def to_dataset_included_in_data_catalog(self):
+        """Return the HydroShare DataCatalog reference when the resource is discoverable (i.e., its
+        sharing status is public, published, or discoverable), None otherwise."""
+        if self.sharing_status not in ("public", "published", "discoverable"):
+            return None
+        return schema.DataCatalog.model_construct(
+            name="HydroShare",
+            url="https://hydroshare.org/search/",
+        )
+
     def to_dataset_keywords(self) -> list[str] | None:
         if self.subjects:
             return self.subjects
@@ -383,6 +393,7 @@ class _ResourceUserMetadata(BaseModel):
         dataset.publisher = self.to_dataset_publisher()
         dataset.identifier = self.to_dataset_identifier(resource_id)
         dataset.subjectOf = self.to_dataset_subject_of(resource_id)
+        dataset.includedInDataCatalog = self.to_dataset_included_in_data_catalog()
         dataset.creator = self.to_dataset_creators()
         dataset.contributor = self.to_dataset_contributors()
         dataset.keywords = self.to_dataset_keywords()
