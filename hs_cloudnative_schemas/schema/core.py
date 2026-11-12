@@ -145,6 +145,14 @@ class CoreMetadata(SchemaBaseModel):
         default=None,
         json_schema_extra=remove_none_default,
     )
+    sameAs: Optional[HttpUrl] = Field(
+        title="Same as",
+        description="A URL for another resource that represents the same underlying resource as this one "
+        "- e.g., the HydroShare landing page URL for a published resource, whose @id/url is instead "
+        "the DOI URL.",
+        default=None,
+        json_schema_extra=remove_none_default,
+    )
     version: Optional[str] = Field(
         description="A text string indicating the version of the resource.",
         default=None,
