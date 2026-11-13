@@ -24,6 +24,7 @@ COPY --from=mc-build /out/mc /usr/bin/mc
 RUN apt-get update
 RUN apt-get -y upgrade
 RUN pip install pymongo
+RUN pip install "pillow==13.0.0"
 
 RUN pip install django-rest-knox
 RUN pip install django-celery-beat==2.7.0
