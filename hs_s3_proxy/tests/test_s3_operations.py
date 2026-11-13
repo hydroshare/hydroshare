@@ -629,6 +629,31 @@ class TestEventService:
         finally:
             s3_client.delete_object(Bucket=test_bucket, Key=key)
 
+    def test_get_object_calls_download_tracking_task(
+        self, s3_client, test_bucket, unique_prefix,
+    ):
+        """A successful GetObject for resource content enqueues only the tracking task."""
+        key = f"{unique_prefix}/download-check.txt"
+        s3_client.put_object(Bucket=test_bucket, Key=key, Body=b"download check")
+
+        def download_object():
+            response = s3_client.get_object(Bucket=test_bucket, Key=key)
+            assert response["Body"].read() == b"download check"
+
+        commands = self._capture_redis_commands_during(download_object)
+        try:
+            assert self._count_task_pushes(
+                commands, "hs_event_s3.tasks.record_s3_download", key
+            ) >= 1
+            assert self._count_task_pushes(
+                commands, "hs_event_s3.tasks.process_s3_event", key
+            ) == 0
+            assert self._count_task_pushes(
+                commands, "hs_extract.tasks.extract_metadata", key
+            ) == 0
+        finally:
+            s3_client.delete_object(Bucket=test_bucket, Key=key)
+
     def test_complete_multipart_calls_event_service(
         self, s3_client, test_bucket, unique_prefix,
     ):

@@ -1,5 +1,6 @@
 import logging
 import os
+from typing import Optional
 
 import django
 
@@ -16,7 +17,9 @@ from hs_core.hydroshare_atlas_discovery_collection import (  # noqa: E402
 from hs_core.views.utils import link_s3_file_to_django  # noqa: E402
 from django_s3.storage import S3Storage  # noqa: E402
 from django.contrib.auth.models import User  # noqa: E402
+from django.db import transaction  # noqa: E402
 from theme.models import UserQuota  # noqa: E402
+from hs_tracking.models import Session, Variable, Visitor  # noqa: E402
 
 from hs_event_s3.celery_app import celery_app  # noqa: E402
 
@@ -59,13 +62,17 @@ def process_s3_event(self, action: str, bucket: str, object_path: str, username:
         return
 
     file_created = action in ("s3:PutObject", "s3:CompleteMultipartUpload", "s3:CopyObject")
+    file_deleted = action in ("s3:DeleteObject", "s3:DeleteObjects")
+    if not file_created and not file_deleted:
+        logger.warning("Unsupported S3 mutation action, skipping: %s", action)
+        return
 
     try:
         if file_created:
             resource = BaseResource.objects.get(short_id=resource_id)
             _link_s3_file_to_resource(resource, short_path)
             UserQuota.objects.get(user=resource.quota_holder).data_zone_value
-        else:
+        elif file_deleted:
             user = User.objects.get(pk=user_id)
             logger.info(f"Deleting file {short_path} for resource {resource_id}")
             delete_resource_file(resource_id, short_path, user)
@@ -74,6 +81,51 @@ def process_s3_event(self, action: str, bucket: str, object_path: str, username:
             UserQuota.objects.get(user=resource.quota_holder).data_zone_value
     except Exception as exc:
         logger.error(f"Error processing S3 event for {resource_id}/{short_path}: {exc}", exc_info=True)
+        raise self.retry(exc=exc)
+
+
+@celery_app.task(
+    bind=True,
+    name="hs_event_s3.tasks.record_s3_download",
+    max_retries=3,
+    default_retry_delay=10,
+)
+def record_s3_download(self, action: str, bucket: str, object_path: str, username: str,
+                       user_id: Optional[int] = None, **kwargs):
+    """Record one successful S3 content-file read in HydroShare activity tracking."""
+    parts = object_path.split("/data/contents/", 1)
+    if action != "s3:GetObject" or len(parts) != 2 or not parts[1]:
+        logger.warning("Unexpected S3 download event, skipping: %s %s", action, object_path)
+        return
+
+    resource_id = parts[0]
+    if len(resource_id) != 32 or any(char not in "0123456789abcdef" for char in resource_id):
+        logger.warning("Unexpected resource ID in S3 download event, skipping: %s", object_path)
+        return
+    if user_id is None:
+        logger.error("Cannot track S3 download without a user ID: %s", object_path)
+        return
+
+    try:
+        with transaction.atomic():
+            user = User.objects.get(pk=user_id)
+            visitor, _ = Visitor.objects.get_or_create(user=user)
+            session = Session.objects.create(visitor=visitor)
+            value = Variable.format_kwargs(
+                s3_action=action,
+                resource_guid=resource_id,
+                bucket=bucket,
+            )
+            session.record("s3", value=value, resource_id=resource_id)
+        logger.info(
+            "Recorded S3 download: user=%s (id=%s), bucket=%s, object=%s",
+            username,
+            user_id,
+            bucket,
+            object_path,
+        )
+    except Exception as exc:
+        logger.error("Error tracking S3 download for %s: %s", resource_id, exc, exc_info=True)
         raise self.retry(exc=exc)
 
 

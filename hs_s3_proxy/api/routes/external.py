@@ -233,6 +233,19 @@ async def proxy_s3_request(request: Request, full_path: str):
             username=username, user_id=user_id, file_size=file_size,
             zone=s3_proxy.zone_for_bucket(authz_bucket),
         )
+    content_path = (authz_prefix or "").split("/data/contents/", 1)
+    if (
+        action == "s3:GetObject"
+        and response.status_code in [200, 206]
+        and len(content_path) == 2
+        and RESOURCE_ID_RE.fullmatch(content_path[0])
+        and content_path[1]
+    ):
+        post_s3_event(
+            action=action, bucket=authz_bucket, object_path=authz_prefix,
+            username=username, user_id=user_id,
+            zone=s3_proxy.zone_for_bucket(authz_bucket),
+        )
     if action in ["s3:DeleteObject", "s3:DeleteObjects"] and response.status_code in [200, 204]:
         event_paths = authz_prefixes if authz_prefixes else [authz_prefix]
         for event_path in event_paths:

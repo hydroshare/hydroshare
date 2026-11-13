@@ -9,6 +9,14 @@ from api.celery_app import celery_app
 router = APIRouter()
 logger = logging.getLogger("hs-s3-auth")
 
+MUTATION_ACTIONS = {
+    "s3:PutObject",
+    "s3:CompleteMultipartUpload",
+    "s3:CopyObject",
+    "s3:DeleteObject",
+    "s3:DeleteObjects",
+}
+
 
 class S3Event(BaseModel):
     action: str
@@ -22,7 +30,7 @@ class S3Event(BaseModel):
 
 @router.post("/event/", status_code=204)
 async def receive_s3_event(event: S3Event):
-    """Receive notification of a completed S3 write or delete from hs-s3-proxy.
+    """Receive notifications of S3 mutations and resource-content downloads.
 
     Dispatches directly to the hs_event_s3 Celery worker for Django-side
     processing (metadata updates, cache invalidation, bag/zip jobs, etc.).
@@ -32,21 +40,35 @@ async def receive_s3_event(event: S3Event):
         f"bucket={event.bucket}, object={event.object_path}, "
         f"user={event.username} (id={event.user_id})"
     )
-    celery_app.send_task(
-        "hs_event_s3.tasks.process_s3_event",
-        kwargs={
-            "action": event.action,
-            "bucket": event.bucket,
-            "object_path": event.object_path,
-            "username": event.username,
-            "user_id": event.user_id,
-            "zone": event.zone
-        },
-        queue="s3_events",
-    )
+    if event.action == "s3:GetObject":
+        celery_app.send_task(
+            "hs_event_s3.tasks.record_s3_download",
+            kwargs={
+                "action": event.action,
+                "bucket": event.bucket,
+                "object_path": event.object_path,
+                "username": event.username,
+                "user_id": event.user_id,
+            },
+            queue="s3_events",
+        )
+    else:
+        celery_app.send_task(
+            "hs_event_s3.tasks.process_s3_event",
+            kwargs={
+                "action": event.action,
+                "bucket": event.bucket,
+                "object_path": event.object_path,
+                "username": event.username,
+                "user_id": event.user_id,
+                "zone": event.zone
+            },
+            queue="s3_events",
+        )
 
     # Dispatch discovery catalog sync when the jsonld metadata file changes
-    if event.object_path.endswith("/.hsjsonld/dataset_metadata.json"):
+    is_dataset_metadata = event.object_path.endswith("/.hsjsonld/dataset_metadata.json")
+    if event.action in MUTATION_ACTIONS and is_dataset_metadata:
         celery_app.send_task(
             "hs_event_s3.tasks.sync_discovery_collection",
             kwargs={
@@ -58,8 +80,11 @@ async def receive_s3_event(event: S3Event):
             queue="s3_events",
         )
 
-    # Dispatch metadata extraction for data file events
-    if not event.object_path.endswith("/.hsjsonld/dataset_metadata.json"):
+    # Dispatch metadata extraction only for mutations to data files.
+    if (
+        event.action in MUTATION_ACTIONS
+        and not is_dataset_metadata
+    ):
         celery_app.send_task(
             "hs_extract.tasks.extract_metadata",
             kwargs={

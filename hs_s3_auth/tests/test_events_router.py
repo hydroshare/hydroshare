@@ -20,7 +20,7 @@ def mock_celery():
 
 def base_event(**overrides):
     data = {
-        "action": "write",
+        "action": "s3:PutObject",
         "bucket": "hydroshare",
         "object_path": "data/contents/somefile.csv",
         "username": "user1",
@@ -98,6 +98,22 @@ class TestReceiveS3Event:
 
         for call in mock_celery.send_task.call_args_list:
             assert call.args[0] != "hs_event_s3.tasks.sync_discovery_collection"
+
+    def test_get_object_dispatches_download_tracking_only(self, mock_celery):
+        event = base_event(
+            action="s3:GetObject",
+            object_path="a" * 32 + "/data/contents/somefile.csv",
+        )
+        response = client.post("/event/", json=event)
+
+        assert response.status_code == 204
+        assert mock_celery.send_task.call_args_list[0].args[0] == (
+            "hs_event_s3.tasks.record_s3_download"
+        )
+        task_names = [call.args[0] for call in mock_celery.send_task.call_args_list]
+        assert "hs_event_s3.tasks.process_s3_event" not in task_names
+        assert "hs_extract.tasks.extract_metadata" not in task_names
+        assert "hs_event_s3.tasks.sync_discovery_collection" not in task_names
 
     def test_user_id_is_optional(self, mock_celery):
         event = base_event()

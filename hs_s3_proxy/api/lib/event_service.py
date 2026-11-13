@@ -78,11 +78,10 @@ def post_s3_event(
     file_size: int = 0,
     zone: str = "",
 ) -> bool:
-    """Notify hs-s3-auth of a completed S3 write or delete event.
+    """Notify hs-s3-auth of a completed S3 operation.
 
     Returns True if the event was accepted, False otherwise.
-    Failures are logged but never propagate — the proxy response to the client
-    is already on its way when this is called.
+    Failures are logged but do not change the S3 operation response.
     """
     url = f"{AUTH_SERVICE_URL}/s3/event/"
     payload = {
