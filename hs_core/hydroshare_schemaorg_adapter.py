@@ -5,7 +5,28 @@ from pydantic import BaseModel, HttpUrl, ConfigDict, model_validator
 from hsmodels.schemas.enums import RelationType
 
 from hs_cloudnative_schemas.schema import base as schema
-from hs_cloudnative_schemas.schema.dataset import ScientificDataset, AdditionalType
+from hs_cloudnative_schemas.schema.dataset import ScientificDataset
+
+
+HYDROSHARE_TERMS_URL = "https://www.hydroshare.org/terms/"
+
+# Maps the values written to ``content_types`` (resource type names and logical file class names) to the
+# HydroShare term name documented at HYDROSHARE_TERMS_URL. The term names for aggregations must stay in sync with
+# AbstractLogicalFile.get_aggregation_type_name() (enforced by a test in hs_core/tests).
+CONTENT_TYPE_TO_TERM = {
+    "CompositeResource": "CompositeResource",
+    "CollectionResource": "CollectionResource",
+    "CSVLogicalFile": "CSVFileAggregation",
+    "FileSetLogicalFile": "FileSetAggregation",
+    "GenericLogicalFile": "SingleFileAggregation",
+    "GeoFeatureLogicalFile": "GeographicFeatureAggregation",
+    "GeoRasterLogicalFile": "GeographicRasterAggregation",
+    "ModelInstanceLogicalFile": "ModelInstanceAggregation",
+    "ModelProgramLogicalFile": "ModelProgramAggregation",
+    "NetCDFLogicalFile": "MultidimensionalAggregation",
+    "RefTimeseriesLogicalFile": "ReferencedTimeSeriesAggregation",
+    "TimeSeriesLogicalFile": "TimeSeriesAggregation",
+}
 
 
 class BasePerson(BaseModel):
@@ -361,17 +382,25 @@ class _ResourceUserMetadata(BaseModel):
         return schema.Organization.model_validate({"name": "HydroShare", "url": "https://www.hydroshare.org/"})
 
     @staticmethod
-    def to_additional_type(type: str):
-        try:
-            additional_type = AdditionalType(type)
-        except ValueError:
-            additional_type = None
-        return additional_type
+    def to_additional_types(content_types: Optional[List[str]]) -> Optional[List[HttpUrl]]:
+        """Converts resource/aggregation type names to a de-duplicated list of HydroShare term URLs.
+        Unknown type names are skipped. Returns None if there is nothing to report."""
+        urls = []
+        for content_type in content_types or []:
+            term = CONTENT_TYPE_TO_TERM.get(content_type)
+            if term is None:
+                continue
+            url = HttpUrl(f"{HYDROSHARE_TERMS_URL}{term}")
+            if url not in urls:
+                urls.append(url)
+        return urls or None
 
     def to_catalog_dataset(self):
         dataset = ScientificDataset.model_construct(**self.extra_columns)
         is_part_of, has_part, other_relations = self._partition_relations_by_type()
-        dataset.additionalType = self.to_additional_type(self.type) if self.type else None
+        # resource type always comes first, followed by the content types in a stable (sorted) order
+        content_types = ([self.type] if self.type else []) + sorted(self.extra_columns.get("content_types") or [])
+        dataset.additionalType = self.to_additional_types(content_types)
         dataset.provider = self.to_dataset_provider()
         dataset.name = self.title
         dataset.description = self.abstract
