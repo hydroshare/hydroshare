@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, List, Optional, Union, Literal
+from typing import Any, Dict, List, Optional, Union, Literal
 
 from pydantic import BaseModel, HttpUrl, ConfigDict, model_validator
 from hsmodels.schemas.enums import RelationType
@@ -263,8 +263,13 @@ class _ResourceUserMetadata(BaseModel):
     period_coverage: Optional[TemporalCoverage] = None
     relations: List[Relation] = []
     citation: Optional[str] = None
-    associatedMedia: List[Any] = []
+    # input-only: used to derive the schema.org creativeWorkStatus; not emitted as-is
     sharing_status: Optional[Literal["private", "public", "published", "discoverable"]] = None
+    additional_metadata: Dict[str, str] = {}
+    # Declared only so that it is NOT passed through to the ScientificDataset via extra_columns --
+    # review_started (emitted by hsmodels ResourceMetadata) is publication workflow state, not
+    # schema.org compliant, and must not appear in the output.
+    review_started: Optional[datetime] = None
 
     @model_validator(mode="before")
     @classmethod
@@ -297,9 +302,6 @@ class _ResourceUserMetadata(BaseModel):
             grants.append(award.to_dataset_grant())
         return grants
 
-    def to_dataset_associated_media(self):
-        return self.associatedMedia
-
     def _partition_relations_by_type(self):
         is_part_of, has_part, other = [], [], []
         for relation in self.relations:
@@ -326,6 +328,11 @@ class _ResourceUserMetadata(BaseModel):
         if self.subjects:
             return self.subjects
         return ["HydroShare"]
+
+    def to_dataset_additional_property(self):
+        if not self.additional_metadata:
+            return None
+        return [schema.PropertyValue(name=key, value=value) for key, value in self.additional_metadata.items()]
 
     def to_dataset_license(self):
         if self.rights:
@@ -377,11 +384,11 @@ class _ResourceUserMetadata(BaseModel):
         dataset.funding = self.to_dataset_funding()
         dataset.spatialCoverage = self.to_dataset_spatial_coverage()
         dataset.temporalCoverage = self.to_dataset_period_coverage()
-        dataset.associatedMedia = self.to_dataset_associated_media()
         dataset.isPartOf = is_part_of
         dataset.hasPart = has_part
         dataset.relation = other_relations
         dataset.license = self.to_dataset_license()
+        dataset.additionalProperty = self.to_dataset_additional_property()
         dataset.citation = [self.citation]
         dataset.creativeWorkStatus = self.to_dataset_creative_work_status()
         return dataset
