@@ -1154,11 +1154,12 @@ def set_resource_files_system_metadata(resource_id):
     """
     Sets size, checksum, and modified time for resource files by getting these values
     from S3 and stores in db
-    :param resource_id: the id of the resource for which to set system metadata for all files currently missing
-    these metadata in db
+    :param resource_id: the id of the resource whose files are missing system metadata in the DB
     """
     resource = utils.get_resource_by_shortkey(resource_id)
-    res_files = resource.files.exclude(_size__gte=0).all()
+    res_files = resource.files.filter(
+        Q(_checksum__isnull=True) | Q(_modified_time__isnull=True) | Q(_size__lt=0)
+    ).exclude(_size=0).all()
     for res_file in res_files:
         res_file.set_system_metadata(resource=resource, save=False)
 

@@ -27,7 +27,7 @@ _storage = S3Storage()
 
 
 def _link_s3_file_to_resource(resource, short_path: str):
-    link_s3_file_to_django(resource, short_path)
+    return link_s3_file_to_django(resource, short_path)
 
 
 @celery_app.task(
