@@ -6,7 +6,7 @@ from django.contrib.auth.models import Group
 from django.test import TestCase, Client
 
 from hs_core import hydroshare
-from hs_core.hydroshare_schemaorg_adapter import CONTENT_TYPE_TO_TERM
+from hs_core.hydroshare_schemaorg_adapter import CONTENT_TYPE_TO_TERM, hydroshare_terms_url
 from hs_file_types.models import base
 from hs_file_types import models as file_types
 
@@ -62,4 +62,4 @@ class TestUserMetadataJsonAdditionalType(TestCase):
             self.resource.write_user_metadata_json_file()
         doc = written[f"{self.resource.short_id}/.hsmetadata/user_metadata.json"]
         self.assertEqual(doc["content_types"], ["CompositeResource"])
-        self.assertEqual(doc["additionalType"], ["https://www.hydroshare.org/terms/CompositeResource"])
+        self.assertEqual(doc["additionalType"], [f"{hydroshare_terms_url()}CompositeResource"])
