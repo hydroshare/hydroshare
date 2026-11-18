@@ -348,7 +348,9 @@ class TestToCatalogRecordAdditionalMetadata(unittest.TestCase):
 
     def test_additional_metadata_key_not_in_dumped_record(self):
         metadata = {**MINIMAL_METADATA, "additional_metadata": {"site": "Logan River"}}
-        dumped = HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=RESOURCE_ID).model_dump(by_alias=True)
+        dumped = HydroshareMetadataAdapter.to_catalog_record(
+            metadata, resource_id=RESOURCE_ID
+        ).model_dump(by_alias=True)
         self.assertNotIn("additional_metadata", dumped)
         self.assertEqual(dumped["additionalProperty"][0]["@type"], "PropertyValue")
         self.assertEqual(dumped["additionalProperty"][0]["name"], "site")
