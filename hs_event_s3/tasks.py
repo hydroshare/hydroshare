@@ -27,7 +27,7 @@ _storage = S3Storage()
 
 
 def _link_s3_file_to_resource(resource, short_path: str):
-    link_s3_file_to_django(resource, short_path)
+    return link_s3_file_to_django(resource, short_path)
 
 
 @celery_app.task(
@@ -63,7 +63,8 @@ def process_s3_event(self, action: str, bucket: str, object_path: str, username:
     try:
         if file_created:
             resource = BaseResource.objects.get(short_id=resource_id)
-            _link_s3_file_to_resource(resource, short_path)
+            resource_file = _link_s3_file_to_resource(resource, short_path)
+            resource_file.calculate_size(resource=resource)
             UserQuota.objects.get(user=resource.quota_holder).data_zone_value
         else:
             user = User.objects.get(pk=user_id)

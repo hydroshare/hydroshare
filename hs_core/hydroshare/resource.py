@@ -14,7 +14,8 @@ from django.core.exceptions import (ObjectDoesNotExist, PermissionDenied,
 from django.core.files import File
 from django.core.files.uploadedfile import UploadedFile
 from django.db import transaction
-from django.db.models import Sum
+from django.db.models import BigIntegerField, OuterRef, Subquery, Sum, Value
+from django.db.models.functions import Coalesce
 
 from hs_core.hydroshare import hs_bagit
 from hs_core.models import ResourceFile, BaseResource
@@ -36,10 +37,10 @@ logger = logging.getLogger(__name__)
 
 def get_quota_usage(username, raise_on_error=True):
     """
-    Query to get quota usage
+    Get quota usage in bytes.
     :param username: the user name to get quota usage for.
-    :param raise_on_error: if True, raise ValidationError if quota usage cannot be retrieved from S3
-    :return: the quota usage from S3; raise ValidationError if quota usage cannot be retrieved
+    :param raise_on_error: if True, raise ValidationError when the user does not exist.
+    :return: quota usage based on known cached file sizes.
     """
     uqDataZoneSize = get_data_zone_usage(username, raise_on_error=raise_on_error)
     return uqDataZoneSize
@@ -47,7 +48,7 @@ def get_quota_usage(username, raise_on_error=True):
 
 def get_data_zone_usage(username, raise_on_error=True, include_published=False):
     """
-    Calculate the data zone usage for a given user.
+    Calculate the data zone usage for a given user. Unknown file sizes count as zero.
 
     Args:
         username (str): The username of the user.
@@ -67,14 +68,25 @@ def get_data_zone_usage(username, raise_on_error=True, include_published=False):
         if raise_on_error:
             raise ValidationError(f'User {username} does not exist')
         return 0
-    uqDataZoneSize = 0
     qh_resources = BaseResource.objects.filter(quota_holder=user)
     if not include_published:
         qh_resources = qh_resources.exclude(raccess__published=True)
-    qh_resource_ids = qh_resources.values_list('id', flat=True)
-    uqDataZoneSize = ResourceFile.objects.filter(object_id__in=qh_resource_ids).aggregate(Sum('_size'))["_size__sum"]
+    if not getattr(settings, 'RESOURCE_SIZE_CACHE_ENABLED', True):
+        total = ResourceFile.objects.filter(
+            object_id__in=qh_resources.values_list('id', flat=True), _size__gte=0,
+        ).aggregate(total=Sum('_size'))['total']
+        return total if total is not None else 0
+    for resource_id in qh_resources.filter(size_cache__isnull=True).values_list('pk', flat=True).iterator():
+        BaseResource(pk=resource_id).get_size_cache()
 
-    return uqDataZoneSize if uqDataZoneSize is not None else 0
+    # A concurrent file mutation can invalidate a cache after the refresh above.
+    file_totals = (ResourceFile.objects.filter(
+        object_id=OuterRef('pk'), _size__gte=0,
+    ).order_by().values('object_id').annotate(total=Sum('_size')).values('total'))
+    total = qh_resources.aggregate(total=Sum(Coalesce(
+        'size_cache__quota_size', Subquery(file_totals), Value(0), output_field=BigIntegerField(),
+    )))['total']
+    return total if total is not None else 0
 
 
 def update_quota_usage(username, notify_user=False):
@@ -227,6 +239,7 @@ def update_resource_file(pk, filename, f):
                 # TODO: should use add_file_to_resource
                 rf.resource_file = File(f) if not isinstance(f, UploadedFile) else f
                 rf.save()
+                rf.calculate_size(resource=resource)
             return rf
     raise ObjectDoesNotExist(filename)
 

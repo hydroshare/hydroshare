@@ -248,6 +248,9 @@ FILE_UPLOAD_TEMP_DIR = "/tmp"
 
 FILE_UPLOAD_MAX_SIZE = 25 * 1024 ** 3  # 25GB in BYTES
 
+# Disable cache reads during a rolling deployment until all writers are upgraded.
+RESOURCE_SIZE_CACHE_ENABLED = True
+
 # https://docs.djangoproject.com/en/3.2/ref/settings/#data-upload-max-memory-size
 DATA_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024  # 100 MB in Bytes
 

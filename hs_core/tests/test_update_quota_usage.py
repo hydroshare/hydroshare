@@ -1,13 +1,18 @@
 import os
 import uuid
+from unittest.mock import PropertyMock, patch
+from django.contrib.contenttypes.models import ContentType
+from django.db import connection, transaction
 from django.http.response import Http404
-from django.test import TestCase
+from django.test import TestCase, override_settings
+from django.test.utils import CaptureQueriesContext
 from django.contrib.auth.models import User, Group
 from theme.models import UserQuota
 from hs_access_control.models import PrivilegeCodes
 from hs_composite_resource.models import CompositeResource
 from hs_core import hydroshare
-from hs_core.models import BaseResource
+from hs_core.models import BaseResource, ResourceFile, ResourceSizeCache
+from hs_core.hydroshare.resource import get_data_zone_usage
 from hs_core.views.utils import create_folder, move_or_rename_file_or_folder, zip_folder, \
     unzip_file, remove_folder, get_default_admin_user
 from hs_core.tasks import create_bag_by_s3
@@ -81,6 +86,132 @@ class UpdateQuotaUsageTestCase(TestCase):
 
     def convert_gb_to_bytes(self, gb):
         return gb * 1024 * 1024 * 1024
+
+    def test_resource_size_cache_mutations(self):
+        first = ResourceFile.objects.create(content_object=self.res, resource_file='cache-test-first', _size=10)
+        self.assertEqual(self.res.size, 10)
+        self.assertEqual(get_data_zone_usage(self.user.username), 10)
+
+        first._size = 15
+        first.save(update_fields=['_size'])
+        self.assertFalse(ResourceSizeCache.objects.filter(resource=self.res).exists())
+        self.assertEqual(self.res.size, 15)
+
+        second, third = ResourceFile.objects.bulk_create([
+            ResourceFile(content_object=self.res, resource_file='cache-test-second', _size=20),
+            ResourceFile(content_object=self.res, resource_file='cache-test-third', _size=-1),
+        ])
+        self.assertEqual(get_data_zone_usage(self.user.username), 35)
+        self.assertTrue(ResourceSizeCache.objects.get(resource=self.res).has_unknown)
+
+        def resolve_size(resource_file, resource=None, save=True):
+            resource_file._size = 7
+            if save:
+                resource_file.save(update_fields=['_size'])
+
+        with patch.object(ResourceFile, 'calculate_size', resolve_size):
+            self.assertEqual(self.res.size, 42)
+        self.assertFalse(ResourceSizeCache.objects.get(resource=self.res).has_unknown)
+
+        second._size = 30
+        third._size = 8
+        ResourceFile.objects.bulk_update([second, third], ['_size'])
+        self.assertEqual(get_data_zone_usage(self.user.username), 53)
+        ResourceFile.objects.filter(pk=first.pk).update(_size=-1)
+        self.assertEqual(get_data_zone_usage(self.user.username), 38)
+        ResourceFile.objects.filter(pk__in=[first.pk, second.pk]).delete()
+        self.assertEqual(self.res.size, 8)
+        ResourceFile.objects.filter(pk=third.pk).delete()
+        self.assertEqual(get_data_zone_usage(self.user.username), 0)
+
+    def test_resource_size_cache_respects_object_ids_and_transactions(self):
+        resource_file = ResourceFile.objects.create(
+            content_object=self.res, resource_file='cache-test-resource', _size=10,
+        )
+        other_file = ResourceFile.objects.create(
+            content_type=ContentType.objects.get_for_model(User),
+            object_id=self.res.pk, resource_file='cache-test-other', _size=4,
+        )
+        self.assertEqual(self.res.size, 10)
+        self.assertEqual(get_data_zone_usage(self.user.username), 14)
+        with self.assertNumQueries(3):
+            self.assertEqual(get_data_zone_usage(self.user.username), 14)
+
+        with transaction.atomic():
+            ResourceFile.objects.filter(pk=resource_file.pk).update(_size=30)
+            self.assertEqual(get_data_zone_usage(self.user.username), 34)
+            transaction.set_rollback(True)
+        self.assertEqual(get_data_zone_usage(self.user.username), 14)
+        ResourceFile.objects.filter(pk__in=[resource_file.pk, other_file.pk]).delete()
+
+    def test_warm_quota_cache_does_not_scan_resource_files(self):
+        resource_file = ResourceFile.objects.create(
+            content_object=self.res, resource_file='cache-test-plan', _size=10,
+        )
+        self.assertEqual(get_data_zone_usage(self.user.username), 10)
+        with CaptureQueriesContext(connection) as queries:
+            self.assertEqual(get_data_zone_usage(self.user.username), 10)
+        with connection.cursor() as cursor:
+            cursor.execute('EXPLAIN (ANALYZE, FORMAT JSON) ' + queries.captured_queries[-1]['sql'])
+            plan = cursor.fetchone()[0][0]['Plan']
+
+        def subplans(node):
+            found = [node] if node.get('Parent Relationship') == 'SubPlan' else []
+            for child in node.get('Plans', []):
+                found.extend(subplans(child))
+            return found
+
+        plans = subplans(plan)
+        self.assertTrue(plans)
+        self.assertTrue(all(node['Actual Loops'] == 0 for node in plans))
+        ResourceFile.objects.filter(pk=resource_file.pk).delete()
+
+    def test_resource_size_cache_respects_quota_holder_and_published_status(self):
+        resource_file = ResourceFile.objects.create(
+            content_object=self.res, resource_file='cache-test-quota-holder', _size=12,
+        )
+        self.assertEqual(get_data_zone_usage(self.user.username), 12)
+        BaseResource.objects.filter(pk=self.res.pk).update(quota_holder=self.user2)
+        self.assertEqual(get_data_zone_usage(self.user.username), 0)
+        self.assertEqual(get_data_zone_usage(self.user2.username), 12)
+        type(self.res.raccess).objects.filter(pk=self.res.raccess.pk).update(published=True)
+        self.assertEqual(get_data_zone_usage(self.user2.username), 0)
+        self.assertEqual(get_data_zone_usage(self.user2.username, include_published=True), 12)
+        ResourceFile.objects.filter(pk=resource_file.pk).delete()
+
+    def test_resource_size_cache_reassign_and_instance_delete(self):
+        other = hydroshare.create_resource('CompositeResource', self.user2, 'Other resource')
+        resource_file = ResourceFile.objects.create(
+            content_object=self.res, resource_file='cache-test-reassign', _size=12,
+        )
+        self.assertEqual(self.res.size, 12)
+        self.assertEqual(other.size, 0)
+        resource_file.object_id = other.pk
+        ResourceFile.objects.bulk_update([resource_file], ['object_id'])
+        self.assertEqual(self.res.size, 0)
+        self.assertEqual(other.size, 12)
+        self.assertEqual(get_data_zone_usage(self.user.username), 0)
+        self.assertEqual(get_data_zone_usage(self.user2.username), 12)
+        with patch.object(ResourceFile, 'exists', new_callable=PropertyMock, return_value=False):
+            resource_file.delete()
+        self.assertEqual(other.size, 0)
+
+    @override_settings(RESOURCE_SIZE_CACHE_ENABLED=False)
+    def test_resource_size_cache_disabled(self):
+        resource_file = ResourceFile.objects.create(
+            content_object=self.res, resource_file='cache-test-disabled', _size=-1,
+        )
+        self.assertEqual(get_data_zone_usage(self.user.username), 0)
+
+        def resolve_size(resource_file, resource=None, save=True):
+            resource_file._size = 9
+            resource_file.save(update_fields=['_size'])
+
+        with patch.object(ResourceFile, 'calculate_size', resolve_size):
+            self.assertEqual(self.res.size, 9)
+        self.assertEqual(get_data_zone_usage(self.user.username), 9)
+        self.assertFalse(ResourceSizeCache.objects.filter(resource=self.res).exists())
+        ResourceFile.objects.filter(pk=resource_file.pk).delete()
 
     def test_adding_file_increase_quota(self):
         # Retrieve the UserQuota object for the user

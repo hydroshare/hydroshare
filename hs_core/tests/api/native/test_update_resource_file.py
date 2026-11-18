@@ -76,6 +76,8 @@ class TestUpdateResourceFileAPI(MockS3TestCaseMixin, unittest.TestCase):
 
         # this is the api call we are testing
         rf = hydroshare.update_resource_file(self.new_res.short_id, original_file_name, new_file)
+        self.assertEqual(self.new_res.size, len(new_file_data))
+        self.assertEqual(hydroshare.resource.get_data_zone_usage(self.user_creator.username), len(new_file_data))
 
         # test if the file name matches
         self.assertEqual(os.path.basename(rf.resource_file.name), new_file_name, msg="resource file name didn't match")
