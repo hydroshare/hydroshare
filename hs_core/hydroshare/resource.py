@@ -9,6 +9,7 @@ import requests
 from dateutil import tz
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import (ObjectDoesNotExist, PermissionDenied,
                                     ValidationError)
 from django.core.files import File
@@ -71,9 +72,10 @@ def get_data_zone_usage(username, raise_on_error=True, include_published=False):
     qh_resources = BaseResource.objects.filter(quota_holder=user)
     if not include_published:
         qh_resources = qh_resources.exclude(raccess__published=True)
+    resource_content_type = ContentType.objects.get_for_model(BaseResource)
     if not getattr(settings, 'RESOURCE_SIZE_CACHE_ENABLED', True):
         total = ResourceFile.objects.filter(
-            object_id__in=qh_resources.values_list('id', flat=True), _size__gte=0,
+            object_id__in=qh_resources.values_list('id', flat=True), content_type=resource_content_type, _size__gte=0,
         ).aggregate(total=Sum('_size'))['total']
         return total if total is not None else 0
     for resource_id in qh_resources.filter(size_cache__isnull=True).values_list('pk', flat=True).iterator():
@@ -81,10 +83,10 @@ def get_data_zone_usage(username, raise_on_error=True, include_published=False):
 
     # A concurrent file mutation can invalidate a cache after the refresh above.
     file_totals = (ResourceFile.objects.filter(
-        object_id=OuterRef('pk'), _size__gte=0,
+        object_id=OuterRef('pk'), content_type=resource_content_type, _size__gte=0,
     ).order_by().values('object_id').annotate(total=Sum('_size')).values('total'))
     total = qh_resources.aggregate(total=Sum(Coalesce(
-        'size_cache__quota_size', Subquery(file_totals), Value(0), output_field=BigIntegerField(),
+        'size_cache__size', Subquery(file_totals), Value(0), output_field=BigIntegerField(),
     )))['total']
     return total if total is not None else 0
 

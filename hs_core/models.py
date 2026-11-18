@@ -5255,14 +5255,14 @@ class BaseResource(Page, AbstractResource):
             cache = ResourceSizeCache.objects.using(using).filter(resource_id=self.pk).first()
             if cache is None:
                 content_type = ContentType.objects.db_manager(using).get_for_model(self, for_concrete_model=True)
-                totals = ResourceFile.objects.using(using).filter(object_id=self.pk).aggregate(
-                    size=Sum('_size', filter=Q(_size__gte=0, content_type=content_type)),
-                    quota_size=Sum('_size', filter=Q(_size__gte=0)),
-                    unknown=Count('pk', filter=Q(_size__lt=0, content_type=content_type)),
+                totals = ResourceFile.objects.using(using).filter(
+                    object_id=self.pk, content_type=content_type,
+                ).aggregate(
+                    size=Sum('_size', filter=Q(_size__gte=0)),
+                    unknown=Count('pk', filter=Q(_size__lt=0)),
                 )
                 cache = ResourceSizeCache.objects.using(using).create(
-                    resource_id=self.pk, size=totals['size'] or 0, quota_size=totals['quota_size'] or 0,
-                    has_unknown=totals['unknown'] > 0,
+                    resource_id=self.pk, size=totals['size'] or 0, has_unknown=totals['unknown'] > 0,
                 )
             return cache
 
@@ -5549,7 +5549,6 @@ class ResourceSizeCache(models.Model):
     resource = models.OneToOneField(BaseResource, on_delete=models.CASCADE, primary_key=True,
                                     related_name='size_cache')
     size = models.BigIntegerField()
-    quota_size = models.BigIntegerField()
     has_unknown = models.BooleanField()
 
 

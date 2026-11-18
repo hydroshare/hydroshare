@@ -124,7 +124,7 @@ class UpdateQuotaUsageTestCase(TestCase):
         ResourceFile.objects.filter(pk=third.pk).delete()
         self.assertEqual(get_data_zone_usage(self.user.username), 0)
 
-    def test_resource_size_cache_respects_object_ids_and_transactions(self):
+    def test_resource_size_cache_respects_content_types_and_transactions(self):
         resource_file = ResourceFile.objects.create(
             content_object=self.res, resource_file='cache-test-resource', _size=10,
         )
@@ -133,15 +133,28 @@ class UpdateQuotaUsageTestCase(TestCase):
             object_id=self.res.pk, resource_file='cache-test-other', _size=4,
         )
         self.assertEqual(self.res.size, 10)
-        self.assertEqual(get_data_zone_usage(self.user.username), 14)
+        self.assertEqual(get_data_zone_usage(self.user.username), 10)
         with self.assertNumQueries(3):
-            self.assertEqual(get_data_zone_usage(self.user.username), 14)
+            self.assertEqual(get_data_zone_usage(self.user.username), 10)
 
         with transaction.atomic():
             ResourceFile.objects.filter(pk=resource_file.pk).update(_size=30)
-            self.assertEqual(get_data_zone_usage(self.user.username), 34)
+            self.assertEqual(get_data_zone_usage(self.user.username), 30)
             transaction.set_rollback(True)
-        self.assertEqual(get_data_zone_usage(self.user.username), 14)
+        self.assertEqual(get_data_zone_usage(self.user.username), 10)
+        with override_settings(RESOURCE_SIZE_CACHE_ENABLED=False):
+            self.assertEqual(get_data_zone_usage(self.user.username), 10)
+
+        ResourceSizeCache.objects.filter(resource=self.res).delete()
+        original_get_size_cache = BaseResource.get_size_cache
+
+        def invalidate_after_refresh(resource):
+            cache = original_get_size_cache(resource)
+            ResourceSizeCache.objects.filter(resource_id=resource.pk).delete()
+            return cache
+
+        with patch.object(BaseResource, 'get_size_cache', invalidate_after_refresh):
+            self.assertEqual(get_data_zone_usage(self.user.username), 10)
         ResourceFile.objects.filter(pk__in=[resource_file.pk, other_file.pk]).delete()
 
     def test_warm_quota_cache_does_not_scan_resource_files(self):

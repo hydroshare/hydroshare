@@ -16,7 +16,6 @@ class Migration(migrations.Migration):
                                                   primary_key=True, related_name='size_cache',
                                                   serialize=False, to='hs_core.baseresource')),
                 ('size', models.BigIntegerField()),
-                ('quota_size', models.BigIntegerField()),
                 ('has_unknown', models.BooleanField()),
             ],
         ),
