@@ -145,7 +145,10 @@ async def proxy_s3_request(request: Request, full_path: str):
 
     path = f"/{full_path}"
     bucket, object_path = parse_s3_path(path)
-    object_path = query_params.get("prefix", object_path)
+    # The prefix query parameter is only meaningful for bucket-level listings. When the URL names an
+    # object key, authorize against that key, since it is what is actually forwarded to S3.
+    if not object_path:
+        object_path = query_params.get("prefix", object_path)
     logger.info(f"Received {method} request for bucket={bucket}, object={object_path}")
 
     auth_header = headers.get('authorization', '')
