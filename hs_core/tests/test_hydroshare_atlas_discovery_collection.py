@@ -159,6 +159,23 @@ class TestCollectFileToCatalog(ParametrizedTestCase):
         self.assertEqual(temporal["startDate"], datetime(2016, 3, 6))
         self.assertEqual(temporal["endDate"], datetime(2016, 3, 7, 12, 0, 0, tzinfo=timezone.utc))
 
+    @parametrize(
+        "value,expected",
+        [
+            param("2018-10-01/2022-09-30", {"startDate": datetime(2018, 10, 1), "endDate": datetime(2022, 9, 30)},
+                  id="date_string_converted_to_object"),
+            param("not/a date", "not/a date", id="unparseable_string_left_as_string"),
+            param("2018-10-01", "2018-10-01", id="no_separator_left_as_string"),
+        ],
+    )
+    def test_temporal_coverage_string_converted(self, value, expected):
+        """A 'start/end' temporalCoverage string becomes startDate/endDate datetimes; other strings are untouched."""
+        metadata = {**SAMPLE_METADATA, "temporalCoverage": value}
+        self.mock_s3.get_object.return_value = _make_s3_response(metadata)
+        collect_file_to_catalog("bucket/res/.hsjsonld/dataset_metadata.json")
+        _, replacement_metadata = self.mock_collection.find_one_and_replace.call_args[0]
+        self.assertEqual(replacement_metadata["temporalCoverage"], expected)
+
 
 class TestSyncResourceInCatalog(ParametrizedTestCase):
 

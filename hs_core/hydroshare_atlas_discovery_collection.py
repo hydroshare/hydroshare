@@ -85,6 +85,25 @@ def datetime_parser(dct, object_key=None):
     return dct
 
 
+def parse_temporal_coverage(value):
+    """Convert a 'start/end' temporalCoverage string into {'startDate': datetime, 'endDate': datetime}.
+
+    Values that are not 'start/end' strings with parseable dates are returned unchanged.
+    """
+    if not isinstance(value, str):
+        return value
+    parts = value.split('/')
+    if len(parts) != 2:
+        logger.warning(f"Could not split temporalCoverage {value!r} into start/end; leaving as string")
+        return value
+    try:
+        start, end = (datetime.datetime.fromisoformat(part) for part in parts)
+    except ValueError:
+        logger.warning(f"Could not parse temporalCoverage {value!r} as dates; leaving as string")
+        return value
+    return {"startDate": start, "endDate": end}
+
+
 def _resource_id_from_url(url):
     """Return the resource id from a HydroShare resource URL such as https://host/resource/<id>/."""
     parts = [part for part in urlparse(str(url or "")).path.split('/') if part]
@@ -185,6 +204,8 @@ def _index_metadata(object_key: str, metadata_json: dict):
             if metadata_json['first_creator']['name']:
                 # encountered some names with leading whitespace which causes sorting issues
                 metadata_json['first_creator']['name'] = metadata_json['first_creator']['name'].strip()
+    if 'temporalCoverage' in metadata_json:
+        metadata_json['temporalCoverage'] = parse_temporal_coverage(metadata_json['temporalCoverage'])
 
     # DISABLED FOR NOW: reading content types for discovery from db exported to user metadata
     # content_types = []
