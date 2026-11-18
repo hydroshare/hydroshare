@@ -241,7 +241,6 @@ def update_resource_file(pk, filename, f):
                 # TODO: should use add_file_to_resource
                 rf.resource_file = File(f) if not isinstance(f, UploadedFile) else f
                 rf.save()
-                rf.calculate_size(resource=resource)
             return rf
     raise ObjectDoesNotExist(filename)
 

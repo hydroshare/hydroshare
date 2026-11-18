@@ -63,8 +63,7 @@ def process_s3_event(self, action: str, bucket: str, object_path: str, username:
     try:
         if file_created:
             resource = BaseResource.objects.get(short_id=resource_id)
-            resource_file = _link_s3_file_to_resource(resource, short_path)
-            resource_file.calculate_size(resource=resource)
+            _link_s3_file_to_resource(resource, short_path)
             UserQuota.objects.get(user=resource.quota_holder).data_zone_value
         else:
             user = User.objects.get(pk=user_id)

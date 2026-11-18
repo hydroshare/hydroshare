@@ -3858,6 +3858,10 @@ class ResourceFileQuerySet(models.QuerySet):
             raise ValueError('ResourceFile bulk_create does not support conflict updates; use bulk_update instead.')
         objs = list(objs)
         with transaction.atomic(using=self.db):
+            file_field = self.model._meta.get_field('resource_file')
+            for obj in objs:
+                file_field.pre_save(obj, add=True)
+                obj.calculate_size(save=False)
             result = super().bulk_create(objs, *args, **kwargs)
             invalidate_resource_size_cache((obj.object_id for obj in objs), self.db)
             return result
@@ -3916,16 +3920,27 @@ class ResourceFile(ResourceFileS3Mixin):
         using = (kwargs.get('using') or (args[2] if len(args) > 2 else None)
                  or router.db_for_write(type(self), instance=self))
         fields = kwargs.get('update_fields', args[3] if len(args) > 3 else None)
-        affects_size = fields is None or bool({'_size', 'object_id', 'content_type', 'content_type_id'} & set(fields))
+        if fields is not None and not fields:
+            return super().save(*args, **kwargs)
+        affects_size = fields is None or bool(
+            {'_size', 'object_id', 'content_type', 'content_type_id', 'resource_file'} & set(fields)
+        )
         if not affects_size:
             return super().save(*args, **kwargs)
         with transaction.atomic(using=using):
-            old_id = None
+            old = None
             if self.pk:
-                old_id = (ResourceFile.objects.using(using).select_for_update()
-                          .filter(pk=self.pk).values_list('object_id', flat=True).first())
+                old = (ResourceFile.objects.using(using).select_for_update()
+                       .filter(pk=self.pk).values_list('object_id', 'resource_file').first())
+            file_is_saved = fields is None or 'resource_file' in fields
+            file_changed = file_is_saved and bool(self.resource_file) and (
+                old is None or not self.resource_file._committed or old[1] != self.resource_file.name
+            )
             result = super().save(*args, **kwargs)
-            invalidate_resource_size_cache([old_id, self.object_id], using)
+            if file_changed:
+                self.calculate_size(save=False)
+                super().save(using=using, update_fields=['_size', 'filesize_cache_updated'])
+            invalidate_resource_size_cache([old[0] if old else None, self.object_id], using)
             return result
 
     def __str__(self):

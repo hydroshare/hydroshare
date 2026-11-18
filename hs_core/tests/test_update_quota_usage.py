@@ -3,6 +3,7 @@ import uuid
 from unittest.mock import PropertyMock, patch
 from django.contrib.contenttypes.models import ContentType
 from django.db import connection, transaction
+from django.core.files.base import ContentFile
 from django.http.response import Http404
 from django.test import TestCase, override_settings
 from django.test.utils import CaptureQueriesContext
@@ -87,7 +88,8 @@ class UpdateQuotaUsageTestCase(TestCase):
     def convert_gb_to_bytes(self, gb):
         return gb * 1024 * 1024 * 1024
 
-    def test_resource_size_cache_mutations(self):
+    @patch.object(ResourceFile, 'calculate_size')
+    def test_resource_size_cache_mutations(self, mock_calculate_size):
         first = ResourceFile.objects.create(content_object=self.res, resource_file='cache-test-first', _size=10)
         self.assertEqual(self.res.size, 10)
         self.assertEqual(get_data_zone_usage(self.user.username), 10)
@@ -124,7 +126,8 @@ class UpdateQuotaUsageTestCase(TestCase):
         ResourceFile.objects.filter(pk=third.pk).delete()
         self.assertEqual(get_data_zone_usage(self.user.username), 0)
 
-    def test_resource_size_cache_respects_content_types_and_transactions(self):
+    @patch.object(ResourceFile, 'calculate_size')
+    def test_resource_size_cache_respects_content_types_and_transactions(self, mock_calculate_size):
         resource_file = ResourceFile.objects.create(
             content_object=self.res, resource_file='cache-test-resource', _size=10,
         )
@@ -157,7 +160,8 @@ class UpdateQuotaUsageTestCase(TestCase):
             self.assertEqual(get_data_zone_usage(self.user.username), 10)
         ResourceFile.objects.filter(pk__in=[resource_file.pk, other_file.pk]).delete()
 
-    def test_warm_quota_cache_does_not_scan_resource_files(self):
+    @patch.object(ResourceFile, 'calculate_size')
+    def test_warm_quota_cache_does_not_scan_resource_files(self, mock_calculate_size):
         resource_file = ResourceFile.objects.create(
             content_object=self.res, resource_file='cache-test-plan', _size=10,
         )
@@ -179,7 +183,8 @@ class UpdateQuotaUsageTestCase(TestCase):
         self.assertTrue(all(node['Actual Loops'] == 0 for node in plans))
         ResourceFile.objects.filter(pk=resource_file.pk).delete()
 
-    def test_resource_size_cache_respects_quota_holder_and_published_status(self):
+    @patch.object(ResourceFile, 'calculate_size')
+    def test_resource_size_cache_respects_quota_holder_and_published_status(self, mock_calculate_size):
         resource_file = ResourceFile.objects.create(
             content_object=self.res, resource_file='cache-test-quota-holder', _size=12,
         )
@@ -192,7 +197,8 @@ class UpdateQuotaUsageTestCase(TestCase):
         self.assertEqual(get_data_zone_usage(self.user2.username, include_published=True), 12)
         ResourceFile.objects.filter(pk=resource_file.pk).delete()
 
-    def test_resource_size_cache_reassign_and_instance_delete(self):
+    @patch.object(ResourceFile, 'calculate_size')
+    def test_resource_size_cache_reassign_and_instance_delete(self, mock_calculate_size):
         other = hydroshare.create_resource('CompositeResource', self.user2, 'Other resource')
         resource_file = ResourceFile.objects.create(
             content_object=self.res, resource_file='cache-test-reassign', _size=12,
@@ -210,7 +216,8 @@ class UpdateQuotaUsageTestCase(TestCase):
         self.assertEqual(other.size, 0)
 
     @override_settings(RESOURCE_SIZE_CACHE_ENABLED=False)
-    def test_resource_size_cache_disabled(self):
+    @patch.object(ResourceFile, 'calculate_size')
+    def test_resource_size_cache_disabled(self, mock_calculate_size):
         resource_file = ResourceFile.objects.create(
             content_object=self.res, resource_file='cache-test-disabled', _size=-1,
         )
@@ -225,6 +232,71 @@ class UpdateQuotaUsageTestCase(TestCase):
         self.assertEqual(get_data_zone_usage(self.user.username), 9)
         self.assertFalse(ResourceSizeCache.objects.filter(resource=self.res).exists())
         ResourceFile.objects.filter(pk=resource_file.pk).delete()
+
+    def test_upload_calculates_size_before_metadata_task(self):
+        from hs_core.tasks import set_resource_files_system_metadata
+        with patch('hs_core.tasks.set_resource_files_system_metadata.apply_async'):
+            resource_file = hydroshare.resource.add_resource_files(
+                self.res.short_id, self.myfile1, auto_aggregate=False,
+            )[0]
+        resource_file.refresh_from_db()
+        self.assertEqual(resource_file._size, self.single_file_size)
+        self.assertIsNotNone(resource_file.filesize_cache_updated)
+        self.assertEqual(get_data_zone_usage(self.user.username), self.single_file_size)
+        with patch.object(ResourceFile, 'calculate_size') as calculate:
+            resource_file.save(update_fields=['file_folder'])
+            resource_file.save()
+            calculate.assert_not_called()
+        set_resource_files_system_metadata.run(self.res.short_id)
+        resource_file.refresh_from_db()
+        self.assertIsNotNone(resource_file._modified_time)
+        self.assertTrue(resource_file._checksum)
+
+    def test_bulk_create_calculates_sizes(self):
+        resource_files = [
+            ResourceFile(content_object=self.res, resource_file='cache-bulk-first'),
+            ResourceFile(content_object=self.res, resource_file='cache-bulk-second'),
+        ]
+        with patch.object(resource_files[0].resource_file.storage, 'size', side_effect=[11, 23]) as size:
+            ResourceFile.objects.bulk_create(resource_files)
+        self.assertEqual(size.call_count, 2)
+        self.assertEqual(list(self.res.files.order_by('pk').values_list('_size', flat=True)), [11, 23])
+        self.assertEqual(get_data_zone_usage(self.user.username), 34)
+        self.res.files.all().delete()
+
+    def test_bulk_create_uploads_before_calculating_sizes(self):
+        resource_files = [
+            ResourceFile(content_object=self.res, resource_file=ContentFile(b'first', name='bulk-first.txt')),
+            ResourceFile(content_object=self.res, resource_file=ContentFile(b'second', name='bulk-second.txt')),
+        ]
+        ResourceFile.objects.bulk_create(resource_files)
+        self.assertEqual(list(self.res.files.order_by('pk').values_list('_size', flat=True)), [5, 6])
+        self.assertEqual(get_data_zone_usage(self.user.username), 11)
+
+    def test_save_with_file_update_fields_recalculates_size(self):
+        with patch('hs_core.tasks.set_resource_files_system_metadata.apply_async'):
+            resource_file = hydroshare.resource.add_resource_files(
+                self.res.short_id, self.myfile1, auto_aggregate=False,
+            )[0]
+        self.assertEqual(get_data_zone_usage(self.user.username), self.single_file_size)
+        resource_file.resource_file = ContentFile(b'replacement', name='replacement.txt')
+        resource_file.save(update_fields=['resource_file'])
+        resource_file.refresh_from_db()
+        self.assertEqual(resource_file._size, 11)
+        self.assertEqual(get_data_zone_usage(self.user.username), 11)
+
+    def test_linking_existing_s3_file_refreshes_size(self):
+        from hs_core.views.utils import link_s3_file_to_django
+        with patch('hs_core.tasks.set_resource_files_system_metadata.apply_async'):
+            resource_file = hydroshare.resource.add_resource_files(
+                self.res.short_id, self.myfile1, auto_aggregate=False,
+            )[0]
+        self.assertEqual(get_data_zone_usage(self.user.username), self.single_file_size)
+        with patch.object(resource_file.resource_file.storage, 'size', return_value=42):
+            linked = link_s3_file_to_django(self.res, resource_file.storage_path)
+        linked.refresh_from_db()
+        self.assertEqual(linked._size, 42)
+        self.assertEqual(get_data_zone_usage(self.user.username), 42)
 
     def test_adding_file_increase_quota(self):
         # Retrieve the UserQuota object for the user
@@ -588,6 +660,11 @@ class UpdateQuotaUsageTestCase(TestCase):
 
         # Assert that the copied resource has files
         self.assertEqual(new_res.files.all().count(), 3)
+        self.assertEqual(
+            list(new_res.files.values_list('_size', flat=True)),
+            [self.single_file_size] * 3,
+        )
+        self.assertEqual(get_data_zone_usage(self.user.username), initial_quota_value * 2)
 
         # Assert that the copied resource has the same size as the original resource
         self.assertEqual(new_res.size, self.res.size)

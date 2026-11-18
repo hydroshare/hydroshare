@@ -757,6 +757,8 @@ def link_s3_file_to_django(resource, filepath):
             file_format_type = get_file_mime_type(filepath)
             if file_format_type not in [mime.value for mime in resource.metadata.formats.all()]:
                 resource.metadata.create_element('format', value=file_format_type)
+        else:
+            ret.calculate_size(resource=resource)
         return ret
 
 

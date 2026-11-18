@@ -20,9 +20,10 @@ class ResourceSizeCacheConcurrencyTest(TransactionTestCase):
             first_name='Cache', last_name='Test', groups=[],
         )
         resource = hydroshare.create_resource('CompositeResource', user, 'Cache test')
-        resource_file = ResourceFile.objects.create(
-            content_object=resource, resource_file='concurrent-cache-test', _size=10,
-        )
+        with patch.object(ResourceFile, 'calculate_size'):
+            resource_file = ResourceFile.objects.create(
+                content_object=resource, resource_file='concurrent-cache-test', _size=10,
+            )
         self.addCleanup(user.delete)
         self.addCleanup(resource.delete)
         self.addCleanup(lambda: ResourceFile.objects.filter(pk=resource_file.pk).delete())

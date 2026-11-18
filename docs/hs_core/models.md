@@ -5,6 +5,9 @@
 Resource file sizes are cached in Django; an unknown file size is counted as zero
 for quota until it is refreshed. Quota sums the cached sizes of resources for
 which the user is the quota holder, excluding published resources by default.
+Creating a resource file (including bulk creation) or replacing its contents
+refreshes its size from storage. An S3 event refreshes the size when linking an
+already registered file; metadata-only saves do not re-read it.
 Resource `size` still resolves unknown file sizes from S3. Resource totals are
 populated lazily, including for existing resources, and invalidated transactionally
 by Django file mutations. Direct SQL, older
