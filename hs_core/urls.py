@@ -206,6 +206,11 @@ urlpatterns = [
         r"^_internal/(?P<shortkey>[0-9a-f-]+)/submit-for-review/$",
         views.submit_for_review,
     ),
+    re_path(
+        r"^_internal/(?P<shortkey>[0-9a-f-]+)/request-curation-assistance/$",
+        views.request_curation_assistance,
+        name="request_curation_assistance",
+    ),
     path(
         "_internal/create-resource/do/", views.create_resource, name="create_resource"
     ),

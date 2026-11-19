@@ -28,6 +28,7 @@ from django.http import (
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.decorators import method_decorator
+from django.views.decorators.http import require_POST
 from django.views.generic import TemplateView
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
@@ -1271,6 +1272,40 @@ def submit_for_review(request, shortkey, *args, **kwargs):
                 please contact help@cuahsi.org"""
         messages.success(request, message)
     return HttpResponseRedirect(request.headers["referer"])
+
+
+@require_POST
+def request_curation_assistance(request, shortkey, *args, **kwargs):
+    res, _, user = authorize(
+        request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG
+    )
+    if not res.can_request_curation_assistance:
+        return JsonResponse(
+            {"status": "error", "message": "Curation assistance is not available for this resource."},
+            status=400,
+        )
+
+    support_user = get_default_support_user()
+    context = {
+        "request": request,
+        "user": support_user,
+        "user_from": user,
+        "resource": res,
+    }
+    subject = subject_template("email/curation_assistance_subject.txt", context)
+    try:
+        send_mail_template(
+            subject,
+            "email/curation_assistance",
+            settings.DEFAULT_FROM_EMAIL,
+            support_user.email,
+            context=context,
+            headers={"Reply-To": user.email},
+        )
+    except Exception as ex:
+        logger.exception(f"Failed to send curation assistance request for {shortkey}: {ex}")
+        return JsonResponse({"status": "error"}, status=500)
+    return JsonResponse({"status": "success"})
 
 
 def set_resource_flag(request, shortkey, *args, **kwargs):

@@ -1,0 +1,16 @@
+{% load i18n %}{% autoescape off %}
+{% trans "Dear " %}{{ user.first_name }} {{ user.last_name }},
+
+{% trans "User " %}{{ user_from.first_name }} {{ user_from.last_name }} ({{ request.scheme }}://{{ request.get_host }}/user/{{ user_from.id }}) has requested pre-publication data curation assistance for the following resource:
+
+{{ resource.title }}
+{{ request.scheme }}://{{ request.get_host }}/resource/{{ resource.short_id }}
+
+Requesting user information:
+User Type: {{ user_from.userprofile.user_type }}
+Organization: {{ user_from.userprofile.organization }}
+Country: {{ user_from.userprofile.country }}
+Email: {{ user_from.email }}
+
+{% trans "Thanks, The HydroShare Team" %}
+{% endautoescape %}

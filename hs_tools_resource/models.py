@@ -60,6 +60,10 @@ class ToolResource(BaseResource):
     def can_be_submitted_for_metadata_review(self):
         return False
 
+    @property
+    def can_request_curation_assistance(self):
+        return False
+
 
 processor_for(ToolResource)(resource_processor)
 
