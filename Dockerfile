@@ -6,9 +6,6 @@ ADD . /hydroshare
 RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
     locale-gen
 
-COPY --from=mc-build /out/mc /usr/local/bin/mc
-COPY --from=mc-build /out/mc /usr/bin/mc
-
 RUN apt-get update
 RUN apt-get -y upgrade
 RUN pip install pymongo
