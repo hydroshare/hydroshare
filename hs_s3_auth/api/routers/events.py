@@ -30,7 +30,7 @@ class S3Event(BaseModel):
 
 @router.post("/event/", status_code=204)
 async def receive_s3_event(event: S3Event):
-    """Receive notifications of S3 mutations and resource-content downloads.
+    """Receive notifications of S3 mutations.
 
     Dispatches directly to the hs_event_s3 Celery worker for Django-side
     processing (metadata updates, cache invalidation, bag/zip jobs, etc.).
@@ -40,35 +40,26 @@ async def receive_s3_event(event: S3Event):
         f"bucket={event.bucket}, object={event.object_path}, "
         f"user={event.username} (id={event.user_id})"
     )
-    if event.action == "s3:GetObject":
-        celery_app.send_task(
-            "hs_event_s3.tasks.record_s3_download",
-            kwargs={
-                "action": event.action,
-                "bucket": event.bucket,
-                "object_path": event.object_path,
-                "username": event.username,
-                "user_id": event.user_id,
-            },
-            queue="s3_events",
-        )
-    else:
-        celery_app.send_task(
-            "hs_event_s3.tasks.process_s3_event",
-            kwargs={
-                "action": event.action,
-                "bucket": event.bucket,
-                "object_path": event.object_path,
-                "username": event.username,
-                "user_id": event.user_id,
-                "zone": event.zone
-            },
-            queue="s3_events",
-        )
+    if event.action not in MUTATION_ACTIONS:
+        logger.warning("Unsupported S3 mutation notification: %s", event.action)
+        return
+
+    celery_app.send_task(
+        "hs_event_s3.tasks.process_s3_event",
+        kwargs={
+            "action": event.action,
+            "bucket": event.bucket,
+            "object_path": event.object_path,
+            "username": event.username,
+            "user_id": event.user_id,
+            "zone": event.zone,
+        },
+        queue="s3_events",
+    )
 
     # Dispatch discovery catalog sync when the jsonld metadata file changes
     is_dataset_metadata = event.object_path.endswith("/.hsjsonld/dataset_metadata.json")
-    if event.action in MUTATION_ACTIONS and is_dataset_metadata:
+    if is_dataset_metadata:
         celery_app.send_task(
             "hs_event_s3.tasks.sync_discovery_collection",
             kwargs={
@@ -81,10 +72,7 @@ async def receive_s3_event(event: S3Event):
         )
 
     # Dispatch metadata extraction only for mutations to data files.
-    if (
-        event.action in MUTATION_ACTIONS
-        and not is_dataset_metadata
-    ):
+    else:
         celery_app.send_task(
             "hs_extract.tasks.extract_metadata",
             kwargs={

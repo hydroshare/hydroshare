@@ -3,9 +3,10 @@ import os
 import hashlib
 import xml.etree.ElementTree as ET
 import re
-from fastapi import APIRouter, Request, Response
+from fastapi import APIRouter, BackgroundTasks, Request, Response
 from api.lib.auth_service import verify_csrf_sync, verify_signature_sync
 from api.lib.authorization import check_s3_authorization
+from api.lib.download_tracking import publish_s3_download
 from api.lib.event_service import post_s3_event
 from api.lib.s3_auth import (
     get_s3_action_from_request,
@@ -126,7 +127,7 @@ async def health_check():
 
 
 @router.api_route("/{full_path:path}", methods=["GET", "PUT", "POST", "DELETE", "HEAD"])
-async def proxy_s3_request(request: Request, full_path: str):
+async def proxy_s3_request(request: Request, full_path: str, background_tasks: BackgroundTasks):
     method = request.method
     headers = dict(request.headers)
     query_params = dict(request.query_params)
@@ -241,10 +242,9 @@ async def proxy_s3_request(request: Request, full_path: str):
         and RESOURCE_ID_RE.fullmatch(content_path[0])
         and content_path[1]
     ):
-        post_s3_event(
-            action=action, bucket=authz_bucket, object_path=authz_prefix,
+        background_tasks.add_task(
+            publish_s3_download, bucket=authz_bucket, object_path=authz_prefix,
             username=username, user_id=user_id,
-            zone=s3_proxy.zone_for_bucket(authz_bucket),
         )
     if action in ["s3:DeleteObject", "s3:DeleteObjects"] and response.status_code in [200, 204]:
         event_paths = authz_prefixes if authz_prefixes else [authz_prefix]

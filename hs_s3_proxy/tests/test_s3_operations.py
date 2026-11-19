@@ -12,12 +12,14 @@ Each operation is tested twice:
   - Django session-cookie auth   (session_s3_client fixture / TestSession* classes)
 
 Event-service checks (TestEventService) verify Celery tasks are enqueued in
-Redis after write operations.
+Redis after write operations and qualifying downloads.
 
 Run with the proxy and its dependencies live:
     pytest hs_s3_proxy/tests/test_s3_operations.py -v
 """
+import base64
 import io
+import json
 import os
 import threading
 import time
@@ -564,11 +566,11 @@ class TestSessionMultipartUpload:
 
 # ===========================================================================
 # Event-service checks
-# Verify that writes enqueue Celery tasks through Redis.
+# Verify that qualifying operations enqueue Celery tasks through Redis.
 # ===========================================================================
 
 class TestEventService:
-    """Verify S3 writes enqueue expected Celery tasks via Redis."""
+    """Verify S3 operations enqueue expected Celery tasks via Redis."""
 
     @staticmethod
     def _capture_redis_commands_during(trigger, timeout_seconds=2.5):
@@ -607,12 +609,22 @@ class TestEventService:
         return commands
 
     @staticmethod
-    def _count_task_pushes(commands, task_name, object_path):
-        return sum(
-            1
-            for cmd in commands
-            if "LPUSH" in cmd and task_name in cmd and object_path in cmd
-        )
+    def _count_task_pushes(commands, task_name, object_path=None, *, action=None):
+        count = 0
+        for command in commands:
+            parts = command.split(maxsplit=2)
+            if len(parts) != 3 or parts[0] != "LPUSH" or task_name not in parts[2]:
+                continue
+            message = json.loads(parts[2])
+            if message["headers"]["task"] != task_name:
+                continue
+            assert message["properties"]["body_encoding"] == "base64"
+            _, kwargs, _ = json.loads(base64.b64decode(message["body"], validate=True))
+            if (object_path is None or kwargs.get("object_path") == object_path) and (
+                action is None or kwargs.get("action") == action
+            ):
+                count += 1
+        return count
 
     def test_put_object_calls_event_service(
         self, s3_client, test_bucket, unique_prefix,
@@ -640,11 +652,11 @@ class TestEventService:
             response = s3_client.get_object(Bucket=test_bucket, Key=key)
             assert response["Body"].read() == b"download check"
 
-        commands = self._capture_redis_commands_during(download_object)
         try:
+            commands = self._capture_redis_commands_during(download_object)
             assert self._count_task_pushes(
                 commands, "hs_event_s3.tasks.record_s3_download", key
-            ) >= 1
+            ) == 1
             assert self._count_task_pushes(
                 commands, "hs_event_s3.tasks.process_s3_event", key
             ) == 0
@@ -709,9 +721,9 @@ class TestEventService:
         try:
             assert s3_client.get_object(Bucket=test_bucket, Key=dst_key)["Body"].read() == b"event copy"
             for task_name in ("hs_event_s3.tasks.process_s3_event", "hs_extract.tasks.extract_metadata"):
-                pushes = [cmd for cmd in commands if "LPUSH" in cmd and task_name in cmd and dst_key in cmd]
-                assert len(pushes) >= 1
-                assert all("s3:PutObject" in cmd for cmd in pushes)
+                count = self._count_task_pushes(commands, task_name, dst_key)
+                assert count >= 1
+                assert self._count_task_pushes(commands, task_name, dst_key, action="s3:PutObject") == count
         finally:
             for key in (src_key, dst_key):
                 s3_client.delete_object(Bucket=test_bucket, Key=key)
@@ -758,11 +770,7 @@ class TestEventService:
         for key in keys:
             assert key in deleted_keys
 
-        deleteobjects_pushes = sum(
-            1
-            for cmd in commands
-            if "LPUSH" in cmd
-            and "hs_event_s3.tasks.process_s3_event" in cmd
-            and "s3:DeleteObjects" in cmd
+        deleteobjects_pushes = self._count_task_pushes(
+            commands, "hs_event_s3.tasks.process_s3_event", action="s3:DeleteObjects",
         )
         assert deleteobjects_pushes >= 1
