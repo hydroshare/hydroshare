@@ -463,7 +463,8 @@ class S3Storage(S3Storage):
         src_config = get_zone_config(src_zone)
         dest_config = get_zone_config(dest_zone)
         return (src_config.aws_s3_endpoint_url.rstrip("/") == dest_config.aws_s3_endpoint_url.rstrip("/")
-                and src_config.aws_access_key_id == dest_config.aws_access_key_id)
+                and src_config.aws_access_key_id == dest_config.aws_access_key_id
+                and src_config.aws_secret_access_key == dest_config.aws_secret_access_key)
 
     @staticmethod
     def _managed_copy(client, copy_source, dst_bucket, dest_path, multipart_threshold):

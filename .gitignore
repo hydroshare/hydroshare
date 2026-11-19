@@ -46,3 +46,5 @@ hs_resource_landing/static
 
 # Credentials
 /*.json
+/config/local-zone-key
+/config/local-zone-token

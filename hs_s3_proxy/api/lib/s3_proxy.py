@@ -1,4 +1,3 @@
-import json
 import logging
 import os
 from dataclasses import dataclass
@@ -12,6 +11,7 @@ from botocore.awsrequest import AWSRequest
 from botocore.credentials import Credentials
 from fastapi import Response
 from fastapi.responses import StreamingResponse
+from .zone_config import load_zone_config
 
 logger = logging.getLogger("hs_s3_proxy")
 
@@ -85,15 +85,7 @@ def _load_zone_config() -> dict[str, _ZoneBackend]:
         The JSON key is the logical zone name and is never itself registered as a routable
         bucket name. Buckets not present in the resulting map are rejected with NoSuchBucket.
     """
-    raw = os.environ.get("S3_ZONE_CONFIG", "").strip()
-    if not raw:
-        return {}
-
-    try:
-        mapping: dict = json.loads(raw)
-    except json.JSONDecodeError as exc:
-        logger.error(f"Invalid S3_ZONE_CONFIG JSON: {exc}")
-        return {}
+    mapping = load_zone_config()
 
     backends: dict[str, _ZoneBackend] = {}
     for key, cfg in mapping.items():

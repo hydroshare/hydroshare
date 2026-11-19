@@ -11,6 +11,8 @@ class ZoneConfig(BaseModel):
     aws_s3_endpoint_url: str
     aws_s3_endpoint_url_public: str
     bucket_name: str
+    alias: str = ""
+    region: str = "auto"
     # Server-side copy into this zone. "copy_object" issues a single CopyObject (GCS: no 5GB cap there, and
     # UploadPartCopy is not implemented). "managed_copy" uses boto3's client.copy(), which switches to a multipart
     # UploadPartCopy at multipart_copy_threshold. Set "managed_copy" when adding an AWS-backed zone, where
@@ -49,6 +51,22 @@ def get_zone_config(zone_name: str) -> ZoneConfig:
 
 @lru_cache(maxsize=None)
 def get_resource_s3_zones_config() -> ZonesConfig:
+    if getattr(django_settings, "S3_ZONES_DATABASE_ENABLED", False):
+        from .models import StorageZone
+
+        zones = {zone.name: ZoneConfig(**zone.as_config())
+                 for zone in StorageZone.objects.filter(enabled=True)}
+        default = getattr(django_settings, "RESOURCE_S3_DEFAULT_ZONE", "hydroshare")
+        if default not in zones:
+            raise ValueError(f"Default S3 zone {default!r} is not configured or enabled")
+        names = set()
+        for config in zones.values():
+            for name in (config.bucket_name, config.alias):
+                if name:
+                    if name in names:
+                        raise ValueError(f"Duplicate S3 bucket or alias {name!r}")
+                    names.add(name)
+        return ZonesConfig(resource_s3_zones_config=zones, resource_s3_default_zone=default)
     return ZonesConfig(
         resource_s3_zones_config={
             zone: ZoneConfig(**config)

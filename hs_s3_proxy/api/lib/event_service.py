@@ -1,9 +1,8 @@
-import ast
-import json
 import logging
 import os
 
 import httpx
+from .zone_config import load_zone_config
 
 logger = logging.getLogger("hs_s3_proxy")
 
@@ -28,22 +27,15 @@ def close_event_service_client() -> None:
 
 
 def _build_bucket_zone_map() -> dict[str, str]:
-    raw = os.environ.get("S3_ZONE_CONFIG", "")
-    if not raw:
-        return {}
-    try:
-        parsed = json.loads(raw)
-    except json.JSONDecodeError:
-        try:
-            parsed = ast.literal_eval(raw)
-        except Exception:
-            return {}
+    parsed = load_zone_config()
     mapping: dict[str, str] = {}
     for zone, config in parsed.items():
         if not isinstance(config, dict):
             continue
         bucket_name = config.get("bucket_name")
-        for b in ([bucket_name] if isinstance(bucket_name, str) else (config.get("buckets") or [])):
+        names = ([bucket_name] if isinstance(bucket_name, str) else (config.get("buckets") or []))
+        names = names + ([config["alias"]] if config.get("alias") else [])
+        for b in names:
             if b:
                 mapping[b] = zone
     return mapping

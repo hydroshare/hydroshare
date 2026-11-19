@@ -90,6 +90,9 @@ done
 
 DOCKER_COMPOSER_YAML_FILE='local-dev.yml'
 
+echo "Preparing local S3 zone secrets"
+python3 scripts/create_local_zone_secrets.py "$CONFIG_DIRECTORY" || exit 1
+
 NODE_CONTAINER_RUNNING=`docker ps -a | grep nodejs`
 
 docker compose -f ${DOCKER_COMPOSER_YAML_FILE} down -v --rmi local --remove-orphans
@@ -138,8 +141,8 @@ make down-discover
 echo " - make up-discover"
 make up-discover
 
-echo "  - docker compose -f ${DOCKER_COMPOSER_YAML_FILE} up -d postgis pgbouncer redis minio mongodb companion hydroshare hs_extract hs-s3-auth hs-s3-proxy nginx"
-docker compose -f $DOCKER_COMPOSER_YAML_FILE up -d postgis pgbouncer redis minio mongodb companion hydroshare hs_extract hs-s3-auth hs-s3-proxy nginx
+echo "  - starting core services before configuring S3 zones"
+docker compose -f "$DOCKER_COMPOSER_YAML_FILE" up -d postgis pgbouncer redis minio mongodb companion hydroshare hs-s3-auth || exit 1
 
 echo
 echo '########################################################################################################################'
@@ -204,7 +207,7 @@ docker exec hydroshare psql -U postgres -h postgis -d postgres -w -c 'SET client
 echo
 echo "  - docker exec hydroshare psql -U postgres -h postgis -d postgres -q -f ${HS_DATABASE}"
 echo
-docker exec hydroshare psql -U postgres -h postgis -d postgres -q -f ${HS_DATABASE}
+docker exec hydroshare psql -U postgres -h postgis -d postgres -v ON_ERROR_STOP=1 -q -f "${HS_DATABASE}" || exit 1
 
 echo
 echo "  - waiting for postgres to be ready to accept connections..."
@@ -228,12 +231,30 @@ docker exec hydroshare python manage.py rename_app django_irods django_s3
 echo
 echo "  - docker exec hydroshare python manage.py migrate sites --noinput"
 echo
-docker exec hydroshare python manage.py migrate sites --noinput
+docker exec hydroshare python manage.py migrate sites --noinput || exit 1
 
 echo
 echo "  - docker exec hydroshare python manage.py migrate --fake-initial --noinput"
 echo
-docker exec hydroshare python manage.py migrate --fake-initial --noinput
+docker exec hydroshare python manage.py migrate --fake-initial --noinput || exit 1
+
+echo "  - configuring local MinIO zones"
+docker exec hydroshare python manage.py seed_local_s3_zones --confirm || exit 1
+docker compose -f "$DOCKER_COMPOSER_YAML_FILE" restart hydroshare || exit 1
+echo "  - waiting for the S3 zone configuration endpoint"
+ready=false
+for attempt in {1..60}; do
+  if docker exec hydroshare python -c 'import os, urllib.request; token = open(os.environ["S3_ZONE_API_TOKEN_FILE"]).read().strip(); request = urllib.request.Request("http://localhost:8000/_internal/s3-zones/", headers={"Authorization": "Bearer " + token}); urllib.request.urlopen(request, timeout=2).close()' >/dev/null 2>&1; then
+    ready=true
+    break
+  fi
+  sleep 1
+done
+if [ "$ready" != true ]; then
+  echo "S3 zone configuration endpoint did not become ready; check hydroshare logs." >&2
+  exit 1
+fi
+docker compose -f "$DOCKER_COMPOSER_YAML_FILE" up -d hs_extract hs-s3-proxy nginx || exit 1
 
 echo
 echo "  - docker exec hydroshare python manage.py prevent_web_crawling"
@@ -344,4 +365,3 @@ echo -e " You are running discovery-atlas using PM2 and the Vite dev server."
 echo -e " Run `green '\"make down-discover\"'` to cleanup the PM2 service when you're done."
 echo '########################################################################################################################'
 echo
-

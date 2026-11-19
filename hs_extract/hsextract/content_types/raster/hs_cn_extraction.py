@@ -71,6 +71,7 @@ def encode_raster_metadata(filepath, zone: str, multiband=False, validate_bbox=T
         boto3.Session(
             aws_access_key_id=config["aws_access_key_id"],
             aws_secret_access_key=config["aws_secret_access_key"],
+            region_name=config.get("region"),
         ),
         aws_unsigned=False,
     )
