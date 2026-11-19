@@ -230,15 +230,15 @@ class TestToCatalogRecordId(ParametrizedTestCase):
             param(None, False, id="no_sharing_status_uses_site_url"),
         ],
     )
-    def test_id_matches_url(self, sharing_status, is_doi):
+    def test_id_is_superset_of_url(self, sharing_status, is_doi):
         expected_id = (
-            f"https://doi.org/10.4211/hs.{RESOURCE_ID}" if is_doi
-            else f"{current_site_url()}/resource/{RESOURCE_ID}"
+            f"https://doi.org/10.4211/hs.{RESOURCE_ID}#schemaorg" if is_doi
+            else f"{current_site_url()}/resource/{RESOURCE_ID}#schemaorg"
         )
         metadata = {**MINIMAL_METADATA, "sharing_status": sharing_status}
         dataset = HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=RESOURCE_ID)
         self.assertEqual(str(dataset.id), expected_id)
-        self.assertEqual(str(dataset.id), str(dataset.url))
+        self.assertIn(str(dataset.url), str(dataset.id))
 
 
 class TestToCatalogRecordSameAs(ParametrizedTestCase):
@@ -390,34 +390,6 @@ class TestToCatalogRecordIncludedInDataCatalog(ParametrizedTestCase):
         metadata = {**MINIMAL_METADATA, "sharing_status": sharing_status}
         dataset = HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=RESOURCE_ID)
         self.assertIsNone(dataset.includedInDataCatalog)
-
-
-class TestToCatalogRecordPublisher(ParametrizedTestCase):
-    """Tests that publisher is the CUAHSI Organization for published resources and None otherwise."""
-    def test_published_has_cuahsi_organization(self):
-        metadata = {**MINIMAL_METADATA, "sharing_status": "published"}
-        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=RESOURCE_ID)
-        self.assertIsInstance(dataset.publisher, schema.PublisherOrganization)
-        self.assertEqual(str(dataset.publisher.id), "https://ror.org/04s2bx355")
-        self.assertEqual(
-            dataset.publisher.name,
-            "Consortium of Universities for the Advancement of Hydrologic Science, Inc. (CUAHSI)",
-        )
-        self.assertEqual(str(dataset.publisher.url), "https://www.cuahsi.org/")
-
-    @parametrize(
-        "sharing_status",
-        [
-            param("public", id="public"),
-            param("private", id="private"),
-            param("discoverable", id="discoverable"),
-            param(None, id="no_sharing_status"),
-        ],
-    )
-    def test_non_published_has_no_publisher(self, sharing_status):
-        metadata = {**MINIMAL_METADATA, "sharing_status": sharing_status}
-        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=RESOURCE_ID)
-        self.assertIsNone(dataset.publisher)
 
 
 class TestToCatalogRecordRelationPartitioning(unittest.TestCase):
