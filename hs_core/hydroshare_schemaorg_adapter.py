@@ -328,7 +328,6 @@ class _ResourceUserMetadata(BaseModel):
     def to_dataset_subject_of(self, resource_id: str) -> list:
         """Return a reference to the resource's Dublin Core XML metadata document."""
         subject_of = schema.SubjectOf.model_construct(
-            type="DataDownload",
             name="resourcemetadata.xml",
             description="Dublin Core Metadata Document Describing the Dataset",
             url=f"{current_site_url()}/hsapi/resource/{resource_id}/scimeta/",

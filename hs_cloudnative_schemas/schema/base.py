@@ -450,6 +450,11 @@ class MediaObjectPartOf(CreativeWork):
 
 
 class SubjectOf(CreativeWork):
+    type: Literal["DataDownload"] = Field(
+            alias="@type",  # type: ignore
+            default="DataDownload",
+            description="Part of a dataset in downloadable form which describes the dataset.",
+        )
     url: Optional[HttpUrl] = Field(
         title="URL",
         description="The URL address that serves as a reference to access additional details related to the record. "
