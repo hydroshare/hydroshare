@@ -16,6 +16,7 @@ RUN pip install pymongo
 
 RUN pip install django-rest-knox
 RUN pip install django-celery-beat==2.7.0
+RUN pip install 'cryptography>=42,<51'
 
 # installs specific commit until hsmodels gets a full release
 RUN pip install --upgrade git+https://github.com/hydroshare/hsmodels.git@22b7d610814a28065511ff03ba044ad66cc1bc98

@@ -33,6 +33,7 @@ def encode_vector_metadata(filepath, zone: str, validate_bbox=True):
         'AWS_S3_ENDPOINT': endpoint,
         'AWS_ACCESS_KEY_ID': config["aws_access_key_id"],
         'AWS_SECRET_ACCESS_KEY': config["aws_secret_access_key"],
+        'AWS_REGION': config.get("region"),
         'AWS_VIRTUAL_HOSTING': 'FALSE',
         'AWS_HTTPS': use_https,
     })
@@ -44,6 +45,7 @@ def encode_vector_metadata(filepath, zone: str, validate_bbox=True):
         pyogrio.set_gdal_config_options({
             'AWS_ACCESS_KEY_ID': None,
             'AWS_SECRET_ACCESS_KEY': None,
+            'AWS_REGION': None,
         })
 
     feature_count = len(gdf)

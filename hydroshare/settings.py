@@ -486,6 +486,9 @@ SWAGGER_SETTINGS = {
 }
 
 RESOURCE_S3_DEFAULT_ZONE = "hydroshare"
+S3_ZONES_DATABASE_ENABLED = os.environ.get("S3_ZONES_DATABASE_ENABLED", "").lower() == "true"
+S3_ZONE_ENCRYPTION_KEY_FILE = os.environ.get("S3_ZONE_ENCRYPTION_KEY_FILE", "")
+S3_ZONE_API_TOKEN_FILE = os.environ.get("S3_ZONE_API_TOKEN_FILE", "")
 S3_AUTH_EVENT_ENDPOINT = os.environ.get("HS_S3_AUTH_EVENT_ENDPOINT", "http://hs-s3-auth/s3/event/")
 S3_AUTH_EVENT_TIMEOUT = float(os.environ.get("HS_S3_AUTH_EVENT_TIMEOUT", "5"))
 S3_AUTH_EVENT_USERNAME = os.environ.get("HS_S3_AUTH_EVENT_USERNAME", "cuahsi")

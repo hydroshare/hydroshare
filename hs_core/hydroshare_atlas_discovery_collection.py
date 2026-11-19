@@ -8,14 +8,20 @@ import boto3
 from botocore.exceptions import ClientError
 from pymongo import MongoClient
 from django.conf import settings
+from django.utils.functional import SimpleLazyObject
 from hsmodels.schemas.enums import RelationType
+from django_s3.settings import get_resource_s3_zones_config
 
 
 @functools.lru_cache(maxsize=None)
 def _make_s3_client(zone=None):
-    zone_config = settings.RESOURCE_S3_ZONES_CONFIG.get(
-        zone or settings.RESOURCE_S3_DEFAULT_ZONE, {}
-    )
+    if getattr(settings, "S3_ZONES_DATABASE_ENABLED", False):
+        config = get_resource_s3_zones_config()
+        zone_config = config.zone_config(zone or config.resource_s3_default_zone).model_dump()
+    else:
+        zone_config = settings.RESOURCE_S3_ZONES_CONFIG.get(
+            zone or settings.RESOURCE_S3_DEFAULT_ZONE, {}
+        )
     kwargs = {}
     if zone_config.get("aws_s3_endpoint_url"):
         kwargs["endpoint_url"] = zone_config["aws_s3_endpoint_url"]
@@ -23,10 +29,12 @@ def _make_s3_client(zone=None):
         kwargs["aws_access_key_id"] = zone_config["aws_access_key_id"]
     if zone_config.get("aws_secret_access_key"):
         kwargs["aws_secret_access_key"] = zone_config["aws_secret_access_key"]
+    if zone_config.get("region"):
+        kwargs["region_name"] = zone_config["region"]
     return boto3.client('s3', **kwargs)
 
 
-s3 = _make_s3_client()
+s3 = SimpleLazyObject(lambda: _make_s3_client())
 
 
 def _s3_client_for_bucket(bucket_name: str):
@@ -35,7 +43,12 @@ def _s3_client_for_bucket(bucket_name: str):
     Zones may live on different endpoints/projects, so a non-default zone bucket must not be
     read with the default-zone client. Unknown buckets fall back to the default-zone client.
     """
-    for zone, zone_config in settings.RESOURCE_S3_ZONES_CONFIG.items():
+    if getattr(settings, "S3_ZONES_DATABASE_ENABLED", False):
+        config = get_resource_s3_zones_config()
+        zones = {name: zone.model_dump() for name, zone in config.resource_s3_zones_config.items()}
+    else:
+        zones = settings.RESOURCE_S3_ZONES_CONFIG
+    for zone, zone_config in zones.items():
         if zone_config.get("bucket_name") == bucket_name and zone != settings.RESOURCE_S3_DEFAULT_ZONE:
             return _make_s3_client(zone)
     return s3

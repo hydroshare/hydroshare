@@ -2,6 +2,7 @@ import os
 import posixpath
 import logging
 import boto3
+from botocore import UNSIGNED
 from celery import current_app as celery_app
 from datetime import datetime
 from datetime import timedelta
@@ -121,7 +122,7 @@ class S3Storage(s3.S3Storage):
                 client_config = self.client_config.merge(client_config)
             resource = session.resource(
                 "s3",
-                region_name=self.region_name or "auto",
+                region_name=self.region_name or zone_config.region,
                 use_ssl=self.use_ssl,
                 endpoint_url=zone_config.aws_s3_endpoint_url,
                 config=client_config,
@@ -569,30 +570,22 @@ class S3Storage(s3.S3Storage):
         params["Bucket"] = bucket
         params["Key"] = name
 
-        if self.querystring_auth:
-            session = self._create_session(zone)
-            zone_config = get_zone_config(zone)
-            presign_endpoint = zone_config.aws_s3_endpoint_url
-            # Force path-style addressing and s3v4 for GCS S3-compat presigned URLs.
-            # Virtual-hosted style changes the string-to-sign host component, causing
-            # SignatureDoesNotMatch on GCS even with otherwise correct credentials.
-            presign_config = BotocoreConfig(
-                signature_version="s3v4",
-                s3={"addressing_style": "path"},
-            )
-            presign_client = session.client(
-                "s3",
-                region_name=self.region_name or "auto",
-                use_ssl=self.use_ssl,
-                endpoint_url=presign_endpoint,
-                config=presign_config,
-                verify=self.verify,
-            )
-            url = presign_client.generate_presigned_url(
-                "get_object", Params=params, ExpiresIn=expire, HttpMethod=http_method
-            )
-        else:
-            url = self.unsigned_connection.meta.client.generate_presigned_url(
-                "get_object", Params=params, ExpiresIn=expire, HttpMethod=http_method
-            )
+        session = self._create_session(zone)
+        zone_config = get_zone_config(zone)
+        # Sign the public host itself; changing the host after signing invalidates SigV4.
+        presign_config = BotocoreConfig(
+            signature_version="s3v4" if self.querystring_auth else UNSIGNED,
+            s3={"addressing_style": "path"},
+        )
+        presign_client = session.client(
+            "s3",
+            region_name=self.region_name or zone_config.region,
+            use_ssl=self.use_ssl,
+            endpoint_url=zone_config.aws_s3_endpoint_url_public,
+            config=presign_config,
+            verify=self.verify,
+        )
+        url = presign_client.generate_presigned_url(
+            "get_object", Params=params, ExpiresIn=expire, HttpMethod=http_method
+        )
         return url

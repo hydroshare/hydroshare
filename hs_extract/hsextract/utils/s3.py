@@ -46,8 +46,10 @@ def _normalize_zone_entry(config: dict) -> dict[str, str | list[str] | None]:
 
     return {
         "aws_s3_endpoint_url": config.get("aws_s3_endpoint_url"),
+        "endpoint_url": config.get("aws_s3_endpoint_url"),
         "aws_access_key_id": config.get("aws_access_key_id"),
         "aws_secret_access_key": config.get("aws_secret_access_key"),
+        "region": config.get("region"),
         "aws_s3_public_endpoint_url": config.get("aws_s3_public_endpoint_url")
         or config.get("aws_s3_endpoint_url_public", ""),
         "buckets": buckets or [],
@@ -55,14 +57,25 @@ def _normalize_zone_entry(config: dict) -> dict[str, str | list[str] | None]:
 
 
 def _parse_zone_config() -> dict[str, dict]:
-    raw_config = os.environ.get(S3_ZONE_CONFIG_ENV_VAR)
-    if not raw_config:
-        return {}
-
-    try:
-        parsed = json.loads(raw_config)
-    except json.JSONDecodeError:
-        parsed = ast.literal_eval(raw_config)
+    url = os.environ.get("S3_ZONE_CONFIG_URL")
+    if url:
+        with open(os.environ["S3_ZONE_API_TOKEN_FILE"], encoding="utf-8") as file:
+            token = file.read().strip()
+        if not token:
+            raise ValueError("S3 zone API token must not be empty")
+        response = requests.get(url, headers={"Authorization": f"Bearer {token}"}, timeout=10)
+        response.raise_for_status()
+        parsed = response.json()
+        if not isinstance(parsed, dict) or not parsed:
+            raise ValueError("S3 zone configuration must be a non-empty object")
+    else:
+        raw_config = os.environ.get(S3_ZONE_CONFIG_ENV_VAR)
+        if not raw_config:
+            return {}
+        try:
+            parsed = json.loads(raw_config)
+        except json.JSONDecodeError:
+            parsed = ast.literal_eval(raw_config)
 
     if not isinstance(parsed, dict):
         return {}
@@ -81,6 +94,7 @@ def _create_s3_client(config: dict) -> boto3.client:
         endpoint_url=config.get("aws_s3_endpoint_url"),
         aws_access_key_id=config.get("aws_access_key_id"),
         aws_secret_access_key=config.get("aws_secret_access_key"),
+        region_name=config.get("region"),
         config=Config(
             s3={"addressing_style": "path"},
             request_checksum_calculation="when_required",

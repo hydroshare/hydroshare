@@ -18,6 +18,7 @@ from hs_sitemap.views import sitemap
 from hs_tracking import views as tracking
 from theme import views as theme
 from theme.views import LogoutView, delete_resource_comment, oidc_signup
+from django_s3.internal_views import zone_configuration
 
 # autocomplete_light.autodiscover()
 admin.autodiscover()
@@ -25,7 +26,7 @@ admin.autodiscover()
 # Add the urlpatterns for any custom Django applications here.
 # You can also change the ``home`` view to add your own functionality
 # to the project's homepage.
-urlpatterns = []
+urlpatterns = [path("_internal/s3-zones/", zone_configuration, name="internal_s3_zones")]
 if settings.ENABLE_OIDC_AUTHENTICATION:
     urlpatterns += i18n_patterns(
         path("admin/login/", RedirectView.as_view(url='/oidc/authenticate'), name="admin_login"),
