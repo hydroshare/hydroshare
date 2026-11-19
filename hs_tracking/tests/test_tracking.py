@@ -288,12 +288,17 @@ class TrackingTests(TestCase):
         self.user.is_staff = True
         self.user.save()
         client = Client()
+        count = Variable.objects.count()
         response = client.get('/tracking/reports/history/')
         self.assertEqual(response.status_code, 200)
         reader = csv.reader(StringIO(response.content.decode()))
         rows = list(reader)
-        count = Variable.objects.all().count()
         self.assertEqual(len(rows), count + 1)  # +1 to account for the session header
+        self.assertEqual(Variable.objects.count(), count + 2)
+        visit = Variable.objects.get(name='visit')
+        fields = dict(pair.split('=', 1) for pair in visit.value.split('|'))
+        self.assertEqual(fields['is_human'], 'None')
+        self.assertEqual(fields['user_agent'], 'None')
 
     def test_history_variables(self):
         self.user.is_staff = True

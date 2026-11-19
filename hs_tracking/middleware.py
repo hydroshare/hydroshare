@@ -1,6 +1,6 @@
 from django.utils.deprecation import MiddlewareMixin
 
-from .models import Session
+from .models import Session, Variable
 from . import utils
 import re
 
@@ -57,11 +57,6 @@ class Tracking(MiddlewareMixin):
         if request.path.startswith('/heartbeat/'):
             return response
 
-        # filter out web crawlers
-        is_human = getattr(request, 'is_human', False)
-        if not is_human:
-            return response
-
         # filter out everything that is not an OK response
         if response.status_code != 200:
             return response
@@ -71,18 +66,19 @@ class Tracking(MiddlewareMixin):
 
         # get user info that will be recorded in the visit log
         session = Session.objects.for_request(request)
-        usertype = utils.get_user_type(session)
-        email_tld = utils.get_user_email_tld(session)
-        ip = utils.get_client_ip(request)
+        fields = utils.get_std_log_fields(request, session)
 
         # build the message string (key:value pairs)
-        msg = '|'.join([str(item) for item in
-                        ['user_ip=%s' % ip,
-                         'http_method=%s' % request.method,
-                         'http_code=%s' % response.status_code,
-                         'user_type=%s' % usertype,
-                         'user_email_domain=%s' % email_tld,
-                         'request_url=%s' % request.path]])
+        msg = Variable.format_kwargs(
+            user_ip=fields['user_ip'],
+            http_method=request.method,
+            http_code=response.status_code,
+            user_type=fields['user_type'],
+            user_email_domain=fields['user_email_domain'],
+            request_url=request.path,
+            is_human=fields['is_human'],
+            user_agent=fields['user_agent'],
+        )
 
         resource_id = get_resource_id_from_url(request.path)
         rest = get_rest_from_url(request.path)
