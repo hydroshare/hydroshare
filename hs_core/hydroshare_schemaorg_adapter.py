@@ -365,6 +365,11 @@ class _ResourceUserMetadata(BaseModel):
             return f"https://doi.org/10.4211/hs.{resource_id}"
         return f"{current_site_url()}/resource/{resource_id}"
 
+    def to_dataset_id(self, resource_id: str) -> str:
+        """Returns the identifier for the JSON-LD graph node which represents the dataset."""
+        dataset_url = self.to_dataset_url(resource_id)
+        return f"{dataset_url}#schemaorg"
+
     def to_dataset_identifier(self, resource_id: str) -> list:
         """Return the HydroShare URL, plus the DOI for published resources."""
         hs_resource_url = f"{current_site_url()}/resource/{resource_id}"
@@ -399,16 +404,6 @@ class _ResourceUserMetadata(BaseModel):
         if not self.additional_metadata:
             return None
         return [schema.PropertyValue(name=key, value=value) for key, value in self.additional_metadata.items()]
-
-    def to_dataset_url(self, resource_id: str) -> str:
-        """Return the DOI URL for published resources and the current environment's resource URL otherwise."""
-        if self.sharing_status == "published":
-            return f"https://doi.org/10.4211/hs.{resource_id}"
-        return f"{current_site_url()}/resource/{resource_id}"
-
-    def to_dataset_keywords(self) -> list[str] | None:
-        if self.subjects:
-            return self.subjects
 
     def to_dataset_license(self):
         if self.rights:
@@ -459,7 +454,7 @@ class _ResourceUserMetadata(BaseModel):
         dataset.name = self.title
         dataset.description = self.abstract
         dataset.url = self.to_dataset_url(resource_id)
-        dataset.id = self.to_dataset_url(resource_id)
+        dataset.id = self.to_dataset_id(resource_id)
         dataset.sameAs = self.to_dataset_same_as(resource_id)
         dataset.isAccessibleForFree = self.to_dataset_is_accessible_for_free()
         dataset.publisher = self.to_dataset_publisher()
