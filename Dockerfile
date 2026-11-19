@@ -6,6 +6,10 @@ ADD . /hydroshare
 RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
     locale-gen
 
+RUN wget https://storage.googleapis.com/minio-client-mirror-tmp/mc -O /usr/bin/mc && \
+    cp /usr/bin/mc /usr/local/bin/mc
+RUN chmod +x /usr/local/bin/mc
+
 RUN apt-get update
 RUN apt-get -y upgrade
 RUN pip install pymongo
