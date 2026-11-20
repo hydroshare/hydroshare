@@ -33,7 +33,12 @@ CONTENT_TYPE_TO_TERM = {
     "NetCDFLogicalFile": "MultidimensionalAggregation",
     "RefTimeseriesLogicalFile": "ReferencedTimeSeriesAggregation",
     "TimeSeriesLogicalFile": "TimeSeriesAggregation",
+    "ToolResource": "WebAppResource",
 }
+
+# Reverse of CONTENT_TYPE_TO_TERM: HydroShare term name -> content type (resource type or logical file class) name.
+# Used to turn the additionalType term URLs back into content type names for the discovery (MongoDB) documents.
+TERM_TO_CONTENT_TYPE = {term: content_type for content_type, term in CONTENT_TYPE_TO_TERM.items()}
 
 
 class BasePerson(BaseModel):
@@ -298,6 +303,9 @@ class _ResourceUserMetadata(BaseModel):
     # review_started (emitted by hsmodels ResourceMetadata) is publication workflow state, not
     # schema.org compliant, and must not appear in the output.
     review_started: Optional[datetime] = None
+    # input-only: resource type and aggregation type names used to derive the schema.org additionalType term URLs;
+    # not schema.org compliant, so declared here to keep it out of the output (see extra_columns)
+    content_types: List[str] = []
 
     @model_validator(mode="before")
     @classmethod
@@ -407,7 +415,7 @@ class _ResourceUserMetadata(BaseModel):
         dataset = ScientificDataset.model_construct(**self.extra_columns)
         is_part_of, has_part, other_relations = self._partition_relations_by_type()
         # content_types already includes the resource type; order it first, then the rest sorted for stability
-        content_types = sorted(self.extra_columns.get("content_types") or [], key=lambda t: (t != self.type, t))
+        content_types = sorted(self.content_types, key=lambda t: (t != self.type, t))
         dataset.additionalType = self.to_additional_types(content_types)
         dataset.provider = self.to_dataset_provider()
         dataset.name = self.title

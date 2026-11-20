@@ -35,7 +35,7 @@ class TestAdditionalTypeTerms(TestCase):
 
 
 class TestUserMetadataJsonAdditionalType(TestCase):
-    """The user_metadata.json written to S3 carries additionalType term URLs and unchanged content_types."""
+    """The user_metadata.json written to S3 carries additionalType term URLs and no content_types."""
 
     def setUp(self):
         group, _ = Group.objects.get_or_create(name='Hydroshare Author')
@@ -61,5 +61,5 @@ class TestUserMetadataJsonAdditionalType(TestCase):
         with mock.patch.object(type(self.resource), 'get_s3_storage', return_value=storage):
             self.resource.write_user_metadata_json_file()
         doc = written[f"{self.resource.short_id}/.hsmetadata/user_metadata.json"]
-        self.assertEqual(doc["content_types"], ["CompositeResource"])
+        self.assertNotIn("content_types", doc)
         self.assertEqual(doc["additionalType"], [f"{hydroshare_terms_url()}CompositeResource"])
