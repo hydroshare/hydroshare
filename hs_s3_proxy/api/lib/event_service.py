@@ -1,4 +1,5 @@
 import ast
+import asyncio
 import json
 import logging
 import os
@@ -9,6 +10,7 @@ logger = logging.getLogger("hs_s3_proxy")
 
 AUTH_SERVICE_URL = os.environ.get("AUTH_SERVICE_URL", "http://localhost:8001")
 EVENT_SERVICE_TIMEOUT = float(os.environ.get("EVENT_SERVICE_TIMEOUT", "5.0"))
+DOWNLOAD_EVENT_DEADLINE = 0.3
 EVENT_SERVICE_POOL_MAX_CONNECTIONS = int(os.environ.get("EVENT_SERVICE_POOL_MAX_CONNECTIONS", "10"))
 EVENT_SERVICE_POOL_MAX_KEEPALIVE_CONNECTIONS = int(
     os.environ.get("EVENT_SERVICE_POOL_MAX_KEEPALIVE_CONNECTIONS", "5")
@@ -21,10 +23,12 @@ EVENT_SERVICE_CLIENT = httpx.Client(
     timeout=EVENT_SERVICE_TIMEOUT,
     limits=EVENT_SERVICE_LIMITS,
 )
+DOWNLOAD_EVENT_CLIENT = httpx.AsyncClient(limits=EVENT_SERVICE_LIMITS)
 
 
-def close_event_service_client() -> None:
+async def close_event_service_clients() -> None:
     EVENT_SERVICE_CLIENT.close()
+    await DOWNLOAD_EVENT_CLIENT.aclose()
 
 
 def _build_bucket_zone_map() -> dict[str, str]:
@@ -120,3 +124,35 @@ def post_s3_event(
     except Exception as e:
         logger.error(f"Unexpected error posting S3 event: {e}", exc_info=True)
         return False
+
+
+async def post_s3_download_event(
+    bucket: str, object_path: str, username: str, user_id: int, zone: str,
+) -> None:
+    """Notify the auth service after the proxy sends the file response."""
+    try:
+        async with asyncio.timeout(DOWNLOAD_EVENT_DEADLINE):
+            response = await DOWNLOAD_EVENT_CLIENT.post(
+                f"{AUTH_SERVICE_URL}/s3/event/",
+                json={
+                    "action": "s3:GetObject",
+                    "bucket": bucket,
+                    "object_path": object_path,
+                    "username": username,
+                    "user_id": user_id,
+                    "zone": zone,
+                },
+            )
+    except (TimeoutError, httpx.TimeoutException):
+        logger.warning("S3 download tracking timed out for %s/%s", bucket, object_path)
+    except httpx.RequestError as exc:
+        logger.warning(
+            "S3 download tracking request failed for %s/%s (%s)",
+            bucket, object_path, type(exc).__name__,
+        )
+    else:
+        if response.status_code != 204:
+            logger.warning(
+                "S3 download tracking returned HTTP %s for %s/%s",
+                response.status_code, bucket, object_path,
+            )

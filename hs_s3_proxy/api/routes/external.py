@@ -6,8 +6,7 @@ import re
 from fastapi import APIRouter, BackgroundTasks, Request, Response
 from api.lib.auth_service import verify_csrf_sync, verify_signature_sync
 from api.lib.authorization import check_s3_authorization
-from api.lib.download_tracking import publish_s3_download
-from api.lib.event_service import post_s3_event
+from api.lib.event_service import post_s3_download_event, post_s3_event
 from api.lib.s3_auth import (
     get_s3_action_from_request,
     parse_authorization_header,
@@ -243,8 +242,9 @@ async def proxy_s3_request(request: Request, full_path: str, background_tasks: B
         and content_path[1]
     ):
         background_tasks.add_task(
-            publish_s3_download, bucket=authz_bucket, object_path=authz_prefix,
+            post_s3_download_event, bucket=authz_bucket, object_path=authz_prefix,
             username=username, user_id=user_id,
+            zone=s3_proxy.zone_for_bucket(authz_bucket),
         )
     if action in ["s3:DeleteObject", "s3:DeleteObjects"] and response.status_code in [200, 204]:
         event_paths = authz_prefixes if authz_prefixes else [authz_prefix]

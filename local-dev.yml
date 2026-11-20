@@ -318,7 +318,6 @@ services:
       dockerfile: Dockerfile
     environment:
       AUTH_SERVICE_URL: "http://hs-s3-auth"
-      CELERY_BROKER_URL: "redis://redis:6379/0"
       AUTH_SERVICE_TIMEOUT: "5"
       CORS_ALLOW_ORIGINS: "*"
       EVENT_SERVICE_POOL_MAX_CONNECTIONS: "10"

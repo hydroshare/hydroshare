@@ -99,7 +99,7 @@ class TestReceiveS3Event:
         for call in mock_celery.send_task.call_args_list:
             assert call.args[0] != "hs_event_s3.tasks.sync_discovery_collection"
 
-    def test_get_object_does_not_dispatch_any_tasks(self, mock_celery):
+    def test_get_object_dispatches_only_download_tracking(self, mock_celery):
         event = base_event(
             action="s3:GetObject",
             object_path="a" * 32 + "/data/contents/somefile.csv",
@@ -107,7 +107,16 @@ class TestReceiveS3Event:
         response = client.post("/event/", json=event)
 
         assert response.status_code == 204
-        mock_celery.send_task.assert_not_called()
+        mock_celery.send_task.assert_called_once_with(
+            "hs_event_s3.tasks.record_s3_download",
+            kwargs={
+                field: event[field]
+                for field in ("action", "bucket", "object_path", "username", "user_id")
+            },
+            queue="s3_events",
+            ignore_result=True,
+            retry=False,
+        )
 
     def test_user_id_is_optional(self, mock_celery):
         event = base_event()

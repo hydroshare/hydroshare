@@ -1,5 +1,6 @@
 """HTTP-level tests for S3 download events, runnable without pytest."""
 
+import asyncio
 import unittest
 from unittest.mock import patch
 
@@ -7,7 +8,6 @@ import httpx
 from fastapi import Response
 from fastapi.responses import StreamingResponse
 from fastapi.testclient import TestClient
-from kombu.exceptions import OperationalError
 
 from api.main import app
 
@@ -35,11 +35,12 @@ class DownloadTrackingTests(unittest.TestCase):
             return_value=Response(content=b"file contents", status_code=200),
         )
         zone = patch("api.routes.external.s3_proxy.zone_for_bucket", return_value="hydroshare")
+        event_url = patch("api.lib.event_service.AUTH_SERVICE_URL", "http://auth.test")
         event = patch(
-            "api.lib.download_tracking.celery_app.send_task",
+            "api.lib.event_service.DOWNLOAD_EVENT_CLIENT.post",
+            return_value=httpx.Response(204),
         )
-        broker = patch("api.lib.download_tracking.BROKER_URL", "memory://")
-        for boundary in (signature, zone, broker):
+        for boundary in (signature, zone, event_url):
             boundary.start()
             self.addCleanup(boundary.stop)
         self.authorization = authorization.start()
@@ -54,20 +55,16 @@ class DownloadTrackingTests(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.content, b"file contents")
-        self.event_post.assert_called_once()
-        self.assertEqual(
-            self.event_post.call_args.args,
-            ("hs_event_s3.tasks.record_s3_download",),
-        )
-        self.assertEqual(
-            self.event_post.call_args.kwargs,
-            dict(kwargs={
+        self.event_post.assert_awaited_once_with(
+            "http://auth.test/s3/event/",
+            json={
                 "action": "s3:GetObject",
                 "bucket": "resource",
                 "object_path": OBJECT_PATH,
                 "username": "test-user",
                 "user_id": 42,
-            }, queue="s3_events", ignore_result=True, retry=False),
+                "zone": "hydroshare",
+            },
         )
 
     def test_partial_content_download_sends_event(self):
@@ -79,8 +76,8 @@ class DownloadTrackingTests(unittest.TestCase):
 
         self.assertEqual(response.status_code, 206)
         self.assertEqual(response.content, b"file")
-        self.event_post.assert_called_once()
-        self.assertEqual(self.event_post.call_args.kwargs["kwargs"]["action"], "s3:GetObject")
+        self.event_post.assert_awaited_once()
+        self.assertEqual(self.event_post.await_args.kwargs["json"]["action"], "s3:GetObject")
 
     def test_tracking_waits_until_response_body_is_sent(self):
         body_sent = False
@@ -99,8 +96,9 @@ class DownloadTrackingTests(unittest.TestCase):
 
             await app(scope, receive, observe_send)
 
-        def post_event(*args, **kwargs):
+        async def post_event(*args, **kwargs):
             response_state_at_post.append(body_sent)
+            return httpx.Response(204)
 
         self.backend.return_value = StreamingResponse(chunks())
         self.event_post.side_effect = post_event
@@ -111,24 +109,28 @@ class DownloadTrackingTests(unittest.TestCase):
         self.assertEqual(response.content, b"file contents")
         self.assertEqual(response_state_at_post, [True])
 
-    def test_broker_failure_leaves_download_unchanged(self):
-        self.event_post.side_effect = OperationalError("broker unavailable")
+    def test_auth_failure_leaves_download_unchanged(self):
+        self.event_post.return_value = httpx.Response(503)
         with self.assertLogs("hs_s3_proxy", level="WARNING") as logs:
             response = self.client.get(f"/resource/{OBJECT_PATH}")
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.content, b"file contents")
-        self.event_post.assert_called_once()
-        self.assertTrue(any("Could not publish S3 download tracking" in entry for entry in logs.output))
+        self.event_post.assert_awaited_once()
+        self.assertTrue(any("S3 download tracking returned HTTP 503" in entry for entry in logs.output))
 
-    def test_missing_broker_config_skips_tracking_and_logs_warning(self):
-        with patch("api.lib.download_tracking.BROKER_URL", None):
-            with self.assertLogs("hs_s3_proxy", level="WARNING") as logs:
-                response = self.client.get(f"/resource/{OBJECT_PATH}")
+    def test_slow_auth_notification_is_cancelled(self):
+        async def slow_post(*args, **kwargs):
+            await asyncio.sleep(10)
+
+        self.event_post.side_effect = slow_post
+        with self.assertLogs("hs_s3_proxy", level="WARNING") as logs:
+            response = self.client.get(f"/resource/{OBJECT_PATH}")
 
         self.assertEqual(response.status_code, 200)
-        self.event_post.assert_not_called()
-        self.assertTrue(any("CELERY_BROKER_URL is not configured" in entry for entry in logs.output))
+        self.assertEqual(response.content, b"file contents")
+        self.event_post.assert_awaited_once()
+        self.assertTrue(any("S3 download tracking timed out" in entry for entry in logs.output))
 
     def test_failed_download_does_not_send_event(self):
         self.backend.return_value = Response(status_code=404)

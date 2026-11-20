@@ -7,7 +7,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from api.routes.external import router as external_router, s3_proxy
-from api.lib.event_service import close_event_service_client
+from api.lib.event_service import close_event_service_clients
 
 logging.basicConfig(
     level=logging.INFO,
@@ -39,7 +39,7 @@ app.include_router(external_router)
 @app.on_event("shutdown")
 async def shutdown_event() -> None:
     await s3_proxy.close()
-    close_event_service_client()
+    await close_event_service_clients()
 
 
 class Server(uvicorn.Server):
