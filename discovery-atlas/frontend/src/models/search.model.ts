@@ -1,5 +1,5 @@
 import { Model } from "@vuex-orm/core";
-import { ENDPOINTS, contentTypeLabels } from "@/constants";
+import { ENDPOINTS, contentTypeLabels, contentTypeTerms } from "@/constants";
 import { getQueryString } from "@/util";
 import { IResult, ISearchParams, ITypeaheadParams } from "@/types";
 
@@ -106,20 +106,16 @@ export default class Search extends Model {
   }
 
   /**
-   * `additionalType` is a list of HydroShare term URLs (e.g. https://www.hydroshare.org/terms/CompositeResource)
-   * for resources, or a plain string for older documents. Return the resource-level term name used as the
-   * key for the content type logos/labels.
+   * `content_types` is the list of resource type and aggregation class names of a resource
+   * (e.g. ["CompositeResource", "NetCDFLogicalFile"]). Return the term name of the resource type, or else of
+   * the first content type with a label, as used for the content type logos/labels.
    */
-  private static _getContentType(additionalType: string | string[] | undefined): string {
-    const values = Array.isArray(additionalType)
-      ? additionalType
-      : additionalType
-        ? [additionalType]
-        : [];
-    const names = values.map((v) => v.split("/").filter(Boolean).pop() || "");
+  private static _getContentType(contentTypes: string[] | undefined): string {
+    const terms = (contentTypes || []).map((t) => contentTypeTerms[t] || t);
+    const resourceTerms = ["CompositeResource", "CollectionResource", "WebAppResource"];
     return (
-      names.find((n) => n === "CompositeResource" || n === "CollectionResource") ||
-      names.find((n) => n in contentTypeLabels) ||
+      terms.find((t) => resourceTerms.includes(t)) ||
+      terms.find((t) => t in contentTypeLabels) ||
       ""
     );
   }
@@ -146,7 +142,7 @@ export default class Search extends Model {
       spatialCoverage: rawResult.document[0].spatialCoverage?.geo || null,
       url: rawResult.document[0].url || "",
       identifier: rawResult.document[0].identifier[0] || "",
-      contentType: Search._getContentType(rawResult.document[0].additionalType),
+      contentType: Search._getContentType(rawResult.document[0].content_types),
       sharingStatus: rawResult.document[0].creativeWorkStatus?.name || "",
       temporalCoverage: rawResult.document[0].temporalCoverage || undefined,
       views: rawResult.document[0].viewCount,

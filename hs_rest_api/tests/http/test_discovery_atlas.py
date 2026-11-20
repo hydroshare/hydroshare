@@ -148,14 +148,7 @@ class TestSearchQuery(ParametrizedTestCase):
                     ]
                 }
             },
-            {
-                "compound": {
-                    "should": [
-                        {"term": {"path": "additionalType", "query": content_type}},
-                        {"term": {"path": "content_types", "query": content_type}},
-                    ]
-                }
-            },
+            {"term": {"path": "content_types", "query": content_type}},
             {
                 "text": {
                     "path": ["creator.name", "contributor.name"],
@@ -340,9 +333,7 @@ class TestSearchQuery(ParametrizedTestCase):
             {
                 "compound": {
                     "should": [
-                        {"term": {"path": "additionalType", "query": content_types[0]}},
                         {"term": {"path": "content_types", "query": content_types[0]}},
-                        {"term": {"path": "additionalType", "query": content_types[1]}},
                         {"term": {"path": "content_types", "query": content_types[1]}},
                     ]
                 }

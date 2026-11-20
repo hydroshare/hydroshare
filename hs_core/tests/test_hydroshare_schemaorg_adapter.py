@@ -739,11 +739,17 @@ class TestToCatalogRecordAdditionalType(unittest.TestCase):
         dataset = HydroshareMetadataAdapter.to_catalog_record(metadata)
         self.assertIsNone(dataset.additionalType)
 
-    def test_dumped_record_has_list_of_strings_and_keeps_content_types(self):
+    def test_dumped_record_has_list_of_strings_and_no_content_types(self):
         metadata = {**MINIMAL_METADATA, "content_types": ["CompositeResource", "GenericLogicalFile"]}
         dumped = HydroshareMetadataAdapter.to_catalog_record(metadata).model_dump(by_alias=True)
         self.assertEqual(
             [str(u) for u in dumped["additionalType"]],
             [f"{self.TERMS}CompositeResource", f"{self.TERMS}SingleFileAggregation"],
         )
-        self.assertEqual(dumped["content_types"], ["CompositeResource", "GenericLogicalFile"])
+        # content_types is input-only (not schema.org); additionalType carries the same information
+        self.assertNotIn("content_types", dumped)
+
+    def test_tool_resource_maps_to_web_app_resource_term(self):
+        metadata = {**MINIMAL_METADATA, "type": "ToolResource", "content_types": ["ToolResource"]}
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata)
+        self.assertEqual([str(u) for u in dataset.additionalType], [f"{self.TERMS}WebAppResource"])

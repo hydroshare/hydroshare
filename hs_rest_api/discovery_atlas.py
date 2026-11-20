@@ -210,27 +210,19 @@ class SearchQuery(BaseModel):
             })
 
         if self.contentType and len(self.contentType) > 0:
-            # Use exact term matching for each content type to ensure precise filtering
-            # Check both 'additionalType' (single value) and 'content_types' (array) fields.
+            # Exact term matching on 'content_types', which holds the resource type and aggregation type names
+            # (e.g. CompositeResource, NetCDFLogicalFile) of the resource. Any of the requested types may match.
             if len(self.contentType) == 1:
-                # Single content type - match either path exactly. Use compound should for OR.
+                must.append({'term': {'path': 'content_types', 'query': self.contentType[0]}})
+            else:
                 must.append({
                     'compound': {
                         'should': [
-                            {'term': {'path': 'additionalType', 'query': self.contentType[0]}},
-                            {'term': {'path': 'content_types', 'query': self.contentType[0]}}
+                            {'term': {'path': 'content_types', 'query': content_type}}
+                            for content_type in self.contentType
                         ]
                     }
                 })
-            else:
-                # Multiple content types - match any of the specified types appearing in either path.
-                # Create a single compound 'should' that includes term matches for each
-                # requested content type against both 'additionalType' and 'content_types'.
-                content_type_conditions = []
-                for content_type in self.contentType:
-                    content_type_conditions.append({'term': {'path': 'additionalType', 'query': content_type}})
-                    content_type_conditions.append({'term': {'path': 'content_types', 'query': content_type}})
-                must.append({'compound': {'should': content_type_conditions}})
         if self.creatorName:
             must.append({'text': {'path': ['creator.name', 'contributor.name'], 'query': self.creatorName}})
         if self.keyword:
