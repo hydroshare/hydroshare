@@ -10,6 +10,8 @@ from pymongo import MongoClient
 from django.conf import settings
 from hsmodels.schemas.enums import RelationType
 
+from hs_core.hydroshare_schemaorg_adapter import TERM_TO_CONTENT_TYPE
+
 
 @functools.lru_cache(maxsize=None)
 def _make_s3_client(zone=None):
@@ -172,6 +174,18 @@ def collect_file_to_catalog(filepath: str):
     _index_metadata(object_key, _load_metadata(bucket_name, object_key))
 
 
+def _content_types_from_additional_type(additional_type) -> list:
+    """Convert schema.org additionalType HydroShare term URLs (e.g.
+    https://www.hydroshare.org/terms/MultidimensionalAggregation) to unique content type names (e.g. NetCDFLogicalFile).
+    Unrecognized values are skipped."""
+    content_types = []
+    for url in additional_type or []:
+        content_type = TERM_TO_CONTENT_TYPE.get(str(url).rstrip('/').rsplit('/', 1)[-1])
+        if content_type and content_type not in content_types:
+            content_types.append(content_type)
+    return content_types
+
+
 def _index_metadata(object_key: str, metadata_json: dict):
     resource_id = object_key.split('/', 1)[0]
     metadata_json['_s3_filepath'] = object_key
@@ -186,17 +200,9 @@ def _index_metadata(object_key: str, metadata_json: dict):
                 # encountered some names with leading whitespace which causes sorting issues
                 metadata_json['first_creator']['name'] = metadata_json['first_creator']['name'].strip()
 
-    # DISABLED FOR NOW: reading content types for discovery from db exported to user metadata
-    # content_types = []
-    # if "hasPart" in metadata_json:
-    #     for part in metadata_json['hasPart']:
-    #         part_key = '/'.join(urlparse(part['url']).path.split('/')[2:])
-    #         s3_response = s3.get_object(Bucket=bucket_name, Key=part_key)
-    #         s3_object_body = s3_response.get('Body')
-    #         content = s3_object_body.read()
-    #         json_dict = json.loads(content)
-    #         content_types.append(json_dict.get('additionalType'))
-    #     metadata_json['content_types'] = list(set(content_types))
+    # Search filters on content type names (e.g. CompositeResource, NetCDFLogicalFile), so the discovery document
+    # stores those in 'content_types' in place of the schema.org additionalType term URLs held in S3.
+    metadata_json['content_types'] = _content_types_from_additional_type(metadata_json.pop('additionalType', None))
 
     MongoDBClient.get_discovery_collection().find_one_and_replace(
         {

@@ -1,11 +1,44 @@
 from datetime import datetime
+from functools import lru_cache
 from typing import Any, Dict, List, Optional, Union, Literal
 
 from pydantic import BaseModel, HttpUrl, ConfigDict, model_validator
 from hsmodels.schemas.enums import RelationType
 
 from hs_cloudnative_schemas.schema import base as schema
-from hs_cloudnative_schemas.schema.dataset import ScientificDataset, AdditionalType
+from hs_cloudnative_schemas.schema.dataset import ScientificDataset
+from hs_core.hydroshare import current_site_url
+
+
+@lru_cache(maxsize=None)
+def hydroshare_terms_url():
+    """Base URL (with trailing slash) of the HydroShare terms page for the current site. Computed lazily, since
+    it needs a database query, and cached for the life of the process."""
+    return f"{current_site_url()}/terms/"
+
+
+# Maps the values written to ``content_types`` (resource type names and logical file class names) to the
+# HydroShare term name documented at hydroshare_terms_url(). The term names for aggregations must stay in sync with
+# AbstractLogicalFile.get_aggregation_type_name() (enforced by a test in hs_core/tests).
+CONTENT_TYPE_TO_TERM = {
+    "CompositeResource": "CompositeResource",
+    "CollectionResource": "CollectionResource",
+    "CSVLogicalFile": "CSVFileAggregation",
+    "FileSetLogicalFile": "FileSetAggregation",
+    "GenericLogicalFile": "SingleFileAggregation",
+    "GeoFeatureLogicalFile": "GeographicFeatureAggregation",
+    "GeoRasterLogicalFile": "GeographicRasterAggregation",
+    "ModelInstanceLogicalFile": "ModelInstanceAggregation",
+    "ModelProgramLogicalFile": "ModelProgramAggregation",
+    "NetCDFLogicalFile": "MultidimensionalAggregation",
+    "RefTimeseriesLogicalFile": "ReferencedTimeSeriesAggregation",
+    "TimeSeriesLogicalFile": "TimeSeriesAggregation",
+    "ToolResource": "WebAppResource",
+}
+
+# Reverse of CONTENT_TYPE_TO_TERM: HydroShare term name -> content type (resource type or logical file class) name.
+# Used to turn the additionalType term URLs back into content type names for the discovery (MongoDB) documents.
+TERM_TO_CONTENT_TYPE = {term: content_type for content_type, term in CONTENT_TYPE_TO_TERM.items()}
 
 
 class BasePerson(BaseModel):
@@ -270,6 +303,9 @@ class _ResourceUserMetadata(BaseModel):
     # review_started (emitted by hsmodels ResourceMetadata) is publication workflow state, not
     # schema.org compliant, and must not appear in the output.
     review_started: Optional[datetime] = None
+    # input-only: resource type and aggregation type names used to derive the schema.org additionalType term URLs;
+    # not schema.org compliant, so declared here to keep it out of the output (see extra_columns)
+    content_types: List[str] = []
 
     @model_validator(mode="before")
     @classmethod
@@ -361,17 +397,26 @@ class _ResourceUserMetadata(BaseModel):
         return schema.Organization.model_validate({"name": "HydroShare", "url": "https://www.hydroshare.org/"})
 
     @staticmethod
-    def to_additional_type(type: str):
-        try:
-            additional_type = AdditionalType(type)
-        except ValueError:
-            additional_type = None
-        return additional_type
+    def to_additional_types(content_types: Optional[List[str]]) -> Optional[List[HttpUrl]]:
+        """Converts resource/aggregation type names to a de-duplicated list of HydroShare term URLs.
+        Unknown type names are skipped. Returns None if there is nothing to report."""
+        terms_url = hydroshare_terms_url()
+        urls = []
+        for content_type in content_types or []:
+            term = CONTENT_TYPE_TO_TERM.get(content_type)
+            if term is None:
+                continue
+            url = HttpUrl(f"{terms_url}{term}")
+            if url not in urls:
+                urls.append(url)
+        return urls or None
 
     def to_catalog_dataset(self):
         dataset = ScientificDataset.model_construct(**self.extra_columns)
         is_part_of, has_part, other_relations = self._partition_relations_by_type()
-        dataset.additionalType = self.to_additional_type(self.type) if self.type else None
+        # content_types already includes the resource type; order it first, then the rest sorted for stability
+        content_types = sorted(self.content_types, key=lambda t: (t != self.type, t))
+        dataset.additionalType = self.to_additional_types(content_types)
         dataset.provider = self.to_dataset_provider()
         dataset.name = self.title
         dataset.description = self.abstract

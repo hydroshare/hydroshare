@@ -114,6 +114,13 @@ document's score — a flat constant, not a variable multiplier.
 Exact value match with no analysis or tokenization. Used for `contentType` and
 `creativeWorkStatus` to ensure precise categorical filtering.
 
+`contentType` values are resource type and aggregation (logical file) class names, e.g.
+`CompositeResource`, `NetCDFLogicalFile`, `ToolResource`, matched against the discovery document's
+`content_types` field. The S3 metadata (`dataset_metadata.json`) carries these as schema.org
+`additionalType` HydroShare term URLs (e.g. `https://www.hydroshare.org/terms/MultidimensionalAggregation`);
+when indexing, `_index_metadata` (`hs_core/hydroshare_atlas_discovery_collection.py`) converts them back to
+class names in `content_types` and drops `additionalType` from the MongoDB document.
+
 Note: this is the Atlas Search `term` *operator*, not to be confused with the `term`
 *query parameter* in the search API, which is the free-text search input.
 

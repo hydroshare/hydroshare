@@ -85,7 +85,7 @@ class ScientificDataset(CoreMetadata):
         title="Source organization",
         description="The organization that provided the data for this dataset.",
     )
-    additionalType: Optional[AdditionalType] = Field(
+    additionalType: Optional[Union[AdditionalType, List[HttpUrl]]] = Field(
         default=None,
         title="Additional Type",
         description="Additional descriptive types associated with the ScientificDataset. This is typically used by "
