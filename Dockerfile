@@ -12,13 +12,14 @@ RUN chmod +x /usr/local/bin/mc
 
 RUN apt-get update
 RUN apt-get -y upgrade
-RUN pip install pymongo
+RUN pip install -c /hydroshare/docker-constraints.txt pymongo
 
-RUN pip install django-rest-knox
-RUN pip install django-celery-beat==2.7.0
+RUN pip install -c /hydroshare/docker-constraints.txt django-rest-knox
+RUN pip install -c /hydroshare/docker-constraints.txt django-celery-beat==2.7.0
 
 # installs specific commit until hsmodels gets a full release
-RUN pip install --upgrade git+https://github.com/hydroshare/hsmodels.git@22b7d610814a28065511ff03ba044ad66cc1bc98
+RUN pip install -c /hydroshare/docker-constraints.txt --upgrade git+https://github.com/hydroshare/hsmodels.git@22b7d610814a28065511ff03ba044ad66cc1bc98
+RUN pip check
 
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
