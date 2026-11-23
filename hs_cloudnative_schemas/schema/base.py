@@ -450,6 +450,11 @@ class MediaObjectPartOf(CreativeWork):
 
 
 class SubjectOf(CreativeWork):
+    type: Literal["DataDownload"] = Field(
+            alias="@type",  # type: ignore
+            default="DataDownload",
+            description="Part of a dataset in downloadable form which describes the dataset.",
+        )
     url: Optional[HttpUrl] = Field(
         title="URL",
         description="The URL address that serves as a reference to access additional details related to the record. "
@@ -957,29 +962,31 @@ class Dataset(CreativeWork):
     distribution: Optional[Union["DataDownload", List["DataDownload"]]] = None
 
 
-class DataCatalog(CreativeWork):
+class DataCatalog(SchemaBaseModel):
     """
-    A collection of datasets.
+    A data catalog which contains datasets. Only the fields relevant to HydroShare's use
+    (referencing the HydroShare repository as the catalog a resource belongs to) are defined here,
+    rather than inheriting the full, mostly-unused CreativeWork field set.
     """
 
-    measurementMethod: Optional[
-        Union[
-            HttpUrl,
-            List[HttpUrl],
-            DefinedTerm,
-            List[DefinedTerm],
-            str,
-            List[str],
-        ]
-    ] = None
-    dataset: Optional[Union[Dataset, List[Dataset]]] = None
-    measurementTechnique: Optional[
-        Union[
-            str,
-            List[str],
-            HttpUrl,
-            List[HttpUrl],
-            DefinedTerm,
-            List[DefinedTerm],
-        ]
-    ] = None
+    type: Literal["DataCatalog"] = Field(
+        alias="@type",  # type: ignore
+        default="DataCatalog",
+        description="A collection of datasets.",
+    )
+    name: Optional[str] = Field(
+        description="The name of the data catalog.",
+        default=None,
+        json_schema_extra=remove_none_default,
+    )
+    description: Optional[str] = Field(
+        description="The description of the data catalog.",
+        default=None,
+        json_schema_extra=remove_none_default,
+    )
+    url: Optional[HttpUrl] = Field(
+        title="URL",
+        description="A URL to the data catalog.",
+        default=None,
+        json_schema_extra=remove_none_default,
+    )
