@@ -30,7 +30,7 @@ Used for:
 - Excluding aggregation-type documents (those with no `dateCreated`)
 - Date range constraints (`publishedStart`/`publishedEnd`, `dateCreatedStart`/`dateCreatedEnd`, etc.)
 - Temporal coverage range filters
-- Restricting to `type = ScientificDataset`
+- Restricting to `type = Dataset`
 
 Because filter clauses are zero-cost for scoring, they are the right place for constraints
 that users apply to narrow results but that shouldn't inflate relevance.
