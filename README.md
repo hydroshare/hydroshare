@@ -86,6 +86,12 @@ Note bracketed -d (run in detached mode) is optional and you don’t paste in th
 Use -d option if you want to run your containers in the background and not see live logs.
 Use --build option in case docker keeps image in cache and does not update correctly while modifying the Dockerfile.
 
+The application image constrains additional Python installs with
+[`docker-constraints.txt`](./docker-constraints.txt), preserving the base
+image's Django 4.2 and Django REST Framework versions. Keep those constraints
+compatible with the base image when updating dependencies. The build runs
+`pip check` to detect conflicting installed requirements.
+
 To stop HydroShare, only need to close the running windows or open a new windows then run
 ```
 docker-compose -f local-dev.yml down
@@ -171,4 +177,3 @@ There are many ways to contribute to Hydroshare. Review [Contributing guidelines
 Hydroshare is released under the BSD 3-Clause License. This means that [you can do what you want, so long as you don't mess with the trademark, and as long as you keep the license with the source code](https://tldrlegal.com/license/bsd-3-clause-license-(revised)).
 
 ©2017 CUAHSI. This material is based upon work supported by the National Science Foundation (NSF) under awards [1148453](https://www.nsf.gov/awardsearch/showAward?AWD_ID=1148453), [1148090](https://www.nsf.gov/awardsearch/showAward?AWD_ID=1148090), [1664061](https://www.nsf.gov/awardsearch/showAward?AWD_ID=1664061), [1664018](https://www.nsf.gov/awardsearch/showAward?AWD_ID=1664018), [1664119](https://www.nsf.gov/awardsearch/showAward?AWD_ID=1664119), [1338606](https://www.nsf.gov/awardsearch/showAward?AWD_ID=1338606), and [1849458](https://www.nsf.gov/awardsearch/showAward?AWD_ID=1849458). Any opinions, findings, conclusions, or recommendations expressed in this material are those of the authors and do not necessarily reflect the views of the NSF.
-
