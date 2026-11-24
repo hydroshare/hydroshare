@@ -6,7 +6,7 @@ RUN git clone https://github.com/minio/mc /src && \
     cd /src && git checkout ${MC_COMMIT}
 WORKDIR /src
 # Force the fixed x/crypto version (CVE-2026-46595)
-RUN go get golang.org/x/crypto@v0.56.0 && go mod tidy
+RUN go get golang.org/x/crypto@v0.57.0 golang.org/x/net@v0.60.0 google.golang.org/grpc@v1.79.3 && go mod tidy
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
     go build -trimpath -ldflags "-s -w" -o /out/mc .
 
