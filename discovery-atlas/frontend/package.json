@@ -11,6 +11,9 @@
     "deploy": "node scripts/gh-pages-deploy.js",
     "up": "taze major -I"
   },
+  "overrides": {
+    "tinypool": "^2.1.2"
+  },
   "dependencies": {
     "@cznethub/cznet-vue-core": "^0.2.42",
     "@jsonforms/core": "^3.2.1",
