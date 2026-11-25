@@ -22,8 +22,8 @@ from django.core.exceptions import (ObjectDoesNotExist, PermissionDenied,
                                     SuspiciousFileOperation, ValidationError)
 from django.core.files import File
 from django.core.validators import URLValidator
-from django.db import models, transaction
-from django.db.models import Q, Sum
+from django.db import models, router, transaction
+from django.db.models import Count, Q, Sum
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.forms.models import model_to_dict
@@ -3830,6 +3830,50 @@ def path_is_allowed(path):
         raise SuspiciousFileOperation("File paths cannot contain '/./'")
 
 
+def invalidate_resource_size_cache(resource_ids, using):
+    """Invalidate totals after file changes, serializing with cache refreshes."""
+    resource_ids = sorted(set(resource_ids) - {None})
+    if resource_ids:
+        list(BaseResource.objects.using(using).filter(pk__in=resource_ids)
+             .order_by('pk').select_for_update().values_list('pk', flat=True))
+        ResourceSizeCache.objects.using(using).filter(resource_id__in=resource_ids).delete()
+
+
+class ResourceFileQuerySet(models.QuerySet):
+    def update(self, **kwargs):
+        if not {'_size', 'object_id', 'content_type', 'content_type_id'} & kwargs.keys():
+            return super().update(**kwargs)
+        with transaction.atomic(using=self.db):
+            rows = list(self.select_for_update().values_list('pk', 'object_id'))
+            result = super().update(**kwargs)
+            ids = [row[1] for row in rows]
+            if {'object_id', 'content_type', 'content_type_id'} & kwargs.keys():
+                ids.extend(self.model.objects.using(self.db).filter(pk__in=[row[0] for row in rows])
+                           .values_list('object_id', flat=True))
+            invalidate_resource_size_cache(ids, self.db)
+            return result
+
+    def bulk_create(self, objs, *args, **kwargs):
+        if kwargs.get('update_conflicts') or (len(args) > 2 and args[2]):
+            raise ValueError('ResourceFile bulk_create does not support conflict updates; use bulk_update instead.')
+        objs = list(objs)
+        with transaction.atomic(using=self.db):
+            file_field = self.model._meta.get_field('resource_file')
+            for obj in objs:
+                file_field.pre_save(obj, add=True)
+                obj.calculate_size(save=False)
+            result = super().bulk_create(objs, *args, **kwargs)
+            invalidate_resource_size_cache((obj.object_id for obj in objs), self.db)
+            return result
+
+    def delete(self):
+        with transaction.atomic(using=self.db):
+            ids = list(self.select_for_update().values_list('object_id', flat=True))
+            result = super().delete()
+            invalidate_resource_size_cache(ids, self.db)
+            return result
+
+
 # TODO: revise path logic for rename_resource_file_in_django for proper path.
 # TODO: utilize antibugging to check that paths are coherent after each operation.
 class ResourceFile(ResourceFileS3Mixin):
@@ -3869,6 +3913,35 @@ class ResourceFile(ResourceFileS3Mixin):
 
     # for tracking when size was last compared with S3
     filesize_cache_updated = models.DateTimeField(null=True)
+
+    objects = ResourceFileQuerySet.as_manager()
+
+    def save(self, *args, **kwargs):
+        using = (kwargs.get('using') or (args[2] if len(args) > 2 else None)
+                 or router.db_for_write(type(self), instance=self))
+        fields = kwargs.get('update_fields', args[3] if len(args) > 3 else None)
+        if fields is not None and not fields:
+            return super().save(*args, **kwargs)
+        affects_size = fields is None or bool(
+            {'_size', 'object_id', 'content_type', 'content_type_id', 'resource_file'} & set(fields)
+        )
+        if not affects_size:
+            return super().save(*args, **kwargs)
+        with transaction.atomic(using=using):
+            old = None
+            if self.pk:
+                old = (ResourceFile.objects.using(using).select_for_update()
+                       .filter(pk=self.pk).values_list('object_id', 'resource_file').first())
+            file_is_saved = fields is None or 'resource_file' in fields
+            file_changed = file_is_saved and bool(self.resource_file) and (
+                old is None or not self.resource_file._committed or old[1] != self.resource_file.name
+            )
+            result = super().save(*args, **kwargs)
+            if file_changed:
+                self.calculate_size(save=False)
+                super().save(using=using, update_fields=['_size', 'filesize_cache_updated'])
+            invalidate_resource_size_cache([old[0] if old else None, self.object_id], using)
+            return result
 
     def __str__(self):
         return self.resource_file.name
@@ -3980,13 +4053,16 @@ class ResourceFile(ResourceFileS3Mixin):
         model.delete does not cascade to delete files themselves,
         and these must be explicitly deleted.
         """
-        if self.exists:
-            if delete_logical_file and self.logical_file is not None:
-                # deleting logical file metadata deletes the logical file as well
-                self.logical_file.metadata.delete()
-            if self.resource_file:
-                self.resource_file.delete()
-        super(ResourceFile, self).delete()
+        using = self._state.db or 'default'
+        with transaction.atomic(using=using):
+            if self.exists:
+                if delete_logical_file and self.logical_file is not None:
+                    self.logical_file.metadata.delete()
+                if self.resource_file:
+                    self.resource_file.delete()
+            result = super(ResourceFile, self).delete()
+            invalidate_resource_size_cache([self.object_id], using)
+            return result
 
     @property
     def resource(self):
@@ -5175,16 +5251,35 @@ class BaseResource(Page, AbstractResource):
 
         Raises SessionException if S3 fails.
         """
-        # trigger file size read for files that haven't been set yet
-        res_size = 0
-        if self.files.count() > 0:
+        if not getattr(settings, 'RESOURCE_SIZE_CACHE_ENABLED', True):
             for f in self.files.filter(_size__lt=0):
                 f.calculate_size()
-            # compute the total file size for the resource
-            res_size_dict = self.files.aggregate(Sum('_size'))
-            res_size = res_size_dict['_size__sum']
+            return self.files.aggregate(total=Sum('_size'))['total'] or 0
+        cache = self.get_size_cache()
+        if cache.has_unknown:
+            for f in self.files.filter(_size__lt=0):
+                f.calculate_size()
+            cache = self.get_size_cache()
+        return cache.size
 
-        return res_size
+    def get_size_cache(self):
+        """Return the cached known-file total, computing it under the resource lock."""
+        using = self._state.db or 'default'
+        with transaction.atomic(using=using):
+            BaseResource.objects.using(using).select_for_update().get(pk=self.pk)
+            cache = ResourceSizeCache.objects.using(using).filter(resource_id=self.pk).first()
+            if cache is None:
+                content_type = ContentType.objects.db_manager(using).get_for_model(self, for_concrete_model=True)
+                totals = ResourceFile.objects.using(using).filter(
+                    object_id=self.pk, content_type=content_type,
+                ).aggregate(
+                    size=Sum('_size', filter=Q(_size__gte=0)),
+                    unknown=Count('pk', filter=Q(_size__lt=0)),
+                )
+                cache = ResourceSizeCache.objects.using(using).create(
+                    resource_id=self.pk, size=totals['size'] or 0, has_unknown=totals['unknown'] > 0,
+                )
+            return cache
 
     @property
     def verbose_name(self):
@@ -5465,6 +5560,13 @@ Page.get_content_model = new_get_content_model
 
 
 # This model has a one-to-one relation with the AbstractResource model
+class ResourceSizeCache(models.Model):
+    resource = models.OneToOneField(BaseResource, on_delete=models.CASCADE, primary_key=True,
+                                    related_name='size_cache')
+    size = models.BigIntegerField()
+    has_unknown = models.BooleanField()
+
+
 class CoreMetaData(models.Model, RDF_MetaData_Mixin):
     """Define CoreMetaData model."""
 
