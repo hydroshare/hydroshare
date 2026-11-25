@@ -62,17 +62,13 @@ def process_s3_event(self, action: str, bucket: str, object_path: str, username:
         return
 
     file_created = action in ("s3:PutObject", "s3:CompleteMultipartUpload", "s3:CopyObject")
-    file_deleted = action in ("s3:DeleteObject", "s3:DeleteObjects")
-    if not file_created and not file_deleted:
-        logger.warning("Unsupported S3 mutation action, skipping: %s", action)
-        return
 
     try:
         if file_created:
             resource = BaseResource.objects.get(short_id=resource_id)
             _link_s3_file_to_resource(resource, short_path)
             UserQuota.objects.get(user=resource.quota_holder).data_zone_value
-        elif file_deleted:
+        else:
             user = User.objects.get(pk=user_id)
             logger.info(f"Deleting file {short_path} for resource {resource_id}")
             delete_resource_file(resource_id, short_path, user)

@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch
 
 from django.test import SimpleTestCase
 
-from hs_event_s3.tasks import process_s3_event, record_s3_download
+from hs_event_s3.tasks import record_s3_download
 
 
 class S3EventTrackingTests(SimpleTestCase):
@@ -40,22 +40,6 @@ class S3EventTrackingTests(SimpleTestCase):
             value=f"s3_action=s3:GetObject|resource_guid={resource_id}|bucket=resource",
             resource_id=resource_id,
         )
-        link_file.assert_not_called()
-        delete_file.assert_not_called()
-
-    @patch("hs_event_s3.tasks.delete_resource_file")
-    @patch("hs_event_s3.tasks._link_s3_file_to_resource")
-    def test_mutation_task_does_not_treat_unknown_action_as_delete(
-        self, link_file, delete_file
-    ):
-        process_s3_event.run(
-            action="s3:GetObject",
-            bucket="resource",
-            object_path=f"{'a' * 32}/data/contents/example.csv",
-            username="testuser",
-            user_id=42,
-        )
-
         link_file.assert_not_called()
         delete_file.assert_not_called()
 

@@ -118,6 +118,24 @@ class TestReceiveS3Event:
             retry=False,
         )
 
+    @pytest.mark.parametrize(
+        "object_path,secondary_task",
+        [
+            ("data/contents/report.pdf", "hs_extract.tasks.extract_metadata"),
+            ("abc123/.hsjsonld/dataset_metadata.json", "hs_event_s3.tasks.sync_discovery_collection"),
+        ],
+    )
+    def test_other_actions_keep_existing_routing(self, mock_celery, object_path, secondary_task):
+        response = client.post(
+            "/event/", json=base_event(action="s3:OtherAction", object_path=object_path)
+        )
+
+        assert response.status_code == 204
+        assert [call.args[0] for call in mock_celery.send_task.call_args_list] == [
+            "hs_event_s3.tasks.process_s3_event",
+            secondary_task,
+        ]
+
     def test_user_id_is_optional(self, mock_celery):
         event = base_event()
         del event["user_id"]

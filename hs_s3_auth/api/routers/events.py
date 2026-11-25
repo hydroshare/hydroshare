@@ -10,15 +10,6 @@ from api.celery_app import celery_app
 router = APIRouter()
 logger = logging.getLogger("hs-s3-auth")
 
-MUTATION_ACTIONS = {
-    "s3:PutObject",
-    "s3:CompleteMultipartUpload",
-    "s3:CopyObject",
-    "s3:DeleteObject",
-    "s3:DeleteObjects",
-}
-
-
 class S3Event(BaseModel):
     action: str
     bucket: str
@@ -58,10 +49,6 @@ async def receive_s3_event(event: S3Event):
         )
         return
 
-    if event.action not in MUTATION_ACTIONS:
-        logger.warning("Unsupported S3 mutation notification: %s", event.action)
-        return
-
     celery_app.send_task(
         "hs_event_s3.tasks.process_s3_event",
         kwargs={
@@ -76,8 +63,7 @@ async def receive_s3_event(event: S3Event):
     )
 
     # Dispatch discovery catalog sync when the jsonld metadata file changes
-    is_dataset_metadata = event.object_path.endswith("/.hsjsonld/dataset_metadata.json")
-    if is_dataset_metadata:
+    if event.object_path.endswith("/.hsjsonld/dataset_metadata.json"):
         celery_app.send_task(
             "hs_event_s3.tasks.sync_discovery_collection",
             kwargs={
@@ -89,8 +75,8 @@ async def receive_s3_event(event: S3Event):
             queue="s3_events",
         )
 
-    # Dispatch metadata extraction only for mutations to data files.
-    else:
+    # Dispatch metadata extraction for data file events
+    if not event.object_path.endswith("/.hsjsonld/dataset_metadata.json"):
         celery_app.send_task(
             "hs_extract.tasks.extract_metadata",
             kwargs={
