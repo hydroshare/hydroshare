@@ -24,11 +24,12 @@ COPY --from=mc-build /out/mc /usr/bin/mc
 RUN apt-get update
 RUN apt-get -y upgrade
 RUN npm uninstall -g phantomjs-prebuilt && rm -f /usr/bin/phantomjs
+RUN npm install -g npm@11.21.3 && npm cache clean --force
 RUN pip install --upgrade pip
 RUN pip install "certifi>=2026.10.18"
 RUN pip install pymongo
 RUN pip install "pillow==13.0.0"
-RUN pip install "deepdiff>=8.6.1,<9"
+RUN pip install "deepdiff>=8.6.1"
 
 
 RUN pip install django-rest-knox
