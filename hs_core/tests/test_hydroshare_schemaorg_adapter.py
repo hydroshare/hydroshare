@@ -683,7 +683,7 @@ class TestToCatalogRecordAdditionalType(unittest.TestCase):
             **MINIMAL_METADATA,
             "content_types": ["NetCDFLogicalFile", "CompositeResource", "GeoRasterLogicalFile"],
         }
-        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata)
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=RESOURCE_ID)
         self.assertEqual(
             [str(u) for u in dataset.additionalType],
             [
@@ -698,7 +698,7 @@ class TestToCatalogRecordAdditionalType(unittest.TestCase):
             **MINIMAL_METADATA,
             "content_types": ["CompositeResource", "GeoRasterLogicalFile", "GeoRasterLogicalFile"],
         }
-        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata)
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=RESOURCE_ID)
         self.assertEqual(
             [str(u) for u in dataset.additionalType],
             [f"{self.TERMS}CompositeResource", f"{self.TERMS}GeographicRasterAggregation"],
@@ -709,7 +709,7 @@ class TestToCatalogRecordAdditionalType(unittest.TestCase):
             **MINIMAL_METADATA,
             "content_types": ["CompositeResource", "NoSuchLogicalFile"],
         }
-        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata)
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=RESOURCE_ID)
         self.assertEqual([str(u) for u in dataset.additionalType], [f"{self.TERMS}CompositeResource"])
 
     def test_resource_type_first_even_if_it_does_not_sort_first(self):
@@ -718,7 +718,7 @@ class TestToCatalogRecordAdditionalType(unittest.TestCase):
             **MINIMAL_METADATA,
             "content_types": ["TimeSeriesLogicalFile", "CSVLogicalFile", "CompositeResource"],
         }
-        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata)
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=RESOURCE_ID)
         self.assertEqual(
             [str(u) for u in dataset.additionalType],
             [
@@ -731,17 +731,19 @@ class TestToCatalogRecordAdditionalType(unittest.TestCase):
     def test_no_content_types_yields_none(self):
         # additionalType is derived solely from content_types (which the caller always populates with the
         # resource type)
-        dataset = HydroshareMetadataAdapter.to_catalog_record(MINIMAL_METADATA)
+        dataset = HydroshareMetadataAdapter.to_catalog_record(MINIMAL_METADATA, resource_id=RESOURCE_ID)
         self.assertIsNone(dataset.additionalType)
 
     def test_only_unknown_content_types_yields_none(self):
         metadata = {**MINIMAL_METADATA, "content_types": ["NoSuchResource", "NoSuchLogicalFile"]}
-        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata)
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=RESOURCE_ID)
         self.assertIsNone(dataset.additionalType)
 
     def test_dumped_record_has_list_of_strings_and_no_content_types(self):
         metadata = {**MINIMAL_METADATA, "content_types": ["CompositeResource", "GenericLogicalFile"]}
-        dumped = HydroshareMetadataAdapter.to_catalog_record(metadata).model_dump(by_alias=True)
+        dumped = HydroshareMetadataAdapter.to_catalog_record(
+            metadata, resource_id=RESOURCE_ID
+        ).model_dump(by_alias=True)
         self.assertEqual(
             [str(u) for u in dumped["additionalType"]],
             [f"{self.TERMS}CompositeResource", f"{self.TERMS}SingleFileAggregation"],
@@ -751,5 +753,5 @@ class TestToCatalogRecordAdditionalType(unittest.TestCase):
 
     def test_tool_resource_maps_to_web_app_resource_term(self):
         metadata = {**MINIMAL_METADATA, "type": "ToolResource", "content_types": ["ToolResource"]}
-        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata)
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=RESOURCE_ID)
         self.assertEqual([str(u) for u in dataset.additionalType], [f"{self.TERMS}WebAppResource"])
