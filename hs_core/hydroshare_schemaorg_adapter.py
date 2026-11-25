@@ -1,12 +1,44 @@
 from datetime import datetime
+from functools import lru_cache
 from typing import Any, Dict, List, Optional, Union, Literal
 
 from pydantic import BaseModel, HttpUrl, ConfigDict, model_validator
 from hsmodels.schemas.enums import RelationType
 
 from hs_cloudnative_schemas.schema import base as schema
-from hs_cloudnative_schemas.schema.dataset import ScientificDataset, AdditionalType
-from hs_core.hydroshare.utils import current_site_url
+from hs_cloudnative_schemas.schema.dataset import ScientificDataset
+from hs_core.hydroshare import current_site_url
+
+
+@lru_cache(maxsize=None)
+def hydroshare_terms_url():
+    """Base URL (with trailing slash) of the HydroShare terms page for the current site. Computed lazily, since
+    it needs a database query, and cached for the life of the process."""
+    return f"{current_site_url()}/terms/"
+
+
+# Maps the values written to ``content_types`` (resource type names and logical file class names) to the
+# HydroShare term name documented at hydroshare_terms_url(). The term names for aggregations must stay in sync with
+# AbstractLogicalFile.get_aggregation_type_name() (enforced by a test in hs_core/tests).
+CONTENT_TYPE_TO_TERM = {
+    "CompositeResource": "CompositeResource",
+    "CollectionResource": "CollectionResource",
+    "CSVLogicalFile": "CSVFileAggregation",
+    "FileSetLogicalFile": "FileSetAggregation",
+    "GenericLogicalFile": "SingleFileAggregation",
+    "GeoFeatureLogicalFile": "GeographicFeatureAggregation",
+    "GeoRasterLogicalFile": "GeographicRasterAggregation",
+    "ModelInstanceLogicalFile": "ModelInstanceAggregation",
+    "ModelProgramLogicalFile": "ModelProgramAggregation",
+    "NetCDFLogicalFile": "MultidimensionalAggregation",
+    "RefTimeseriesLogicalFile": "ReferencedTimeSeriesAggregation",
+    "TimeSeriesLogicalFile": "TimeSeriesAggregation",
+    "ToolResource": "WebAppResource",
+}
+
+# Reverse of CONTENT_TYPE_TO_TERM: HydroShare term name -> content type (resource type or logical file class) name.
+# Used to turn the additionalType term URLs back into content type names for the discovery (MongoDB) documents.
+TERM_TO_CONTENT_TYPE = {term: content_type for content_type, term in CONTENT_TYPE_TO_TERM.items()}
 
 
 class BasePerson(BaseModel):
@@ -271,6 +303,9 @@ class _ResourceUserMetadata(BaseModel):
     # review_started (emitted by hsmodels ResourceMetadata) is publication workflow state, not
     # schema.org compliant, and must not appear in the output.
     review_started: Optional[datetime] = None
+    # input-only: resource type and aggregation type names used to derive the schema.org additionalType term URLs;
+    # not schema.org compliant, so declared here to keep it out of the output (see extra_columns)
+    content_types: List[str] = []
 
     @model_validator(mode="before")
     @classmethod
@@ -325,6 +360,29 @@ class _ResourceUserMetadata(BaseModel):
             return self.period_coverage.to_dataset_temporal_coverage()
         return None
 
+    def to_dataset_subject_of(self, resource_id: str) -> list:
+        """Return a reference to the resource's Dublin Core XML metadata document."""
+        subject_of = schema.SubjectOf.model_construct(
+            name="resourcemetadata.xml",
+            description="Dublin Core Metadata Document Describing the Dataset",
+            url=f"{current_site_url()}/hsapi/resource/{resource_id}/scimeta/",
+            encodingFormat="application/rdf+xml",
+        )
+        return [subject_of]
+
+    def to_dataset_same_as(self, resource_id: str) -> Optional[str]:
+        """Return the HydroShare resource URL for published resources, whose @id/url is the DOI URL
+        instead, None otherwise."""
+        if self.sharing_status == "published":
+            return f"{current_site_url()}/resource/{resource_id}"
+        return None
+
+    def to_dataset_is_accessible_for_free(self) -> Optional[bool]:
+        """Return True for public and published resources, None otherwise."""
+        if self.sharing_status in ("public", "published"):
+            return True
+        return None
+
     def to_dataset_publisher(self):
         """Return the CUAHSI publisher organization for published resources, None otherwise."""
         if self.sharing_status != "published":
@@ -342,6 +400,11 @@ class _ResourceUserMetadata(BaseModel):
             return f"https://doi.org/10.4211/hs.{resource_id}"
         return f"{current_site_url()}/resource/{resource_id}"
 
+    def to_dataset_id(self, resource_id: str) -> str:
+        """Returns the identifier for the JSON-LD graph node which represents the dataset."""
+        dataset_url = self.to_dataset_url(resource_id)
+        return f"{dataset_url}#schemaorg"
+
     def to_dataset_identifier(self, resource_id: str) -> list:
         """Return the HydroShare URL, plus the DOI for published resources."""
         hs_resource_url = f"{current_site_url()}/resource/{resource_id}"
@@ -357,6 +420,16 @@ class _ResourceUserMetadata(BaseModel):
             }))
 
         return identifier_list
+
+    def to_dataset_included_in_data_catalog(self):
+        """Return the HydroShare DataCatalog reference when the resource is discoverable (i.e., its
+        sharing status is public, published, or discoverable), None otherwise."""
+        if self.sharing_status not in ("public", "published", "discoverable"):
+            return None
+        return schema.DataCatalog.model_construct(
+            name="HydroShare",
+            url="https://hydroshare.org/search/",
+        )
 
     def to_dataset_keywords(self) -> list[str] | None:
         if self.subjects:
@@ -401,23 +474,37 @@ class _ResourceUserMetadata(BaseModel):
         )
 
     @staticmethod
-    def to_additional_type(type: str):
-        try:
-            additional_type = AdditionalType(type)
-        except ValueError:
-            additional_type = None
-        return additional_type
+    def to_additional_types(content_types: Optional[List[str]]) -> Optional[List[HttpUrl]]:
+        """Converts resource/aggregation type names to a de-duplicated list of HydroShare term URLs.
+        Unknown type names are skipped. Returns None if there is nothing to report."""
+        terms_url = hydroshare_terms_url()
+        urls = []
+        for content_type in content_types or []:
+            term = CONTENT_TYPE_TO_TERM.get(content_type)
+            if term is None:
+                continue
+            url = HttpUrl(f"{terms_url}{term}")
+            if url not in urls:
+                urls.append(url)
+        return urls or None
 
     def to_catalog_dataset(self, resource_id: str):
         dataset = ScientificDataset.model_construct(**self.extra_columns)
         is_part_of, has_part, other_relations = self._partition_relations_by_type()
-        dataset.additionalType = self.to_additional_type(self.type) if self.type else None
+        # content_types already includes the resource type; order it first, then the rest sorted for stability
+        content_types = sorted(self.content_types, key=lambda t: (t != self.type, t))
+        dataset.additionalType = self.to_additional_types(content_types)
         dataset.provider = self.to_dataset_provider()
         dataset.name = self.title
         dataset.description = self.abstract
         dataset.url = self.to_dataset_url(resource_id)
+        dataset.id = self.to_dataset_id(resource_id)
+        dataset.sameAs = self.to_dataset_same_as(resource_id)
+        dataset.isAccessibleForFree = self.to_dataset_is_accessible_for_free()
         dataset.publisher = self.to_dataset_publisher()
         dataset.identifier = self.to_dataset_identifier(resource_id)
+        dataset.subjectOf = self.to_dataset_subject_of(resource_id)
+        dataset.includedInDataCatalog = self.to_dataset_included_in_data_catalog()
         dataset.creator = self.to_dataset_creators()
         dataset.contributor = self.to_dataset_contributors()
         dataset.keywords = self.to_dataset_keywords()

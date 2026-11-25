@@ -9,8 +9,10 @@ from hsmodels.schemas.enums import RelationType
 from unittest_parametrize import ParametrizedTestCase, parametrize, param
 
 from hs_core.hydroshare_atlas_discovery_collection import (
-    MongoDBClient, collect_file_to_catalog, delete_file_from_catalog, sync_resource_in_catalog
+    MongoDBClient, _content_types_from_additional_type, collect_file_to_catalog, delete_file_from_catalog,
+    sync_resource_in_catalog
 )
+from hs_core.hydroshare_schemaorg_adapter import CONTENT_TYPE_TO_TERM, TERM_TO_CONTENT_TYPE
 
 
 ZONES_CONFIG = {
@@ -175,6 +177,52 @@ class TestCollectFileToCatalog(ParametrizedTestCase):
         collect_file_to_catalog("bucket/res/.hsjsonld/dataset_metadata.json")
         _, replacement_metadata = self.mock_collection.find_one_and_replace.call_args[0]
         self.assertEqual(replacement_metadata["temporalCoverage"], expected)
+
+    @parametrize(
+        "additional_type,expected_content_types",
+        [
+            param(
+                [
+                    "https://www.hydroshare.org/terms/CompositeResource",
+                    "https://www.hydroshare.org/terms/CSVFileAggregation",
+                    "http://localhost:8000/terms/MultidimensionalAggregation",
+                ],
+                ["CompositeResource", "CSVLogicalFile", "NetCDFLogicalFile"],
+                id="term_urls_to_class_names",
+            ),
+            param(["https://www.hydroshare.org/terms/WebAppResource"], ["ToolResource"], id="web_app_resource"),
+            param(
+                [
+                    "https://www.hydroshare.org/terms/CompositeResource",
+                    "https://www.hydroshare.org/terms/CompositeResource",
+                    "https://www.hydroshare.org/terms/NoSuchAggregation",
+                ],
+                ["CompositeResource"],
+                id="duplicates_and_unknown_dropped",
+            ),
+            param(["https://geodex.org/voc/SomethingElse"], [], id="unrelated_url_dropped"),
+            param(None, [], id="missing"),
+        ],
+    )
+    def test_additional_type_replaced_by_content_types(self, additional_type, expected_content_types):
+        """The schema.org additionalType term URLs are converted to content type (class) names in content_types,
+        and additionalType is removed from the discovery document."""
+        metadata = {**SAMPLE_METADATA}
+        if additional_type is not None:
+            metadata["additionalType"] = additional_type
+        self.mock_s3.get_object.return_value = _make_s3_response(metadata)
+        collect_file_to_catalog("bucket/res/.hsjsonld/dataset_metadata.json")
+        _, replacement_metadata = self.mock_collection.find_one_and_replace.call_args[0]
+        self.assertEqual(replacement_metadata["content_types"], expected_content_types)
+        self.assertNotIn("additionalType", replacement_metadata)
+
+    def test_every_term_url_round_trips_to_its_content_type(self):
+        """Every resource type and aggregation type term URL maps back to its content type name."""
+        self.assertEqual(len(TERM_TO_CONTENT_TYPE), len(CONTENT_TYPE_TO_TERM), "duplicate term in CONTENT_TYPE_TO_TERM")
+        for content_type, term in CONTENT_TYPE_TO_TERM.items():
+            with self.subTest(content_type=content_type):
+                url = f"https://www.hydroshare.org/terms/{term}"
+                self.assertEqual(_content_types_from_additional_type([url]), [content_type])
 
 
 class TestSyncResourceInCatalog(ParametrizedTestCase):

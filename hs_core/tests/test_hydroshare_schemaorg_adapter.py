@@ -5,7 +5,13 @@ from unittest_parametrize import ParametrizedTestCase, parametrize, param
 from pydantic import ValidationError
 
 from hs_cloudnative_schemas.schema import base as schema
-from hs_core.hydroshare_schemaorg_adapter import Contributor, Creator, HydroshareMetadataAdapter, Relation
+from hs_core.hydroshare_schemaorg_adapter import (
+    Contributor,
+    Creator,
+    HydroshareMetadataAdapter,
+    Relation,
+    hydroshare_terms_url,
+)
 from hs_core.hydroshare.utils import current_site_url
 
 
@@ -217,6 +223,82 @@ class TestToCatalogRecordUrl(ParametrizedTestCase):
         self.assertEqual(str(dataset.url), f"https://doi.org/10.4211/hs.{self.SHORT_ID}")
 
 
+class TestToCatalogRecordId(ParametrizedTestCase):
+    """Tests that @id mirrors dataset.url: the DOI for published resources, the HydroShare URL otherwise."""
+
+    @parametrize(
+        "sharing_status,is_doi",
+        [
+            param("published", True, id="published_uses_doi"),
+            param("public", False, id="public_uses_site_url"),
+            param("private", False, id="private_uses_site_url"),
+            param("discoverable", False, id="discoverable_uses_site_url"),
+            param(None, False, id="no_sharing_status_uses_site_url"),
+        ],
+    )
+    def test_id_is_superset_of_url(self, sharing_status, is_doi):
+        expected_id = (
+            f"https://doi.org/10.4211/hs.{RESOURCE_ID}#schemaorg" if is_doi
+            else f"{current_site_url()}/resource/{RESOURCE_ID}#schemaorg"
+        )
+        metadata = {**MINIMAL_METADATA, "sharing_status": sharing_status}
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=RESOURCE_ID)
+        self.assertEqual(str(dataset.id), expected_id)
+        self.assertIn(str(dataset.url), str(dataset.id))
+
+
+class TestToCatalogRecordSameAs(ParametrizedTestCase):
+    """Tests that sameAs is the HydroShare URL only for published resources (whose @id/url is the DOI)."""
+
+    def test_published_has_hydroshare_url(self):
+        metadata = {**MINIMAL_METADATA, "sharing_status": "published"}
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=RESOURCE_ID)
+        self.assertEqual(str(dataset.sameAs), f"{current_site_url()}/resource/{RESOURCE_ID}")
+
+    @parametrize(
+        "sharing_status",
+        [
+            param("public", id="public"),
+            param("private", id="private"),
+            param("discoverable", id="discoverable"),
+            param(None, id="no_sharing_status"),
+        ],
+    )
+    def test_non_published_has_no_same_as(self, sharing_status):
+        metadata = {**MINIMAL_METADATA, "sharing_status": sharing_status}
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=RESOURCE_ID)
+        self.assertIsNone(dataset.sameAs)
+
+
+class TestToCatalogRecordIsAccessibleForFree(ParametrizedTestCase):
+    """Tests that isAccessibleForFree is True for public and published resources, None otherwise."""
+
+    @parametrize(
+        "sharing_status",
+        [
+            param("public", id="public"),
+            param("published", id="published"),
+        ],
+    )
+    def test_public_and_published_are_accessible_for_free(self, sharing_status):
+        metadata = {**MINIMAL_METADATA, "sharing_status": sharing_status}
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=RESOURCE_ID)
+        self.assertIs(dataset.isAccessibleForFree, True)
+
+    @parametrize(
+        "sharing_status",
+        [
+            param("private", id="private"),
+            param("discoverable", id="discoverable"),
+            param(None, id="no_sharing_status"),
+        ],
+    )
+    def test_other_statuses_have_no_is_accessible_for_free(self, sharing_status):
+        metadata = {**MINIMAL_METADATA, "sharing_status": sharing_status}
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=RESOURCE_ID)
+        self.assertIsNone(dataset.isAccessibleForFree)
+
+
 class TestToCatalogRecordIdentifier(unittest.TestCase):
     """Tests the identifier list: HydroShare URL, DOI for published resources, and other metadata identifiers."""
 
@@ -267,6 +349,53 @@ class TestToCatalogRecordPublisher(ParametrizedTestCase):
         metadata = {**MINIMAL_METADATA, "sharing_status": sharing_status}
         dataset = HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=RESOURCE_ID)
         self.assertIsNone(dataset.publisher)
+
+
+class TestToCatalogRecordSubjectOf(unittest.TestCase):
+    """Tests the subjectOf reference to the resource's Dublin Core XML metadata document."""
+
+    def test_subject_of_references_dublin_core_xml(self):
+        metadata = {**MINIMAL_METADATA}
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=RESOURCE_ID)
+        self.assertEqual(len(dataset.subjectOf), 1)
+        subject_of = dataset.subjectOf[0]
+        self.assertIsInstance(subject_of, schema.SubjectOf)
+        self.assertEqual(subject_of.type, "DataDownload")
+        self.assertEqual(subject_of.name, "resourcemetadata.xml")
+        self.assertEqual(subject_of.description, "Dublin Core Metadata Document Describing the Dataset")
+        self.assertEqual(str(subject_of.url), f"{current_site_url()}/hsapi/resource/{RESOURCE_ID}/scimeta/")
+        self.assertEqual(subject_of.encodingFormat, "application/rdf+xml")
+
+
+class TestToCatalogRecordIncludedInDataCatalog(ParametrizedTestCase):
+    """Tests that includedInDataCatalog is the HydroShare DataCatalog when discoverable, None otherwise."""
+
+    @parametrize(
+        "sharing_status",
+        [
+            param("public", id="public"),
+            param("published", id="published"),
+            param("discoverable", id="discoverable"),
+        ],
+    )
+    def test_discoverable_states_have_hydroshare_data_catalog(self, sharing_status):
+        metadata = {**MINIMAL_METADATA, "sharing_status": sharing_status}
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=RESOURCE_ID)
+        self.assertIsInstance(dataset.includedInDataCatalog, schema.DataCatalog)
+        self.assertEqual(dataset.includedInDataCatalog.name, "HydroShare")
+        self.assertEqual(str(dataset.includedInDataCatalog.url), "https://hydroshare.org/search/")
+
+    @parametrize(
+        "sharing_status",
+        [
+            param("private", id="private"),
+            param(None, id="no_sharing_status"),
+        ],
+    )
+    def test_non_discoverable_states_have_no_data_catalog(self, sharing_status):
+        metadata = {**MINIMAL_METADATA, "sharing_status": sharing_status}
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=RESOURCE_ID)
+        self.assertIsNone(dataset.includedInDataCatalog)
 
 
 class TestToCatalogRecordRelationPartitioning(unittest.TestCase):
@@ -541,3 +670,88 @@ class TestToCatalogSpatialCoverage(unittest.TestCase):
         self.assertEqual(dataset.spatialCoverage.geo.latitude, 10.0)
         self.assertEqual(dataset.spatialCoverage.geo.longitude, 20.0)
         self.assertEqual(dataset.spatialCoverage.name, "Test Point")
+
+
+class TestToCatalogRecordAdditionalType(unittest.TestCase):
+    """additionalType is a list of resolvable HydroShare term URLs for the resource and content types."""
+
+    def setUp(self):
+        self.TERMS = hydroshare_terms_url()
+
+    def test_content_types_map_to_term_urls(self):
+        metadata = {
+            **MINIMAL_METADATA,
+            "content_types": ["NetCDFLogicalFile", "CompositeResource", "GeoRasterLogicalFile"],
+        }
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=RESOURCE_ID)
+        self.assertEqual(
+            [str(u) for u in dataset.additionalType],
+            [
+                f"{self.TERMS}CompositeResource",
+                f"{self.TERMS}GeographicRasterAggregation",
+                f"{self.TERMS}MultidimensionalAggregation",
+            ],
+        )
+
+    def test_duplicate_types_are_dropped(self):
+        metadata = {
+            **MINIMAL_METADATA,
+            "content_types": ["CompositeResource", "GeoRasterLogicalFile", "GeoRasterLogicalFile"],
+        }
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=RESOURCE_ID)
+        self.assertEqual(
+            [str(u) for u in dataset.additionalType],
+            [f"{self.TERMS}CompositeResource", f"{self.TERMS}GeographicRasterAggregation"],
+        )
+
+    def test_unknown_types_are_dropped(self):
+        metadata = {
+            **MINIMAL_METADATA,
+            "content_types": ["CompositeResource", "NoSuchLogicalFile"],
+        }
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=RESOURCE_ID)
+        self.assertEqual([str(u) for u in dataset.additionalType], [f"{self.TERMS}CompositeResource"])
+
+    def test_resource_type_first_even_if_it_does_not_sort_first(self):
+        # plain sorting would place "CSVLogicalFile" before "CompositeResource"
+        metadata = {
+            **MINIMAL_METADATA,
+            "content_types": ["TimeSeriesLogicalFile", "CSVLogicalFile", "CompositeResource"],
+        }
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=RESOURCE_ID)
+        self.assertEqual(
+            [str(u) for u in dataset.additionalType],
+            [
+                f"{self.TERMS}CompositeResource",
+                f"{self.TERMS}CSVFileAggregation",
+                f"{self.TERMS}TimeSeriesAggregation",
+            ],
+        )
+
+    def test_no_content_types_yields_none(self):
+        # additionalType is derived solely from content_types (which the caller always populates with the
+        # resource type)
+        dataset = HydroshareMetadataAdapter.to_catalog_record(MINIMAL_METADATA, resource_id=RESOURCE_ID)
+        self.assertIsNone(dataset.additionalType)
+
+    def test_only_unknown_content_types_yields_none(self):
+        metadata = {**MINIMAL_METADATA, "content_types": ["NoSuchResource", "NoSuchLogicalFile"]}
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=RESOURCE_ID)
+        self.assertIsNone(dataset.additionalType)
+
+    def test_dumped_record_has_list_of_strings_and_no_content_types(self):
+        metadata = {**MINIMAL_METADATA, "content_types": ["CompositeResource", "GenericLogicalFile"]}
+        dumped = HydroshareMetadataAdapter.to_catalog_record(
+            metadata, resource_id=RESOURCE_ID
+        ).model_dump(by_alias=True)
+        self.assertEqual(
+            [str(u) for u in dumped["additionalType"]],
+            [f"{self.TERMS}CompositeResource", f"{self.TERMS}SingleFileAggregation"],
+        )
+        # content_types is input-only (not schema.org); additionalType carries the same information
+        self.assertNotIn("content_types", dumped)
+
+    def test_tool_resource_maps_to_web_app_resource_term(self):
+        metadata = {**MINIMAL_METADATA, "type": "ToolResource", "content_types": ["ToolResource"]}
+        dataset = HydroshareMetadataAdapter.to_catalog_record(metadata, resource_id=RESOURCE_ID)
+        self.assertEqual([str(u) for u in dataset.additionalType], [f"{self.TERMS}WebAppResource"])

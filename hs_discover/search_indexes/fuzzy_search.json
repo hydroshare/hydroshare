@@ -2,9 +2,6 @@
   "mappings": {
     "dynamic": true,
     "fields": {
-      "additionalType": {
-        "type": "string"
-      },
       "content_types": [
         {
           "type": "string"

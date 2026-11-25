@@ -86,4 +86,26 @@ export const contentTypeLabels: { [key: string]: string } = {
   GeographicRasterAggregation: "Geographic Raster",
   MultidimensionalAggregation: "Multidimensional (NetCDF)",
   Image: "Image",
+  WebAppResource: "App Connector",
+};
+
+/**
+ * Maps the content type names stored in a discovery document's `content_types` (resource type and
+ * logical file class names) to the HydroShare term names that key `contentTypeLogos` and `contentTypeLabels`.
+ * Mirrors CONTENT_TYPE_TO_TERM in hs_core/hydroshare_schemaorg_adapter.py.
+ */
+export const contentTypeTerms: { [key: string]: string } = {
+  CompositeResource: "CompositeResource",
+  CollectionResource: "CollectionResource",
+  CSVLogicalFile: "CSVFileAggregation",
+  FileSetLogicalFile: "FileSetAggregation",
+  GenericLogicalFile: "SingleFileAggregation",
+  GeoFeatureLogicalFile: "GeographicFeatureAggregation",
+  GeoRasterLogicalFile: "GeographicRasterAggregation",
+  ModelInstanceLogicalFile: "ModelInstanceAggregation",
+  ModelProgramLogicalFile: "ModelProgramAggregation",
+  NetCDFLogicalFile: "MultidimensionalAggregation",
+  RefTimeseriesLogicalFile: "ReferencedTimeSeriesAggregation",
+  TimeSeriesLogicalFile: "TimeSeriesAggregation",
+  ToolResource: "WebAppResource",
 };

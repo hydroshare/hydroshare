@@ -137,6 +137,29 @@ class CoreMetadata(SchemaBaseModel):
         "describing the resource.",
         default=[],
     )
+    id: Optional[HttpUrl] = Field(
+        alias="@id",
+        title="ID",
+        description="A unique identifier for the resource - the DOI URL once the resource has been "
+        "published, or its HydroShare landing page URL otherwise.",
+        default=None,
+        json_schema_extra=remove_none_default,
+    )
+    sameAs: Optional[HttpUrl] = Field(
+        title="Same as",
+        description="A URL for another resource that represents the same underlying resource as this one "
+        "- e.g., the HydroShare landing page URL for a published resource, whose @id/url is instead "
+        "the DOI URL.",
+        default=None,
+        json_schema_extra=remove_none_default,
+    )
+    isAccessibleForFree: Optional[bool] = Field(
+        title="Accessible for free",
+        description="Indicates that the resource is accessible at no cost. True for public and published "
+        "resources.",
+        default=None,
+        json_schema_extra=remove_none_default,
+    )
     version: Optional[str] = Field(
         description="A text string indicating the version of the resource.",
         default=None,
